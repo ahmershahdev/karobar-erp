@@ -1,9 +1,9 @@
 from typing import Any, cast
 
-from django.db.models import DecimalField, Prefetch, QuerySet, Sum
+from django.db.models import Count, DecimalField, Prefetch, QuerySet, Sum
 from django.db.models.functions import Coalesce
-from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import generics
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from rest_framework import generics, serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from apps.accounting.services import AccountingError
 from apps.accounts.models import User
+from apps.core.money import quantize_money
 from apps.tenancy.permissions import HasModulePermission
 
 from . import services
@@ -162,15 +163,36 @@ class StockLevelListView(InventoryView, generics.ListAPIView[StockLevel]):
     serializer_class = StockLevelSerializer
 
     def get_queryset(self) -> QuerySet[StockLevel]:
-        query = StockLevel.objects.select_related("product", "product__unit", "warehouse").exclude(
-            quantity=0
+        return _levels(self.request)
+
+
+def _levels(request: Request) -> QuerySet[StockLevel]:
+    query = StockLevel.objects.select_related("product", "product__unit", "warehouse").exclude(
+        quantity=0
+    )
+    for field in ("warehouse", "product"):
+        value = request.query_params.get(field, "")
+        if value.isdigit():
+            query = query.filter(**{f"{field}_id": value})
+    return query
+
+
+@extend_schema(parameters=[OpenApiParameter("warehouse", int)])
+class StockValueView(InventoryView):
+    @extend_schema(
+        responses=inline_serializer(
+            "StockValue",
+            {
+                "total_value": serializers.DecimalField(max_digits=18, decimal_places=2),
+                "lines": serializers.IntegerField(),
+            },
         )
-        params = self.request.query_params
-        for field in ("warehouse", "product"):
-            value = params.get(field, "")
-            if value.isdigit():
-                query = query.filter(**{f"{field}_id": value})
-        return query
+    )
+    def get(self, request: Request) -> Response:
+        totals = _levels(request).aggregate(total=Sum("value"), lines=Count("id"))
+        return Response(
+            {"total_value": str(quantize_money(totals["total"] or 0)), "lines": totals["lines"]}
+        )
 
 
 class ProductMovesView(InventoryView, generics.ListAPIView[StockMove]):

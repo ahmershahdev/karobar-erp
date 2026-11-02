@@ -532,6 +532,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory/stock-value/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_stock_value_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/inventory/units/": {
         parameters: {
             query?: never;
@@ -1191,6 +1207,11 @@ export interface components {
             readonly quantity: string;
             /** Format: decimal */
             readonly value: string;
+        };
+        StockValue: {
+            /** Format: decimal */
+            total_value: string;
+            lines: number;
         };
         TenantCreate: {
             name: string;
@@ -2373,6 +2394,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedStockLevelList"];
+                };
+            };
+        };
+    };
+    inventory_stock_value_retrieve: {
+        parameters: {
+            query?: {
+                warehouse?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockValue"];
                 };
             };
         };

@@ -19,7 +19,9 @@ def send_stock_alerts() -> int:
             if not low and not soon:
                 continue
             owners = list(
-                Membership.objects.filter(is_owner=True).values_list("user__email", flat=True)
+                Membership.objects.filter(is_owner=True, user__is_active=True).values_list(
+                    "user__email", flat=True
+                )
             )
         lines = [f"Stock alerts for {tenant.name}", ""]
         if low:
@@ -33,7 +35,8 @@ def send_stock_alerts() -> int:
                 f"({row.warehouse.code}): {row.quantity}, expires {row.batch.expiry_date}"
                 for row in soon
             ]
-        lines += ["", f"{settings.SITE_URL.rstrip('/')}/app"]
+        link = f"{settings.SITE_URL.rstrip('/')}/app/t/{tenant.public_id}/inventory/alerts"
+        lines += ["", link]
         for email in owners:
             send_email.delay(email, f"Stock alerts: {tenant.name}", "\n".join(lines))
             sent += 1

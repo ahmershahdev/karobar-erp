@@ -42,7 +42,8 @@ services:
   # Exactly one beat process, or scheduled emails go out twice.
   beat:
     <<: *backend
-    command: celery -A config beat --loglevel=info --schedule /tmp/celerybeat-schedule
+    command: celery -A config beat --loglevel=info --schedule /var/lib/karobar/celerybeat-schedule
+    volumes: [beat-data:/var/lib/karobar]
 
   mysql:
     image: mysql:8.4.13
@@ -70,3 +71,4 @@ services:
 volumes:
   mysql-data:
   redis-data:
+  beat-data:

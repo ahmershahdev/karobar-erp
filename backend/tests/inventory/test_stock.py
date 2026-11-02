@@ -68,6 +68,33 @@ def test_fifo_issues_the_oldest_cost_first(fifo_shop: Shop) -> None:
     assert inventory_balance() == D("84.00")
 
 
+def test_fifo_emptying_a_level_keeps_books_and_stock_equal(fifo_shop: Shop) -> None:
+    post(fifo_shop, "receipt", [line(fifo_shop, "3", "10")])
+    level(fifo_shop).value = D("30.01")
+    StockLevel.objects.filter(pk=level(fifo_shop).pk).update(value=D("30.01"))
+    issue = post(fifo_shop, "issue", [line(fifo_shop, "3")])
+    assert StockMove.objects.get(entry=issue).value == D("-30.01")
+    assert level(fifo_shop).value == D(0)
+
+
+def test_alerts_skip_deactivated_owners_and_link_to_the_business(shop: Shop) -> None:
+    post(shop, "receipt", [line(shop, "1", "10")])
+    assert send_stock_alerts() == 1
+    assert f"/app/t/{shop.member.tenant.public_id}/inventory/alerts" in str(mail.outbox[-1].body)
+    shop.member.user.is_active = False
+    shop.member.user.save()
+    assert send_stock_alerts() == 0
+
+
+def test_stock_value_sums_every_row(shop: Shop) -> None:
+    post(shop, "receipt", [line(shop, "2", "10")])
+    post(shop, "transfer", [line(shop, "1")], to_warehouse=shop.branch)
+    client = shop.member.client()
+    assert client.get("/api/inventory/stock-value/").json() == {"total_value": "20.00", "lines": 2}
+    branch = client.get(f"/api/inventory/stock-value/?warehouse={shop.branch.pk}").json()
+    assert branch == {"total_value": "10.00", "lines": 1}
+
+
 def test_packs_convert_to_base_units(shop: Shop) -> None:
     post(shop, "receipt", [line(shop, "2", "1200", unit=shop.ctn)])
     assert (level(shop).quantity, level(shop).value) == (D("24.0000"), D("2400.00"))

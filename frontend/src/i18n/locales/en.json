@@ -422,6 +422,7 @@
     "setup": "Inventory setup",
     "setupBody": "Units of measure and the warehouses you keep stock in.",
     "units": "Units",
-    "warehouses": "Warehouses"
+    "warehouses": "Warehouses",
+    "loadMore": "Load more ({{shown}} of {{total}})"
   }
 }

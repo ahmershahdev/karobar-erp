@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,7 +6,7 @@ import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { can, type Product, type StockEntry } from '../../lib/api/types';
-import { formatMoney, toMinor } from '../../lib/money';
+import { formatMoney } from '../../lib/money';
 import { ensureCsrf } from '../auth/session';
 import { errorText, useWorkspace } from '../workspace/hooks';
 import { PageTitle, Panel } from '../workspace/ui';
@@ -40,9 +40,83 @@ function useWarehouses() {
   return useList('warehouses', () => unwrap(api.GET('/api/inventory/warehouses/')));
 }
 
-function useAllProducts() {
-  return useList('products-all', () =>
-    unwrap(api.GET('/api/inventory/products/', { params: { query: { page_size: 200 } as never } })),
+// Searches as you type and resolves scanned barcodes, so it works the same for 20 products or
+// 20,000. A barcode also picks the pack it belongs to (scan a carton, get the carton unit).
+function ProductPicker({
+  value,
+  onPick,
+}: {
+  value: Product | undefined;
+  onPick: (product: Product, unit: number) => void;
+}) {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const [term, setTerm] = useState('');
+  const [open, setOpen] = useState(false);
+  const query = term.trim();
+  const barcode = /^\d{6,}$/.test(query);
+  const results = useQuery({
+    queryKey: [membership.tenant_id, 'product-search', query],
+    enabled: open && query.length > 0,
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/inventory/products/', {
+          params: {
+            query: { ...(barcode ? { barcode: query } : { q: query }), page_size: 8 } as never,
+          },
+        }),
+      ),
+  });
+  const pick = (product: Product) => {
+    const pack = barcode ? product.packs?.find((item) => item.barcode === query) : undefined;
+    onPick(product, pack?.unit ?? product.unit);
+    setTerm('');
+    setOpen(false);
+  };
+  return (
+    <div className="relative">
+      <input
+        aria-label={t('inv.product')}
+        placeholder={value ? `${value.sku} ${value.name}` : t('inv.search')}
+        className={`${CELL_INPUT} ${value ? 'placeholder:text-ink' : ''}`}
+        value={term}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onChange={(e) => {
+          setTerm(e.target.value.slice(0, 80));
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          const first = results.data?.results[0];
+          if (e.key === 'Enter' && first) {
+            e.preventDefault();
+            pick(first);
+          }
+        }}
+      />
+      {open && query && (
+        <ul
+          className="absolute inset-x-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-line bg-raised shadow-xl"
+          data-lenis-prevent
+        >
+          {results.data?.results.length === 0 && (
+            <li className="px-3 py-2 text-sm text-muted">{t('workspace.none')}</li>
+          )}
+          {results.data?.results.map((product) => (
+            <li key={product.id}>
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-start text-sm hover:bg-white/5"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(product)}
+              >
+                <span className="font-mono text-xs text-gold">{product.sku}</span> {product.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -268,7 +342,7 @@ function blank(key: number): DraftLine {
 function StockEditor({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const warehouses = useWarehouses();
-  const products = useAllProducts();
+  const [picked, setPicked] = useState<Map<string, Product>>(new Map());
   const save = useInventoryAction(['stock-entries']);
   const [kind, setKind] = useState<Kind>('receipt');
   const [date, setDate] = useState(today());
@@ -276,9 +350,7 @@ function StockEditor({ onDone }: { onDone: () => void }) {
   const [warehouse, setWarehouse] = useState('');
   const [destination, setDestination] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([blank(0)]);
-  const byId = new Map(
-    (products.data?.results ?? []).map((product) => [String(product.id), product]),
-  );
+  const byId = picked;
   const costed = kind === 'receipt' || kind === 'adjustment';
   const update = (key: number, patch: Partial<DraftLine>) => {
     setLines(lines.map((line) => (line.key === key ? { ...line, ...patch } : line)));
@@ -384,19 +456,13 @@ function StockEditor({ onDone }: { onDone: () => void }) {
               return (
                 <tr key={line.key} className="border-t border-line">
                   <td className="py-2 pe-2">
-                    <select
-                      aria-label={t('inv.product')}
-                      className={CELL_INPUT}
-                      value={line.product}
-                      onChange={(e) => update(line.key, { product: e.target.value, unit: '' })}
-                    >
-                      <option value="">-</option>
-                      {products.data?.results.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.sku} {item.name}
-                        </option>
-                      ))}
-                    </select>
+                    <ProductPicker
+                      value={product}
+                      onPick={(chosen, unit) => {
+                        setPicked(new Map(picked).set(String(chosen.id), chosen));
+                        update(line.key, { product: String(chosen.id), unit: String(unit) });
+                      }}
+                    />
                   </td>
                   <td className="w-28 py-2 pe-2">
                     <select
@@ -534,8 +600,11 @@ function EntryRow({ entry }: { entry: StockEntry }) {
                       {formatQuantity(line.quantity, i18n.resolvedLanguage)} {line.unit_code}
                     </td>
                     <td className={NUM}>
-                      {line.unit_cost && toMinor(Number(line.unit_cost).toFixed(2))
-                        ? formatMoney(Number(line.unit_cost).toFixed(2), i18n.resolvedLanguage)
+                      {line.unit_cost
+                        ? new Intl.NumberFormat(i18n.resolvedLanguage, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 4,
+                          }).format(Number(line.unit_cost))
                         : ''}
                     </td>
                   </tr>
@@ -625,16 +694,25 @@ export function StockOnHandPage() {
   const { membership } = useWorkspace();
   const warehouses = useWarehouses();
   const [warehouse, setWarehouse] = useState('');
-  const levels = useQuery({
+  const filter = warehouse ? { warehouse: Number(warehouse) } : {};
+  const levels = useInfiniteQuery({
     queryKey: [membership.tenant_id, 'levels', warehouse],
-    queryFn: () =>
+    initialPageParam: '',
+    queryFn: ({ pageParam }) =>
       unwrap(
         api.GET('/api/inventory/stock-levels/', {
-          params: { query: warehouse ? { warehouse: Number(warehouse) } : {} },
+          params: { query: { ...filter, ...(pageParam ? { cursor: pageParam } : {}) } },
         }),
       ),
+    getNextPageParam: (page) =>
+      page.next ? (new URL(page.next).searchParams.get('cursor') ?? undefined) : undefined,
   });
-  const total = (levels.data?.results ?? []).reduce((sum, row) => sum + toMinor(row.value), 0);
+  // The total comes from the server so it covers every row, not just the pages loaded so far.
+  const value = useQuery({
+    queryKey: [membership.tenant_id, 'levels', 'value', warehouse],
+    queryFn: () => unwrap(api.GET('/api/inventory/stock-value/', { params: { query: filter } })),
+  });
+  const rows = levels.data?.pages.flatMap((page) => page.results) ?? [];
   return (
     <>
       <PageTitle title={t('inv.onHandTitle')} subtitle={t('inv.onHandBody')} />
@@ -668,7 +746,7 @@ export function StockOnHandPage() {
               </tr>
             </thead>
             <tbody>
-              {levels.data?.results.map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
                   <td className={`${TD} font-mono text-gold`}>{row.sku}</td>
                   <td className={TD}>{row.product_name}</td>
@@ -685,11 +763,24 @@ export function StockOnHandPage() {
                 <td className={TD} colSpan={4}>
                   {t('inv.totalValue')}
                 </td>
-                <td className={NUM}>{formatMoney(total, i18n.resolvedLanguage)}</td>
+                <td className={NUM}>
+                  {formatMoney(value.data?.total_value ?? '0', i18n.resolvedLanguage)}
+                </td>
               </tr>
             </tfoot>
           </table>
         </div>
+        {levels.hasNextPage && (
+          <div className="mt-4">
+            <Button
+              variant="ghost"
+              disabled={levels.isFetchingNextPage}
+              onClick={() => void levels.fetchNextPage()}
+            >
+              {t('inv.loadMore', { shown: rows.length, total: value.data?.lines ?? rows.length })}
+            </Button>
+          </div>
+        )}
       </Panel>
     </>
   );

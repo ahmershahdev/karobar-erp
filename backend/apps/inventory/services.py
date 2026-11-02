@@ -364,7 +364,12 @@ def _issue(
         layer.save(update_fields=["quantity_left"])
         pieces.append((part.quantity, layer.unit_cost))
     level.quantity = quantize_quantity(level.quantity - quantity)
-    level.value = ZERO if level.quantity == 0 else quantize_money(level.value - cost)
+    if level.quantity == 0:
+        # The last units take whatever value is left, so rounding residue can't stay on the
+        # level while the books credit a slightly different cost.
+        cost, level.value = quantize_money(level.value), ZERO
+    else:
+        level.value = quantize_money(level.value - cost)
     return cost, pieces
 
 

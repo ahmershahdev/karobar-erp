@@ -248,6 +248,9 @@ def _alerts(member: Member) -> tuple[str, int]:
     return "/api/inventory/alerts/", int(shop["product"].pk)
 
 
+tenant_endpoint("api/inventory/stock-value/")(
+    lambda m: ("/api/inventory/stock-value/", _stock_level(m))
+)
 tenant_endpoint("api/inventory/batches/")(lambda m: ("/api/inventory/batches/", _batch(m)))
 tenant_endpoint("api/inventory/alerts/")(_alerts)
 
@@ -321,6 +324,9 @@ def test_other_tenants_rows_are_invisible(
     else:
         assert theirs.status_code == 200
         body = theirs.json()
+        if isinstance(body, dict) and "total_value" in body:
+            assert body == {"total_value": "0.00", "lines": 0}
+            return
         if isinstance(body, dict) and "low_stock" in body:
             rows = [{"id": row["product"]} for row in body["low_stock"]]
         else:

@@ -1078,6 +1078,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedStockLevelList'
           description: ''
+  /api/inventory/stock-value/:
+    get:
+      operationId: inventory_stock_value_retrieve
+      parameters:
+      - in: query
+        name: warehouse
+        schema:
+          type: integer
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockValue'
+          description: ''
   /api/inventory/units/:
     get:
       operationId: inventory_units_list
@@ -2736,6 +2755,18 @@ components:
       - value
       - warehouse
       - warehouse_code
+    StockValue:
+      type: object
+      properties:
+        total_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        lines:
+          type: integer
+      required:
+      - lines
+      - total_value
     TenantCreate:
       type: object
       properties:
