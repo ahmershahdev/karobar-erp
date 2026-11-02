@@ -3,7 +3,7 @@ import { useEffect, useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 
-import { Alert, Button, Field } from '../../components/form';
+import { Alert, Button, Field, PasswordField, SubmitButton } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { AuthCard } from './AuthCard';
@@ -44,7 +44,8 @@ export function SignInPage() {
 
   return (
     <AuthCard
-      title={t('signIn.title')}
+      title={t('auth.welcome')}
+      subtitle={t('auth.welcomeBody')}
       footer={
         <>
           {t('auth.noAccount')}{' '}
@@ -61,18 +62,27 @@ export function SignInPage() {
           required
           maxLength={254}
           autoComplete="username"
+          autoFocus
+          placeholder={t('auth.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <Field
-          label={t('signIn.password')}
-          type="password"
-          required
-          maxLength={128}
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="space-y-2">
+          <PasswordField
+            label={t('signIn.password')}
+            required
+            maxLength={128}
+            autoComplete="current-password"
+            placeholder={t('auth.passwordPlaceholder')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <div className="text-end">
+            <Link className={`${LINK} text-sm`} to="/app/forgot-password">
+              {t('auth.forgot')}
+            </Link>
+          </div>
+        </div>
         {mutation.isError && (
           <Alert tone="error">
             {mutation.error instanceof ApiError && mutation.error.status === 403
@@ -80,14 +90,9 @@ export function SignInPage() {
               : t('signIn.unavailable')}
           </Alert>
         )}
-        <Button type="submit" className="w-full" disabled={mutation.isPending}>
+        <SubmitButton pending={mutation.isPending}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
-        </Button>
-        <p className="text-center text-sm">
-          <Link className={LINK} to="/app/forgot-password">
-            {t('auth.forgot')}
-          </Link>
-        </p>
+        </SubmitButton>
       </form>
     </AuthCard>
   );
@@ -120,7 +125,8 @@ export function SignUpPage() {
 
   return (
     <AuthCard
-      title={t('auth.signUp')}
+      title={t('auth.joinTitle')}
+      subtitle={t('auth.joinBody')}
       footer={
         <>
           {t('auth.haveAccount')}{' '}
@@ -135,6 +141,8 @@ export function SignUpPage() {
           label={t('auth.fullName')}
           maxLength={150}
           autoComplete="name"
+          autoFocus
+          placeholder={t('auth.namePlaceholder')}
           value={form.full_name}
           onChange={set('full_name')}
         />
@@ -144,16 +152,18 @@ export function SignUpPage() {
           required
           maxLength={254}
           autoComplete="email"
+          placeholder={t('auth.emailPlaceholder')}
           value={form.email}
           onChange={set('email')}
         />
-        <Field
+        <PasswordField
           label={t('signIn.password')}
-          type="password"
+          showStrength
           required
           minLength={12}
           maxLength={128}
           autoComplete="new-password"
+          placeholder={t('auth.newPasswordPlaceholder')}
           value={form.password}
           onChange={set('password')}
         />
@@ -161,9 +171,7 @@ export function SignUpPage() {
         {mutation.isError && (
           <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
         )}
-        <Button type="submit" className="w-full" disabled={mutation.isPending}>
-          {t('auth.signUp')}
-        </Button>
+        <SubmitButton pending={mutation.isPending}>{t('auth.signUp')}</SubmitButton>
       </form>
     </AuthCard>
   );
@@ -210,7 +218,7 @@ export function ForgotPasswordPage() {
     },
   });
   return (
-    <AuthCard title={t('auth.forgot')}>
+    <AuthCard title={t('auth.forgot')} subtitle={t('auth.forgotBody')}>
       {mutation.isSuccess ? (
         <Alert tone="success">{t('auth.resetSent')}</Alert>
       ) : (
@@ -221,19 +229,19 @@ export function ForgotPasswordPage() {
             required
             maxLength={254}
             autoComplete="email"
+            autoFocus
+            placeholder={t('auth.emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           {mutation.isError && (
             <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
           )}
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
-            {t('auth.sendLink')}
-          </Button>
+          <SubmitButton pending={mutation.isPending}>{t('auth.sendLink')}</SubmitButton>
         </form>
       )}
-      <Link className={LINK} to="/app/sign-in">
-        {t('signIn.title')}
+      <Link className={`${LINK} mt-6 inline-block text-sm`} to="/app/sign-in">
+        &larr; {t('signIn.title')}
       </Link>
     </AuthCard>
   );
@@ -254,7 +262,7 @@ export function ResetPasswordPage() {
     },
   });
   return (
-    <AuthCard title={t('auth.newPassword')}>
+    <AuthCard title={t('auth.newPassword')} subtitle={t('auth.resetBody')}>
       {mutation.isSuccess ? (
         <>
           <Alert tone="success">{t('auth.passwordChanged')}</Alert>
@@ -264,13 +272,15 @@ export function ResetPasswordPage() {
         </>
       ) : (
         <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
-          <Field
+          <PasswordField
             label={t('auth.newPassword')}
-            type="password"
+            showStrength
             required
             minLength={12}
             maxLength={128}
             autoComplete="new-password"
+            autoFocus
+            placeholder={t('auth.newPasswordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -278,9 +288,7 @@ export function ResetPasswordPage() {
           {mutation.isError && (
             <Alert tone="error">{messageOf(mutation.error, t('auth.badLink'))}</Alert>
           )}
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
-            {t('auth.savePassword')}
-          </Button>
+          <SubmitButton pending={mutation.isPending}>{t('auth.savePassword')}</SubmitButton>
         </form>
       )}
     </AuthCard>

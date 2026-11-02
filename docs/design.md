@@ -43,6 +43,7 @@ No raw hex values in components. A new colour goes into `tokens.css` first.
 Scale: `.display-xl` (hero, up to 11.5rem), `.display-lg` (section titles), `.display-md`
 (statements), `.label` (mono labels). Nastaliq and Kufi get larger line heights per language in
 `global.css`. Headlines split by word, never by letter, because Arabic script letters join.
+Headings and imagery can't be selected or dragged; body text, tables and forms stay selectable.
 
 ## Layout
 
@@ -72,6 +73,13 @@ Scale: `.display-xl` (hero, up to 11.5rem), `.display-lg` (section titles), `.di
 - `Cursor`: a dot and a trailing ring that grows over anything clickable and shows its
   `data-cursor` label. Fine pointers only.
 - `Magnetic`: primary buttons lean toward the pointer.
+- `Cursor`: a gold ledger tick inside a trailing ring. The ring opens with a label over links,
+  wraps the exact shape of anything marked `data-cursor-stick` (buttons, pills), becomes a caret
+  over fields and inverts over imagery. Fine pointers only.
+- `ScrollTopButton`: floats bottom-right once you are a screen down, ringed by reading progress.
+- Module cards: each module has a line-drawn glyph (`features/modules/catalog.tsx`) that redraws
+  on hover, a status chip (live since, or arriving in, a milestone), its feature points, a 3D tilt
+  and a spotlight that follows the pointer.
 - `SplitHeadline`, `Reveal`, `ScrollWords`: word reveals, staggered entrances, and a paragraph
   that lights up word by word as it crosses the screen.
 - `PageTransition`: an ink curtain with the wordmark between public pages; app screens switch

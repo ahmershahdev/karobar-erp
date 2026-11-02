@@ -57,6 +57,31 @@ export const PUBLIC_ROUTES = [
   },
 ] as const satisfies readonly PublicRoute[];
 
+// The home page FAQ as structured data. Keep it word for word with home.faq in en.json: search
+// engines only trust FAQ markup that matches what the page shows. A test checks they agree.
+export const HOME_FAQ: readonly { q: string; a: string }[] = [
+  {
+    q: 'Is Karobar ERP free?',
+    a: 'Yes. It is open source under the MIT license. You can run it on your own server at no cost.',
+  },
+  {
+    q: 'Can several businesses share one installation?',
+    a: "Yes. Each business has its own books, stock and staff, and the server refuses any request for another business's data.",
+  },
+  {
+    q: 'Does it work in Urdu and Arabic?',
+    a: 'Every screen does, with right-to-left layouts. Printed invoices in all three languages arrive with sales.',
+  },
+  {
+    q: "Which countries' taxes are supported?",
+    a: 'Tax arrives in milestone M5, starting with Pakistan and then the Gulf. Rates are stored as dated data, never hard-coded.',
+  },
+  {
+    q: 'What happens if I make a mistake in a posted entry?',
+    a: 'Posted entries never change. You post a reversal, which keeps a complete and honest audit trail.',
+  },
+];
+
 export const NOINDEX_PREFIXES = ['/app'] as const;
 
 export function absoluteUrl(siteUrl: string, path: string): string {

@@ -40,6 +40,8 @@ def test_products_with_packs_and_barcodes(shop: Shop) -> None:
     assert services.find_by_barcode("8960000000024") is not None
     assert services.find_by_barcode("missing") is None
 
+    by_code = client.get("/api/inventory/products/?q=8960000000024").json()["results"]
+    assert [row["sku"] for row in by_code] == ["TEA-500"]
     duplicate = client.post(
         "/api/inventory/products/",
         {"sku": "TEA-500", "name": "Again", "unit": shop.pcs.pk},

@@ -7,6 +7,7 @@ import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
 import { PageTransition } from '../components/PageTransition';
 import { Preloader } from '../components/Preloader';
+import { ScrollTopButton } from '../components/ScrollTopButton';
 import { Backdrop } from '../features/scene/Backdrop';
 import HomePage from '../pages/HomePage';
 
@@ -24,6 +25,7 @@ function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <ScrollTopButton />
     </>
   );
 }

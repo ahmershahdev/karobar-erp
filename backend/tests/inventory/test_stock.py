@@ -77,6 +77,25 @@ def test_fifo_emptying_a_level_keeps_books_and_stock_equal(fifo_shop: Shop) -> N
     assert level(fifo_shop).value == D(0)
 
 
+@pytest.mark.parametrize("issue_size", ["1", "7"])
+def test_fifo_sub_paisa_costs_never_drift_below_zero(fifo_shop: Shop, issue_size: str) -> None:
+    # 150 units: rounding every unit to 0.11 would have gone below zero after 145 issues.
+    post(fifo_shop, "receipt", [line(fifo_shop, "150", "0.1060")])
+    issued = D(0)
+    total_cost = D(0)
+    while level(fifo_shop).quantity >= D(issue_size):
+        entry = post(fifo_shop, "issue", [line(fifo_shop, issue_size)])
+        total_cost -= StockMove.objects.get(entry=entry).value
+        issued += D(issue_size)
+        assert level(fifo_shop).value >= 0
+    if level(fifo_shop).quantity:
+        entry = post(fifo_shop, "issue", [line(fifo_shop, str(level(fifo_shop).quantity))])
+        total_cost -= StockMove.objects.get(entry=entry).value
+    assert level(fifo_shop).value == D(0)
+    assert total_cost == D("15.90")
+    assert inventory_balance() == D(0)
+
+
 def test_alerts_skip_deactivated_owners_and_link_to_the_business(shop: Shop) -> None:
     post(shop, "receipt", [line(shop, "1", "10")])
     assert send_stock_alerts() == 1

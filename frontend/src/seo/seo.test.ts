@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { headFor } from '../../build/seo-plugin';
 import { breadcrumbs, serializeJsonLd, structuredData } from './jsonld';
-import { PUBLIC_ROUTES, absoluteUrl } from './site';
+import en from '../i18n/locales/en.json';
+import { HOME_FAQ, PUBLIC_ROUTES, absoluteUrl } from './site';
 
 const SITE_URL = 'https://karobarerp.ahmershah.dev';
 
@@ -45,4 +46,8 @@ it('only the home page claims to be the software application', () => {
     (structuredData(SITE_URL, route)['@graph'] as { '@type': string }[]).map((n) => n['@type']);
   expect(types(PUBLIC_ROUTES[0])).toContain('SoftwareApplication');
   expect(types(PUBLIC_ROUTES[1])).not.toContain('SoftwareApplication');
+});
+
+it('the FAQ markup matches the FAQ on the page', () => {
+  expect(HOME_FAQ).toEqual(en.home.faq.items);
 });

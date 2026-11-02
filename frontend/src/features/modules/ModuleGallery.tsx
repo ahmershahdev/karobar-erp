@@ -1,23 +1,10 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 import { prefersReducedMotion } from '../../lib/motion';
-
-const GRADIENTS = [
-  'var(--gradient-lagoon)',
-  'var(--gradient-molten)',
-  'var(--gradient-blossom)',
-  'var(--gradient-orchard)',
-  'var(--gradient-aurora)',
-  'var(--gradient-sunrise)',
-  'var(--gradient-dusk)',
-  'var(--gradient-earth)',
-];
-
-interface Item {
-  title: string;
-  body: string;
-}
+import { ModuleGlyph, TiltCard } from './catalog';
+import { MODULES, type ModuleCopy } from './data';
 
 const WIDE = '(min-width: 1024px)';
 
@@ -33,34 +20,78 @@ function useWide(): boolean {
   );
 }
 
-function ModuleCard({ item, index }: { item: Item; index: number }) {
-  const gradient = GRADIENTS[index % GRADIENTS.length];
+export function StatusChip({ status, milestone }: { status: string; milestone: string }) {
+  const { t } = useTranslation();
+  const built = status === 'built';
   return (
-    <article className="card group flex h-full min-h-[22rem] flex-col justify-between overflow-hidden p-7 lg:min-h-0">
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-px opacity-70"
-        style={{ background: gradient }}
-      />
-      <div className="flex items-start justify-between">
-        <span className="label">{String(index + 1).padStart(2, '0')}</span>
-        <span
-          aria-hidden="true"
-          className="size-12 rounded-full opacity-80 blur-[1px] transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-125"
-          style={{ background: gradient }}
-        />
-      </div>
+    <span
+      className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 font-mono text-[0.62rem] tracking-[0.14em] uppercase ${
+        built ? 'border-mint/30 text-mint' : 'border-line-strong text-muted'
+      }`}
+    >
       <span
-        aria-hidden="true"
-        className="outline-text pointer-events-none absolute -end-4 top-1/2 -translate-y-1/2 font-display text-[11rem] leading-none select-none"
-      >
-        {String(index + 1).padStart(2, '0')}
-      </span>
-      <div className="relative space-y-3">
-        <h3 className="font-display text-4xl md:text-5xl">{item.title}</h3>
-        <p className="max-w-sm text-muted">{item.body}</p>
-      </div>
-    </article>
+        className={`size-1.5 rounded-full ${built ? 'bg-mint' : status === 'next' ? 'bg-gold' : 'bg-muted/50'}`}
+      />
+      {built ? t('modules.status.built', { milestone }) : t('modules.status.coming', { milestone })}
+    </span>
+  );
+}
+
+export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy }) {
+  const { t } = useTranslation();
+  const meta = MODULES[index];
+  if (!meta) return null;
+  return (
+    <TiltCard className="h-full rounded-[var(--radius-card)]">
+      <article className="relative flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-[linear-gradient(160deg,rgb(31_28_25/0.95),rgb(10_9_8/0.92))] p-7 md:p-8">
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-px"
+          style={{ background: meta.gradient }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute -end-24 -top-24 size-72 rounded-full opacity-20 blur-3xl transition-opacity duration-700 group-hover:opacity-40"
+          style={{ background: meta.gradient }}
+        />
+        <div className="relative flex items-start justify-between gap-4">
+          <span className="label">{String(index + 1).padStart(2, '0')} / 08</span>
+          <StatusChip status={meta.status} milestone={meta.milestone} />
+        </div>
+        <div className="relative my-8" style={{ color: meta.color }}>
+          <ModuleGlyph module={meta.key} className="size-20 md:size-24" />
+        </div>
+        <div className="relative flex flex-1 flex-col">
+          <h3 className="font-display text-4xl leading-none md:text-5xl">{copy.title}</h3>
+          <p className="mt-4 text-sm leading-relaxed text-muted">{copy.body}</p>
+          <ul className="mt-6 space-y-2.5 text-sm">
+            {copy.points.slice(0, 3).map((point) => (
+              <li key={point} className="flex gap-3 text-ink/85">
+                <span
+                  aria-hidden="true"
+                  className="mt-2 size-1 shrink-0 rotate-45"
+                  style={{ background: meta.color }}
+                />
+                {point}
+              </li>
+            ))}
+          </ul>
+          <Link
+            to={`/modules#${meta.key}`}
+            className="mt-auto inline-flex items-center gap-2 pt-8 font-mono text-[0.7rem] tracking-[0.14em] text-gold uppercase"
+            data-cursor={t('cursor.open')}
+          >
+            {t('modules.more')}
+            <span
+              aria-hidden="true"
+              className="transition-transform duration-500 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1"
+            >
+              &rarr;
+            </span>
+          </Link>
+        </div>
+      </article>
+    </TiltCard>
   );
 }
 
@@ -69,13 +100,14 @@ function ModuleCard({ item, index }: { item: Item; index: number }) {
  * section's height is what gives the sideways track its scroll distance. Narrow screens and
  * reduced motion get a plain grid.
  */
-export function ModuleGallery({ limit }: { limit?: number }) {
+export function ModuleGallery() {
   const { t, i18n } = useTranslation();
-  const items = (t('modules.items', { returnObjects: true }) as Item[]).slice(0, limit);
+  const items = t('modules.items', { returnObjects: true }) as ModuleCopy[];
   const wide = useWide();
   const pinned = wide && !prefersReducedMotion();
   const section = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
   const rtl = i18n.dir() === 'rtl';
 
   useEffect(() => {
@@ -90,6 +122,7 @@ export function ModuleGallery({ limit }: { limit?: number }) {
       const distance = inner.scrollWidth - window.innerWidth;
       const progress = Math.min(1, Math.max(0, -rect.top / (rect.height - window.innerHeight)));
       inner.style.transform = `translate3d(${(rtl ? 1 : -1) * progress * distance}px, 0, 0)`;
+      if (bar.current) bar.current.style.transform = `scaleX(${progress})`;
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -106,9 +139,9 @@ export function ModuleGallery({ limit }: { limit?: number }) {
 
   if (!pinned) {
     return (
-      <div className="shell grid gap-4 sm:grid-cols-2">
-        {items.map((item, index) => (
-          <ModuleCard key={item.title} item={item} index={index} />
+      <div className="shell grid gap-5 sm:grid-cols-2">
+        {items.map((copy, index) => (
+          <ModuleCard key={copy.title} index={index} copy={copy} />
         ))}
       </div>
     );
@@ -116,13 +149,22 @@ export function ModuleGallery({ limit }: { limit?: number }) {
 
   return (
     <div ref={section} style={{ height: `${items.length * 45 + 60}vh` }} className="relative">
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
+      <div className="sticky top-0 flex h-[100svh] flex-col justify-center overflow-hidden">
         <div ref={track} className="flex gap-6 ps-[var(--gutter)] pe-[30vw] will-change-transform">
-          {items.map((item, index) => (
-            <div key={item.title} className="h-[62vh] w-[min(34rem,38vw)] shrink-0">
-              <ModuleCard item={item} index={index} />
+          {items.map((copy, index) => (
+            <div key={copy.title} className="h-[70vh] max-h-[40rem] w-[min(30rem,34vw)] shrink-0">
+              <ModuleCard index={index} copy={copy} />
             </div>
           ))}
+        </div>
+        <div className="shell mt-10">
+          <div className="h-px w-full bg-line">
+            <div
+              ref={bar}
+              className="h-px origin-left bg-gold rtl:origin-right"
+              style={{ transform: 'scaleX(0)' }}
+            />
+          </div>
         </div>
       </div>
     </div>

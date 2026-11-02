@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { useScroll } from '../lib/scroll';
-import { scrollToTop, useLenis } from '../lib/smooth-scroll';
 import { SITE } from '../seo/site';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 import { Magnetic } from './Magnetic';
 import { Reveal } from './Reveal';
 import { RollText } from './RollText';
+
+const SHIPPED = 3;
+const MILESTONES = 7;
+const LATEST = 'v0.3.0';
 
 function useLahoreTime(locale: string | undefined): string {
   const [now, setNow] = useState(() => new Date());
@@ -24,60 +26,13 @@ function useLahoreTime(locale: string | undefined): string {
   }).format(now);
 }
 
-function BackToTop() {
-  const { t } = useTranslation();
-  const lenis = useLenis();
-  const { progress } = useScroll();
-  const circumference = 2 * Math.PI * 22;
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        if (lenis) lenis.scrollTo(0, { duration: 1.6 });
-        else scrollToTop(null);
-      }}
-      className="group relative flex size-14 items-center justify-center"
-      aria-label={t('footer.top')}
-      data-cursor={t('footer.topShort')}
-    >
-      <svg viewBox="0 0 48 48" className="absolute inset-0 -rotate-90" aria-hidden="true">
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          fill="none"
-          stroke="var(--color-line-strong)"
-          strokeWidth="1"
-        />
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          fill="none"
-          stroke="var(--color-gold)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - progress)}
-        />
-      </svg>
-      <span className="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:-translate-y-1">
-        &uarr;
-      </span>
-    </button>
-  );
-}
-
 function FooterLink({ to, href, children }: { to?: string; href?: string; children: string }) {
-  const className = 'group inline-flex text-ink/80 hover:text-ink';
-  if (to) {
-    return (
-      <Link to={to} className={className}>
-        <RollText>{children}</RollText>
-      </Link>
-    );
-  }
-  return (
+  const className = 'group inline-flex text-ink/75 transition-colors hover:text-ink';
+  return to ? (
+    <Link to={to} className={className}>
+      <RollText>{children}</RollText>
+    </Link>
+  ) : (
     <a href={href} rel="noopener" className={className}>
       <RollText>{children}</RollText>
     </a>
@@ -88,18 +43,42 @@ export function Footer() {
   const { t, i18n } = useTranslation();
   const time = useLahoreTime(i18n.resolvedLanguage);
 
+  const columns = [
+    {
+      title: t('footer.explore'),
+      links: [
+        { label: t('nav.home'), to: '/' },
+        { label: t('nav.modules'), to: '/modules' },
+        { label: t('nav.security'), to: '/security' },
+        { label: t('nav.signIn'), to: '/app' },
+      ],
+    },
+    {
+      title: t('footer.project'),
+      links: [
+        { label: t('nav.source'), href: SITE.repo },
+        { label: t('footer.wiki'), href: `${SITE.repo}/wiki` },
+        { label: t('footer.releases'), href: `${SITE.repo}/releases` },
+        { label: t('footer.report'), href: `${SITE.repo}/security/advisories/new` },
+      ],
+    },
+    {
+      title: t('footer.contact'),
+      links: [
+        { label: SITE.email, href: `mailto:${SITE.email}` },
+        { label: 'ahmershah.dev', href: SITE.authorUrl },
+      ],
+    },
+  ];
+
   return (
-    <footer className="relative mt-24 overflow-hidden bg-black md:mt-40">
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-px"
-        style={{ background: 'var(--gradient-molten)' }}
-      />
+    <footer className="relative mt-24 overflow-hidden border-t border-line bg-black md:mt-40">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
-          background: 'radial-gradient(50% 60% at 85% 0%, rgb(216 178 106 / 0.1), transparent 70%)',
+          background:
+            'radial-gradient(45% 55% at 90% 0%, rgb(216 178 106 / 0.12), transparent 70%), radial-gradient(35% 45% at 0% 100%, rgb(116 98 201 / 0.08), transparent 70%)',
         }}
       />
 
@@ -124,7 +103,7 @@ export function Footer() {
         </Magnetic>
       </Reveal>
 
-      <div className="shell relative grid gap-12 border-t border-line py-16 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+      <div className="shell relative grid gap-12 border-t border-line py-16 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.2fr]">
         <div className="space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
             <Logo className="size-8" />
@@ -141,52 +120,60 @@ export function Footer() {
             </span>
           </div>
         </div>
+        {columns.map((column) => (
+          <div key={column.title} className="space-y-4">
+            <p className="label">{column.title}</p>
+            <ul className="space-y-2.5 text-sm">
+              {column.links.map((link) => (
+                <li key={link.label}>
+                  <FooterLink {...('to' in link ? { to: link.to } : { href: link.href })}>
+                    {link.label}
+                  </FooterLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
         <div className="space-y-4">
-          <p className="label">{t('footer.explore')}</p>
-          <ul className="space-y-2.5">
-            <li>
-              <FooterLink to="/">{t('nav.home')}</FooterLink>
-            </li>
-            <li>
-              <FooterLink to="/modules">{t('nav.modules')}</FooterLink>
-            </li>
-            <li>
-              <FooterLink to="/security">{t('nav.security')}</FooterLink>
-            </li>
-            <li>
-              <FooterLink to="/app">{t('nav.signIn')}</FooterLink>
-            </li>
-          </ul>
-        </div>
-        <div className="space-y-4">
-          <p className="label">{t('footer.project')}</p>
-          <ul className="space-y-2.5">
-            <li>
-              <FooterLink href={SITE.repo}>{t('nav.source')}</FooterLink>
-            </li>
-            <li>
-              <FooterLink href={`${SITE.repo}/wiki`}>{t('footer.wiki')}</FooterLink>
-            </li>
-            <li>
-              <FooterLink href={`${SITE.repo}/releases`}>{t('footer.releases')}</FooterLink>
-            </li>
-            <li>
-              <FooterLink href={`${SITE.repo}/blob/main/SECURITY.md`}>
-                {t('footer.report')}
-              </FooterLink>
-            </li>
-          </ul>
-        </div>
-        <div className="space-y-4">
-          <p className="label">{t('footer.contact')}</p>
-          <ul className="space-y-2.5">
-            <li>
-              <FooterLink href={`mailto:${SITE.email}`}>{SITE.email}</FooterLink>
-            </li>
-            <li>
-              <FooterLink href={SITE.authorUrl}>ahmershah.dev</FooterLink>
-            </li>
-          </ul>
+          <p className="label">{t('footer.status')}</p>
+          <div className="space-y-3 rounded-2xl border border-line bg-white/[0.02] p-5">
+            <p className="text-sm">{t('footer.shipped', { count: SHIPPED })}</p>
+            <div className="flex gap-1" aria-hidden="true">
+              {Array.from({ length: MILESTONES }, (_, index) => (
+                <span
+                  key={index}
+                  className={`h-1 flex-1 rounded-full ${index < SHIPPED ? 'bg-gold' : 'bg-line-strong'}`}
+                />
+              ))}
+            </div>
+            <p className="label">
+              {t('footer.latest')} &middot;{' '}
+              <a
+                href={`${SITE.repo}/releases`}
+                rel="noopener"
+                className="!text-gold hover:underline"
+              >
+                {LATEST}
+              </a>
+            </p>
+          </div>
+          <a
+            href={SITE.repo}
+            rel="noopener"
+            data-cursor-stick
+            className="inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm transition-colors hover:border-gold hover:text-gold"
+          >
+            <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
+              <path
+                d="M8 1.5 9.9 5.4l4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {t('footer.github')}
+          </a>
         </div>
       </div>
 
@@ -195,7 +182,6 @@ export function Footer() {
           &copy; {new Date().getFullYear()} {SITE.author} &middot; {t('footer.rights')}
         </span>
         <LanguageSwitcher />
-        <BackToTop />
       </div>
     </footer>
   );

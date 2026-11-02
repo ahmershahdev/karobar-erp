@@ -6,7 +6,7 @@ const ParticleField = lazy(() => import('./ParticleField'));
 
 // Fixed behind every public page. The soft gradients paint first and stay as the fallback, so
 // nothing flashes while three.js downloads and the page still looks right without WebGL.
-export function Backdrop() {
+export function Backdrop({ side = 'right' }: { side?: 'left' | 'right' }) {
   const reduced = useReducedMotion();
   const [failed, setFailed] = useState(false);
   const onFailure = useCallback(() => setFailed(true), []);
@@ -22,7 +22,7 @@ export function Backdrop() {
       />
       {!failed && (
         <Suspense fallback={null}>
-          <ParticleField animate={!reduced} onFailure={onFailure} />
+          <ParticleField animate={!reduced} onFailure={onFailure} side={side} />
         </Suspense>
       )}
     </div>

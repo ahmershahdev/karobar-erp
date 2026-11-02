@@ -54,21 +54,18 @@ function ProductPicker({
   const [term, setTerm] = useState('');
   const [open, setOpen] = useState(false);
   const query = term.trim();
-  const barcode = /^\d{6,}$/.test(query);
   const results = useQuery({
     queryKey: [membership.tenant_id, 'product-search', query],
     enabled: open && query.length > 0,
     queryFn: () =>
       unwrap(
         api.GET('/api/inventory/products/', {
-          params: {
-            query: { ...(barcode ? { barcode: query } : { q: query }), page_size: 8 } as never,
-          },
+          params: { query: { q: query, page_size: 8 } as never },
         }),
       ),
   });
   const pick = (product: Product) => {
-    const pack = barcode ? product.packs?.find((item) => item.barcode === query) : undefined;
+    const pack = product.packs?.find((item) => item.barcode === query);
     onPick(product, pack?.unit ?? product.unit);
     setTerm('');
     setOpen(false);

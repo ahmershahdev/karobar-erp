@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from django.db.models import Count, DecimalField, Prefetch, QuerySet, Sum
+from django.db.models import Count, DecimalField, Prefetch, Q, QuerySet, Sum
 from django.db.models.functions import Coalesce
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import generics, serializers
@@ -120,7 +120,10 @@ class ProductListView(InventoryView, generics.ListCreateAPIView[Product]):
         if barcode := params.get("barcode", "").strip()[:64]:
             query = query.filter(packs__barcode=barcode)
         if term := params.get("q", "").strip()[:80]:
-            query = query.filter(name__icontains=term) | query.filter(sku__icontains=term)
+            # One box for names, SKUs and scanned barcodes: no guessing which one was typed.
+            query = query.filter(
+                Q(name__icontains=term) | Q(sku__icontains=term) | Q(packs__barcode=term)
+            ).distinct()
         return query
 
     def perform_create(self, serializer: ProductSerializer) -> None:  # type: ignore[override]
