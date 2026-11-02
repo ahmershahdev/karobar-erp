@@ -6,6 +6,7 @@ nobody can add an endpoint without deciding how tenants are kept apart on it.
 
 from collections.abc import Callable, Iterator
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from django.conf import settings
@@ -14,6 +15,16 @@ from django.utils import timezone
 
 from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry
+from apps.inventory import services as inventory
+from apps.inventory.models import (
+    Batch,
+    Category,
+    Product,
+    StockEntry,
+    StockLevel,
+    Unit,
+    Warehouse,
+)
 from apps.tenancy import audit, services
 from apps.tenancy.models import AuditEvent, Membership, Role, Tenant
 from tests.conftest import Member
@@ -167,10 +178,86 @@ def _trial_balance(member: Member) -> tuple[str, int]:
 
 tenant_endpoint("api/accounting/reports/trial-balance/")(_trial_balance)
 
+
+def _shop(member: Member) -> dict[str, Any]:
+    _books(member)
+    pcs, _ = Unit.objects.get_or_create(code="PCS", defaults={"name": "Piece"})
+    main, _ = Warehouse.objects.get_or_create(code="MAIN", defaults={"name": "Main"})
+    product, _ = Product.objects.get_or_create(sku="P1", defaults={"name": "Private", "unit": pcs})
+    return {"unit": pcs, "warehouse": main, "product": product}
+
+
+def _stock_draft(member: Member) -> int:
+    shop = _shop(member)
+    entry = inventory.save_draft(
+        member.user,
+        {
+            "kind": "receipt",
+            "date": timezone.localdate(),
+            "memo": "",
+            "warehouse": shop["warehouse"],
+        },
+        [inventory.LineInput(shop["product"], shop["unit"], Decimal(2), Decimal(5))],
+    )
+    return entry.pk
+
+
+def _stock_level(member: Member) -> int:
+    entry = StockEntry.objects.get(pk=_stock_draft(member))
+    inventory.post_entry(member.user, entry)
+    level: StockLevel = StockLevel.objects.get(product__sku="P1")
+    return level.pk
+
+
+def _row(field: str) -> Callable[[Member], int]:
+    def make(member: Member) -> int:
+        row = _shop(member)[field]
+        return int(row.pk)
+
+    return make
+
+
+def _category(member: Member) -> int:
+    category, _ = Category.objects.get_or_create(name="Private")
+    return int(category.pk)
+
+
+_register("inventory/units", _row("unit"))
+_register("inventory/warehouses", _row("warehouse"))
+_register("inventory/products", _row("product"))
+_register("inventory/categories", _category)
+_register("inventory/stock-entries", _stock_draft)
+tenant_endpoint("api/inventory/products/<int:pk>/moves/")(
+    _detail("/api/inventory/products/{pk}/moves/", _row("product"))
+)
+tenant_endpoint("api/inventory/stock-levels/")(
+    lambda m: ("/api/inventory/stock-levels/", _stock_level(m))
+)
+
+
+def _batch(member: Member) -> int:
+    shop = _shop(member)
+    batch = Batch.objects.create(product=shop["product"], number="B-PRIVATE")
+    return int(batch.pk)
+
+
+def _alerts(member: Member) -> tuple[str, int]:
+    shop = _shop(member)
+    shop["product"].reorder_level = Decimal(10)
+    shop["product"].save()
+    return "/api/inventory/alerts/", int(shop["product"].pk)
+
+
+tenant_endpoint("api/inventory/batches/")(lambda m: ("/api/inventory/batches/", _batch(m)))
+tenant_endpoint("api/inventory/alerts/")(_alerts)
+
 # POST-only actions on one tenant-owned row. An outsider must get 404 and change nothing.
 TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/accounting/entries/<int:pk>/post/": lambda m: (
         f"/api/accounting/entries/{_draft(m)}/post/"
+    ),
+    "api/inventory/stock-entries/<int:pk>/post/": lambda m: (
+        f"/api/inventory/stock-entries/{_stock_draft(m)}/post/"
     ),
     "api/accounting/entries/<int:pk>/reverse/": lambda m: (
         f"/api/accounting/entries/{_posted(m)}/reverse/"
@@ -234,7 +321,10 @@ def test_other_tenants_rows_are_invisible(
     else:
         assert theirs.status_code == 200
         body = theirs.json()
-        rows = body if isinstance(body, list) else body.get("results", body.get("rows"))
+        if isinstance(body, dict) and "low_stock" in body:
+            rows = [{"id": row["product"]} for row in body["low_stock"]]
+        else:
+            rows = body if isinstance(body, list) else body.get("results", body.get("rows"))
         assert row_id not in [row["id"] for row in rows]
 
 
@@ -245,7 +335,9 @@ def test_other_tenants_rows_cannot_be_acted_on(
 ) -> None:
     in_tenant(owner.tenant)
     url = TENANT_ACTIONS[route](owner)
-    before = list(JournalEntry.objects.values_list("id", "status", "number"))
+    before = list(JournalEntry.all_tenants.values_list("id", "status", "number"))
+    stock_before = list(StockEntry.all_tenants.values_list("id", "status"))
     response = outsider.client().post(url, {"date": str(timezone.localdate())}, format="json")
     assert response.status_code == 404
-    assert list(JournalEntry.objects.values_list("id", "status", "number")) == before
+    assert list(JournalEntry.all_tenants.values_list("id", "status", "number")) == before
+    assert list(StockEntry.all_tenants.values_list("id", "status")) == stock_before

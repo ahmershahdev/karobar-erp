@@ -37,11 +37,11 @@ in CI, and seed data.
 
 ## M3. Inventory (target 2027-01-10)
 
-- [ ] Products, variants, units and conversions, categories, barcodes
-- [ ] Warehouses and stock moves (receipt, issue, transfer, adjustment)
-- [ ] Stock levels updated under row locks; a concurrency test with parallel sales of the last item
-- [ ] Valuation by FIFO and moving average, chosen per tenant, with cost posted to the books
-- [ ] Batches with expiry dates; low-stock and expiry alerts (Celery)
+- [x] Products, variants, units and conversions, categories, barcodes
+- [x] Warehouses and stock moves (receipt, issue, transfer, adjustment)
+- [x] Stock levels updated under row locks; a concurrency test with parallel sales of the last item
+- [x] Valuation by FIFO and moving average, chosen per tenant, with cost posted to the books
+- [x] Batches with expiry dates; low-stock and expiry alerts (Celery)
 
 ## M4. Purchasing and sales (target 2027-01-31)
 

@@ -617,6 +617,655 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/inventory/alerts/:
+    get:
+      operationId: inventory_alerts_retrieve
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alerts'
+          description: ''
+  /api/inventory/batches/:
+    get:
+      operationId: inventory_batches_list
+      parameters:
+      - in: query
+        name: product
+        schema:
+          type: integer
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Batch'
+          description: ''
+  /api/inventory/categories/:
+    get:
+      operationId: inventory_categories_list
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+    post:
+      operationId: inventory_categories_create
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/inventory/categories/{id}/:
+    get:
+      operationId: inventory_categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: inventory_categories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: inventory_categories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/inventory/products/:
+    get:
+      operationId: inventory_products_list
+      parameters:
+      - in: query
+        name: barcode
+        schema:
+          type: string
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProductList'
+          description: ''
+    post:
+      operationId: inventory_products_create
+      parameters:
+      - in: query
+        name: barcode
+        schema:
+          type: string
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/inventory/products/{id}/:
+    get:
+      operationId: inventory_products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: inventory_products_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: inventory_products_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/inventory/products/{id}/moves/:
+    get:
+      operationId: inventory_products_moves_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStockMoveList'
+          description: ''
+  /api/inventory/stock-entries/:
+    get:
+      operationId: inventory_stock_entries_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: kind
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStockEntryList'
+          description: ''
+    post:
+      operationId: inventory_stock_entries_create
+      parameters:
+      - in: query
+        name: kind
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockEntry'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockEntry'
+          description: ''
+  /api/inventory/stock-entries/{id}/:
+    get:
+      operationId: inventory_stock_entries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockEntry'
+          description: ''
+    put:
+      operationId: inventory_stock_entries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockEntry'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockEntry'
+          description: ''
+    delete:
+      operationId: inventory_stock_entries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/inventory/stock-entries/{id}/post/:
+    post:
+      operationId: inventory_stock_entries_post_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockEntry'
+          description: ''
+  /api/inventory/stock-levels/:
+    get:
+      operationId: inventory_stock_levels_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: product
+        schema:
+          type: integer
+      - in: query
+        name: warehouse
+        schema:
+          type: integer
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStockLevelList'
+          description: ''
+  /api/inventory/units/:
+    get:
+      operationId: inventory_units_list
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unit'
+          description: ''
+    post:
+      operationId: inventory_units_create
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Unit'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+  /api/inventory/units/{id}/:
+    get:
+      operationId: inventory_units_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+    patch:
+      operationId: inventory_units_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUnit'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+    delete:
+      operationId: inventory_units_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/inventory/warehouses/:
+    get:
+      operationId: inventory_warehouses_list
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Warehouse'
+          description: ''
+    post:
+      operationId: inventory_warehouses_create
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Warehouse'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+          description: ''
+  /api/inventory/warehouses/{id}/:
+    get:
+      operationId: inventory_warehouses_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+          description: ''
+    patch:
+      operationId: inventory_warehouses_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWarehouse'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+          description: ''
+    delete:
+      operationId: inventory_warehouses_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - inventory
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/invitations/:
     get:
       operationId: invitations_list
@@ -1011,6 +1660,22 @@ components:
         * `update` - Update
         * `delete` - Delete
         * `post` - Post
+    Alerts:
+      type: object
+      properties:
+        low_stock:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        expiring:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - expiring
+      - low_stock
     AuditEvent:
       type: object
       properties:
@@ -1046,6 +1711,40 @@ components:
       - model
       - object_id
       - user
+    Batch:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+        expiry_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+      required:
+      - expiry_date
+      - id
+      - number
+      - product
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+      required:
+      - id
+      - name
     Email:
       type: object
       properties:
@@ -1239,6 +1938,18 @@ components:
       - account_code
       - account_name
       - id
+    KindEnum:
+      enum:
+      - receipt
+      - issue
+      - transfer
+      - adjustment
+      type: string
+      description: |-
+        * `receipt` - Receipt
+        * `issue` - Issue
+        * `transfer` - Transfer
+        * `adjustment` - Adjustment
     Ledger:
       type: object
       properties:
@@ -1405,6 +2116,26 @@ components:
       - role
       - tenant_id
       - tenant_name
+    Pack:
+      type: object
+      properties:
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        factor:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        barcode:
+          type: string
+          nullable: true
+          maxLength: 64
+      required:
+      - factor
+      - unit
+      - unit_code
     PaginatedAuditEventList:
       type: object
       required:
@@ -1481,6 +2212,82 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Member'
+    PaginatedProductList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    PaginatedStockEntryList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockEntry'
+    PaginatedStockLevelList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockLevel'
+    PaginatedStockMoveList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockMove'
     PasswordResetConfirm:
       type: object
       properties:
@@ -1522,6 +2329,15 @@ components:
           type: string
           readOnly: true
           nullable: true
+    PatchedCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
     PatchedMember:
       type: object
       properties:
@@ -1554,6 +2370,47 @@ components:
       properties:
         closed:
           type: boolean
+    PatchedProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sku:
+          type: string
+          maxLength: 40
+        name:
+          type: string
+          maxLength: 150
+        category:
+          type: integer
+          nullable: true
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        variant_of:
+          type: integer
+          nullable: true
+        attributes: {}
+        track_batches:
+          type: boolean
+        reorder_level:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        is_active:
+          type: boolean
+        packs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pack'
+        on_hand:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
     PatchedRole:
       type: object
       properties:
@@ -1564,6 +2421,80 @@ components:
           type: string
           maxLength: 80
         permissions: {}
+    PatchedUnit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 50
+    PatchedWarehouse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sku:
+          type: string
+          maxLength: 40
+        name:
+          type: string
+          maxLength: 150
+        category:
+          type: integer
+          nullable: true
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        variant_of:
+          type: integer
+          nullable: true
+        attributes: {}
+        track_batches:
+          type: boolean
+        reorder_level:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        is_active:
+          type: boolean
+        packs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pack'
+        on_hand:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
+      required:
+      - id
+      - name
+      - on_hand
+      - sku
+      - unit
+      - unit_code
     Reverse:
       type: object
       properties:
@@ -1613,6 +2544,198 @@ components:
       description: |-
         * `draft` - Draft
         * `posted` - Posted
+    StockEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        warehouse:
+          type: integer
+        to_warehouse:
+          type: integer
+          nullable: true
+        contra_account:
+          type: integer
+          nullable: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockEntryLine'
+        journal_number:
+          type: string
+          readOnly: true
+          nullable: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_by
+      - date
+      - id
+      - journal_number
+      - kind
+      - lines
+      - number
+      - posted_at
+      - status
+      - warehouse
+    StockEntryLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+        sku:
+          type: string
+          readOnly: true
+        product_name:
+          type: string
+          readOnly: true
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        unit_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          nullable: true
+        batch_number:
+          type: string
+          maxLength: 40
+        expiry_date:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - id
+      - product
+      - product_name
+      - quantity
+      - sku
+      - unit
+      - unit_code
+    StockLevel:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+          readOnly: true
+        sku:
+          type: string
+          readOnly: true
+        product_name:
+          type: string
+          readOnly: true
+        unit_code:
+          type: string
+          readOnly: true
+        warehouse:
+          type: integer
+          readOnly: true
+        warehouse_code:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
+        value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - id
+      - product
+      - product_name
+      - quantity
+      - sku
+      - unit_code
+      - value
+      - warehouse
+      - warehouse_code
+    StockMove:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        product:
+          type: integer
+          readOnly: true
+        warehouse:
+          type: integer
+          readOnly: true
+        warehouse_code:
+          type: string
+          readOnly: true
+        batch_number:
+          type: string
+          readOnly: true
+          nullable: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
+        value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - batch_number
+      - date
+      - id
+      - number
+      - product
+      - quantity
+      - value
+      - warehouse
+      - warehouse_code
     TenantCreate:
       type: object
       properties:
@@ -1632,6 +2755,10 @@ components:
           maximum: 12
           minimum: 1
           default: 7
+        valuation_method:
+          allOf:
+          - $ref: '#/components/schemas/ValuationMethodEnum'
+          default: average
       required:
       - name
     Token:
@@ -1710,6 +2837,48 @@ components:
         * `equity` - Equity
         * `income` - Income
         * `expense` - Expense
+    Unit:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 10
+        name:
+          type: string
+          maxLength: 50
+      required:
+      - code
+      - id
+      - name
+    ValuationMethodEnum:
+      enum:
+      - average
+      - fifo
+      type: string
+      description: |-
+        * `average` - average
+        * `fifo` - fifo
+    Warehouse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - code
+      - id
+      - name
   securitySchemes:
     cookieAuth:
       type: apiKey

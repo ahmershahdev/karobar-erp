@@ -39,6 +39,11 @@ services:
     <<: *backend
     command: celery -A config worker --loglevel=info --concurrency=2
 
+  # Exactly one beat process, or scheduled emails go out twice.
+  beat:
+    <<: *backend
+    command: celery -A config beat --loglevel=info --schedule /tmp/celerybeat-schedule
+
   mysql:
     image: mysql:8.4.13
     env_file: .env

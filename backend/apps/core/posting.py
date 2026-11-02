@@ -71,6 +71,24 @@ def payment(amount: Decimal, out_of: str = "cash") -> list[Line]:
     return _lines(("payables", amount, ZERO), (out_of, ZERO, amount))
 
 
+def stock_in(value: Decimal, contra: str) -> list[Line]:
+    """Stock arrives without a supplier bill (opening stock, a count that found more).
+
+    Dr inventory; Cr `contra`, for example opening equity or an adjustment account.
+    """
+    _non_negative(value=value)
+    return _lines(("inventory", value, ZERO), (contra, ZERO, value))
+
+
+def stock_out(cost: Decimal, contra: str) -> list[Line]:
+    """Stock leaves without a sale (damage, own use, a count that found less).
+
+    Dr `contra`, usually an inventory adjustments expense; Cr inventory at cost.
+    """
+    _non_negative(cost=cost)
+    return _lines((contra, cost, ZERO), ("inventory", ZERO, cost))
+
+
 def reversal(lines: Sequence[Line]) -> list[Line]:
     """The entry that cancels `lines`: every debit becomes a credit and the other way round.
 

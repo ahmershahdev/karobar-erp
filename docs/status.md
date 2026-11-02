@@ -1,28 +1,29 @@
 # Project status
 
-Last updated: 2026-11-02. Update at the end of every work session.
+Last updated: 2026-11-03. Update at the end of every work session.
 
 ## Where we are
 
-- M1 is done and released as `v0.1.0`. The Ledger Noir redesign is merged.
-- M2 (accounting core) is complete on `feat/m2-accounting-core`:
-  - `apps/core`: posting rules (sale, purchase, receipt, payment, reversal) in account roles,
-    fiscal period maths and balance sides, all at 100% branch coverage.
-  - `apps/accounting`: standard chart of accounts installed for every new business (signal),
-    fiscal years with monthly periods and closing, gapless JV numbering from a locked series,
-    drafts, posting, reversals, immutability in the model, trial balance and general ledger
-    with CSV export safe from formula injection.
-  - Screens: journal with a line editor and live balance, chart of accounts, trial balance,
-    general ledger, fiscal periods. English, Urdu and Arabic.
-  - 128 backend tests, including six threads posting at once with no duplicate or missing
-    numbers; every new route is in the tenant isolation tests.
-- Existing businesses got their books with `python manage.py set_up_books` (safe to rerun).
+- Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core). The Ledger Noir design,
+  the floating navbar, the new footer and the ledger-opening intro are on `main`.
+- M3 (inventory) is complete on `feat/m3-inventory`:
+  - `apps/core`: moving-average and FIFO valuation, unit conversion, stock posting rules, at
+    100% branch coverage.
+  - `apps/inventory`: units, categories, products with variants, packs and barcodes,
+    warehouses, batches with expiry, stock levels under row locks, FIFO cost layers, stock
+    entries (receipt, issue, transfer, count) posted with gapless GRN/GIN/TRF/ADJ numbers and
+    their cost posted to the books, low-stock and expiry alerts with a daily Celery email.
+  - Screens: products, stock entries with a line editor, stock on hand with value, alerts, setup.
+  - 179 backend tests, including two cashiers selling the last unit at once and three
+    first-ever receipts racing to create a stock level.
+- `npm run dev` now also runs Celery beat for scheduled jobs.
 
 ## Next session
 
-1. Merge the M2 pull request after CI; tag `v0.2.0`.
-2. Start M3 (inventory): products, units, warehouses, stock moves under row locks, FIFO and
-   moving-average valuation in `apps/core`, posting cost to the books through the posting rules.
+1. Merge the M3 pull request after CI; tag `v0.3.0`.
+2. Start M4 (purchasing and sales): suppliers, purchase orders, goods received, bills and
+   payments; customers, quotations, orders, invoices, receipts, returns and credit notes; each
+   posting its stock moves and journal entry in one transaction through the posting rules.
 
 ## Open questions
 

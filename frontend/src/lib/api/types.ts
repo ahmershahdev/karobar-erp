@@ -16,6 +16,12 @@ export type JournalLine = Schemas['JournalLine'];
 export type FiscalYear = Schemas['FiscalYear'];
 export type TrialBalance = Schemas['TrialBalance'];
 export type Ledger = Schemas['Ledger'];
+export type Product = Schemas['Product'];
+export type Unit = Schemas['Unit'];
+export type Warehouse = Schemas['Warehouse'];
+export type Category = Schemas['Category'];
+export type StockEntry = Schemas['StockEntry'];
+export type StockLevel = Schemas['StockLevel'];
 
 export const MODULES: Record<string, readonly string[]> = {
   members: ['view', 'create', 'update', 'delete'],

@@ -18,6 +18,13 @@ import {
   TrialBalancePage,
 } from '../features/accounting/pages';
 import { useMe } from '../features/auth/session';
+import {
+  AlertsPage,
+  InventorySetupPage,
+  ProductsPage,
+  StockEntriesPage,
+  StockOnHandPage,
+} from '../features/inventory/pages';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
   AuditPage,
@@ -92,6 +99,11 @@ export default function AppRoutes() {
         <Route path="accounting/trial-balance" element={<TrialBalancePage />} />
         <Route path="accounting/ledger" element={<LedgerPage />} />
         <Route path="accounting/periods" element={<PeriodsPage />} />
+        <Route path="inventory/products" element={<ProductsPage />} />
+        <Route path="inventory/entries" element={<StockEntriesPage />} />
+        <Route path="inventory/on-hand" element={<StockOnHandPage />} />
+        <Route path="inventory/alerts" element={<AlertsPage />} />
+        <Route path="inventory/setup" element={<InventorySetupPage />} />
       </Route>
       <Route path="*" element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>} />
     </Routes>

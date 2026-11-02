@@ -34,6 +34,7 @@ CLAUDE.local.md
 .claude/
 
 # Karobar local data
+.celerybeat-schedule*
 media/
 staticfiles/
 *.sql.gz

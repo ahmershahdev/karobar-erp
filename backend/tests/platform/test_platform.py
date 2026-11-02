@@ -1,11 +1,11 @@
 from typing import Any
 
 import pytest
-from django.db import transaction
+from django.db import OperationalError, transaction
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
-from apps.platform.locking import lock_rows
+from apps.platform.locking import lock_rows, retry_on_deadlock
 
 pytestmark = pytest.mark.django_db
 
@@ -69,3 +69,29 @@ def test_lock_rows_returns_rows_in_primary_key_order(user: User) -> None:
     second = User.objects.create_user("second@example.test", "another long password")
     with transaction.atomic():
         assert lock_rows(User.objects.order_by("-pk")) == [user, second]
+
+
+def _flaky(failures: list[int]) -> Any:
+    calls = {"n": 0}
+
+    def call() -> str:
+        calls["n"] += 1
+        if failures:
+            raise OperationalError(failures.pop(0), "lock trouble")
+        return f"done after {calls['n']}"
+
+    return call
+
+
+@pytest.mark.django_db(transaction=True)
+def test_retry_on_deadlock_starts_over() -> None:
+    assert retry_on_deadlock(_flaky([1213, 1205]))() == "done after 3"
+    with pytest.raises(OperationalError):
+        retry_on_deadlock(_flaky([1213, 1213, 1213]))()
+    with pytest.raises(OperationalError):
+        retry_on_deadlock(_flaky([2006]))()
+
+
+def test_retry_on_deadlock_leaves_outer_transactions_alone() -> None:
+    with pytest.raises(OperationalError), transaction.atomic():
+        retry_on_deadlock(_flaky([1213]))()

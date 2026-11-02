@@ -3,6 +3,7 @@ from typing import Any, ClassVar
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils import timezone
 
@@ -17,6 +18,8 @@ class Tenant(models.Model):
     locale = models.CharField(max_length=5, default="en")
     # July for Pakistan's July to June fiscal year; 1 for a calendar year.
     fiscal_year_start_month = models.PositiveSmallIntegerField(default=7)
+    # "average" or "fifo". Fixed once stock has moved: changing it would revalue history.
+    valuation_method = models.CharField(max_length=10, default="average")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -110,7 +113,8 @@ class AuditEvent(TenantOwnedModel):
     action = models.CharField(max_length=10, choices=Action.choices)
     model = models.CharField(max_length=100)
     object_id = models.CharField(max_length=64)
-    changes = models.JSONField(default=dict)
+    # DjangoJSONEncoder keeps Decimal amounts, dates and UUIDs readable in the audit trail.
+    changes = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
     request_id = models.CharField(max_length=64, blank=True)
     at = models.DateTimeField(auto_now_add=True, db_index=True)
 

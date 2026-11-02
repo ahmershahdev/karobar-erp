@@ -272,7 +272,15 @@
     "who": "Who",
     "what": "What",
     "changes": "Changes",
-    "fiscalStart": "Fiscal year starts in"
+    "fiscalStart": "Fiscal year starts in",
+    "valuation": "Stock valuation",
+    "average": "Moving average",
+    "fifo": "FIFO (first in, first out)",
+    "valuationHint": "How stock is costed when it leaves. It can't be changed once stock has moved.",
+    "groups": {
+      "accounting": "Accounting",
+      "inventory": "Inventory"
+    }
   },
   "modulesShort": {
     "members": "Members",
@@ -357,5 +365,63 @@
     "words": ["Stock", "Sales", "Books", "Payroll"],
     "tag": "In balance",
     "loading": "Opening the ledger"
+  },
+  "inv": {
+    "products": "Products",
+    "productsBody": "What you buy and sell, the units it comes in and its barcodes.",
+    "newProduct": "New product",
+    "needUnits": "Add a unit such as PCS under Inventory setup first.",
+    "sku": "SKU",
+    "baseUnit": "Base unit",
+    "reorderLevel": "Reorder level",
+    "packUnit": "Pack unit",
+    "packSize": "Pack size",
+    "barcode": "Barcode",
+    "trackBatches": "Track batches and expiry",
+    "search": "Search or scan",
+    "packs": "Units",
+    "onHand": "On hand",
+    "batched": "Batches",
+    "entries": "Stock entries",
+    "entriesBody": "Receipts, issues, transfers and counts. Posting moves stock and books its cost.",
+    "newEntry": "New stock entry",
+    "from": "From warehouse",
+    "to": "To warehouse",
+    "warehouse": "Warehouse",
+    "product": "Product",
+    "unit": "Unit",
+    "quantity": "Quantity",
+    "counted": "Counted",
+    "unitCost": "Unit cost",
+    "batch": "Batch",
+    "expiry": "Expiry",
+    "lines": "lines",
+    "postedAs": "Cost posted as {{number}}",
+    "kinds": {
+      "receipt": "Receipt",
+      "issue": "Issue",
+      "transfer": "Transfer",
+      "adjustment": "Count"
+    },
+    "kindHelp": {
+      "receipt": "Stock coming in without a supplier bill, such as opening stock. Enter what each unit cost.",
+      "issue": "Stock leaving without a sale: damage, samples, own use. It leaves at cost.",
+      "transfer": "Move stock between warehouses. Cost moves with it; the books don't change.",
+      "adjustment": "Enter what you counted. The difference is booked as found or lost stock."
+    },
+    "onHandTitle": "Stock on hand",
+    "onHandBody": "What every warehouse holds and what it is worth in the books.",
+    "levels": "Levels",
+    "allWarehouses": "All warehouses",
+    "value": "Value",
+    "totalValue": "Total stock value",
+    "alerts": "Stock alerts",
+    "alertsBody": "Products below their reorder level and batches expiring within 30 days. Owners get this by email each morning.",
+    "lowStock": "Below reorder level",
+    "expiring": "Expiring soon",
+    "setup": "Inventory setup",
+    "setupBody": "Units of measure and the warehouses you keep stock in.",
+    "units": "Units",
+    "warehouses": "Warehouses"
   }
 }

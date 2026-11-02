@@ -33,6 +33,7 @@ Celery, never inside a web request.
 | `reports` | trial balance, P&L, balance sheet, tax and stock reports |
 | `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
 | `accounting` (built) | accounts, fiscal years and periods, number series, journal entries and lines, trial balance and ledger reports |
+| `inventory` (built) | units, categories, products and packs, warehouses, batches, stock levels, FIFO layers, stock entries and moves, alerts |
 | `platform` | health check, request ids, security headers, error handler, pagination, row locking |
 | `accounts` | the user model (email sign-in, public UUID) and the session endpoints |
 
@@ -112,6 +113,10 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | Numbers assigned at post, from a locked series row | Drafts that are deleted never consume a number, and a rolled-back post returns its number, so the series has no gaps |
 | Immutability enforced in the model too | `JournalEntry.save()` and `JournalLine.save()` refuse to change posted rows, so even admin scripts can't edit the books |
 | Standard chart first, July fiscal year by default | A general small-business chart suits Pakistan and the Gulf; July to June is Pakistan's fiscal year, and each business can pick its month |
+| One lock per product and warehouse | Batch levels and FIFO layers are only touched while their `StockLevel` row is locked, so one row lock guards all three |
+| Costing method fixed per business | Moving average or FIFO is chosen when the business is created; switching later would revalue every past issue |
+| Transfers carry cost, not value | A transfer posts no journal entry; the destination receives exactly the cost (and, under FIFO, the layers) that left the source |
+| Counts post the difference | An adjustment line holds the counted quantity; posting books only what was found or lost |
 | Books set up through a `tenant_created` signal | Tenancy doesn't import accounting; later modules hook in the same way |
 
 ## Open questions

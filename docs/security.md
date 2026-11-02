@@ -106,9 +106,16 @@ response. `/app` also gets `X-Robots-Tag: noindex`.
   locks in primary-key order. One global lock order means two transactions can't deadlock on
   the same rows.
 - `innodb_lock_wait_timeout` is 10 s, so a stuck lock fails a request instead of piling up.
+- Never `INSERT IGNORE` (or `bulk_create(ignore_conflicts=True)`) a row that may already exist and
+  then lock it: the ignored insert takes a shared lock, and two transactions holding shared locks
+  while waiting for exclusive ones deadlock. Insert only the rows that are missing.
+- Deadlocks that remain (two first-ever receipts creating the same stock level) are retried by
+  `retry_on_deadlock`, which reruns the whole outermost transaction, as MySQL recommends.
 - Document numbers come from a locked `NumberSeries` row in the same transaction as the posting,
   so a rolled-back post leaves no gap and two documents can't share a number. A test posts six
   entries from six threads at once and checks the numbers are 1 to 6.
+- Stock: two threads issue the last unit at the same moment; exactly one succeeds and stock never
+  goes below zero (the database also has a `quantity >= 0` check).
 - Posting locks the entry (so it can't be posted twice) and the fiscal period row (so closing a
   period and posting into it can't interleave).
 - Uniqueness is enforced by database constraints, not by "check then insert".

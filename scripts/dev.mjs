@@ -14,7 +14,7 @@ const windows = process.platform === 'win32';
 const venvBin = join(backend, '.venv', windows ? 'Scripts' : 'bin');
 const python = join(venvBin, windows ? 'python.exe' : 'python');
 
-const COLORS = { db: 90, api: 36, worker: 35, web: 33 };
+const COLORS = { db: 90, api: 36, worker: 35, beat: 34, web: 33 };
 
 function step(label, command, args, options = {}) {
   console.log(`\x1b[1m> ${label}\x1b[0m`);
@@ -119,6 +119,8 @@ run(
   ['-m', 'celery', '-A', 'config', 'worker', '--loglevel=info', ...(windows ? ['--pool=solo'] : [])],
   backend,
 );
+// Beat sends scheduled jobs (the morning stock-alert email) to the worker.
+run('beat', python, ['-m', 'celery', '-A', 'config', 'beat', '--loglevel=info', '--schedule', join(backend, '.celerybeat-schedule')], backend);
 run('web', 'npm', ['run', 'dev'], frontend);
 
 console.log('\n  Karobar ERP is starting: http://localhost:5173  (API on :8000)');

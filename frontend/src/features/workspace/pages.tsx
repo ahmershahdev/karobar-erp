@@ -19,6 +19,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState('PKR');
   const [startMonth, setStartMonth] = useState(7);
+  const [valuation, setValuation] = useState<'average' | 'fifo'>('average');
   const create = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
@@ -29,6 +30,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
             base_currency: currency,
             locale: 'en',
             fiscal_year_start_month: startMonth,
+            valuation_method: valuation,
           },
         }),
       );
@@ -80,6 +82,15 @@ export function NewBusinessPage({ me }: { me: Me }) {
             </option>
           ))}
         </Select>
+        <Select
+          label={t('workspace.valuation')}
+          value={valuation}
+          onChange={(e) => setValuation(e.target.value as 'average' | 'fifo')}
+        >
+          <option value="average">{t('workspace.average')}</option>
+          <option value="fifo">{t('workspace.fifo')}</option>
+        </Select>
+        <p className="text-xs text-muted">{t('workspace.valuationHint')}</p>
         {create.isError && (
           <Alert tone="error">{errorText(create.error, t('signIn.unavailable'))}</Alert>
         )}

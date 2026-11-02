@@ -38,6 +38,12 @@ function VerifyBanner() {
   );
 }
 
+function groupOf(path: string): 'workspace' | 'accounting' | 'inventory' {
+  if (path.includes('/accounting/')) return 'accounting';
+  if (path.includes('/inventory/')) return 'inventory';
+  return 'workspace';
+}
+
 export function WorkspaceLayout({ me }: { me: Me }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -83,6 +89,17 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       label: item.label,
       show: can(membership, 'accounting', 'view'),
     })),
+    ...[
+      { path: 'products', label: t('inv.products') },
+      { path: 'entries', label: t('inv.entries') },
+      { path: 'on-hand', label: t('inv.onHandTitle') },
+      { path: 'alerts', label: t('inv.alerts') },
+      { path: 'setup', label: t('inv.setup') },
+    ].map((item) => ({
+      to: `${base}/inventory/${item.path}`,
+      label: item.label,
+      show: can(membership, 'inventory', 'view'),
+    })),
   ];
 
   return (
@@ -122,25 +139,38 @@ export function WorkspaceLayout({ me }: { me: Me }) {
               <option value="new">{t('workspace.newBusiness')}</option>
             </select>
           </label>
-          <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-col md:px-0">
+          <nav
+            className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:mx-0 md:min-h-0 md:flex-1 md:flex-col md:overflow-y-auto md:px-0"
+            data-lenis-prevent
+          >
             {links
               .filter((link) => link.show)
-              .map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.end ?? false}
-                  className={({ isActive }) =>
-                    `rounded-xl px-3 py-2 text-sm whitespace-nowrap transition-colors ${
-                      isActive
-                        ? 'bg-cream text-black'
-                        : 'text-muted hover:bg-white/5 hover:text-ink'
-                    }`
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              ))}
+              .map((link, index, shown) => {
+                const group = groupOf(link.to);
+                const first = index === 0 || groupOf(shown[index - 1]?.to ?? '') !== group;
+                return (
+                  <div key={link.to} className="contents">
+                    {first && group !== 'workspace' && (
+                      <span className="label mt-4 mb-1 hidden px-3 md:block">
+                        {t(`workspace.groups.${group}`)}
+                      </span>
+                    )}
+                    <NavLink
+                      to={link.to}
+                      end={link.end ?? false}
+                      className={({ isActive }) =>
+                        `rounded-xl px-3 py-2 text-sm whitespace-nowrap transition-colors ${
+                          isActive
+                            ? 'bg-cream text-black'
+                            : 'text-muted hover:bg-white/5 hover:text-ink'
+                        }`
+                      }
+                    >
+                      {link.label}
+                    </NavLink>
+                  </div>
+                );
+              })}
           </nav>
           <div className="mt-auto hidden space-y-4 md:block">
             <LanguageSwitcher />

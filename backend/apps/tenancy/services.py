@@ -84,7 +84,12 @@ def hash_token(token: str) -> str:
 
 @transaction.atomic
 def create_tenant(
-    owner: User, name: str, base_currency: str, locale: str, fiscal_year_start_month: int = 7
+    owner: User,
+    name: str,
+    base_currency: str,
+    locale: str,
+    fiscal_year_start_month: int = 7,
+    valuation_method: str = "average",
 ) -> Membership:
     if owner.email_verified_at is None:
         raise UnverifiedCreatorError
@@ -93,6 +98,7 @@ def create_tenant(
         base_currency=base_currency,
         locale=locale,
         fiscal_year_start_month=fiscal_year_start_month,
+        valuation_method=valuation_method,
     )
     with tenant_context(tenant):
         Role.objects.create(name="Manager", permissions=FULL_ACCESS)

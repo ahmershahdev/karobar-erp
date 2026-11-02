@@ -356,6 +356,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory/alerts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_alerts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/batches/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_batches_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/categories/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_categories_list"];
+        put?: never;
+        post: operations["inventory_categories_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/categories/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_categories_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["inventory_categories_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["inventory_categories_partial_update"];
+        trace?: never;
+    };
+    "/api/inventory/products/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_products_list"];
+        put?: never;
+        post: operations["inventory_products_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/products/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_products_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["inventory_products_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["inventory_products_partial_update"];
+        trace?: never;
+    };
+    "/api/inventory/products/{id}/moves/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_products_moves_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/stock-entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_stock_entries_list"];
+        put?: never;
+        post: operations["inventory_stock_entries_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/stock-entries/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_stock_entries_retrieve"];
+        put: operations["inventory_stock_entries_update"];
+        post?: never;
+        delete: operations["inventory_stock_entries_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/stock-entries/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["inventory_stock_entries_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/stock-levels/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_stock_levels_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/units/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_units_list"];
+        put?: never;
+        post: operations["inventory_units_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/units/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_units_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["inventory_units_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["inventory_units_partial_update"];
+        trace?: never;
+    };
+    "/api/inventory/warehouses/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_warehouses_list"];
+        put?: never;
+        post: operations["inventory_warehouses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/warehouses/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inventory_warehouses_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["inventory_warehouses_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["inventory_warehouses_partial_update"];
+        trace?: never;
+    };
     "/api/invitations/": {
         parameters: {
             query?: never;
@@ -509,6 +749,14 @@ export interface components {
          * @enum {string}
          */
         ActionEnum: "create" | "update" | "delete" | "post";
+        Alerts: {
+            low_stock: {
+                [key: string]: unknown;
+            }[];
+            expiring: {
+                [key: string]: unknown;
+            }[];
+        };
         AuditEvent: {
             readonly id: number;
             readonly action: components["schemas"]["ActionEnum"];
@@ -519,6 +767,17 @@ export interface components {
             readonly user: string | null;
             /** Format: date-time */
             readonly at: string;
+        };
+        Batch: {
+            readonly id: number;
+            readonly product: number;
+            readonly number: string;
+            /** Format: date */
+            readonly expiry_date: string | null;
+        };
+        Category: {
+            readonly id: number;
+            name: string;
         };
         Email: {
             /** Format: email */
@@ -586,6 +845,14 @@ export interface components {
             credit?: string;
             description?: string;
         };
+        /**
+         * @description * `receipt` - Receipt
+         *     * `issue` - Issue
+         *     * `transfer` - Transfer
+         *     * `adjustment` - Adjustment
+         * @enum {string}
+         */
+        KindEnum: "receipt" | "issue" | "transfer" | "adjustment";
         Ledger: {
             account: components["schemas"]["Account"];
             /** Format: decimal */
@@ -649,6 +916,13 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        Pack: {
+            unit: number;
+            readonly unit_code: string;
+            /** Format: decimal */
+            factor: string;
+            barcode?: string | null;
+        };
         PaginatedAuditEventList: {
             /**
              * Format: uri
@@ -701,6 +975,58 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Member"][];
         };
+        PaginatedProductList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Product"][];
+        };
+        PaginatedStockEntryList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["StockEntry"][];
+        };
+        PaginatedStockLevelList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["StockLevel"][];
+        };
+        PaginatedStockMoveList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["StockMove"][];
+        };
         PasswordResetConfirm: {
             uid: string;
             token: string;
@@ -716,6 +1042,10 @@ export interface components {
             is_active?: boolean;
             readonly role?: string | null;
         };
+        PatchedCategory: {
+            readonly id?: number;
+            name?: string;
+        };
         PatchedMember: {
             readonly id?: number;
             /** Format: email */
@@ -730,10 +1060,55 @@ export interface components {
         PatchedPeriodState: {
             closed?: boolean;
         };
+        PatchedProduct: {
+            readonly id?: number;
+            sku?: string;
+            name?: string;
+            category?: number | null;
+            unit?: number;
+            readonly unit_code?: string;
+            variant_of?: number | null;
+            attributes?: unknown;
+            track_batches?: boolean;
+            /** Format: decimal */
+            reorder_level?: string;
+            is_active?: boolean;
+            packs?: components["schemas"]["Pack"][];
+            /** Format: decimal */
+            readonly on_hand?: string;
+        };
         PatchedRole: {
             readonly id?: number;
             name?: string;
             permissions?: unknown;
+        };
+        PatchedUnit: {
+            readonly id?: number;
+            code?: string;
+            name?: string;
+        };
+        PatchedWarehouse: {
+            readonly id?: number;
+            code?: string;
+            name?: string;
+            is_active?: boolean;
+        };
+        Product: {
+            readonly id: number;
+            sku: string;
+            name: string;
+            category?: number | null;
+            unit: number;
+            readonly unit_code: string;
+            variant_of?: number | null;
+            attributes?: unknown;
+            track_batches?: boolean;
+            /** Format: decimal */
+            reorder_level?: string;
+            is_active?: boolean;
+            packs?: components["schemas"]["Pack"][];
+            /** Format: decimal */
+            readonly on_hand: string;
         };
         Reverse: {
             /** Format: date */
@@ -757,6 +1132,66 @@ export interface components {
          * @enum {string}
          */
         StatusEnum: "draft" | "posted";
+        StockEntry: {
+            readonly id: number;
+            kind: components["schemas"]["KindEnum"];
+            readonly number: string | null;
+            /** Format: date */
+            date: string;
+            memo?: string;
+            readonly status: components["schemas"]["StatusEnum"];
+            warehouse: number;
+            to_warehouse?: number | null;
+            contra_account?: number | null;
+            lines: components["schemas"]["StockEntryLine"][];
+            readonly journal_number: string | null;
+            /** Format: email */
+            readonly created_by: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
+        StockEntryLine: {
+            readonly id: number;
+            product: number;
+            readonly sku: string;
+            readonly product_name: string;
+            unit: number;
+            readonly unit_code: string;
+            /** Format: decimal */
+            quantity: string;
+            /** Format: decimal */
+            unit_cost?: string | null;
+            batch_number?: string;
+            /** Format: date */
+            expiry_date?: string | null;
+        };
+        StockLevel: {
+            readonly id: number;
+            readonly product: number;
+            readonly sku: string;
+            readonly product_name: string;
+            readonly unit_code: string;
+            readonly warehouse: number;
+            readonly warehouse_code: string;
+            /** Format: decimal */
+            readonly quantity: string;
+            /** Format: decimal */
+            readonly value: string;
+        };
+        StockMove: {
+            readonly id: number;
+            /** Format: date */
+            readonly date: string;
+            readonly number: string | null;
+            readonly product: number;
+            readonly warehouse: number;
+            readonly warehouse_code: string;
+            readonly batch_number: string | null;
+            /** Format: decimal */
+            readonly quantity: string;
+            /** Format: decimal */
+            readonly value: string;
+        };
         TenantCreate: {
             name: string;
             /** @default PKR */
@@ -765,6 +1200,8 @@ export interface components {
             locale: components["schemas"]["LocaleEnum"];
             /** @default 7 */
             fiscal_year_start_month: number;
+            /** @default average */
+            valuation_method: components["schemas"]["ValuationMethodEnum"];
         };
         Token: {
             token: string;
@@ -799,6 +1236,23 @@ export interface components {
          * @enum {string}
          */
         TypeEnum: "asset" | "liability" | "equity" | "income" | "expense";
+        Unit: {
+            readonly id: number;
+            code: string;
+            name: string;
+        };
+        /**
+         * @description * `average` - average
+         *     * `fifo` - fifo
+         * @enum {string}
+         */
+        ValuationMethodEnum: "average" | "fifo";
+        Warehouse: {
+            readonly id: number;
+            code: string;
+            name: string;
+            is_active?: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -1462,6 +1916,679 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    inventory_alerts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Alerts"];
+                };
+            };
+        };
+    };
+    inventory_batches_list: {
+        parameters: {
+            query?: {
+                product?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Batch"][];
+                };
+            };
+        };
+    };
+    inventory_categories_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"][];
+                };
+            };
+        };
+    };
+    inventory_categories_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Category"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    inventory_categories_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    inventory_categories_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inventory_categories_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCategory"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    inventory_products_list: {
+        parameters: {
+            query?: {
+                barcode?: string;
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedProductList"];
+                };
+            };
+        };
+    };
+    inventory_products_create: {
+        parameters: {
+            query?: {
+                barcode?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Product"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
+    inventory_products_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
+    inventory_products_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inventory_products_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProduct"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Product"];
+                };
+            };
+        };
+    };
+    inventory_products_moves_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStockMoveList"];
+                };
+            };
+        };
+    };
+    inventory_stock_entries_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                kind?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStockEntryList"];
+                };
+            };
+        };
+    };
+    inventory_stock_entries_create: {
+        parameters: {
+            query?: {
+                kind?: string;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockEntry"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockEntry"];
+                };
+            };
+        };
+    };
+    inventory_stock_entries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockEntry"];
+                };
+            };
+        };
+    };
+    inventory_stock_entries_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockEntry"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockEntry"];
+                };
+            };
+        };
+    };
+    inventory_stock_entries_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inventory_stock_entries_post_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockEntry"];
+                };
+            };
+        };
+    };
+    inventory_stock_levels_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                product?: number;
+                warehouse?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStockLevelList"];
+                };
+            };
+        };
+    };
+    inventory_units_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unit"][];
+                };
+            };
+        };
+    };
+    inventory_units_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Unit"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unit"];
+                };
+            };
+        };
+    };
+    inventory_units_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unit"];
+                };
+            };
+        };
+    };
+    inventory_units_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inventory_units_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedUnit"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unit"];
+                };
+            };
+        };
+    };
+    inventory_warehouses_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"][];
+                };
+            };
+        };
+    };
+    inventory_warehouses_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Warehouse"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    inventory_warehouses_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    inventory_warehouses_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inventory_warehouses_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedWarehouse"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
                 };
             };
         };

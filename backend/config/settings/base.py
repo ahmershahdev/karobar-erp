@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 import environ
+from celery.schedules import crontab
 from csp.constants import NONCE, NONE, SELF
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.tenancy",
     "apps.accounting",
+    "apps.inventory",
 ]
 
 MIDDLEWARE = [
@@ -188,6 +190,13 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_TIME_LIMIT = 300
 CELERY_TASK_SOFT_TIME_LIMIT = 240
+# 02:00 UTC is 07:00 in Pakistan and 05:00 to 06:00 in the Gulf: before the shops open.
+CELERY_BEAT_SCHEDULE = {
+    "stock-alerts": {
+        "task": "apps.inventory.tasks.send_stock_alerts",
+        "schedule": crontab(hour=2, minute=0),
+    }
+}
 
 LANGUAGE_CODE = "en"
 LANGUAGES = [("en", "English"), ("ur", "Urdu"), ("ar", "Arabic")]
