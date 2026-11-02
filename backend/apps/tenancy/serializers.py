@@ -3,7 +3,7 @@ from typing import Any
 from rest_framework import serializers
 
 from .models import AuditEvent, Invitation, Membership, Role
-from .modules import clean_permissions
+from .modules import clean_permissions, permission_problems
 
 
 class TenantRoleField(serializers.PrimaryKeyRelatedField[Role]):
@@ -46,10 +46,10 @@ class RoleSerializer(serializers.ModelSerializer[Role]):
         extra_kwargs = {"name": {"max_length": 80}}
 
     def validate_permissions(self, value: Any) -> dict[str, list[str]]:
-        try:
-            return clean_permissions(value)
-        except ValueError as exc:
-            raise serializers.ValidationError(str(exc)) from exc
+        problems = permission_problems(value)
+        if problems:
+            raise serializers.ValidationError(problems)
+        return clean_permissions(value)
 
 
 class MemberSerializer(serializers.ModelSerializer[Membership]):

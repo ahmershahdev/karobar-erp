@@ -20,7 +20,53 @@ Action = AuditEvent.Action
 
 
 class TenancyError(Exception):
-    """A request that is well formed but not allowed by the rules; shown to the user as is."""
+    """A request that is well formed but not allowed by the rules.
+
+    Each rule is its own subclass with a fixed `message`. Views show that class attribute, never
+    the exception's text, so nothing from a traceback or from user input can reach a response.
+    """
+
+    message = "That isn't allowed."
+
+
+class UnverifiedCreatorError(TenancyError):
+    message = "Confirm your email address before creating a business."
+
+
+class DuplicateRoleError(TenancyError):
+    message = "A role with this name already exists."
+
+
+class RoleInUseError(TenancyError):
+    message = "Move members and pending invitations off this role first."
+
+
+class OwnerRoleFixedError(TenancyError):
+    message = "The owner's access can't be changed."
+
+
+class OwnerNotRemovableError(TenancyError):
+    message = "The owner can't be removed."
+
+
+class AlreadyMemberError(TenancyError):
+    message = "This person is already a member."
+
+
+class InvitationAcceptedError(TenancyError):
+    message = "This invitation was already accepted."
+
+
+class InvitationUnusableError(TenancyError):
+    message = "This invitation is invalid, used or expired."
+
+
+class InvitationForSomeoneElseError(TenancyError):
+    message = "This invitation was sent to a different email address."
+
+
+class UnverifiedInviteeError(TenancyError):
+    message = "Confirm your email address before joining a business."
 
 
 def _snapshot(instance: models.Model, fields: tuple[str, ...]) -> dict[str, Any]:
@@ -38,7 +84,7 @@ def hash_token(token: str) -> str:
 @transaction.atomic
 def create_tenant(owner: User, name: str, base_currency: str, locale: str) -> Membership:
     if owner.email_verified_at is None:
-        raise TenancyError("Confirm your email address before creating a business.")
+        raise UnverifiedCreatorError
     tenant = Tenant.objects.create(name=name, base_currency=base_currency, locale=locale)
     with tenant_context(tenant):
         Role.objects.create(name="Manager", permissions=FULL_ACCESS)
@@ -60,7 +106,7 @@ def save_role(
         with transaction.atomic():
             target.save()
     except IntegrityError as exc:
-        raise TenancyError("A role with this name already exists.") from exc
+        raise DuplicateRoleError from exc
     changes = _diff(before, _snapshot(target, fields))
     audit.record(Action.UPDATE if role else Action.CREATE, target, actor, changes)
     return target
@@ -74,7 +120,7 @@ def delete_role(actor: User, role: Role) -> None:
             role=role, accepted_at__isnull=True, revoked_at__isnull=True
         ).exists()
     ):
-        raise TenancyError("Move members and pending invitations off this role first.")
+        raise RoleInUseError
     audit.record(Action.DELETE, role, actor, {"name": [role.name, None]})
     role.delete()
 
@@ -82,7 +128,7 @@ def delete_role(actor: User, role: Role) -> None:
 @transaction.atomic
 def change_member_role(actor: User, membership: Membership, role: Role | None) -> Membership:
     if membership.is_owner:
-        raise TenancyError("The owner's access can't be changed.")
+        raise OwnerRoleFixedError
     before = membership.role.name if membership.role else None
     membership.role = role
     membership.save(update_fields=["role"])
@@ -93,7 +139,7 @@ def change_member_role(actor: User, membership: Membership, role: Role | None) -
 @transaction.atomic
 def remove_member(actor: User, membership: Membership) -> None:
     if membership.is_owner:
-        raise TenancyError("The owner can't be removed.")
+        raise OwnerNotRemovableError
     audit.record(Action.DELETE, membership, actor, {"user": [membership.user.email, None]})
     membership.delete()
 
@@ -105,7 +151,7 @@ def invite(actor: User, tenant: Tenant, email: str, role: Role | None) -> tuple[
     # same address at once can't leave two live links behind.
     Tenant.objects.select_for_update().get(pk=tenant.pk)
     if Membership.objects.filter(user__email=email).exists():
-        raise TenancyError("This person is already a member.")
+        raise AlreadyMemberError
     now = timezone.now()
     Invitation.objects.filter(
         email=email, accepted_at__isnull=True, revoked_at__isnull=True
@@ -125,7 +171,7 @@ def invite(actor: User, tenant: Tenant, email: str, role: Role | None) -> tuple[
 @transaction.atomic
 def revoke_invitation(actor: User, invitation: Invitation) -> None:
     if invitation.accepted_at is not None:
-        raise TenancyError("This invitation was already accepted.")
+        raise InvitationAcceptedError
     invitation.revoked_at = invitation.revoked_at or timezone.now()
     invitation.save(update_fields=["revoked_at"])
     audit.record(Action.DELETE, invitation, actor, {"email": [invitation.email, None]})
@@ -140,11 +186,11 @@ def accept_invitation(user: User, token: str) -> Membership:
         .first()
     )
     if invitation is None or not invitation.is_pending:
-        raise TenancyError("This invitation is invalid, used or expired.")
+        raise InvitationUnusableError
     if invitation.email != user.email.lower():
-        raise TenancyError("This invitation was sent to a different email address.")
+        raise InvitationForSomeoneElseError
     if user.email_verified_at is None:
-        raise TenancyError("Confirm your email address before joining a business.")
+        raise UnverifiedInviteeError
     with tenant_context(invitation.tenant):
         membership: Membership
         membership, created = Membership.objects.get_or_create(

@@ -24,20 +24,26 @@ FULL_ACCESS = {module: list(actions) for module, actions in MODULES.items()}
 READ_ONLY = {module: ["view"] for module in MODULES}
 
 
-def clean_permissions(raw: object) -> dict[str, list[str]]:
-    """Return the permissions in canonical form, or raise ValueError naming the bad entry."""
+def permission_problems(raw: object) -> list[str]:
+    """Describe what is wrong with a permissions object; an empty list means it is valid."""
     if not isinstance(raw, dict):
-        raise ValueError("permissions must be an object of module to actions")
-    cleaned: dict[str, list[str]] = {}
+        return ["permissions must be an object of module to actions"]
+    problems: list[str] = []
     for module, actions in raw.items():
         allowed = MODULES.get(module)
         if allowed is None:
-            raise ValueError(f"unknown module: {module}")
-        if not isinstance(actions, list) or not all(isinstance(a, str) for a in actions):
-            raise ValueError(f"actions for {module} must be a list of strings")
-        unknown = set(actions) - set(allowed)
-        if unknown:
-            raise ValueError(f"unknown actions for {module}: {', '.join(sorted(unknown))}")
-        if actions:
-            cleaned[module] = [action for action in allowed if action in actions]
-    return cleaned
+            problems.append(f"unknown module: {module}")
+        elif not isinstance(actions, list) or not all(isinstance(a, str) for a in actions):
+            problems.append(f"actions for {module} must be a list of strings")
+        elif unknown := set(actions) - set(allowed):
+            problems.append(f"unknown actions for {module}: {', '.join(sorted(unknown))}")
+    return problems
+
+
+def clean_permissions(raw: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Canonical form of permissions that passed permission_problems(): known order, no empties."""
+    return {
+        module: [action for action in allowed if action in raw[module]]
+        for module, allowed in MODULES.items()
+        if raw.get(module)
+    }

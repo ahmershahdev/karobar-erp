@@ -35,7 +35,7 @@ def run(call: Any, *args: Any) -> Any:
     try:
         return call(*args)
     except services.TenancyError as exc:
-        raise ValidationError({"detail": str(exc)}) from exc
+        raise ValidationError({"detail": type(exc).message}) from exc
 
 
 class MyTenantsView(generics.ListAPIView[Membership]):

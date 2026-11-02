@@ -3,7 +3,7 @@
 // reloads instantly. Ctrl+C stops everything this script started (the containers keep running).
 
 import { spawn, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 
@@ -25,14 +25,26 @@ function step(label, command, args, options = {}) {
   }
 }
 
+function writeIfMissing(file, contents) {
+  // The 'wx' flag creates the file only if it doesn't exist, in one step, so an existing .env is
+  // never overwritten even if something creates it between a check and the write.
+  try {
+    writeFileSync(file, contents, { flag: 'wx' });
+    return true;
+  } catch (error) {
+    if (error.code === 'EEXIST') return false;
+    throw error;
+  }
+}
+
 function ensureBackendEnv() {
-  const envFile = join(backend, '.env');
-  if (existsSync(envFile)) return;
   // A fresh random key for this machine only; .env is git-ignored.
   const key = randomBytes(48).toString('base64url');
   const example = readFileSync(join(backend, '.env.example'), 'utf8');
-  writeFileSync(envFile, example.replace(/^DJANGO_SECRET_KEY=.*$/m, `DJANGO_SECRET_KEY=${key}`));
-  console.log('Created backend/.env from .env.example');
+  const contents = example.replace(/^DJANGO_SECRET_KEY=.*$/m, `DJANGO_SECRET_KEY=${key}`);
+  if (writeIfMissing(join(backend, '.env'), contents)) {
+    console.log('Created backend/.env from .env.example');
+  }
 }
 
 function ensurePythonEnv() {
@@ -51,8 +63,7 @@ function ensureNodeModules() {
 }
 
 function ensureFrontendEnv() {
-  const envFile = join(frontend, '.env.local');
-  if (!existsSync(envFile)) copyFileSync(join(frontend, '.env.example'), envFile);
+  writeIfMissing(join(frontend, '.env.local'), readFileSync(join(frontend, '.env.example'), 'utf8'));
 }
 
 const children = [];

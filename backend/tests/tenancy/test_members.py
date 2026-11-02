@@ -10,7 +10,7 @@ from apps.accounts.models import User
 from apps.tenancy import services
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import AuditEvent, Invitation, Membership, Role
-from apps.tenancy.modules import clean_permissions
+from apps.tenancy.modules import clean_permissions, permission_problems
 from tests.conftest import Member, make_member
 from tests.factories import create_user
 
@@ -208,10 +208,11 @@ def test_members_need_permission() -> None:
     "raw",
     ["not a dict", {"sales": "view"}, {"sales": ["fly"]}, {"sales": [1]}],
 )
-def test_clean_permissions_rejects_bad_input(raw: object) -> None:
-    with pytest.raises(ValueError):  # noqa: PT011
-        clean_permissions(raw)
+def test_permission_problems_reports_bad_input(raw: object) -> None:
+    assert permission_problems(raw)
 
 
 def test_clean_permissions_drops_empty_modules() -> None:
-    assert clean_permissions({"sales": [], "audit": ["view"]}) == {"audit": ["view"]}
+    raw = {"sales": [], "audit": ["view"]}
+    assert permission_problems(raw) == []
+    assert clean_permissions(raw) == {"audit": ["view"]}
