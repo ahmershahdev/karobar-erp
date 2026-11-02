@@ -28,12 +28,12 @@ in CI, and seed data.
 
 ## M2. Accounting core (target 2026-12-20)
 
-- [ ] Chart of accounts from a template, editable per tenant
-- [ ] Fiscal years and periods; a closed period takes no new entries
-- [ ] Journal entries: balanced before saving, immutable once posted, reversals
-- [ ] Posting rules in `apps/core` that every later module uses
-- [ ] Gapless document numbering per tenant and series
-- [ ] Trial balance and general ledger with filters and CSV export
+- [x] Chart of accounts from a template, editable per tenant
+- [x] Fiscal years and periods; a closed period takes no new entries
+- [x] Journal entries: balanced before saving, immutable once posted, reversals
+- [x] Posting rules in `apps/core` that every later module uses
+- [x] Gapless document numbering per tenant and series
+- [x] Trial balance and general ledger with filters and CSV export
 
 ## M3. Inventory (target 2027-01-10)
 

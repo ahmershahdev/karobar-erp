@@ -261,7 +261,8 @@
     "when": "When",
     "who": "Who",
     "what": "What",
-    "changes": "Changes"
+    "changes": "Changes",
+    "fiscalStart": "Fiscal year starts in"
   },
   "modulesShort": {
     "members": "Members",
@@ -282,5 +283,64 @@
   "manifesto": {
     "eyebrow": "Why it exists",
     "body": "Most small businesses run on paper registers and spreadsheets that slowly drift apart. Karobar keeps stock, sales and books in one ledger, so every number agrees with every other the moment anything happens."
+  },
+  "acc": {
+    "journal": "Journal",
+    "journalBody": "Every entry in the books. Drafts can change; posted entries can only be reversed.",
+    "entries": "Entries",
+    "newEntry": "New entry",
+    "editDraft": "Edit draft",
+    "date": "Date",
+    "memo": "Memo",
+    "description": "Description",
+    "addLine": "Add line",
+    "difference": "Off by {{amount}}",
+    "saveDraft": "Save draft",
+    "draftHint": "Drafts can be saved unbalanced. Posting checks the balance, the period and the accounts, then gives the entry its number.",
+    "draft": "Draft",
+    "post": "Post",
+    "reverse": "Reverse",
+    "reversed": "Reversed",
+    "reversalOf": "Reverses entry {{id}}",
+    "postedBy": "Posted by {{who}} at {{when}}",
+    "createdBy": "Draft by {{who}}",
+    "filter": {
+      "all": "All",
+      "draft": "Drafts",
+      "posted": "Posted"
+    },
+    "chart": "Chart of accounts",
+    "chartBody": "Groups total their accounts; entries go to the accounts inside them.",
+    "newAccount": "New account",
+    "accounts": "Accounts",
+    "code": "Code",
+    "name": "Name",
+    "type": "Type",
+    "parent": "Group",
+    "types": {
+      "asset": "Asset",
+      "liability": "Liability",
+      "equity": "Equity",
+      "income": "Income",
+      "expense": "Expense"
+    },
+    "trialBalance": "Trial balance",
+    "trialBalanceBody": "Every account's balance. Debits and credits always match.",
+    "period": "Period",
+    "from": "From",
+    "to": "To",
+    "exportCsv": "Export CSV",
+    "outOfBalance": "Out of balance",
+    "ledger": "General ledger",
+    "ledgerBody": "Every posted line of one account, with the running balance.",
+    "number": "Number",
+    "balance": "Balance",
+    "opening": "Opening balance",
+    "closing": "Closing balance",
+    "periods": "Fiscal periods",
+    "periodsBody": "Close a month once its books are final; closed periods take no new entries.",
+    "nextYear": "Open the next fiscal year",
+    "open": "Open",
+    "closed": "Closed"
   }
 }

@@ -15,6 +15,8 @@ class Tenant(models.Model):
     name = models.CharField(max_length=150)
     base_currency = models.CharField(max_length=3, default="PKR")
     locale = models.CharField(max_length=5, default="en")
+    # July for Pakistan's July to June fiscal year; 1 for a calendar year.
+    fiscal_year_start_month = models.PositiveSmallIntegerField(default=7)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

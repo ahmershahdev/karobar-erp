@@ -34,6 +34,7 @@ class TenantCreateSerializer(serializers.Serializer[None]):
     name = serializers.CharField(max_length=150)
     base_currency = serializers.RegexField(r"^[A-Z]{3}$", default="PKR")
     locale = serializers.ChoiceField(choices=["en", "ur", "ar"], default="en")
+    fiscal_year_start_month = serializers.IntegerField(min_value=1, max_value=12, default=7)
 
 
 class RoleSerializer(serializers.ModelSerializer[Role]):

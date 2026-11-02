@@ -10,6 +10,13 @@ import {
   SignUpPage,
   VerifyEmailPage,
 } from '../features/auth/pages';
+import {
+  ChartPage,
+  JournalPage,
+  LedgerPage,
+  PeriodsPage,
+  TrialBalancePage,
+} from '../features/accounting/pages';
 import { useMe } from '../features/auth/session';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
@@ -80,6 +87,11 @@ export default function AppRoutes() {
         <Route path="members" element={<MembersPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="audit" element={<AuditPage />} />
+        <Route path="accounting/journal" element={<JournalPage />} />
+        <Route path="accounting/chart" element={<ChartPage />} />
+        <Route path="accounting/trial-balance" element={<TrialBalancePage />} />
+        <Route path="accounting/ledger" element={<LedgerPage />} />
+        <Route path="accounting/periods" element={<PeriodsPage />} />
       </Route>
       <Route path="*" element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>} />
     </Routes>

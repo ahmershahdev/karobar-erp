@@ -3,6 +3,425 @@ info:
   title: Karobar ERP API
   version: 0.1.0
 paths:
+  /api/accounting/accounts/:
+    get:
+      operationId: accounting_accounts_list
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+          description: ''
+    post:
+      operationId: accounting_accounts_create
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+  /api/accounting/accounts/{id}/:
+    get:
+      operationId: accounting_accounts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+    patch:
+      operationId: accounting_accounts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAccount'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+    delete:
+      operationId: accounting_accounts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/accounting/accounts/{id}/ledger/:
+    get:
+      operationId: accounting_accounts_ledger_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+      - in: query
+        name: export
+        schema:
+          type: string
+          enum:
+          - csv
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: start
+        schema:
+          type: string
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ledger'
+          description: ''
+  /api/accounting/entries/:
+    get:
+      operationId: accounting_entries_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: end
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: start
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - draft
+          - posted
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJournalEntryList'
+          description: ''
+    post:
+      operationId: accounting_entries_create
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+      - in: query
+        name: start
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - draft
+          - posted
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalEntry'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+          description: ''
+  /api/accounting/entries/{id}/:
+    get:
+      operationId: accounting_entries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+          description: ''
+    put:
+      operationId: accounting_entries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalEntry'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+          description: ''
+    delete:
+      operationId: accounting_entries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/accounting/entries/{id}/post/:
+    post:
+      operationId: accounting_entries_post_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+          description: ''
+  /api/accounting/entries/{id}/reverse/:
+    post:
+      operationId: accounting_entries_reverse_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reverse'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+          description: ''
+  /api/accounting/fiscal-years/:
+    get:
+      operationId: accounting_fiscal_years_list
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FiscalYear'
+          description: ''
+    post:
+      operationId: accounting_fiscal_years_create
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FiscalYear'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FiscalYear'
+          description: ''
+  /api/accounting/periods/{id}/:
+    get:
+      operationId: accounting_periods_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FiscalPeriod'
+          description: ''
+    patch:
+      operationId: accounting_periods_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPeriodState'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FiscalPeriod'
+          description: ''
+  /api/accounting/reports/trial-balance/:
+    get:
+      operationId: accounting_reports_trial_balance_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+      - in: query
+        name: export
+        schema:
+          type: string
+          enum:
+          - csv
+      - in: query
+        name: start
+        schema:
+          type: string
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrialBalance'
+          description: ''
   /api/accounts/csrf/:
     get:
       operationId: accounts_csrf_retrieve
@@ -549,6 +968,37 @@ components:
           maxLength: 128
       required:
       - token
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        parent:
+          type: integer
+          nullable: true
+        is_group:
+          type: boolean
+        is_active:
+          type: boolean
+        role:
+          type: string
+          readOnly: true
+          nullable: true
+      required:
+      - code
+      - id
+      - name
+      - role
+      - type
     ActionEnum:
       enum:
       - create
@@ -605,6 +1055,57 @@ components:
           maxLength: 254
       required:
       - email
+    FiscalPeriod:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: integer
+          readOnly: true
+        start:
+          type: string
+          format: date
+          readOnly: true
+        end:
+          type: string
+          format: date
+          readOnly: true
+        closed:
+          type: boolean
+          readOnly: true
+      required:
+      - closed
+      - end
+      - id
+      - number
+      - start
+    FiscalYear:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 40
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+        periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/FiscalPeriod'
+          readOnly: true
+      required:
+      - end
+      - id
+      - periods
+      - start
     Health:
       type: object
       properties:
@@ -647,6 +1148,154 @@ components:
       - id
       - role_name
       - status
+    JournalEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalLine'
+        total:
+          type: string
+          readOnly: true
+        reversal_of:
+          type: integer
+          readOnly: true
+          nullable: true
+        reversed_by:
+          type: integer
+          nullable: true
+          readOnly: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        posted_by:
+          type: string
+          format: email
+          readOnly: true
+          nullable: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_by
+      - date
+      - id
+      - lines
+      - number
+      - posted_at
+      - posted_by
+      - reversal_of
+      - reversed_by
+      - status
+      - total
+    JournalLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        account:
+          type: integer
+        account_code:
+          type: string
+          readOnly: true
+        account_name:
+          type: string
+          readOnly: true
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        description:
+          type: string
+          maxLength: 255
+      required:
+      - account
+      - account_code
+      - account_name
+      - id
+    Ledger:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/Account'
+        opening:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        closing:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerLine'
+      required:
+      - account
+      - closing
+      - lines
+      - opening
+    LedgerLine:
+      type: object
+      properties:
+        entry_id:
+          type: integer
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+        description:
+          type: string
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - balance
+      - credit
+      - date
+      - debit
+      - description
+      - entry_id
+      - memo
+      - number
     LocaleEnum:
       enum:
       - en
@@ -794,6 +1443,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Invitation'
+    PaginatedJournalEntryList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
     PaginatedMemberList:
       type: object
       required:
@@ -829,6 +1497,31 @@ components:
       - password
       - token
       - uid
+    PatchedAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 150
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        parent:
+          type: integer
+          nullable: true
+        is_group:
+          type: boolean
+        is_active:
+          type: boolean
+        role:
+          type: string
+          readOnly: true
+          nullable: true
     PatchedMember:
       type: object
       properties:
@@ -856,6 +1549,11 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedPeriodState:
+      type: object
+      properties:
+        closed:
+          type: boolean
     PatchedRole:
       type: object
       properties:
@@ -866,6 +1564,17 @@ components:
           type: string
           maxLength: 80
         permissions: {}
+    Reverse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+      required:
+      - date
     Role:
       type: object
       properties:
@@ -896,6 +1605,14 @@ components:
       required:
       - email
       - password
+    StatusEnum:
+      enum:
+      - draft
+      - posted
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `posted` - Posted
     TenantCreate:
       type: object
       properties:
@@ -910,6 +1627,11 @@ components:
           allOf:
           - $ref: '#/components/schemas/LocaleEnum'
           default: en
+        fiscal_year_start_month:
+          type: integer
+          maximum: 12
+          minimum: 1
+          default: 7
       required:
       - name
     Token:
@@ -920,6 +1642,74 @@ components:
           maxLength: 512
       required:
       - token
+    TrialBalance:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date
+          nullable: true
+        end:
+          type: string
+          format: date
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrialBalanceRow'
+        total_debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        total_credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - end
+      - rows
+      - start
+      - total_credit
+      - total_debit
+    TrialBalanceRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - code
+      - credit
+      - debit
+      - id
+      - name
+      - type
+    TypeEnum:
+      enum:
+      - asset
+      - liability
+      - equity
+      - income
+      - expense
+      type: string
+      description: |-
+        * `asset` - Asset
+        * `liability` - Liability
+        * `equity` - Equity
+        * `income` - Income
+        * `expense` - Expense
   securitySchemes:
     cookieAuth:
       type: apiKey

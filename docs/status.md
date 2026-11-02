@@ -4,27 +4,26 @@ Last updated: 2026-11-02. Update at the end of every work session.
 
 ## Where we are
 
-M1 (platform skeleton) is complete in code. Two pull requests:
-
-- PR #1 `feat/platform-skeleton`: rules, backend and frontend foundation, security baseline,
-  public site, CI. CI is green and the review comments are fixed; it is waiting for the review
-  threads to be resolved before the squash merge.
-- `feat/m1-accounts-and-members` (stacked on #1): sign-up, email verification, password reset,
-  creating a business, members, roles with a permission grid, invitations, the business
-  switcher, `npm run dev` at the root. 83 backend tests, 14 frontend tests, all checks clean.
-  Walked through in a browser end to end against the live dev stack.
-
-The wiki is live with Getting Started, Self Hosting, Concepts, Security Model and FAQ; its source
-is `docs/wiki/`.
+- M1 is done and released as `v0.1.0`. The Ledger Noir redesign is merged.
+- M2 (accounting core) is complete on `feat/m2-accounting-core`:
+  - `apps/core`: posting rules (sale, purchase, receipt, payment, reversal) in account roles,
+    fiscal period maths and balance sides, all at 100% branch coverage.
+  - `apps/accounting`: standard chart of accounts installed for every new business (signal),
+    fiscal years with monthly periods and closing, gapless JV numbering from a locked series,
+    drafts, posting, reversals, immutability in the model, trial balance and general ledger
+    with CSV export safe from formula injection.
+  - Screens: journal with a line editor and live balance, chart of accounts, trial balance,
+    general ledger, fiscal periods. English, Urdu and Arabic.
+  - 128 backend tests, including six threads posting at once with no duplicate or missing
+    numbers; every new route is in the tenant isolation tests.
+- Existing businesses got their books with `python manage.py set_up_books` (safe to rerun).
 
 ## Next session
 
-1. Merge PR #1, rebase `feat/m1-accounts-and-members` onto `main`, open its PR, merge after CI.
-2. Apply `.github/rulesets/protect-main.json` (now with required checks) to the repository
-   settings, push `docs/wiki/` changes to the wiki, tag `v0.1.0` as a pre-release.
-3. Start M2: chart of accounts template, fiscal periods, journal entries through
-   `apps/core/journal.py`, gapless numbering with a locked counter row.
+1. Merge the M2 pull request after CI; tag `v0.2.0`.
+2. Start M3 (inventory): products, units, warehouses, stock moves under row locks, FIFO and
+   moving-average valuation in `apps/core`, posting cost to the books through the posting rules.
 
 ## Open questions
 
-- First chart of accounts template and first country for tax and payroll rules.
+- First tax and payroll rules to ship (Pakistan first, then the Gulf), with official sources.

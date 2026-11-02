@@ -106,11 +106,21 @@ response. `/app` also gets `X-Robots-Tag: noindex`.
   locks in primary-key order. One global lock order means two transactions can't deadlock on
   the same rows.
 - `innodb_lock_wait_timeout` is 10 s, so a stuck lock fails a request instead of piling up.
-- Document numbers must come from a locked counter row in the same transaction as the document
-  (M2), so a rolled-back document leaves no gap and two documents can't share a number.
+- Document numbers come from a locked `NumberSeries` row in the same transaction as the posting,
+  so a rolled-back post leaves no gap and two documents can't share a number. A test posts six
+  entries from six threads at once and checks the numbers are 1 to 6.
+- Posting locks the entry (so it can't be posted twice) and the fiscal period row (so closing a
+  period and posting into it can't interleave).
 - Uniqueness is enforced by database constraints, not by "check then insert".
 - Celery tasks are acknowledged late and must be idempotent: a task that runs twice must not post
   twice.
+
+## Exports
+
+CSV exports pass every cell through `apps.platform.csv_export.safe_cell`: text starting with
+`=`, `+`, `-`, `@`, tab or carriage return gets a leading apostrophe, so a name like
+`=HYPERLINK(...)` is shown as text instead of running as a spreadsheet formula. Numbers are
+written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu and Arabic intact.
 
 ## Errors and logging
 

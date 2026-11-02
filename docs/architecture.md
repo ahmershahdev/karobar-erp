@@ -32,6 +32,7 @@ Celery, never inside a web request.
 | `hr`, `payroll` | employees, attendance, leave, salary structures, payroll runs, payslips |
 | `reports` | trial balance, P&L, balance sheet, tax and stock reports |
 | `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
+| `accounting` (built) | accounts, fiscal years and periods, number series, journal entries and lines, trial balance and ledger reports |
 | `platform` | health check, request ids, security headers, error handler, pagination, row locking |
 | `accounts` | the user model (email sign-in, public UUID) and the session endpoints |
 
@@ -106,9 +107,15 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | `READ COMMITTED` plus explicit locks | Fewer gap-lock deadlocks than `REPEATABLE READ`; locks say exactly what is protected |
 | Fail-closed tenant manager | A forgotten filter raises instead of leaking every tenant's rows |
 | Per-route HTML generated at build | Crawlers and link previews get the right head without server rendering |
+| Posting rules speak in account roles | `sale()` debits "receivables", not account 1130; each tenant maps roles to its own chart, so rules work for every chart |
+| Drafts may be unbalanced; posting may not | People enter entries in steps; the balance check, the open-period check and the number all happen at post time |
+| Numbers assigned at post, from a locked series row | Drafts that are deleted never consume a number, and a rolled-back post returns its number, so the series has no gaps |
+| Immutability enforced in the model too | `JournalEntry.save()` and `JournalLine.save()` refuse to change posted rows, so even admin scripts can't edit the books |
+| Standard chart first, July fiscal year by default | A general small-business chart suits Pakistan and the Gulf; July to June is Pakistan's fiscal year, and each business can pick its month |
+| Books set up through a `tenant_created` signal | Tenancy doesn't import accounting; later modules hook in the same way |
 
 ## Open questions
 
-- Which chart of accounts template to start from, and which tax and payroll rules to ship first
-  (Pakistan, then Gulf countries); each needs official sources before it is coded.
+- Which tax and payroll rules to ship first (Pakistan, then Gulf countries); each needs official
+  sources before it is coded.
 - Whether HR uses the `holidays` library directly or the HolidayOps API for working days.

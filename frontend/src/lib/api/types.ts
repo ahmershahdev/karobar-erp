@@ -10,6 +10,12 @@ export type Member = Schemas['Member'];
 export type Role = Omit<Schemas['Role'], 'permissions'> & { permissions: Record<string, string[]> };
 export type Invitation = Schemas['Invitation'];
 export type AuditEvent = Schemas['AuditEvent'];
+export type Account = Schemas['Account'];
+export type JournalEntry = Schemas['JournalEntry'];
+export type JournalLine = Schemas['JournalLine'];
+export type FiscalYear = Schemas['FiscalYear'];
+export type TrialBalance = Schemas['TrialBalance'];
+export type Ledger = Schemas['Ledger'];
 
 export const MODULES: Record<string, readonly string[]> = {
   members: ['view', 'create', 'update', 'delete'],
