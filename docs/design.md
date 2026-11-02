@@ -60,7 +60,15 @@ Scale: `.display-xl` (hero, up to 11.5rem), `.display-lg` (section titles), `.di
   vertex shader blends between them. Sections mark the shape they want with `data-morph="0|1|2"`;
   the scroll position between markers sets the blend. Particles drift, react to the pointer and
   fade to 40% past the hero so text stays readable. The canvas pauses when the tab is hidden.
-- `Preloader`: a 000 to 100 counter and a lifting panel, about 2 seconds, public pages only.
+- `Preloader`: the logo draws itself above a gold seam, the four things Karobar keeps (stock,
+  sales, books, payroll) cycle below it, a mono counter runs to 100, then the screen opens like a
+  ledger, top half up and bottom half down. About two seconds, public pages only, with a 4 second
+  failsafe so it can never trap the page.
+- `Header`: a floating glass capsule. Links roll their text on hover and a soft pill glides to the
+  hovered link; the header hides while scrolling down and returns on the first scroll up; a gold
+  hairline along its edge shows reading progress.
+- `Footer`: a closing call to action with a large magnetic round button, link columns that roll
+  on hover, the live time in Lahore, and a back-to-top button ringed by scroll progress.
 - `Cursor`: a dot and a trailing ring that grows over anything clickable and shows its
   `data-cursor` label. Fine pointers only.
 - `Magnetic`: primary buttons lean toward the pointer.

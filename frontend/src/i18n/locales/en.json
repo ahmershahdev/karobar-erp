@@ -162,13 +162,23 @@
     "button": "Star on GitHub"
   },
   "footer": {
-    "built": "Built by",
     "rights": "MIT License",
     "status": "Status: in development",
     "tagline": "Built for the counter, the back office and the books.",
     "explore": "Explore",
     "project": "Project",
-    "wiki": "Wiki"
+    "wiki": "Wiki",
+    "next": "Next step",
+    "ctaTitle": "Keep books that",
+    "ctaAccent": "always balance.",
+    "ctaBody": "Create a business in a minute. Your chart of accounts and first fiscal year are ready when you are.",
+    "ctaButton": "Open the app",
+    "lahore": "Lahore",
+    "releases": "Releases",
+    "report": "Report a vulnerability",
+    "contact": "Contact",
+    "top": "Back to top",
+    "topShort": "Top"
   },
   "signIn": {
     "title": "Sign in",
@@ -342,5 +352,10 @@
     "nextYear": "Open the next fiscal year",
     "open": "Open",
     "closed": "Closed"
+  },
+  "preloader": {
+    "words": ["Stock", "Sales", "Books", "Payroll"],
+    "tag": "In balance",
+    "loading": "Opening the ledger"
   }
 }
