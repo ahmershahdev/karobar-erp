@@ -4,38 +4,27 @@ Last updated: 2026-11-02. Update at the end of every work session.
 
 ## Where we are
 
-M1 in progress on branch `feat/platform-skeleton` (not merged yet).
+M1 (platform skeleton) is complete in code. Two pull requests:
 
-Done this session:
+- PR #1 `feat/platform-skeleton`: rules, backend and frontend foundation, security baseline,
+  public site, CI. CI is green and the review comments are fixed; it is waiting for the review
+  threads to be resolved before the squash merge.
+- `feat/m1-accounts-and-members` (stacked on #1): sign-up, email verification, password reset,
+  creating a business, members, roles with a permission grid, invitations, the business
+  switcher, `npm run dev` at the root. 83 backend tests, 14 frontend tests, all checks clean.
+  Walked through in a browser end to end against the live dev stack.
 
-- Rules written down: AGENTS.md now has security, SEO, design and comment rules, with details in
-  `docs/security.md`, `docs/seo.md` and `docs/design.md`.
-- Backend: Django 5.2 with `dev`/`test`/`prod` settings, custom `User` (email sign-in, public UUID),
-  session sign-in with CSRF, tenants, roles, memberships, a fail-closed tenant manager, the
-  `X-Tenant` middleware, the audit log, health check, request ids, security headers, nonce CSP,
-  throttles, cursor pagination, a safe error handler and `lock_rows()`. `apps/core` has money
-  rounding and journal balancing at 100% branch coverage, plus a test that it never imports Django.
-- 46 backend tests on MySQL 8.4; Ruff, strict mypy and `check --deploy` are clean.
-- Frontend: React 19, Vite 8, Tailwind 4, Lenis, three.js hero shader, anime.js reveals and page
-  transitions, English, Urdu and Arabic with right-to-left layouts, sign-in screen. Per-route HTML
-  heads, JSON-LD, sitemap, robots, llms.txt and llms-full.txt are generated at build.
-- Production: nginx with a per-request CSP nonce, edge rate limits and caching rules (checked in a
-  browser: no CSP violations); `deploy/compose.prod.yaml`; CI for backend, frontend and CodeQL;
-  Dependabot for pip, npm, Docker and Actions.
-- Community files: CODE_OF_CONDUCT.md; wiki source in `docs/wiki/`.
+The wiki is live with Getting Started, Self Hosting, Concepts, Security Model and FAQ; its source
+is `docs/wiki/`.
 
 ## Next session
 
-1. Open the PR for `feat/platform-skeleton`, get CI green, then make `backend`, `frontend` and
-   CodeQL required checks in the "Protect main" ruleset.
-2. Push `docs/wiki/` to the GitHub wiki (create the first wiki page in the web UI once so the wiki
-   repository exists).
-3. Finish M1: sign-up, email verification, password reset (all with the `auth` throttle),
-   invitations, and a tenant switcher in the app shell.
-4. Write audit rows from a service layer helper so every M2 model gets them by default.
+1. Merge PR #1, rebase `feat/m1-accounts-and-members` onto `main`, open its PR, merge after CI.
+2. Apply `.github/rulesets/protect-main.json` (now with required checks) to the repository
+   settings, push `docs/wiki/` changes to the wiki, tag `v0.1.0` as a pre-release.
+3. Start M2: chart of accounts template, fiscal periods, journal entries through
+   `apps/core/journal.py`, gapless numbering with a locked counter row.
 
 ## Open questions
 
 - First chart of accounts template and first country for tax and payroll rules.
-- The domain in AGENTS.md was `karobar.ahmershah.dev`; it is now `karobarerp.ahmershah.dev`
-  everywhere, as asked on 2026-11-02.

@@ -2,6 +2,20 @@
 
 You need Docker, Python 3.12 and Node 22.
 
+The quick way:
+
+```sh
+git clone https://github.com/ahmershahdev/karobar-erp.git
+cd karobar-erp
+npm run dev
+```
+
+Open <http://localhost:5173/app/sign-up>, create an account, and copy the confirmation link from
+the worker's log (emails are printed there in development). Then create your first business and
+invite people from Members.
+
+The manual way:
+
 1. Clone the repository and start the database and cache:
 
    ```sh

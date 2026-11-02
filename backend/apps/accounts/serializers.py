@@ -1,6 +1,18 @@
+from typing import Any
+
+from django.contrib.auth import password_validation
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import User
+
+
+def check_password_strength(password: str, user: User | None) -> str:
+    try:
+        password_validation.validate_password(password, user)
+    except DjangoValidationError as exc:
+        raise serializers.ValidationError({"password": list(exc.messages)}) from exc
+    return password
 
 
 class LoginSerializer(serializers.Serializer[None]):
@@ -10,8 +22,38 @@ class LoginSerializer(serializers.Serializer[None]):
 
 class MeSerializer(serializers.ModelSerializer[User]):
     id = serializers.UUIDField(source="public_id", read_only=True)
+    email_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name")
+        fields = ("id", "email", "full_name", "email_verified")
         read_only_fields = fields
+
+    def get_email_verified(self, user: User) -> bool:
+        return user.email_verified_at is not None
+
+
+class SignUpSerializer(serializers.Serializer[None]):
+    email = serializers.EmailField(max_length=254)
+    password = serializers.CharField(max_length=128, trim_whitespace=False)
+    full_name = serializers.CharField(max_length=150, allow_blank=True, required=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs["email"] = attrs["email"].lower()
+        probe = User(email=attrs["email"], full_name=attrs.get("full_name", ""))
+        check_password_strength(attrs["password"], probe)
+        return attrs
+
+
+class TokenSerializer(serializers.Serializer[None]):
+    token = serializers.CharField(max_length=512)
+
+
+class EmailSerializer(serializers.Serializer[None]):
+    email = serializers.EmailField(max_length=254)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer[None]):
+    uid = serializers.CharField(max_length=64)
+    token = serializers.CharField(max_length=128)
+    password = serializers.CharField(max_length=128, trim_whitespace=False)

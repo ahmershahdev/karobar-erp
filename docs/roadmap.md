@@ -14,15 +14,16 @@ in CI, and seed data.
 - [x] MySQL 8.4, Redis and one Celery worker in Docker Compose (MySQL in tests too, never SQLite)
 - [x] pytest with coverage, Ruff, mypy (strict); Vite + React + TypeScript app with Vitest, ESLint
 - [x] GitHub Actions: `backend`, `frontend`, CodeQL
-- [ ] Make `backend`, `frontend` and CodeQL required checks in the ruleset (after the first green run)
+- [x] Make `backend`, `frontend` and CodeQL required checks in the ruleset
 - [x] Dependabot for Actions, Python, npm and Docker
-- [ ] Accounts: sign up, sign in, password reset, email verification (sign in and out done)
-- [ ] Tenants and members, roles with permissions per module, invitations (invitations left)
+- [x] Accounts: sign up, sign in, password reset, email verification
+- [x] Tenants and members, roles with permissions per module, invitations
 - [x] Tenant-scoped managers and an isolation test that runs against every endpoint
-- [ ] Audit log for every change to business data (model, service and API done; wire into modules)
+- [x] Audit log for every change to business data (each later module records through `apps.tenancy.audit`)
 - [x] English, Urdu and Arabic in the app shell, right to left for Urdu and Arabic
 
 - [x] Security baseline: Argon2id, CSRF on sign-in, nonce CSP, rate limits, row-lock helper
+- [x] `npm run dev` at the repository root starts MySQL, Redis, Django, Celery and Vite
 - [x] Public site with SEO (per-route heads, JSON-LD, sitemap, robots, llms.txt) and the design system
 
 ## M2. Accounting core (target 2026-12-20)
