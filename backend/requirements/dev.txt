@@ -1,5 +1,5 @@
 -r base.txt
-django-stubs[compatible-mypy]==5.2.9
+django-stubs[compatible-mypy]==6.1.2
 djangorestframework-stubs==3.16.9
 factory_boy==3.3.3
 mypy==1.19.1
