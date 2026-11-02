@@ -4,6 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 import { finishIntro, isIntroPending } from '../lib/intro';
 
+// Starting positions are inline transforms, not Tailwind's translate or scale utilities: those
+// set the separate CSS translate and scale properties, which stack with the transform anime.js
+// writes instead of being replaced by it.
+//
 // The intro runs once per page load and never waits on the network: the logo draws itself, the
 // four things Karobar keeps cycle past, and the screen opens like a ledger, top half up and
 // bottom half down. About two seconds; skipped for reduced motion and on app screens.
@@ -152,7 +156,8 @@ export function Preloader() {
             <span
               key={word}
               data-word
-              className="absolute inset-x-0 block translate-y-full text-center"
+              className="absolute inset-x-0 block text-center"
+              style={{ transform: 'translateY(100%)' }}
             >
               {word}
             </span>
@@ -170,7 +175,11 @@ export function Preloader() {
             </span>
           </div>
           <div className="h-px w-full bg-line">
-            <div ref={bar} className="h-px origin-left scale-x-0 bg-gold rtl:origin-right" />
+            <div
+              ref={bar}
+              className="h-px origin-left bg-gold rtl:origin-right"
+              style={{ transform: 'scaleX(0)' }}
+            />
           </div>
         </div>
       </div>

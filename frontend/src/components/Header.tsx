@@ -43,7 +43,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     <div
       ref={panel}
       id="mobile-menu"
-      className="fixed inset-0 z-[65] flex flex-col bg-black px-[var(--gutter)] pt-28 pb-8 md:hidden"
+      className="fixed inset-0 z-[65] flex flex-col overflow-y-auto overscroll-contain bg-black px-[var(--gutter)] pt-28 pb-8 md:hidden"
       data-lenis-prevent
     >
       <div
@@ -151,7 +151,7 @@ export function Header() {
     <>
       <header
         className={`fixed inset-x-0 top-3 z-[70] px-[var(--gutter)] transition-transform duration-700 ease-[var(--ease-out-expo)] md:top-5 ${
-          hidden ? '-translate-y-[150%]' : 'translate-y-0'
+          hidden ? '-translate-y-[150%] focus-within:translate-y-0' : 'translate-y-0'
         }`}
       >
         <div

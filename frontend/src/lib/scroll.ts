@@ -9,14 +9,24 @@ export interface ScrollState {
 // One passive scroll listener shared by every component that cares (header, back-to-top ring),
 // throttled to animation frames.
 let state: ScrollState = { y: 0, progress: 0, direction: 'up' };
+// Where the current direction was last confirmed. Measuring from here, not from the previous
+// frame, means a slow scroll of a pixel or two per frame still flips the direction.
+let anchor = 0;
 const listeners = new Set<() => void>();
 let frame = 0;
+const THRESHOLD = 8;
 
 function read(): void {
   frame = 0;
   const y = window.scrollY;
   const room = document.documentElement.scrollHeight - window.innerHeight;
-  const direction = Math.abs(y - state.y) < 4 ? state.direction : y > state.y ? 'down' : 'up';
+  let direction = state.direction;
+  if (Math.abs(y - anchor) >= THRESHOLD) {
+    direction = y > anchor ? 'down' : 'up';
+    anchor = y;
+  } else if ((direction === 'down' && y > anchor) || (direction === 'up' && y < anchor)) {
+    anchor = y;
+  }
   state = { y, progress: room > 0 ? Math.min(1, y / room) : 0, direction };
   for (const listener of listeners) listener();
 }
