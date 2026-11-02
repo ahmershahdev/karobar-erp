@@ -190,6 +190,15 @@ def _write_lines(entry: JournalEntry, lines: list[LineInput]) -> None:
     )
 
 
+def _locked_draft(entry: JournalEntry) -> JournalEntry:
+    # The caller's copy may be stale: someone else could have posted the entry since it was
+    # loaded. Lock the row and decide on what the database says now.
+    locked: JournalEntry = lock_rows(JournalEntry.objects.filter(pk=entry.pk))[0]
+    if locked.status == JournalEntry.Status.POSTED:
+        raise AlreadyPostedError
+    return locked
+
+
 @transaction.atomic
 def save_draft(
     actor: User,
@@ -199,9 +208,7 @@ def save_draft(
     entry: JournalEntry | None = None,
 ) -> JournalEntry:
     """Drafts may be unbalanced while someone is still typing; posting is where balance is law."""
-    if entry is not None and entry.status == JournalEntry.Status.POSTED:
-        raise AlreadyPostedError
-    target = entry or JournalEntry(created_by=actor)
+    target = _locked_draft(entry) if entry is not None else JournalEntry(created_by=actor)
     target.date, target.memo = entry_date, memo
     target.save()
     _write_lines(target, lines)
@@ -216,10 +223,9 @@ def save_draft(
 
 @transaction.atomic
 def delete_draft(actor: User, entry: JournalEntry) -> None:
-    if entry.status == JournalEntry.Status.POSTED:
-        raise AlreadyPostedError
-    audit.record(Action.DELETE, entry, actor, {"memo": [entry.memo, None]})
-    entry.delete()
+    draft = _locked_draft(entry)
+    audit.record(Action.DELETE, draft, actor, {"memo": [draft.memo, None]})
+    draft.delete()
 
 
 def _next_number(key: str, prefix: str) -> str:

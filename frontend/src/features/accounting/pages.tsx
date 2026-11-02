@@ -17,8 +17,13 @@ const TH = 'label py-3 pe-4 text-start font-normal';
 const TD = 'py-3 pe-4 align-top';
 const NUM = 'py-3 pe-4 text-end font-mono tabular-nums';
 
+// The local calendar date. toISOString() would give the UTC date, which is yesterday in
+// Pakistan and the Gulf until 5 in the morning.
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
 }
 
 function useAccounts() {
@@ -445,9 +450,12 @@ export function ChartPage() {
   const [form, setForm] = useState({ code: '', name: '', type: 'expense', parent: '' });
   const groups = (accounts.data ?? []).filter((account) => account.is_group);
   const depth = (account: Account): number => {
+    // The API refuses cycles, but a visited set keeps a bad row from freezing the page.
+    const seen = new Set<number>();
     let level = 0;
     let parent = account.parent;
-    while (parent) {
+    while (parent && !seen.has(parent)) {
+      seen.add(parent);
       level += 1;
       parent = accounts.data?.find((item) => item.id === parent)?.parent ?? null;
     }

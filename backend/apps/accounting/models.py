@@ -128,7 +128,9 @@ class JournalEntry(TenantOwnedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
-        if self.status == self.Status.POSTED:
+        # Ask the database, not this copy: a stale draft object must not delete a posted entry.
+        stored = JournalEntry.all_tenants.filter(pk=self.pk).values_list("status", flat=True)
+        if self.status == self.Status.POSTED or stored.first() == self.Status.POSTED:
             raise PostedEntryError("Posted entries can't be deleted; post a reversal instead.")
         return super().delete(*args, **kwargs)
 

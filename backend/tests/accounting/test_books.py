@@ -312,6 +312,40 @@ def test_entry_list_filters(bookkeeper: Member) -> None:
     assert client.get("/api/accounting/entries/?start=yesterday").status_code == 400
 
 
+def test_a_stale_draft_object_cannot_change_or_delete_a_posted_entry(bookkeeper: Member) -> None:
+    stale = draft(bookkeeper)
+    services.post_entry(bookkeeper.user, JournalEntry.objects.get(pk=stale.pk))
+    assert stale.status == JournalEntry.Status.DRAFT
+    with pytest.raises(services.AlreadyPostedError):
+        services.delete_draft(bookkeeper.user, stale)
+    with pytest.raises(services.AlreadyPostedError):
+        services.save_draft(bookkeeper.user, TODAY(), "Edited", [], stale)
+    with pytest.raises(PostedEntryError):
+        stale.delete()
+    assert JournalEntry.objects.get(pk=stale.pk).lines.count() == 2
+
+
+def test_account_parents_cannot_loop(bookkeeper: Member) -> None:
+    client = bookkeeper.client()
+    top = Account.objects.get(code="6000")
+    middle = client.post(
+        "/api/accounting/accounts/",
+        {"code": "6800", "name": "Office", "type": "expense", "is_group": True, "parent": top.pk},
+        format="json",
+    ).json()["id"]
+    looped = client.patch(f"/api/accounting/accounts/{top.pk}/", {"parent": middle}, format="json")
+    assert looped.status_code == 400
+
+
+def test_odd_account_codes_still_export(bookkeeper: Member) -> None:
+    cash = account("cash")
+    cash.code = 'C"1'
+    cash.save()
+    response = bookkeeper.client().get(f"/api/accounting/accounts/{cash.pk}/ledger/?export=csv")
+    assert response.status_code == 200
+    assert "attachment" in response["Content-Disposition"]
+
+
 def test_drafts_can_be_deleted(bookkeeper: Member) -> None:
     entry = draft(bookkeeper)
     assert bookkeeper.client().delete(f"/api/accounting/entries/{entry.pk}/").status_code == 204

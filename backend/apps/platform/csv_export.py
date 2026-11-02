@@ -5,6 +5,7 @@ from collections.abc import Iterable, Sequence
 from decimal import Decimal
 
 from django.http import HttpResponse
+from django.utils.http import content_disposition_header
 
 # A cell that starts with one of these is run as a formula by Excel and LibreOffice. Account names
 # and memos are typed by users, so an attacker could plant "=HYPERLINK(...)" in one and wait for
@@ -32,5 +33,6 @@ def csv_response(
         writer.writerow([safe_cell(cell) for cell in row])
     # The byte order mark makes Excel read the file as UTF-8, so Urdu and Arabic names survive.
     response = HttpResponse(UTF8_BOM + buffer.getvalue(), content_type="text/csv; charset=utf-8")
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    # Filenames can carry user-typed account codes; Django's helper quotes and encodes them.
+    response["Content-Disposition"] = content_disposition_header(True, filename) or "attachment"
     return response

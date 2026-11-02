@@ -29,11 +29,23 @@ class AccountSerializer(serializers.ModelSerializer[Account]):
         if parent is not None:
             if not parent.is_group:
                 raise serializers.ValidationError({"parent": ["The parent must be a group."]})
-            if self.instance is not None and parent.pk == self.instance.pk:
+            if self.instance is not None and self._descends_from(parent, self.instance):
                 raise serializers.ValidationError(
-                    {"parent": ["An account can't be its own parent."]}
+                    {"parent": ["An account can't sit under itself or one of its own accounts."]}
                 )
         return attrs
+
+    @staticmethod
+    def _descends_from(candidate: Account, account: Account) -> bool:
+        """True when `candidate` is `account` or sits somewhere below it."""
+        seen: set[int] = set()
+        node: Account | None = candidate
+        while node is not None and node.pk not in seen:
+            if node.pk == account.pk:
+                return True
+            seen.add(node.pk)
+            node = node.parent
+        return False
 
 
 class FiscalPeriodSerializer(serializers.ModelSerializer[FiscalPeriod]):

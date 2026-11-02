@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from apps.accounting import services
 from apps.accounting.models import Account
@@ -14,7 +15,8 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         done = 0
         for tenant in Tenant.objects.order_by("pk"):
-            with tenant_context(tenant):
+            # One transaction per business: a failure leaves that business untouched.
+            with tenant_context(tenant), transaction.atomic():
                 if Account.objects.exists():
                     continue
                 services.install_chart(tenant, None)
