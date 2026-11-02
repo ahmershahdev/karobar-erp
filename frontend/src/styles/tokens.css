@@ -1,68 +1,75 @@
 /*
-  The whole palette lives here. Components use these names (bg-gold, text-cream, from-indigo)
+  The whole palette lives here. Components use these names (bg-gold, text-cream, from-coral)
   or the semantic ones below; a raw hex value anywhere else is a review comment.
+
+  The 30 named colours are tuned to sit on warm ink: slightly desaturated, never neon, so the
+  gold accents and the WebGL light read as the brightest things on the page.
 */
 @theme {
-  --color-red: #e5484d;
-  --color-blue: #3e63dd;
-  --color-green: #30a46c;
-  --color-yellow: #f5d90a;
-  --color-orange: #f76b15;
-  --color-purple: #8e4ec6;
-  --color-black: #0b0b10;
-  --color-white: #ffffff;
-  --color-grey: #8b8d98;
-  --color-pink: #e93d82;
-  --color-brown: #8d5a3b;
-  --color-navy: #0f1b3d;
-  --color-sky: #7cc4fa;
-  --color-maroon: #7a1f2b;
-  --color-violet: #6e56cf;
-  --color-turquoise: #3dd6c6;
-  --color-cyan: #00a2c7;
-  --color-magenta: #d6409f;
-  --color-cream: #f6f0e4;
-  --color-beige: #e8dcc4;
-  --color-silver: #c9ccd3;
-  --color-gold: #d4a64a;
-  --color-olive: #7c8b3a;
-  --color-teal: #12a594;
-  --color-indigo: #3a3fbf;
-  --color-lavender: #b7a6f0;
-  --color-peach: #ffb38a;
-  --color-coral: #ff6f61;
-  --color-mint: #98e2c6;
-  --color-charcoal: #1b1c22;
+  --color-red: #d9534f;
+  --color-blue: #4b6bd6;
+  --color-green: #3e9b6b;
+  --color-yellow: #e8c547;
+  --color-orange: #e8793a;
+  --color-purple: #8a5cc2;
+  --color-black: #0a0908;
+  --color-white: #fffdf8;
+  --color-grey: #8a857d;
+  --color-pink: #e0749a;
+  --color-brown: #7a5238;
+  --color-navy: #141c33;
+  --color-sky: #8cc4ec;
+  --color-maroon: #6b1f2a;
+  --color-violet: #7462c9;
+  --color-turquoise: #4fd1c1;
+  --color-cyan: #2fa8c8;
+  --color-magenta: #c94b98;
+  --color-cream: #f1e9da;
+  --color-beige: #ddd0b8;
+  --color-silver: #b9b5ad;
+  --color-gold: #d8b26a;
+  --color-olive: #7d7f3c;
+  --color-teal: #1f8f84;
+  --color-indigo: #3d3f9e;
+  --color-lavender: #b9aee8;
+  --color-peach: #f2b48c;
+  --color-coral: #ee7b66;
+  --color-mint: #9fdcc3;
+  --color-charcoal: #161412;
 
   --color-canvas: var(--color-black);
   --color-surface: var(--color-charcoal);
+  --color-raised: #1f1c19;
   --color-ink: var(--color-cream);
-  --color-muted: var(--color-silver);
+  --color-muted: #9b958b;
   --color-accent: var(--color-gold);
-  --color-line: rgb(246 240 228 / 0.1);
+  --color-line: rgb(241 233 218 / 0.1);
+  --color-line-strong: rgb(241 233 218 / 0.22);
 
-  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: 'Noto Kufi Arabic Variable', 'Inter Variable', sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-arabic: 'Noto Kufi Arabic Variable', 'Geist Variable', sans-serif;
   --font-urdu: 'Noto Nastaliq Urdu', 'Noto Kufi Arabic Variable', serif;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 :root {
+  --gradient-molten: linear-gradient(
+    100deg,
+    var(--color-gold) 0%,
+    var(--color-peach) 45%,
+    var(--color-coral) 100%
+  );
   --gradient-aurora: linear-gradient(
     120deg,
     var(--color-navy) 0%,
     var(--color-indigo) 35%,
     var(--color-violet) 65%,
     var(--color-magenta) 100%
-  );
-  --gradient-ledger: linear-gradient(
-    100deg,
-    var(--color-gold) 0%,
-    var(--color-peach) 55%,
-    var(--color-coral) 100%
   );
   --gradient-lagoon: linear-gradient(
     120deg,
@@ -86,9 +93,7 @@
   --gradient-blossom: linear-gradient(120deg, var(--color-pink) 0%, var(--color-peach) 100%);
   --gradient-earth: linear-gradient(120deg, var(--color-brown) 0%, var(--color-beige) 100%);
 
-  --duration-fast: 180ms;
-  --duration-base: 420ms;
-  --duration-slow: 900ms;
-  --radius-card: 1.25rem;
-  --header-height: 4.5rem;
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --header-height: 4.25rem;
+  --radius-card: 1.5rem;
 }

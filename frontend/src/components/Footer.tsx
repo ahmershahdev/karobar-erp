@@ -3,71 +3,81 @@ import { Link } from 'react-router';
 
 import { SITE } from '../seo/site';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { Logo } from './Logo';
 
 export function Footer() {
   const { t } = useTranslation();
+  const columns = [
+    {
+      title: t('footer.explore'),
+      links: [
+        { label: t('nav.home'), to: '/' },
+        { label: t('nav.modules'), to: '/modules' },
+        { label: t('nav.security'), to: '/security' },
+        { label: t('nav.signIn'), to: '/app' },
+      ],
+    },
+  ];
   return (
-    <footer className="relative mt-32 border-t border-line">
-      <div
-        className="absolute inset-x-0 top-0 h-px"
-        style={{ background: 'var(--gradient-ledger)' }}
-      />
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-[2fr_1fr_1fr] md:px-8">
+    <footer className="relative mt-24 overflow-hidden border-t border-line bg-black pt-16 md:mt-40">
+      <div className="shell grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="space-y-5">
+          <p className="display-md max-w-[16ch] font-display">{t('footer.tagline')}</p>
+          <a
+            href={`mailto:${SITE.email}`}
+            className="inline-block text-lg text-gold hover:underline"
+          >
+            {SITE.email}
+          </a>
+        </div>
+        {columns.map((column) => (
+          <div key={column.title} className="space-y-4">
+            <p className="label">{column.title}</p>
+            <ul className="space-y-2">
+              {column.links.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-ink/80 transition-colors hover:text-gold">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
         <div className="space-y-4">
-          <div className="flex items-center gap-3 font-display text-2xl">
-            <Logo className="size-9" />
-            Karobar ERP
-          </div>
-          <p className="max-w-sm text-sm text-muted">{t('hero.eyebrow')}</p>
-          <div className="sm:hidden">
-            <LanguageSwitcher />
-          </div>
-        </div>
-        <ul className="space-y-3 text-sm">
-          <li>
-            <Link className="text-muted hover:text-gold" to="/">
-              {t('nav.home')}
-            </Link>
-          </li>
-          <li>
-            <Link className="text-muted hover:text-gold" to="/modules">
-              {t('nav.modules')}
-            </Link>
-          </li>
-          <li>
-            <Link className="text-muted hover:text-gold" to="/security">
-              {t('nav.security')}
-            </Link>
-          </li>
-        </ul>
-        <ul className="space-y-3 text-sm">
-          <li>
-            <a className="text-muted hover:text-gold" href={SITE.repo} rel="noopener">
-              {t('nav.source')}
-            </a>
-          </li>
-          <li>
-            <a className="text-muted hover:text-gold" href={`mailto:${SITE.email}`}>
-              {SITE.email}
-            </a>
-          </li>
-          <li className="text-muted">{t('footer.status')}</li>
-        </ul>
-      </div>
-      <div className="border-t border-line">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-6 text-xs text-muted md:px-8">
-          <span>
-            {t('footer.built')}{' '}
-            <a className="text-ink hover:text-gold" href={SITE.authorUrl} rel="noopener">
-              {SITE.author}
-            </a>
-          </span>
-          <span>
-            {t('footer.rights')} &middot; {new Date().getFullYear()}
-          </span>
+          <p className="label">{t('footer.project')}</p>
+          <ul className="space-y-2">
+            <li>
+              <a className="text-ink/80 hover:text-gold" href={SITE.repo} rel="noopener">
+                {t('nav.source')}
+              </a>
+            </li>
+            <li>
+              <a className="text-ink/80 hover:text-gold" href={`${SITE.repo}/wiki`} rel="noopener">
+                {t('footer.wiki')}
+              </a>
+            </li>
+            <li className="text-muted">{t('footer.status')}</li>
+          </ul>
         </div>
       </div>
+      <div className="shell mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-line py-6">
+        <span className="label">
+          {t('footer.built')}{' '}
+          <a className="!text-ink hover:!text-gold" href={SITE.authorUrl} rel="noopener">
+            {SITE.author}
+          </a>
+        </span>
+        <LanguageSwitcher />
+        <span className="label">
+          {t('footer.rights')} &middot; {new Date().getFullYear()}
+        </span>
+      </div>
+      <p
+        aria-hidden="true"
+        className="pointer-events-none -mb-[0.22em] text-center font-display text-[24vw] leading-[0.8] tracking-[-0.05em] text-gradient select-none"
+      >
+        Karobar
+      </p>
     </footer>
   );
 }

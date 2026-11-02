@@ -2,29 +2,31 @@ import { useTranslation } from 'react-i18next';
 
 import { LANGUAGES } from '../i18n';
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ className = '' }: { className?: string }) {
   const { t, i18n } = useTranslation();
   return (
     <div
       role="group"
       aria-label={t('nav.language')}
-      className="flex rounded-full border border-line p-1"
+      className={`flex items-center gap-1 ${className}`}
     >
-      {LANGUAGES.map((language) => {
+      {LANGUAGES.map((language, index) => {
         const active = i18n.resolvedLanguage === language.code;
         return (
-          <button
-            key={language.code}
-            type="button"
-            lang={language.code}
-            aria-pressed={active}
-            onClick={() => void i18n.changeLanguage(language.code)}
-            className={`rounded-full px-3 py-1 text-xs transition-colors duration-300 ${
-              active ? 'bg-cream text-black' : 'text-muted hover:text-ink'
-            }`}
-          >
-            {language.label}
-          </button>
+          <span key={language.code} className="flex items-center gap-1">
+            {index > 0 && <span className="text-muted/40">/</span>}
+            <button
+              type="button"
+              lang={language.code}
+              aria-pressed={active}
+              onClick={() => void i18n.changeLanguage(language.code)}
+              className={`px-1 py-1 text-xs transition-colors duration-300 ${
+                active ? 'text-gold' : 'text-muted hover:text-ink'
+              } ${language.code === 'en' ? 'font-mono uppercase tracking-widest' : ''}`}
+            >
+              {language.code === 'en' ? 'En' : language.label}
+            </button>
+          </span>
         );
       })}
     </div>

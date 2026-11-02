@@ -7,14 +7,17 @@
     "source": "Source code",
     "skip": "Skip to content",
     "language": "Language",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "menu": "Menu"
   },
   "hero": {
     "eyebrow": "Open-source ERP for shops and distributors",
-    "title": "Every rupee and every unit, in balance.",
+    "title": "Every rupee and every unit,",
     "lead": "Stock, sales, purchasing, books and payroll for small businesses. Every document posts its own double-entry journal, so your trial balance is right the moment the sale is.",
     "primary": "Explore the modules",
-    "secondary": "Read the code"
+    "secondary": "Read the code",
+    "accent": "in balance.",
+    "scroll": "Scroll"
   },
   "marquee": [
     "Inventory",
@@ -60,7 +63,9 @@
       "Sales tax payable",
       "Cost of goods sold",
       "Inventory"
-    ]
+    ],
+    "balanced": "Balanced",
+    "posting": "Posting"
   },
   "modules": {
     "eyebrow": "Everything a counter and a back office need",
@@ -99,7 +104,10 @@
         "title": "Payroll",
         "body": "Monthly runs, deductions, income tax from slabs per tax year, and payslips."
       }
-    ]
+    ],
+    "all": "All modules",
+    "pageTitle": "Everything a shop",
+    "pageAccent": "runs on."
   },
   "languages": {
     "eyebrow": "Three languages, both directions",
@@ -144,7 +152,9 @@
         "body": "Unexpected errors return a request id and nothing else. The details stay in the server log."
       }
     ],
-    "report": "Found a problem? Report it privately through GitHub security advisories or support@ahmershah.dev."
+    "report": "Found a problem? Report it privately through GitHub security advisories or support@ahmershah.dev.",
+    "pageTitle": "Your books are",
+    "pageAccent": "yours alone."
   },
   "cta": {
     "title": "Open source, MIT licensed.",
@@ -154,7 +164,11 @@
   "footer": {
     "built": "Built by",
     "rights": "MIT License",
-    "status": "Status: in development"
+    "status": "Status: in development",
+    "tagline": "Built for the counter, the back office and the books.",
+    "explore": "Explore",
+    "project": "Project",
+    "wiki": "Wiki"
   },
   "signIn": {
     "title": "Sign in",
@@ -261,5 +275,12 @@
     "hr": "HR",
     "payroll": "Payroll",
     "reports": "Reports"
+  },
+  "cursor": {
+    "open": "Open"
+  },
+  "manifesto": {
+    "eyebrow": "Why it exists",
+    "body": "Most small businesses run on paper registers and spreadsheets that slowly drift apart. Karobar keeps stock, sales and books in one ledger, so every number agrees with every other the moment anything happens."
   }
 }

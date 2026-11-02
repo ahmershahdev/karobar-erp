@@ -17,59 +17,68 @@ const TOTAL = 27300;
 export function LedgerDemo() {
   const { t, i18n } = useTranslation();
   const rows = t('ledger.rows', { returnObjects: true }) as string[];
-  const tableRef = useRef<HTMLTableElement>(null);
-  const [progress, setProgress] = useState(prefersReducedMotion() ? 1 : 0);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(() => (prefersReducedMotion() ? 1 : 0));
   const format = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 0 });
 
   useEffect(() => {
     const table = tableRef.current;
     if (!table || prefersReducedMotion()) return;
     const state = { value: 0 };
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry?.isIntersecting) return;
-      observer.disconnect();
-      animate(state, {
-        value: 1,
-        duration: 2200,
-        ease: 'outExpo',
-        onUpdate: () => setProgress(state.value),
-      });
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        observer.disconnect();
+        animate(state, {
+          value: 1,
+          duration: 2400,
+          ease: 'outExpo',
+          onUpdate: () => setProgress(state.value),
+        });
+      },
+      { threshold: 0.4 },
+    );
     observer.observe(table);
     return () => observer.disconnect();
   }, []);
 
   const cell = (amount: number) => (amount ? format.format(Math.round(amount * progress)) : '');
+  const balanced = progress > 0.999;
 
   return (
-    <div
-      className="gradient-border overflow-hidden p-1"
-      style={{ ['--gradient' as string]: 'var(--gradient-ledger)' }}
-    >
-      <table ref={tableRef} className="w-full text-start text-sm tabular-nums md:text-base">
-        <thead className="text-xs tracking-widest text-muted uppercase">
-          <tr>
-            <th className="px-5 py-4 text-start font-medium">{t('ledger.account')}</th>
-            <th className="px-5 py-4 text-end font-medium">{t('ledger.debit')}</th>
-            <th className="px-5 py-4 text-end font-medium">{t('ledger.credit')}</th>
+    <div ref={tableRef} className="card overflow-hidden">
+      <div className="flex items-center justify-between border-b border-line px-5 py-4 md:px-7">
+        <span className="label">JV-000142</span>
+        <span className={`label transition-colors duration-700 ${balanced ? '!text-mint' : ''}`}>
+          {balanced ? t('ledger.balanced') : t('ledger.posting')}
+        </span>
+      </div>
+      <table className="w-full font-mono text-[0.8rem] tabular-nums md:text-sm">
+        <thead>
+          <tr className="label">
+            <th className="px-5 py-3 text-start font-normal md:px-7">{t('ledger.account')}</th>
+            <th className="px-3 py-3 text-end font-normal">{t('ledger.debit')}</th>
+            <th className="px-5 py-3 text-end font-normal md:px-7">{t('ledger.credit')}</th>
           </tr>
         </thead>
         <tbody>
           {ENTRY.map((line, index) => (
             <tr key={rows[index] ?? index} className="border-t border-line">
-              <td className={`px-5 py-4 ${line.credit ? 'ps-10 text-muted' : ''}`}>
+              <td
+                className={`px-5 py-3.5 font-sans text-sm md:px-7 ${line.credit ? 'ps-9 text-muted md:ps-12' : ''}`}
+              >
                 {rows[index]}
               </td>
-              <td className="px-5 py-4 text-end">{cell(line.debit)}</td>
-              <td className="px-5 py-4 text-end">{cell(line.credit)}</td>
+              <td className="px-3 py-3.5 text-end">{cell(line.debit)}</td>
+              <td className="px-5 py-3.5 text-end md:px-7">{cell(line.credit)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t border-gold/40 font-display text-lg">
-            <td className="px-5 py-5">{t('ledger.total')}</td>
-            <td className="px-5 py-5 text-end text-gold">{cell(TOTAL)}</td>
-            <td className="px-5 py-5 text-end text-gold">{cell(TOTAL)}</td>
+          <tr className="border-t border-gold/40 text-base text-gold md:text-lg">
+            <td className="px-5 py-4 font-sans md:px-7">{t('ledger.total')}</td>
+            <td className="px-3 py-4 text-end">{cell(TOTAL)}</td>
+            <td className="px-5 py-4 text-end md:px-7">{cell(TOTAL)}</td>
           </tr>
         </tfoot>
       </table>

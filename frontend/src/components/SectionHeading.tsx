@@ -3,27 +3,23 @@ import type { ReactNode } from 'react';
 import { Reveal } from './Reveal';
 
 interface Props {
+  index: string;
   eyebrow: string;
   title: ReactNode;
   lead?: string;
-  gradient?: string;
+  className?: string;
 }
 
-export function SectionHeading({
-  eyebrow,
-  title,
-  lead,
-  gradient = 'var(--gradient-ledger)',
-}: Props) {
+export function SectionHeading({ index, eyebrow, title, lead, className = '' }: Props) {
   return (
-    <Reveal stagger className="max-w-3xl space-y-5">
-      <p className="text-xs font-medium tracking-[0.25em] text-gold uppercase">{eyebrow}</p>
-      <h2 className="text-4xl leading-[1.05] md:text-6xl">
-        <span className="text-gradient" style={{ ['--gradient' as string]: gradient }}>
-          {title}
-        </span>
-      </h2>
-      {lead && <p className="text-lg text-muted">{lead}</p>}
+    <Reveal stagger className={`space-y-6 ${className}`}>
+      <div className="flex items-center gap-4">
+        <span className="label !text-gold">[{index}]</span>
+        <span className="h-px w-10 bg-line-strong" />
+        <span className="label">{eyebrow}</span>
+      </div>
+      <h2 className="display-lg max-w-[14ch]">{title}</h2>
+      {lead && <p className="max-w-xl text-lg text-muted">{lead}</p>}
     </Reveal>
   );
 }
