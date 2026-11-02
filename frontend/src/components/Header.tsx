@@ -151,7 +151,7 @@ export function Header() {
     <>
       <header
         className={`fixed inset-x-0 top-3 z-[70] px-[var(--gutter)] transition-transform duration-700 ease-[var(--ease-out-expo)] md:top-5 ${
-          hidden ? '-translate-y-[150%] focus-within:translate-y-0' : 'translate-y-0'
+          hidden ? '-translate-y-[150%] has-[:focus-visible]:translate-y-0' : 'translate-y-0'
         }`}
       >
         <div
