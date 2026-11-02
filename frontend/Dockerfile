@@ -1,5 +1,5 @@
 # Build from the repository root: docker build -f frontend/Dockerfile .
-FROM node:22.20.0-alpine AS build
+FROM node:26.13.0-alpine AS build
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --ignore-scripts
