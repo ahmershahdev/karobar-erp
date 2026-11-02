@@ -14,6 +14,7 @@ from . import audit
 from .context import tenant_context
 from .models import AuditEvent, Invitation, Membership, Role, Tenant
 from .modules import FULL_ACCESS, READ_ONLY
+from .signals import tenant_created
 
 INVITATION_LIFETIME = timedelta(days=7)
 Action = AuditEvent.Action
@@ -82,15 +83,23 @@ def hash_token(token: str) -> str:
 
 
 @transaction.atomic
-def create_tenant(owner: User, name: str, base_currency: str, locale: str) -> Membership:
+def create_tenant(
+    owner: User, name: str, base_currency: str, locale: str, fiscal_year_start_month: int = 7
+) -> Membership:
     if owner.email_verified_at is None:
         raise UnverifiedCreatorError
-    tenant = Tenant.objects.create(name=name, base_currency=base_currency, locale=locale)
+    tenant = Tenant.objects.create(
+        name=name,
+        base_currency=base_currency,
+        locale=locale,
+        fiscal_year_start_month=fiscal_year_start_month,
+    )
     with tenant_context(tenant):
         Role.objects.create(name="Manager", permissions=FULL_ACCESS)
         Role.objects.create(name="Viewer", permissions=READ_ONLY)
         membership: Membership = Membership.objects.create(user=owner, is_owner=True)
         audit.record(Action.CREATE, tenant, owner, {"name": [None, name]})
+        tenant_created.send(sender=Tenant, tenant=tenant, owner=owner)
     return membership
 
 

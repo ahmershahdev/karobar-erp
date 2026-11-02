@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "apps.platform",
     "apps.accounts",
     "apps.tenancy",
+    "apps.accounting",
 ]
 
 MIDDLEWARE = [

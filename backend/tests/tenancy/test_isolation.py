@@ -5,11 +5,15 @@ nobody can add an endpoint without deciding how tenants are kept apart on it.
 """
 
 from collections.abc import Callable, Iterator
+from decimal import Decimal
 
 import pytest
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver
+from django.utils import timezone
 
+from apps.accounting import services as accounting
+from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry
 from apps.tenancy import audit, services
 from apps.tenancy.models import AuditEvent, Membership, Role, Tenant
 from tests.conftest import Member
@@ -87,6 +91,93 @@ _register("members", _member)
 _register("invitations", _invitation)
 
 
+def _books(member: Member) -> None:
+    if not Account.objects.exists():
+        accounting.install_chart(member.tenant, member.user)
+        accounting.create_current_fiscal_year(member.user, start_month=1)
+
+
+def _account(member: Member) -> int:
+    _books(member)
+    cash: Account = Account.objects.get(role="cash")
+    return cash.pk
+
+
+def _draft(member: Member) -> int:
+    _books(member)
+    amount = Decimal(10)
+    entry = accounting.save_draft(
+        member.user,
+        timezone.localdate(),
+        "Private",
+        [
+            accounting.LineInput(Account.objects.get(role="cash"), amount, Decimal(0)),
+            accounting.LineInput(Account.objects.get(role="sales"), Decimal(0), amount),
+        ],
+    )
+    return entry.pk
+
+
+def _posted(member: Member) -> int:
+    entry = JournalEntry.objects.get(pk=_draft(member))
+    return accounting.post_entry(member.user, entry).pk
+
+
+def _fiscal_year(member: Member) -> int:
+    _books(member)
+    year: FiscalYear = FiscalYear.objects.get()
+    return year.pk
+
+
+def _period(member: Member) -> int:
+    _books(member)
+    period: FiscalPeriod = FiscalPeriod.objects.all()[0]
+    return period.pk
+
+
+_register("accounting/accounts", _account)
+_register("accounting/entries", _draft)
+tenant_endpoint("api/accounting/fiscal-years/")(
+    lambda m: ("/api/accounting/fiscal-years/", _fiscal_year(m))
+)
+
+
+def _detail(
+    template: str, make_row: Callable[[Member], int]
+) -> Callable[[Member], tuple[str, int]]:
+    def probe(member: Member) -> tuple[str, int]:
+        pk = make_row(member)
+        return template.format(pk=pk), pk
+
+    return probe
+
+
+tenant_endpoint("api/accounting/periods/<int:pk>/")(
+    _detail("/api/accounting/periods/{pk}/", _period)
+)
+tenant_endpoint("api/accounting/accounts/<int:pk>/ledger/")(
+    _detail("/api/accounting/accounts/{pk}/ledger/", _account)
+)
+
+
+def _trial_balance(member: Member) -> tuple[str, int]:
+    _posted(member)
+    return "/api/accounting/reports/trial-balance/", Account.objects.get(role="cash").pk
+
+
+tenant_endpoint("api/accounting/reports/trial-balance/")(_trial_balance)
+
+# POST-only actions on one tenant-owned row. An outsider must get 404 and change nothing.
+TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
+    "api/accounting/entries/<int:pk>/post/": lambda m: (
+        f"/api/accounting/entries/{_draft(m)}/post/"
+    ),
+    "api/accounting/entries/<int:pk>/reverse/": lambda m: (
+        f"/api/accounting/entries/{_posted(m)}/reverse/"
+    ),
+}
+
+
 def _routes(resolver: URLResolver, prefix: str = "") -> Iterator[str]:
     for entry in resolver.url_patterns:
         route = prefix + str(entry.pattern)
@@ -116,7 +207,7 @@ def test_every_api_view_has_a_throttle_scope() -> None:
 
 def test_every_endpoint_is_classified() -> None:
     api_routes = {r for r in _routes(get_resolver()) if r.startswith("api/")}
-    classified = PUBLIC | USER_LEVEL | set(TENANT_OWNED)
+    classified = PUBLIC | USER_LEVEL | set(TENANT_OWNED) | set(TENANT_ACTIONS)
     assert api_routes - classified == set(), "classify new endpoints in test_isolation.py"
     assert classified - api_routes == set(), "remove deleted endpoints from test_isolation.py"
 
@@ -143,5 +234,18 @@ def test_other_tenants_rows_are_invisible(
     else:
         assert theirs.status_code == 200
         body = theirs.json()
-        rows = body["results"] if isinstance(body, dict) else body
+        rows = body if isinstance(body, list) else body.get("results", body.get("rows"))
         assert row_id not in [row["id"] for row in rows]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("route", sorted(TENANT_ACTIONS))
+def test_other_tenants_rows_cannot_be_acted_on(
+    route: str, owner: Member, outsider: Member, in_tenant: Callable[[Tenant], None]
+) -> None:
+    in_tenant(owner.tenant)
+    url = TENANT_ACTIONS[route](owner)
+    before = list(JournalEntry.objects.values_list("id", "status", "number"))
+    response = outsider.client().post(url, {"date": str(timezone.localdate())}, format="json")
+    assert response.status_code == 404
+    assert list(JournalEntry.objects.values_list("id", "status", "number")) == before

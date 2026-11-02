@@ -17,6 +17,17 @@ works once, for 7 days, and only for a signed-in user with that confirmed email.
 double-entry journal entry are saved together. Posted documents never change; mistakes are fixed
 with reversals and credit notes.
 
+**Chart of accounts.** Every business starts with a standard chart: assets, liabilities, equity,
+income, cost of sales and expenses. Groups total their accounts; entries go to the accounts
+inside them. Accounts can be added and renamed at any time.
+
+**Fiscal year and periods.** Each business picks the month its fiscal year starts (July by
+default). The year is split into months; closing a month stops new entries going into it.
+
+**Journal entry.** Saved as a draft first. Posting checks that debits equal credits, that the date
+is in an open period and that every account can take entries, then gives it the next number
+(JV-000001, JV-000002, ...). Numbers never skip.
+
 **Audit log.** Changes to businesses, members, roles and invitations record who made them, when,
 what changed and the request they came from. Each business module adds its own records as it
 ships.

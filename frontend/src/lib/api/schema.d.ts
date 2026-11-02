@@ -4,6 +4,166 @@
  */
 
 export interface paths {
+    "/api/accounting/accounts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_accounts_list"];
+        put?: never;
+        post: operations["accounting_accounts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/accounts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_accounts_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["accounting_accounts_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["accounting_accounts_partial_update"];
+        trace?: never;
+    };
+    "/api/accounting/accounts/{id}/ledger/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_accounts_ledger_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/entries/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_entries_list"];
+        put?: never;
+        post: operations["accounting_entries_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/entries/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_entries_retrieve"];
+        put: operations["accounting_entries_update"];
+        post?: never;
+        delete: operations["accounting_entries_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/entries/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accounting_entries_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/entries/{id}/reverse/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accounting_entries_reverse_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/fiscal-years/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_fiscal_years_list"];
+        put?: never;
+        post: operations["accounting_fiscal_years_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/periods/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_periods_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["accounting_periods_partial_update"];
+        trace?: never;
+    };
+    "/api/accounting/reports/trial-balance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_reports_trial_balance_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/csrf/": {
         parameters: {
             query?: never;
@@ -331,6 +491,16 @@ export interface components {
         AcceptInvitation: {
             token: string;
         };
+        Account: {
+            readonly id: number;
+            code: string;
+            name: string;
+            type: components["schemas"]["TypeEnum"];
+            parent?: number | null;
+            is_group?: boolean;
+            is_active?: boolean;
+            readonly role: string | null;
+        };
         /**
          * @description * `create` - Create
          *     * `update` - Update
@@ -354,6 +524,24 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        FiscalPeriod: {
+            readonly id: number;
+            readonly number: number;
+            /** Format: date */
+            readonly start: string;
+            /** Format: date */
+            readonly end: string;
+            readonly closed: boolean;
+        };
+        FiscalYear: {
+            readonly id: number;
+            name?: string;
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+            readonly periods: components["schemas"]["FiscalPeriod"][];
+        };
         Health: {
             status: string;
         };
@@ -368,6 +556,57 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly expires_at: string;
+        };
+        JournalEntry: {
+            readonly id: number;
+            readonly number: string | null;
+            /** Format: date */
+            date: string;
+            memo?: string;
+            readonly status: components["schemas"]["StatusEnum"];
+            lines: components["schemas"]["JournalLine"][];
+            readonly total: string;
+            readonly reversal_of: number | null;
+            readonly reversed_by: number | null;
+            /** Format: email */
+            readonly created_by: string;
+            /** Format: email */
+            readonly posted_by: string | null;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
+        JournalLine: {
+            readonly id: number;
+            account: number;
+            readonly account_code: string;
+            readonly account_name: string;
+            /** Format: decimal */
+            debit?: string;
+            /** Format: decimal */
+            credit?: string;
+            description?: string;
+        };
+        Ledger: {
+            account: components["schemas"]["Account"];
+            /** Format: decimal */
+            opening: string;
+            /** Format: decimal */
+            closing: string;
+            lines: components["schemas"]["LedgerLine"][];
+        };
+        LedgerLine: {
+            entry_id: number;
+            number: string;
+            /** Format: date */
+            date: string;
+            memo: string;
+            description: string;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
+            /** Format: decimal */
+            balance: string;
         };
         /**
          * @description * `en` - en
@@ -436,6 +675,19 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Invitation"][];
         };
+        PaginatedJournalEntryList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["JournalEntry"][];
+        };
         PaginatedMemberList: {
             /**
              * Format: uri
@@ -454,6 +706,16 @@ export interface components {
             token: string;
             password: string;
         };
+        PatchedAccount: {
+            readonly id?: number;
+            code?: string;
+            name?: string;
+            type?: components["schemas"]["TypeEnum"];
+            parent?: number | null;
+            is_group?: boolean;
+            is_active?: boolean;
+            readonly role?: string | null;
+        };
         PatchedMember: {
             readonly id?: number;
             /** Format: email */
@@ -465,10 +727,18 @@ export interface components {
             /** Format: date-time */
             readonly created_at?: string;
         };
+        PatchedPeriodState: {
+            closed?: boolean;
+        };
         PatchedRole: {
             readonly id?: number;
             name?: string;
             permissions?: unknown;
+        };
+        Reverse: {
+            /** Format: date */
+            date: string;
+            memo?: string;
         };
         Role: {
             readonly id: number;
@@ -481,16 +751,54 @@ export interface components {
             password: string;
             full_name?: string;
         };
+        /**
+         * @description * `draft` - Draft
+         *     * `posted` - Posted
+         * @enum {string}
+         */
+        StatusEnum: "draft" | "posted";
         TenantCreate: {
             name: string;
             /** @default PKR */
             base_currency: string;
             /** @default en */
             locale: components["schemas"]["LocaleEnum"];
+            /** @default 7 */
+            fiscal_year_start_month: number;
         };
         Token: {
             token: string;
         };
+        TrialBalance: {
+            /** Format: date */
+            start: string | null;
+            /** Format: date */
+            end: string;
+            rows: components["schemas"]["TrialBalanceRow"][];
+            /** Format: decimal */
+            total_debit: string;
+            /** Format: decimal */
+            total_credit: string;
+        };
+        TrialBalanceRow: {
+            id: number;
+            code: string;
+            name: string;
+            type: string;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
+        };
+        /**
+         * @description * `asset` - Asset
+         *     * `liability` - Liability
+         *     * `equity` - Equity
+         *     * `income` - Income
+         *     * `expense` - Expense
+         * @enum {string}
+         */
+        TypeEnum: "asset" | "liability" | "equity" | "income" | "expense";
     };
     responses: never;
     parameters: never;
@@ -500,6 +808,416 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    accounting_accounts_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"][];
+                };
+            };
+        };
+    };
+    accounting_accounts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Account"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+        };
+    };
+    accounting_accounts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+        };
+    };
+    accounting_accounts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accounting_accounts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAccount"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+        };
+    };
+    accounting_accounts_ledger_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                export?: "csv";
+                start?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ledger"];
+                };
+            };
+        };
+    };
+    accounting_entries_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                end?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                start?: string;
+                status?: "draft" | "posted";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedJournalEntryList"];
+                };
+            };
+        };
+    };
+    accounting_entries_create: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+                status?: "draft" | "posted";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalEntry"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+        };
+    };
+    accounting_entries_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+        };
+    };
+    accounting_entries_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalEntry"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+        };
+    };
+    accounting_entries_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accounting_entries_post_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+        };
+    };
+    accounting_entries_reverse_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Reverse"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalEntry"];
+                };
+            };
+        };
+    };
+    accounting_fiscal_years_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalYear"][];
+                };
+            };
+        };
+    };
+    accounting_fiscal_years_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FiscalYear"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalYear"];
+                };
+            };
+        };
+    };
+    accounting_periods_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalPeriod"];
+                };
+            };
+        };
+    };
+    accounting_periods_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPeriodState"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FiscalPeriod"];
+                };
+            };
+        };
+    };
+    accounting_reports_trial_balance_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                export?: "csv";
+                start?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialBalance"];
+                };
+            };
+        };
+    };
     accounts_csrf_retrieve: {
         parameters: {
             query?: never;

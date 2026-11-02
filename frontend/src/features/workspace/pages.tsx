@@ -1,71 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type ReactNode, type SyntheticEvent } from 'react';
+import { useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useOutletContext } from 'react-router';
+import { useNavigate } from 'react-router';
 
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
-import { ApiError, unwrap } from '../../lib/api/errors';
+import { unwrap } from '../../lib/api/errors';
 import { MODULES, can, type Me, type Role } from '../../lib/api/types';
 import { usePrivateSeo } from '../../lib/seo';
 import { ensureCsrf, sessionKeys } from '../auth/session';
-import type { WorkspaceContext } from './WorkspaceLayout';
-
-function errorText(error: unknown, fallback: string): string {
-  return error instanceof ApiError && error.status < 500 ? error.message : fallback;
-}
-
-function Panel({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-[var(--radius-card)] border border-line bg-surface/50 p-6">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-  usePrivateSeo(title);
-  return (
-    <header className="space-y-1">
-      <h1 className="text-4xl">{title}</h1>
-      {subtitle && <p className="text-muted">{subtitle}</p>}
-    </header>
-  );
-}
-
-function useWorkspace() {
-  return useOutletContext<WorkspaceContext>();
-}
-
-// One mutation that runs whichever API call it is given, then refreshes the listed queries.
-function useTenantAction(invalidate: string[]) {
-  const client = useQueryClient();
-  const { membership } = useWorkspace();
-  return useMutation({
-    mutationFn: async (call: () => Promise<unknown>) => {
-      await ensureCsrf();
-      return call();
-    },
-    onSuccess: () =>
-      Promise.all(
-        invalidate.map((key) =>
-          client.invalidateQueries({ queryKey: [membership.tenant_id, key] }),
-        ),
-      ),
-  });
-}
+import { errorText, useTenantAction, useWorkspace } from './hooks';
+import { PageTitle, Panel } from './ui';
 
 export function NewBusinessPage({ me }: { me: Me }) {
   const { t } = useTranslation();
@@ -73,11 +18,19 @@ export function NewBusinessPage({ me }: { me: Me }) {
   const client = useQueryClient();
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState('PKR');
+  const [startMonth, setStartMonth] = useState(7);
   const create = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
       return unwrap(
-        api.POST('/api/tenants/', { body: { name, base_currency: currency, locale: 'en' } }),
+        api.POST('/api/tenants/', {
+          body: {
+            name,
+            base_currency: currency,
+            locale: 'en',
+            fiscal_year_start_month: startMonth,
+          },
+        }),
       );
     },
     onSuccess: async (membership) => {
@@ -112,6 +65,19 @@ export function NewBusinessPage({ me }: { me: Me }) {
         >
           {['PKR', 'AED', 'SAR', 'QAR', 'OMR', 'KWD', 'BHD', 'USD', 'EUR', 'GBP'].map((code) => (
             <option key={code}>{code}</option>
+          ))}
+        </Select>
+        <Select
+          label={t('workspace.fiscalStart')}
+          value={startMonth}
+          onChange={(e) => setStartMonth(Number(e.target.value))}
+        >
+          {Array.from({ length: 12 }, (_, index) => (
+            <option key={index} value={index + 1}>
+              {new Intl.DateTimeFormat(undefined, { month: 'long' }).format(
+                new Date(2026, index, 1),
+              )}
+            </option>
           ))}
         </Select>
         {create.isError && (

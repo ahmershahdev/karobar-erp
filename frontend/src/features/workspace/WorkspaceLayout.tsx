@@ -72,6 +72,17 @@ export function WorkspaceLayout({ me }: { me: Me }) {
     },
     { to: `${base}/roles`, label: t('workspace.roles'), show: can(membership, 'roles', 'view') },
     { to: `${base}/audit`, label: t('workspace.audit'), show: can(membership, 'audit', 'view') },
+    ...[
+      { path: 'journal', label: t('acc.journal') },
+      { path: 'chart', label: t('acc.chart') },
+      { path: 'trial-balance', label: t('acc.trialBalance') },
+      { path: 'ledger', label: t('acc.ledger') },
+      { path: 'periods', label: t('acc.periods') },
+    ].map((item) => ({
+      to: `${base}/accounting/${item.path}`,
+      label: item.label,
+      show: can(membership, 'accounting', 'view'),
+    })),
   ];
 
   return (
