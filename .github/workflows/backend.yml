@@ -68,4 +68,5 @@ jobs:
           EMAIL_HOST_USER: ci
           EMAIL_HOST_PASSWORD: ci
           DEFAULT_FROM_EMAIL: ci@example.test
+          DJANGO_ALLOWED_HOSTS: karobarerp.ahmershah.dev
           DJANGO_SECRET_KEY: ci-only-a-long-enough-key-for-the-deploy-check-0123456789abcdefghij
