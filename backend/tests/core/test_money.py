@@ -17,6 +17,11 @@ def test_quantize_quantity_keeps_four_places() -> None:
     assert quantize_quantity("1.23456") == Decimal("1.2346")
 
 
+def test_numbers_too_large_to_round_raise_money_error() -> None:
+    with pytest.raises(MoneyError, match="too large"):
+        quantize_money("1E+30")
+
+
 @pytest.mark.parametrize("bad", [0.1, True, None, "abc", "NaN", "Infinity"])
 def test_to_decimal_refuses_floats_and_garbage(bad: object) -> None:
     with pytest.raises(MoneyError):

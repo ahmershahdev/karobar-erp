@@ -13,5 +13,6 @@ Owners can do everything.
 double-entry journal entry are saved together. Posted documents never change; mistakes are fixed
 with reversals and credit notes.
 
-**Audit log.** Every create, update, post and delete records who did it, when, what changed and
-the request it came from.
+**Audit log.** Changes to businesses, members, roles and invitations record who made them, when,
+what changed and the request they came from. Each business module adds its own records as it
+ships.

@@ -50,6 +50,8 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    throttle_scope = "session"
+
     @extend_schema(request=None, responses={204: None})
     def post(self, request: Request) -> Response:
         logout(request._request)
@@ -57,6 +59,8 @@ class LogoutView(APIView):
 
 
 class MeView(APIView):
+    throttle_scope = "session"
+
     @extend_schema(responses=MeSerializer)
     def get(self, request: Request) -> Response:
         return Response(MeSerializer(cast(User, request.user)).data)

@@ -73,8 +73,8 @@ the Compose service.
 ## Checks
 
 ```sh
-cd backend  && ruff check . && ruff format --check . && mypy . && pytest
-cd frontend && npm run lint && npm run typecheck && npm test && npm run build
+(cd backend && ruff check . && ruff format --check . && mypy . && pytest)
+(cd frontend && npm run lint && npm run typecheck && npm test && npm run build)
 ```
 
 ## Documentation

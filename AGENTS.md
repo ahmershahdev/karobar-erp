@@ -75,7 +75,7 @@ Details and the reasoning are in [docs/security.md](docs/security.md). The short
   The JSON-LD component is the one exception and escapes `<`.
 - Session cookies (HttpOnly, Secure, SameSite=Lax) and Django CSRF for the SPA. No tokens in
   `localStorage`.
-- Passwords hashed with Argon2id; minimum length 12; breached and common passwords rejected.
+- Passwords hashed with Argon2id; minimum length 12; common and all-numeric passwords rejected.
 - Content Security Policy with a per-request nonce and `strict-dynamic`; no `unsafe-inline` for
   scripts. New third-party origins need a line in `docs/security.md`.
 - Every endpoint has a throttle scope. Sign-in, sign-up and password reset have strict ones.

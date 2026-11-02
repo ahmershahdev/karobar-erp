@@ -73,10 +73,11 @@ def test_create_superuser_lowercases_email_and_email_is_required() -> None:
 
 
 def test_auth_endpoints_are_throttled() -> None:
-    ScopedRateThrottle.THROTTLE_RATES = {**ScopedRateThrottle.THROTTLE_RATES, "auth": "3/min"}
+    original = ScopedRateThrottle.THROTTLE_RATES
+    ScopedRateThrottle.THROTTLE_RATES = {**original, "auth": "3/min"}
     try:
         client = APIClient()
         codes = [client.get("/api/accounts/csrf/").status_code for _ in range(4)]
     finally:
-        ScopedRateThrottle.THROTTLE_RATES = {**ScopedRateThrottle.THROTTLE_RATES, "auth": "10/min"}
+        ScopedRateThrottle.THROTTLE_RATES = original
     assert codes[-1] == 429

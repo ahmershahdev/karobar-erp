@@ -8,6 +8,7 @@ from .serializers import AuditEventSerializer, MembershipSerializer
 
 class MyTenantsView(generics.ListAPIView[Membership]):
     serializer_class = MembershipSerializer
+    throttle_scope = "tenancy"
     pagination_class = None
 
     def get_queryset(self) -> QuerySet[Membership]:
@@ -21,6 +22,7 @@ class MyTenantsView(generics.ListAPIView[Membership]):
 
 class AuditEventListView(generics.ListAPIView[AuditEvent]):
     serializer_class = AuditEventSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "audit"
 
@@ -30,6 +32,7 @@ class AuditEventListView(generics.ListAPIView[AuditEvent]):
 
 class AuditEventDetailView(generics.RetrieveAPIView[AuditEvent]):
     serializer_class = AuditEventSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "audit"
 

@@ -43,7 +43,10 @@ export function headFor(siteUrl: string, route: PublicRoute): string {
 }
 
 function robots(siteUrl: string): string {
-  const disallow = NOINDEX_PREFIXES.map((prefix) => `Disallow: ${prefix}`).join('\n');
+  const disallow = NOINDEX_PREFIXES.flatMap((prefix) => [
+    `Disallow: ${prefix}$`,
+    `Disallow: ${prefix}/`,
+  ]).join('\n');
   return `User-agent: *\nAllow: /\n${disallow}\nDisallow: /api/\n\nSitemap: ${absoluteUrl(siteUrl, '/sitemap.xml')}\n`;
 }
 

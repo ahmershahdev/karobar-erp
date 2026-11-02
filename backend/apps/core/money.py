@@ -27,9 +27,17 @@ def to_decimal(value: Decimal | int | str) -> Decimal:
     return result
 
 
+def _quantize(value: Decimal | int | str, exponent: Decimal) -> Decimal:
+    try:
+        return to_decimal(value).quantize(exponent, rounding=ROUND_HALF_UP)
+    except InvalidOperation as exc:
+        # quantize() fails when the result needs more digits than the context allows (28).
+        raise MoneyError(f"too large to round: {value!r}") from exc
+
+
 def quantize_money(value: Decimal | int | str) -> Decimal:
-    return to_decimal(value).quantize(_MONEY_EXP, rounding=ROUND_HALF_UP)
+    return _quantize(value, _MONEY_EXP)
 
 
 def quantize_quantity(value: Decimal | int | str) -> Decimal:
-    return to_decimal(value).quantize(_QUANTITY_EXP, rounding=ROUND_HALF_UP)
+    return _quantize(value, _QUANTITY_EXP)

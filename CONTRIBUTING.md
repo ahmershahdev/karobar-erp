@@ -16,7 +16,7 @@ CI runs the same ones plus CodeQL.
 - Branch names: `feat/...`, `fix/...`, `docs/...`, `chore/...`.
 - Tests and linters must pass. Business logic in `backend/apps/core` needs 100% branch coverage.
 - New tenant-owned endpoints need an isolation test (another tenant's data is `404`); the test
-  suite fails until every route is listed in `tests/tenancy/test_isolation.py`.
+  suite fails until every route is listed in `backend/tests/tenancy/test_isolation.py`.
 - API changes regenerate `backend/openapi.yaml` and `frontend/src/lib/api/schema.d.ts`.
 - New public pages follow [docs/seo.md](docs/seo.md); visual changes use the tokens in
   [docs/design.md](docs/design.md); anything security-relevant is checked against

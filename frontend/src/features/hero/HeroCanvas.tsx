@@ -65,11 +65,14 @@ export default function HeroCanvas({ animate, onFailure }: Props) {
     let visible = true;
     let frame = 0;
     const start = performance.now();
+    if (!animate) uniforms.uTime.value = 12;
 
     const resize = () => {
       const { width, height } = host.getBoundingClientRect();
       renderer.setSize(width, height, false);
       renderer.getDrawingBufferSize(uniforms.uResolution.value);
+      // setSize() clears the canvas; with no animation loop, nothing would redraw it.
+      if (!animate) renderer.render(scene, camera);
     };
     const onPointer = (event: PointerEvent) => {
       const rect = host.getBoundingClientRect();
@@ -103,9 +106,6 @@ export default function HeroCanvas({ animate, onFailure }: Props) {
       window.addEventListener('pointermove', onPointer, { passive: true });
       window.addEventListener('scroll', onScroll, { passive: true });
       loop();
-    } else {
-      uniforms.uTime.value = 12;
-      renderer.render(scene, camera);
     }
 
     return () => {

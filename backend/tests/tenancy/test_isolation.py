@@ -7,6 +7,7 @@ nobody can add an endpoint without deciding how tenants are kept apart on it.
 from collections.abc import Callable, Iterator
 
 import pytest
+from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver
 
 from apps.tenancy import audit
@@ -46,6 +47,24 @@ def _routes(resolver: URLResolver, prefix: str = "") -> Iterator[str]:
             yield from _routes(entry, route)
         elif isinstance(entry, URLPattern):
             yield route
+
+
+def _views(resolver: URLResolver, prefix: str = "") -> Iterator[tuple[str, object]]:
+    for entry in resolver.url_patterns:
+        route = prefix + str(entry.pattern)
+        if isinstance(entry, URLResolver):
+            yield from _views(entry, route)
+        elif isinstance(entry, URLPattern):
+            yield route, getattr(entry.callback, "cls", None)
+
+
+def test_every_api_view_has_a_throttle_scope() -> None:
+    rates = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]
+    for route, view in _views(get_resolver()):
+        if not route.startswith("api/") or route == "api/schema/":
+            continue
+        scope = getattr(view, "throttle_scope", None)
+        assert scope in rates, f"{route} needs a throttle_scope with a rate in settings"
 
 
 def test_every_endpoint_is_classified() -> None:

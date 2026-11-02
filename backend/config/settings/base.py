@@ -161,6 +161,8 @@ REST_FRAMEWORK: dict[str, Any] = {
         "user": env("THROTTLE_USER", default="600/min"),
         "auth": env("THROTTLE_AUTH", default="10/min"),
         "health": env("THROTTLE_HEALTH", default="120/min"),
+        "session": env("THROTTLE_SESSION", default="120/min"),
+        "tenancy": env("THROTTLE_TENANCY", default="300/min"),
     },
     "EXCEPTION_HANDLER": "apps.platform.exceptions.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

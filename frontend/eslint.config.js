@@ -4,6 +4,26 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+const HTML_SINKS = [
+  {
+    selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
+    message: 'Render text, not HTML. See docs/security.md.',
+  },
+  {
+    selector: 'AssignmentExpression[left.property.name=/^(innerHTML|outerHTML)$/]',
+    message: 'Use textContent. See docs/security.md.',
+  },
+  {
+    selector: "CallExpression[callee.property.name='insertAdjacentHTML']",
+    message: 'Use DOM APIs. See docs/security.md.',
+  },
+];
+
+const IMPORT_META = {
+  selector: "MetaProperty[meta.name='import'][property.name='meta']",
+  message: 'Read configuration through src/lib/env.ts.',
+};
+
 export default tseslint.config(
   { ignores: ['dist', 'src/lib/api/schema.d.ts'] },
   {
@@ -24,21 +44,7 @@ export default tseslint.config(
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
-          message: 'Render text, not HTML. See docs/security.md.',
-        },
-        {
-          selector: 'AssignmentExpression[left.property.name=/^(innerHTML|outerHTML)$/]',
-          message: 'Use textContent. See docs/security.md.',
-        },
-        {
-          selector: "CallExpression[callee.property.name='insertAdjacentHTML']",
-          message: 'Use DOM APIs. See docs/security.md.',
-        },
-      ],
+      'no-restricted-syntax': ['error', ...HTML_SINKS, IMPORT_META],
       'no-restricted-properties': [
         'error',
         {
@@ -46,17 +52,12 @@ export default tseslint.config(
           property: 'setItem',
           message: 'No tokens or business data in localStorage.',
         },
-        {
-          object: 'import',
-          property: 'meta',
-          message: 'Read configuration through src/lib/env.ts.',
-        },
       ],
     },
   },
   {
     files: ['src/lib/env.ts', 'vite.config.ts'],
-    rules: { 'no-restricted-properties': 'off' },
+    rules: { 'no-restricted-syntax': ['error', ...HTML_SINKS] },
   },
   {
     files: ['**/*.test.ts', 'src/test/**'],

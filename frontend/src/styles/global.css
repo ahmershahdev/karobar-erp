@@ -148,13 +148,20 @@ html.lenis body {
   }
 
   [dir='rtl'] .marquee-track {
-    animation-direction: reverse;
+    animation-name: marquee-rtl;
   }
 }
 
 @keyframes marquee {
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* In RTL the track starts at the right edge, so it has to travel the other way. */
+@keyframes marquee-rtl {
+  to {
+    transform: translateX(50%);
   }
 }
 
