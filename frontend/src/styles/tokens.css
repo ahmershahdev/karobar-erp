@@ -94,6 +94,6 @@
   --gradient-earth: linear-gradient(120deg, var(--color-brown) 0%, var(--color-beige) 100%);
 
   --gutter: clamp(1rem, 4vw, 3rem);
-  --header-height: 4.25rem;
+  --header-height: 5.5rem;
   --radius-card: 1.5rem;
 }
