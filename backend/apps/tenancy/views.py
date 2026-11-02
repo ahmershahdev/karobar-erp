@@ -62,6 +62,7 @@ class MyTenantsView(generics.ListAPIView[Membership]):
             data.validated_data["base_currency"],
             data.validated_data["locale"],
             data.validated_data["fiscal_year_start_month"],
+            data.validated_data["valuation_method"],
         )
         return Response(MembershipSerializer(membership).data, status=status.HTTP_201_CREATED)
 

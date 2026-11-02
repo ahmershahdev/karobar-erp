@@ -249,7 +249,7 @@ def delete_draft(actor: User, entry: JournalEntry) -> None:
     draft.delete()
 
 
-def _next_number(key: str, prefix: str) -> str:
+def next_number(key: str, prefix: str) -> str:
     # The series row is locked until this transaction ends, so concurrent posts queue here and
     # each takes the next number. If the post rolls back, so does the increment: no gaps.
     series = NumberSeries.objects.filter(key=key)
@@ -278,7 +278,7 @@ def post_entry(actor: User, entry: JournalEntry) -> JournalEntry:
     periods = lock_rows(FiscalPeriod.objects.filter(start__lte=locked.date, end__gte=locked.date))
     if not periods or periods[0].closed_at is not None:
         raise NoOpenPeriodError
-    locked.number = _next_number(*JOURNAL_SERIES)
+    locked.number = next_number(*JOURNAL_SERIES)
     locked.status = JournalEntry.Status.POSTED
     locked.posted_by = actor
     locked.posted_at = timezone.now()
@@ -303,5 +303,43 @@ def reverse_entry(actor: User, entry: JournalEntry, on: date, memo: str = "") ->
     draft = save_draft(actor, on, memo or f"Reversal of {original.number}", lines)
     draft.reversal_of = original
     draft.save(update_fields=["reversal_of"])
+    posted: JournalEntry = post_entry(actor, draft)
+    return posted
+
+
+class MissingRoleError(AccountingError):
+    message = "The chart of accounts has no account for a role this posting needs."
+
+
+def account_for_role(role: str) -> Account:
+    found: Account | None = Account.objects.filter(role=role).first()
+    if found is None:
+        raise MissingRoleError
+    return found
+
+
+def post_rule_lines(
+    actor: User,
+    entry_date: date,
+    memo: str,
+    lines: list[Line],
+    accounts: dict[str, Account],
+    source: tuple[str, str],
+) -> JournalEntry:
+    """Turn apps.core posting-rule lines into a posted journal entry.
+
+    Each line names an account role ("inventory") or a key in `accounts` for accounts the user
+    chose (a contra account on a stock adjustment). Runs inside the caller's transaction, so the
+    document, its stock moves and this entry commit or fail together.
+    """
+    resolved = [
+        LineInput(
+            accounts.get(line.account) or account_for_role(line.account), line.debit, line.credit
+        )
+        for line in lines
+    ]
+    draft = save_draft(actor, entry_date, memo, resolved)
+    draft.source_type, draft.source_id = source
+    draft.save(update_fields=["source_type", "source_id"])
     posted: JournalEntry = post_entry(actor, draft)
     return posted

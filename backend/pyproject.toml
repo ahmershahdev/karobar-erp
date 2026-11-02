@@ -12,6 +12,11 @@ extend-exclude = ["**/migrations/**", ".venv"]
 select = ["E", "F", "W", "I", "B", "UP", "S", "DJ", "SIM", "RUF", "PT", "C4", "N", "PL"]
 ignore = ["PLR2004", "RUF012"]
 
+[tool.ruff.lint.pylint]
+# Domain services take an actor, a date, a memo and the data they post; six is honest.
+max-args = 7
+max-positional-args = 7
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "PLR0913"]
 "config/settings/*.py" = ["F405"]

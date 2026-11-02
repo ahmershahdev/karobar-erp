@@ -53,5 +53,9 @@ services:
     <<: *backend
     command: celery -A config worker --loglevel=info --concurrency=2
 
+  beat:
+    <<: *backend
+    command: celery -A config beat --loglevel=info --schedule /tmp/celerybeat-schedule
+
 volumes:
   mysql-data:
