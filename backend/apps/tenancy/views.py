@@ -67,6 +67,7 @@ class MyTenantsView(generics.ListAPIView[Membership]):
 
 class RoleListView(generics.ListCreateAPIView[Role]):
     serializer_class = RoleSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "roles"
     pagination_class = None
@@ -83,6 +84,7 @@ class RoleListView(generics.ListCreateAPIView[Role]):
 
 class RoleDetailView(generics.RetrieveUpdateDestroyAPIView[Role]):
     serializer_class = RoleSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "roles"
 
@@ -106,6 +108,7 @@ class RoleDetailView(generics.RetrieveUpdateDestroyAPIView[Role]):
 
 class MemberListView(generics.ListAPIView[Membership]):
     serializer_class = MemberSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "members"
 
@@ -115,6 +118,7 @@ class MemberListView(generics.ListAPIView[Membership]):
 
 class MemberDetailView(generics.RetrieveUpdateDestroyAPIView[Membership]):
     serializer_class = MemberSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "members"
     http_method_names = ["get", "patch", "delete", "head", "options"]
@@ -133,6 +137,7 @@ class MemberDetailView(generics.RetrieveUpdateDestroyAPIView[Membership]):
 
 class InvitationListView(generics.ListCreateAPIView[Invitation]):
     serializer_class = InvitationSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "members"
 
@@ -159,6 +164,7 @@ class InvitationListView(generics.ListCreateAPIView[Invitation]):
 
 class InvitationDetailView(generics.RetrieveDestroyAPIView[Invitation]):
     serializer_class = InvitationSerializer
+    throttle_scope = "tenancy"
     permission_classes = [HasModulePermission]
     module = "members"
 
