@@ -1,12 +1,12 @@
 import type { ComponentProps, ReactNode } from 'react';
 
 const INPUT =
-  'w-full rounded-xl border border-line bg-black/40 px-4 py-3 outline-none transition-colors focus:border-gold disabled:opacity-60';
+  'w-full rounded-xl border border-line bg-black/50 px-4 py-3 text-base outline-none transition-colors placeholder:text-muted/60 focus:border-gold disabled:opacity-60';
 
 export function Field({ label, ...props }: { label: string } & ComponentProps<'input'>) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm text-muted">{label}</span>
+      <span className="label">{label}</span>
       <input {...props} className={INPUT} />
     </label>
   );
@@ -19,7 +19,7 @@ export function Select({
 }: { label: string; children: ReactNode } & ComponentProps<'select'>) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm text-muted">{label}</span>
+      <span className="label">{label}</span>
       <select {...props} className={INPUT}>
         {children}
       </select>
@@ -33,8 +33,8 @@ export function Button({
   ...props
 }: { variant?: 'primary' | 'ghost' | 'danger' } & ComponentProps<'button'>) {
   const styles = {
-    primary: 'text-black [background:var(--gradient-ledger)]',
-    ghost: 'border border-line text-ink hover:border-gold hover:text-gold',
+    primary: 'text-black [background:var(--gradient-molten)] hover:brightness-110',
+    ghost: 'border border-line-strong text-ink hover:border-gold hover:text-gold',
     danger: 'border border-coral/40 text-coral hover:bg-coral/10',
   }[variant];
   return (

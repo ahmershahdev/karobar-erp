@@ -33,14 +33,13 @@ export function Reveal({
         observer.disconnect();
         animate(targets, {
           opacity: [0, 1],
-          translateY: ['2.5rem', '0rem'],
-          filter: ['blur(8px)', 'blur(0px)'],
-          duration: 1100,
-          delay: staggered ? stagger(90, { start: delay }) : delay,
+          translateY: ['2rem', '0rem'],
+          duration: 1200,
+          delay: staggered ? stagger(80, { start: delay }) : delay,
           ease: 'outExpo',
         });
       },
-      { rootMargin: '0px 0px -12% 0px' },
+      { rootMargin: '0px 0px -10% 0px' },
     );
     observer.observe(element);
     return () => observer.disconnect();

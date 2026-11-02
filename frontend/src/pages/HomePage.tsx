@@ -1,182 +1,190 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
+import { Magnetic } from '../components/Magnetic';
 import { Marquee } from '../components/Marquee';
 import { Reveal } from '../components/Reveal';
+import { ScrollWords } from '../components/ScrollWords';
 import { SectionHeading } from '../components/SectionHeading';
 import { SplitHeadline } from '../components/SplitHeadline';
-import { HeroBackdrop } from '../features/hero/HeroBackdrop';
 import { LedgerDemo } from '../features/ledger/LedgerDemo';
-import { ModuleGrid } from '../features/modules/ModuleGrid';
+import { ModuleGallery } from '../features/modules/ModuleGallery';
 import { usePublicSeo } from '../lib/seo';
 import { PUBLIC_ROUTES, SITE } from '../seo/site';
 
-const PROMISE_ACCENTS = [
-  'var(--gradient-ledger)',
-  'var(--gradient-lagoon)',
-  'var(--gradient-dusk)',
-];
+const RULE_ACCENTS = ['var(--gradient-molten)', 'var(--gradient-lagoon)', 'var(--gradient-dusk)'];
 
 export default function HomePage() {
   const { t } = useTranslation();
   usePublicSeo(PUBLIC_ROUTES[0]);
-  const promises = t('promises.items', { returnObjects: true }) as {
-    title: string;
-    body: string;
-  }[];
+  const rules = t('promises.items', { returnObjects: true }) as { title: string; body: string }[];
 
   return (
     <>
-      <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-20 md:pb-28">
-        <HeroBackdrop />
-        <div className="relative mx-auto w-full max-w-7xl px-4 md:px-8">
-          <Reveal>
-            <p className="mb-6 inline-flex items-center gap-3 rounded-full border border-cream/15 bg-black/30 px-4 py-2 text-xs tracking-wide text-cream/80 backdrop-blur">
-              <span className="size-1.5 rounded-full bg-mint" />
-              {t('hero.eyebrow')}
-            </p>
+      <section data-morph="0" className="relative flex min-h-[100svh] flex-col">
+        <div className="shell flex flex-1 flex-col justify-end pt-[calc(var(--header-height)+2rem)] pb-10 md:pb-14">
+          <Reveal className="mb-8 flex items-center gap-3">
+            <span className="size-1.5 animate-pulse rounded-full bg-mint" />
+            <span className="label">{t('hero.eyebrow')}</span>
           </Reveal>
           <SplitHeadline
             text={t('hero.title')}
-            className="max-w-5xl text-5xl leading-[0.98] sm:text-7xl lg:text-8xl"
+            accent={t('hero.accent')}
+            className="display-xl max-w-[13ch]"
+            delay={1500}
           />
           <Reveal
-            delay={600}
-            className="mt-8 flex flex-col gap-8 md:flex-row md:items-end md:justify-between"
+            delay={2000}
+            className="mt-10 grid gap-8 border-t border-line pt-8 md:grid-cols-[1fr_auto] md:items-end"
           >
-            <p className="max-w-xl text-lg text-cream/80">{t('hero.lead')}</p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/modules"
-                className="rounded-full px-6 py-3 font-medium text-black transition-transform duration-300 hover:-translate-y-0.5"
-                style={{ background: 'var(--gradient-ledger)' }}
-              >
-                {t('hero.primary')}
-              </Link>
+            <p className="max-w-lg text-base text-ink/75 md:text-lg">{t('hero.lead')}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Magnetic>
+                <Link
+                  to="/modules"
+                  data-cursor={t('cursor.open')}
+                  className="inline-flex items-center gap-3 rounded-full px-7 py-4 font-medium text-black"
+                  style={{ background: 'var(--gradient-molten)' }}
+                >
+                  {t('hero.primary')}
+                  <span aria-hidden="true" className="rtl:rotate-180">
+                    &rarr;
+                  </span>
+                </Link>
+              </Magnetic>
               <a
                 href={SITE.repo}
                 rel="noopener"
-                className="rounded-full border border-cream/25 px-6 py-3 text-cream backdrop-blur transition-colors hover:border-gold hover:text-gold"
+                data-cursor="Git"
+                className="rounded-full border border-line-strong px-7 py-4 transition-colors hover:border-gold hover:text-gold"
               >
                 {t('hero.secondary')}
               </a>
             </div>
           </Reveal>
         </div>
+        <div className="shell hidden items-center justify-between pb-6 md:flex">
+          <span className="label">{t('hero.scroll')}</span>
+          <span className="relative h-10 w-px overflow-hidden bg-line">
+            <span className="absolute inset-0 bg-gold [animation:scroll-cue_2.4s_var(--ease-in-out-expo)_infinite]" />
+          </span>
+          <span className="label">EN / UR / AR</span>
+        </div>
+      </section>
+
+      <section data-morph="0" className="shell py-28 md:py-44">
+        <span className="label mb-8 block !text-gold">[01] {t('manifesto.eyebrow')}</span>
+        <ScrollWords
+          text={t('manifesto.body')}
+          className="display-md max-w-5xl font-display !leading-[1.12]"
+        />
       </section>
 
       <Marquee items={t('marquee', { returnObjects: true }) as string[]} />
 
-      <section className="mx-auto max-w-7xl px-4 py-32 md:px-8">
-        <SectionHeading eyebrow={t('promises.eyebrow')} title={t('promises.title')} />
-        <Reveal stagger className="mt-16 grid gap-4 md:grid-cols-3">
-          {promises.map((promise, index) => (
+      <section data-morph="1" className="shell py-28 md:py-40">
+        <SectionHeading index="02" eyebrow={t('promises.eyebrow')} title={t('promises.title')} />
+        <Reveal stagger className="mt-16 border-t border-line md:mt-24">
+          {rules.map((rule, index) => (
             <article
-              key={promise.title}
-              className="gradient-border p-8"
-              style={{ ['--gradient' as string]: PROMISE_ACCENTS[index] }}
+              key={rule.title}
+              className="group grid gap-4 border-b border-line py-10 md:grid-cols-[6rem_1fr_1fr] md:gap-10 md:py-14"
             >
               <span
-                className="text-gradient font-display text-6xl"
-                style={{ ['--gradient' as string]: PROMISE_ACCENTS[index] }}
+                className="text-gradient font-display text-6xl leading-none md:text-7xl"
+                style={{ ['--gradient' as string]: RULE_ACCENTS[index] }}
               >
-                {index + 1}
+                {String(index + 1).padStart(2, '0')}
               </span>
-              <h3 className="mt-8 text-2xl">{promise.title}</h3>
-              <p className="mt-3 leading-relaxed text-muted">{promise.body}</p>
+              <h3 className="font-display text-4xl leading-tight transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:translate-x-2 md:text-5xl rtl:group-hover:-translate-x-2">
+                {rule.title}
+              </h3>
+              <p className="max-w-md text-muted md:pt-3">{rule.body}</p>
             </article>
           ))}
         </Reveal>
       </section>
 
-      <section className="relative overflow-hidden py-32">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 opacity-40"
-          style={{
-            background: 'radial-gradient(50% 60% at 80% 50%, var(--color-maroon), transparent 70%)',
-          }}
-        />
-        <div className="mx-auto grid max-w-7xl items-center gap-16 px-4 md:px-8 lg:grid-cols-2">
+      <section data-morph="1" className="shell py-20 md:py-32">
+        <div className="grid items-center gap-14 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
           <SectionHeading
+            index="03"
             eyebrow={t('ledger.eyebrow')}
             title={t('ledger.title')}
             lead={t('ledger.body')}
           />
-          <Reveal delay={200}>
+          <Reveal delay={150}>
             <LedgerDemo />
           </Reveal>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-32 md:px-8">
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+      <section data-morph="2" className="pt-20 md:pt-32">
+        <div className="shell mb-14 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeading
+            index="04"
             eyebrow={t('modules.eyebrow')}
             title={t('modules.title')}
             lead={t('modules.lead')}
-            gradient="var(--gradient-lagoon)"
           />
-          <Link to="/modules" className="text-sm text-gold underline-offset-8 hover:underline">
-            {t('hero.primary')}
+          <Link to="/modules" className="label !text-gold hover:underline">
+            {t('modules.all')}
           </Link>
         </div>
-        <div className="mt-16">
-          <ModuleGrid limit={4} />
-        </div>
+        <ModuleGallery />
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-32 md:px-8">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.2fr]">
-          <SectionHeading
-            eyebrow={t('languages.eyebrow')}
-            title={t('languages.title')}
-            lead={t('languages.body')}
-            gradient="var(--gradient-orchard)"
-          />
-          <Reveal stagger className="grid gap-3">
-            <p lang="en" dir="ltr" className="font-display text-4xl md:text-6xl">
-              Invoice paid.
-            </p>
-            <p
-              lang="ur"
-              dir="rtl"
-              className="text-gradient text-4xl leading-[1.9] md:text-6xl"
-              style={{
-                fontFamily: 'var(--font-urdu)',
-                ['--gradient' as string]: 'var(--gradient-orchard)',
-              }}
-            >
-              انوائس ادا ہو گئی۔
-            </p>
-            <p
-              lang="ar"
-              dir="rtl"
-              className="text-4xl text-muted md:text-6xl"
-              style={{ fontFamily: 'var(--font-arabic)' }}
-            >
-              تم دفع الفاتورة.
-            </p>
-          </Reveal>
-        </div>
+      <section data-morph="2" className="shell py-28 md:py-40">
+        <SectionHeading index="05" eyebrow={t('languages.eyebrow')} title={t('languages.title')} />
+        <Reveal stagger className="mt-14 divide-y divide-line border-y border-line">
+          <p lang="en" dir="ltr" className="py-6 font-display text-5xl md:text-8xl">
+            Invoice <em className="text-gradient">paid.</em>
+          </p>
+          <p
+            lang="ur"
+            dir="rtl"
+            className="py-6 text-4xl leading-[1.9] md:text-7xl"
+            style={{ fontFamily: 'var(--font-urdu)' }}
+          >
+            انوائس ادا ہو گئی۔
+          </p>
+          <p
+            lang="ar"
+            dir="rtl"
+            className="py-6 text-4xl text-muted md:text-7xl"
+            style={{ fontFamily: 'var(--font-arabic)' }}
+          >
+            تم دفع الفاتورة.
+          </p>
+        </Reveal>
+        <p className="mt-8 max-w-xl text-muted">{t('languages.body')}</p>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 md:px-8">
-        <Reveal className="relative overflow-hidden rounded-[2rem] px-8 py-20 text-center md:px-16 md:py-28">
+      <section data-morph="2" className="shell pb-10">
+        <Reveal className="card overflow-hidden px-6 py-16 text-center md:px-16 md:py-28">
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10"
-            style={{ background: 'var(--gradient-aurora)' }}
+            className="absolute inset-0 -z-10 opacity-60"
+            style={{
+              background:
+                'radial-gradient(60% 80% at 50% 120%, rgb(216 178 106 / 0.35), transparent 70%)',
+            }}
           />
-          <h2 className="mx-auto max-w-3xl text-4xl md:text-6xl">{t('cta.title')}</h2>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-cream/80">{t('cta.body')}</p>
-          <a
-            href={SITE.repo}
-            rel="noopener"
-            className="mt-10 inline-flex rounded-full bg-cream px-7 py-3.5 font-medium text-black transition-transform duration-300 hover:-translate-y-0.5"
-          >
-            {t('cta.button')}
-          </a>
+          <span className="label !text-gold">[06] MIT</span>
+          <h2 className="display-lg mx-auto mt-6 max-w-[14ch]">{t('cta.title')}</h2>
+          <p className="mx-auto mt-6 max-w-xl text-lg text-muted">{t('cta.body')}</p>
+          <div className="mt-10">
+            <Magnetic>
+              <a
+                href={SITE.repo}
+                rel="noopener"
+                data-cursor="Star"
+                className="inline-flex rounded-full bg-cream px-8 py-4 font-medium text-black"
+              >
+                {t('cta.button')}
+              </a>
+            </Magnetic>
+          </div>
         </Reveal>
       </section>
     </>

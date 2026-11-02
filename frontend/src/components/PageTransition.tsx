@@ -14,8 +14,9 @@ interface Props {
 }
 
 /**
- * Covers the page with a gradient curtain, swaps the route underneath, then lifts the curtain.
- * The old page stays rendered until it is fully covered, so nothing pops.
+ * Covers the page with an ink panel carrying the wordmark, swaps the route underneath, then
+ * lifts the panel. The old page stays rendered until it is fully covered, so nothing pops.
+ * Screens inside the app switch instantly; the curtain is for the public site.
  */
 export function PageTransition({ children }: Props) {
   const location = useLocation();
@@ -25,7 +26,6 @@ export function PageTransition({ children }: Props) {
 
   useEffect(() => {
     if (location.pathname === shown.pathname) return;
-    // Inside the app, screens change often; the curtain is for the public site only.
     if (bothInApp(location, shown)) return;
     const element = curtain.current;
     if (!element || prefersReducedMotion()) {
@@ -34,17 +34,20 @@ export function PageTransition({ children }: Props) {
       return;
     }
     let cancelled = false;
-    element.style.transformOrigin = '50% 100%';
     const cover = animate(element, {
-      scaleY: [0, 1],
-      duration: 520,
-      ease: 'inOutQuart',
+      clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'],
+      duration: 650,
+      ease: 'inOutExpo',
       onComplete: () => {
         if (cancelled) return;
         setShown(location);
         scrollToTop(lenis);
-        element.style.transformOrigin = '50% 0%';
-        animate(element, { scaleY: [1, 0], duration: 620, delay: 80, ease: 'inOutQuart' });
+        animate(element, {
+          clipPath: ['inset(0 0 0% 0)', 'inset(0 0 100% 0)'],
+          duration: 750,
+          delay: 120,
+          ease: 'inOutExpo',
+        });
       },
     });
     return () => {
@@ -61,12 +64,12 @@ export function PageTransition({ children }: Props) {
       <div
         ref={curtain}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-50 origin-bottom scale-y-0"
-        style={{ background: 'var(--gradient-aurora)' }}
+        className="pointer-events-none fixed inset-0 z-[85] flex items-center justify-center bg-black [clip-path:inset(100%_0_0_0)]"
       >
+        <span className="text-gradient font-display text-[18vw] leading-none">Karobar</span>
         <div
-          className="absolute inset-x-0 bottom-0 h-1"
-          style={{ background: 'var(--gradient-ledger)' }}
+          className="absolute inset-x-0 bottom-0 h-px"
+          style={{ background: 'var(--gradient-molten)' }}
         />
       </div>
     </>

@@ -76,16 +76,25 @@ export function WorkspaceLayout({ me }: { me: Me }) {
 
   return (
     <div className="flex min-h-[100svh] flex-col md:flex-row">
-      <aside className="border-line bg-surface/60 md:sticky md:top-0 md:h-[100svh] md:w-72 md:border-e">
-        <div className="flex h-full flex-col gap-6 p-5">
-          <Link to="/" className="flex items-center gap-3 font-display text-lg">
-            <Logo />
-            Karobar
-          </Link>
+      <aside className="border-b border-line bg-surface/70 backdrop-blur md:sticky md:top-0 md:h-[100svh] md:w-72 md:border-e md:border-b-0">
+        <div className="flex h-full flex-col gap-5 p-4 md:gap-6 md:p-5">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2.5">
+              <Logo className="size-7" />
+              <span className="font-display text-2xl">Karobar</span>
+            </Link>
+            <button
+              type="button"
+              className="label rounded-full border border-line px-3 py-1.5 hover:border-gold hover:!text-gold md:hidden"
+              onClick={() => {
+                void signOut().then(() => navigate('/app/sign-in'));
+              }}
+            >
+              {t('workspace.signOut')}
+            </button>
+          </div>
           <label className="block space-y-2">
-            <span className="text-xs tracking-widest text-muted uppercase">
-              {t('workspace.business')}
-            </span>
+            <span className="label">{t('workspace.business')}</span>
             <select
               className="w-full rounded-xl border border-line bg-black/40 px-3 py-2.5 outline-none focus:border-gold"
               value={membership.tenant_id}
@@ -102,7 +111,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
               <option value="new">{t('workspace.newBusiness')}</option>
             </select>
           </label>
-          <nav className="flex gap-1 overflow-x-auto md:flex-col">
+          <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-col md:px-0">
             {links
               .filter((link) => link.show)
               .map((link) => (
@@ -137,7 +146,10 @@ export function WorkspaceLayout({ me }: { me: Me }) {
           </div>
         </div>
       </aside>
-      <main className="flex-1 space-y-6 p-5 md:p-10">
+      <main className="min-w-0 flex-1 space-y-6 p-4 md:p-10">
+        <div className="flex justify-end md:hidden">
+          <LanguageSwitcher />
+        </div>
         {!me.email_verified && <VerifyBanner />}
         <Outlet context={{ me, membership } satisfies WorkspaceContext} />
       </main>
