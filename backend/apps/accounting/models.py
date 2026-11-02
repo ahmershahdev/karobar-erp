@@ -2,7 +2,7 @@ from typing import Any
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 
 from apps.core.balances import AccountType
 from apps.tenancy.models import TenantOwnedModel
@@ -128,11 +128,18 @@ class JournalEntry(TenantOwnedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
-        # Ask the database, not this copy: a stale draft object must not delete a posted entry.
-        stored = JournalEntry.all_tenants.filter(pk=self.pk).values_list("status", flat=True)
-        if self.status == self.Status.POSTED or stored.first() == self.Status.POSTED:
-            raise PostedEntryError("Posted entries can't be deleted; post a reversal instead.")
-        return super().delete(*args, **kwargs)
+        # Ask the database, not this copy, and hold the row until the delete is done, so nothing
+        # can post the entry between the check and the delete.
+        with transaction.atomic():
+            stored = (
+                JournalEntry.all_tenants.select_for_update()
+                .filter(pk=self.pk)
+                .values_list("status", flat=True)
+                .first()
+            )
+            if self.Status.POSTED in (self.status, stored):
+                raise PostedEntryError("Posted entries can't be deleted; post a reversal instead.")
+            return super().delete(*args, **kwargs)
 
 
 class JournalLine(TenantOwnedModel):

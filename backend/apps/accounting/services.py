@@ -64,6 +64,10 @@ class OverlappingYearError(AccountingError):
     message = "This fiscal year overlaps an existing one."
 
 
+class HierarchyLoopError(AccountingError):
+    message = "An account can't sit under itself or one of its own accounts."
+
+
 class AccountInUseError(AccountingError):
     message = "This account has entries or child accounts, so it can't be deleted."
 
@@ -139,6 +143,21 @@ def set_period_closed(actor: User, period: FiscalPeriod, closed: bool) -> Fiscal
 # Chart of accounts
 
 
+def _check_no_loop(account: Account) -> None:
+    # Lock the business row so hierarchy changes run one at a time per business; then walk the
+    # new parent's ancestors as they are in the database. Two concurrent moves can't both pass.
+    Tenant.objects.select_for_update().get(pk=account.tenant_id)
+    seen: set[int] = set()
+    parent_id = account.parent_id
+    while parent_id is not None and parent_id not in seen:
+        if parent_id == account.pk:
+            raise HierarchyLoopError
+        seen.add(parent_id)
+        parent_id = (
+            Account.objects.filter(pk=parent_id).values_list("parent_id", flat=True).first()
+        )
+
+
 @transaction.atomic
 def save_account(actor: User, values: dict[str, Any], account: Account | None = None) -> Account:
     fields = ("code", "name", "type", "parent_id", "is_group", "is_active", "role")
@@ -146,6 +165,8 @@ def save_account(actor: User, values: dict[str, Any], account: Account | None = 
     target = account or Account()
     for key, value in values.items():
         setattr(target, key, value)
+    if "parent" in values and target.pk is not None:
+        _check_no_loop(target)
     try:
         with transaction.atomic():
             target.save()

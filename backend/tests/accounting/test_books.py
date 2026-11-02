@@ -335,6 +335,10 @@ def test_account_parents_cannot_loop(bookkeeper: Member) -> None:
     ).json()["id"]
     looped = client.patch(f"/api/accounting/accounts/{top.pk}/", {"parent": middle}, format="json")
     assert looped.status_code == 400
+    # The service checks again under a lock, for requests that race past the serializer.
+    top.parent_id = middle
+    with pytest.raises(services.HierarchyLoopError):
+        services.save_account(bookkeeper.user, {"parent": Account.objects.get(pk=middle)}, top)
 
 
 def test_odd_account_codes_still_export(bookkeeper: Member) -> None:
