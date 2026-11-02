@@ -194,6 +194,8 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Karobar ERP <no-reply@localhost>")
+
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 

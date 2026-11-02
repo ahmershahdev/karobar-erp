@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import models
+from django.utils import timezone
 
 from .context import get_current_tenant
 from .managers import TenantScopedManager
@@ -64,6 +65,34 @@ class Membership(TenantOwnedModel):
 
     def __str__(self) -> str:
         return f"{self.user_id} in {self.tenant_id}"
+
+
+class Invitation(TenantOwnedModel):
+    email = models.EmailField()
+    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
+    # Only a SHA-256 of the emailed token is stored, so a database leak can't be used to join.
+    token_hash = models.CharField(max_length=64, unique=True)
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        indexes = [models.Index(fields=["tenant", "email"])]
+
+    def __str__(self) -> str:
+        return f"{self.email} to {self.tenant_id}"
+
+    @property
+    def is_pending(self) -> bool:
+        return (
+            self.accepted_at is None
+            and self.revoked_at is None
+            and self.expires_at > timezone.now()
+        )
 
 
 class AuditEvent(TenantOwnedModel):

@@ -10,34 +10,81 @@ import pytest
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver
 
-from apps.tenancy import audit
-from apps.tenancy.models import AuditEvent, Role, Tenant
+from apps.tenancy import audit, services
+from apps.tenancy.models import AuditEvent, Membership, Role, Tenant
 from tests.conftest import Member
+from tests.factories import create_user
 
-PUBLIC = {"api/health/", "api/accounts/csrf/", "api/accounts/login/"}
-USER_LEVEL = {"api/accounts/logout/", "api/accounts/me/", "api/tenants/", "api/schema/"}
+PUBLIC = {
+    "api/health/",
+    "api/accounts/csrf/",
+    "api/accounts/login/",
+    "api/accounts/signup/",
+    "api/accounts/verify-email/",
+    "api/accounts/password-reset/",
+    "api/accounts/password-reset/confirm/",
+}
+USER_LEVEL = {
+    "api/accounts/logout/",
+    "api/accounts/me/",
+    "api/accounts/verify-email/resend/",
+    "api/tenants/",
+    "api/invitations/accept/",
+    "api/schema/",
+}
 
-# Each entry builds a row in the given tenant and returns the URL that reads it.
-TENANT_OWNED: dict[str, Callable[[Member], str]] = {}
+# Each entry creates a row in the member's tenant and returns (url, id of that row). Detail
+# urls must be 404 for an outsider; list urls must not contain the row.
+TENANT_OWNED: dict[str, Callable[[Member], tuple[str, int]]] = {}
 
 
-def tenant_endpoint(route: str) -> Callable[[Callable[[Member], str]], Callable[[Member], str]]:
-    def register(make_url: Callable[[Member], str]) -> Callable[[Member], str]:
-        TENANT_OWNED[route] = make_url
-        return make_url
+def tenant_endpoint(
+    route: str,
+) -> Callable[[Callable[[Member], tuple[str, int]]], Callable[[Member], tuple[str, int]]]:
+    def register(make: Callable[[Member], tuple[str, int]]) -> Callable[[Member], tuple[str, int]]:
+        TENANT_OWNED[route] = make
+        return make
 
     return register
 
 
-@tenant_endpoint("api/audit/")
-def _audit_list(member: Member) -> str:
-    return "/api/audit/"
+def _event(member: Member) -> int:
+    role = Role.objects.create(name="Audited")
+    event: AuditEvent = audit.record(AuditEvent.Action.CREATE, role, member.user)
+    return event.pk
 
 
-@tenant_endpoint("api/audit/<int:pk>/")
-def _audit_detail(member: Member) -> str:
-    role = Role.objects.create(name="Owner role")
-    return f"/api/audit/{audit.record(AuditEvent.Action.CREATE, role, member.user).pk}/"
+def _role(member: Member) -> int:
+    role: Role = Role.objects.create(name="Private role")
+    return role.pk
+
+
+def _member(member: Member) -> int:
+    membership: Membership = Membership.objects.create(user=create_user())
+    return membership.pk
+
+
+def _invitation(member: Member) -> int:
+    invitation, _ = services.invite(member.user, member.tenant, "hidden@example.test", None)
+    return invitation.pk
+
+
+def _register(prefix: str, make_row: Callable[[Member], int]) -> None:
+    def collection(member: Member) -> tuple[str, int]:
+        return f"/api/{prefix}/", make_row(member)
+
+    def detail(member: Member) -> tuple[str, int]:
+        pk = make_row(member)
+        return f"/api/{prefix}/{pk}/", pk
+
+    tenant_endpoint(f"api/{prefix}/")(collection)
+    tenant_endpoint(f"api/{prefix}/<int:pk>/")(detail)
+
+
+_register("audit", _event)
+_register("roles", _role)
+_register("members", _member)
+_register("invitations", _invitation)
 
 
 def _routes(resolver: URLResolver, prefix: str = "") -> Iterator[str]:
@@ -80,7 +127,7 @@ def test_other_tenants_rows_are_invisible(
     route: str, owner: Member, outsider: Member, in_tenant: Callable[[Tenant], None]
 ) -> None:
     in_tenant(owner.tenant)
-    url = TENANT_OWNED[route](owner)
+    url, row_id = TENANT_OWNED[route](owner)
 
     mine = owner.client().get(url)
     assert mine.status_code == 200
@@ -88,6 +135,13 @@ def test_other_tenants_rows_are_invisible(
     theirs = outsider.client().get(url)
     if "<" in route:
         assert theirs.status_code == 404
+        for method in ("patch", "delete"):
+            assert getattr(outsider.client(), method)(url, {}, format="json").status_code in (
+                404,
+                405,
+            )
     else:
         assert theirs.status_code == 200
-        assert theirs.json().get("results", theirs.json()) in ([], {})
+        body = theirs.json()
+        rows = body["results"] if isinstance(body, dict) else body
+        assert row_id not in [row["id"] for row in rows]

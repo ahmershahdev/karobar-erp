@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Route, Routes } from 'react-router';
+import { Outlet, Route, Routes } from 'react-router';
 
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
@@ -9,8 +9,18 @@ import HomePage from '../pages/HomePage';
 
 const ModulesPage = lazy(() => import('../pages/ModulesPage'));
 const SecurityPage = lazy(() => import('../pages/SecurityPage'));
-const SignInPage = lazy(() => import('../pages/SignInPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
+const AppRoutes = lazy(() => import('./AppRoutes'));
+
+function PublicLayout() {
+  return (
+    <>
+      <Header />
+      <Outlet />
+      <Footer />
+    </>
+  );
+}
 
 export function App() {
   const { t } = useTranslation();
@@ -22,23 +32,23 @@ export function App() {
       >
         {t('nav.skip')}
       </a>
-      <Header />
-      <main id="main">
+      <div id="main">
         <PageTransition>
           {(location) => (
             <Suspense fallback={<div className="min-h-[100svh]" />}>
               <Routes location={location}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/modules" element={<ModulesPage />} />
-                <Route path="/security" element={<SecurityPage />} />
-                <Route path="/app/*" element={<SignInPage />} />
-                <Route path="*" element={<NotFoundPage />} />
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/modules" element={<ModulesPage />} />
+                  <Route path="/security" element={<SecurityPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+                <Route path="/app/*" element={<AppRoutes />} />
               </Routes>
             </Suspense>
           )}
         </PageTransition>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

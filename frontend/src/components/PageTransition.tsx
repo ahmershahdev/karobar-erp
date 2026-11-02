@@ -5,6 +5,10 @@ import { useLocation, type Location } from 'react-router';
 import { prefersReducedMotion } from '../lib/motion';
 import { scrollToTop, useLenis } from '../lib/smooth-scroll';
 
+function bothInApp(a: Location, b: Location): boolean {
+  return a.pathname.startsWith('/app') && b.pathname.startsWith('/app');
+}
+
 interface Props {
   children: (location: Location) => ReactNode;
 }
@@ -21,6 +25,8 @@ export function PageTransition({ children }: Props) {
 
   useEffect(() => {
     if (location.pathname === shown.pathname) return;
+    // Inside the app, screens change often; the curtain is for the public site only.
+    if (bothInApp(location, shown)) return;
     const element = curtain.current;
     if (!element || prefersReducedMotion()) {
       setShown(location);
@@ -49,7 +55,9 @@ export function PageTransition({ children }: Props) {
 
   return (
     <>
-      {children(location.pathname === shown.pathname ? location : shown)}
+      {children(
+        location.pathname === shown.pathname || bothInApp(location, shown) ? location : shown,
+      )}
       <div
         ref={curtain}
         aria-hidden="true"

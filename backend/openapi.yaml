@@ -59,6 +59,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/accounts/password-reset/:
+    post:
+      operationId: accounts_password_reset_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Email'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/password-reset/confirm/:
+    post:
+      operationId: accounts_password_reset_confirm_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/signup/:
+    post:
+      operationId: accounts_signup_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUp'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '202':
+          description: No response body
+  /api/accounts/verify-email/:
+    post:
+      operationId: accounts_verify_email_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/verify-email/resend/:
+    post:
+      operationId: accounts_verify_email_resend_create
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/audit/:
     get:
       operationId: audit_list
@@ -120,6 +198,312 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/invitations/:
+    get:
+      operationId: invitations_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - invitations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInvitationList'
+          description: ''
+    post:
+      operationId: invitations_create
+      tags:
+      - invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invitation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
+  /api/invitations/{id}/:
+    get:
+      operationId: invitations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - invitations
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
+    delete:
+      operationId: invitations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - invitations
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/invitations/accept/:
+    post:
+      operationId: invitations_accept_create
+      tags:
+      - invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInvitation'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+          description: ''
+  /api/members/:
+    get:
+      operationId: members_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - members
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMemberList'
+          description: ''
+  /api/members/{id}/:
+    get:
+      operationId: members_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - members
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    patch:
+      operationId: members_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - members
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMember'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+    delete:
+      operationId: members_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - members
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/roles/:
+    get:
+      operationId: roles_list
+      tags:
+      - roles
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+          description: ''
+    post:
+      operationId: roles_create
+      tags:
+      - roles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/roles/{id}/:
+    get:
+      operationId: roles_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - roles
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    put:
+      operationId: roles_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - roles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    patch:
+      operationId: roles_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - roles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRole'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    delete:
+      operationId: roles_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - roles
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/tenants/:
     get:
       operationId: tenants_list
@@ -136,8 +520,35 @@ paths:
                 items:
                   $ref: '#/components/schemas/Membership'
           description: ''
+    post:
+      operationId: tenants_create
+      tags:
+      - tenants
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+          description: ''
 components:
   schemas:
+    AcceptInvitation:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 128
+      required:
+      - token
     ActionEnum:
       enum:
       - create
@@ -172,6 +583,7 @@ components:
           type: string
           format: email
           readOnly: true
+          nullable: true
         at:
           type: string
           format: date-time
@@ -184,6 +596,15 @@ components:
       - model
       - object_id
       - user
+    Email:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+      required:
+      - email
     Health:
       type: object
       properties:
@@ -191,6 +612,51 @@ components:
           type: string
       required:
       - status
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        role:
+          type: integer
+          nullable: true
+        role_name:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - expires_at
+      - id
+      - role_name
+      - status
+    LocaleEnum:
+      enum:
+      - en
+      - ur
+      - ar
+      type: string
+      description: |-
+        * `en` - en
+        * `ur` - ur
+        * `ar` - ar
     Login:
       type: object
       properties:
@@ -218,10 +684,48 @@ components:
         full_name:
           type: string
           readOnly: true
+        email_verified:
+          type: boolean
+          readOnly: true
       required:
+      - email
+      - email_verified
+      - full_name
+      - id
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        role:
+          type: integer
+          nullable: true
+        role_name:
+          type: string
+          readOnly: true
+          nullable: true
+        is_owner:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
       - email
       - full_name
       - id
+      - is_owner
+      - role_name
     Membership:
       type: object
       properties:
@@ -235,11 +739,20 @@ components:
         role:
           type: string
           readOnly: true
+          nullable: true
         is_owner:
           type: boolean
           readOnly: true
+        permissions:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          readOnly: true
       required:
       - is_owner
+      - permissions
       - role
       - tenant_id
       - tenant_name
@@ -262,6 +775,151 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AuditEvent'
+    PaginatedInvitationList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invitation'
+    PaginatedMemberList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+    PasswordResetConfirm:
+      type: object
+      properties:
+        uid:
+          type: string
+          maxLength: 64
+        token:
+          type: string
+          maxLength: 128
+        password:
+          type: string
+          maxLength: 128
+      required:
+      - password
+      - token
+      - uid
+    PatchedMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        role:
+          type: integer
+          nullable: true
+        role_name:
+          type: string
+          readOnly: true
+          nullable: true
+        is_owner:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedRole:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        permissions: {}
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        permissions: {}
+      required:
+      - id
+      - name
+      - permissions
+    SignUp:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 128
+        full_name:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - password
+    TenantCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        base_currency:
+          type: string
+          default: PKR
+          pattern: ^[A-Z]{3}$
+        locale:
+          allOf:
+          - $ref: '#/components/schemas/LocaleEnum'
+          default: en
+      required:
+      - name
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 512
+      required:
+      - token
   securitySchemes:
     cookieAuth:
       type: apiKey
