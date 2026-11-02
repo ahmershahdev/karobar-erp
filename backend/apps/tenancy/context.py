@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
@@ -16,3 +18,13 @@ def get_current_tenant() -> "Tenant":
     if tenant is None:
         raise TenantNotSetError("no tenant is active for this request or task")
     return tenant
+
+
+@contextmanager
+def tenant_context(tenant: "Tenant") -> Iterator["Tenant"]:
+    """Activate a tenant outside a request, for services, tasks and management commands."""
+    token = current_tenant_var.set(tenant)
+    try:
+        yield tenant
+    finally:
+        current_tenant_var.reset(token)

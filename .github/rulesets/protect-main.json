@@ -13,6 +13,18 @@
     { "type": "non_fast_forward" },
     { "type": "required_linear_history" },
     {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "required_status_checks": [
+          { "context": "backend" },
+          { "context": "frontend" },
+          { "context": "analyze (python)" },
+          { "context": "analyze (javascript-typescript)" }
+        ]
+      }
+    },
+    {
       "type": "pull_request",
       "parameters": {
         "required_approving_review_count": 0,

@@ -47,7 +47,21 @@ another's data. Karobar ERP is built around those three rules, with tests for ea
 
 ## Run it locally
 
-You need Docker, Python 3.12 and Node 22.
+You need Docker, Python 3.12 and Node 22. One command starts everything:
+
+```sh
+git clone https://github.com/ahmershahdev/karobar-erp.git
+cd karobar-erp
+npm run dev
+```
+
+The first run creates `backend/.env` with a random secret key, the Python virtual environment and
+`node_modules`, starts MySQL and Redis in Docker, applies migrations, then runs Django on :8000,
+a Celery worker and Vite on <http://localhost:5173>. Emails (sign-up confirmation, password
+reset, invitations) are printed in the worker's log in development. Ctrl+C stops the app
+processes; `docker compose stop` stops the databases.
+
+To run the pieces by hand instead:
 
 ```sh
 git clone https://github.com/ahmershahdev/karobar-erp.git
