@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question
+    url: https://github.com/ahmershahdev/karobar-erp/discussions
+    about: Ask how to set up or use Karobar ERP.
+  - name: Security vulnerability
+    url: https://github.com/ahmershahdev/karobar-erp/security/advisories/new
+    about: Report security problems privately.
