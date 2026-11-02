@@ -38,7 +38,7 @@ export function AuthCard({
         </p>
         <span className="label">{t('hero.eyebrow')}</span>
       </aside>
-      <section className="flex flex-col px-[var(--gutter)] py-8">
+      <section id="main" className="flex flex-col px-[var(--gutter)] py-8">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 lg:invisible">
             <Logo className="size-7" />

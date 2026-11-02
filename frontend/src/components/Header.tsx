@@ -95,6 +95,25 @@ export function Header() {
     else lenis?.start();
   }, [open, lenis]);
 
+  // The menu and its toggle disappear at 768px; close it there, or scrolling would stay locked
+  // with no way to reopen the toggle. Escape closes it too.
+  useEffect(() => {
+    if (!open) return;
+    const wide = window.matchMedia('(min-width: 768px)');
+    const close = () => {
+      if (wide.matches) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    wide.addEventListener('change', close);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      wide.removeEventListener('change', close);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   const links = [
     { to: '/modules', label: t('nav.modules') },
     { to: '/security', label: t('nav.security') },

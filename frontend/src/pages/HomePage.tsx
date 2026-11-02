@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -9,6 +10,7 @@ import { SectionHeading } from '../components/SectionHeading';
 import { SplitHeadline } from '../components/SplitHeadline';
 import { LedgerDemo } from '../features/ledger/LedgerDemo';
 import { ModuleGallery } from '../features/modules/ModuleGallery';
+import { isIntroPending } from '../lib/intro';
 import { usePublicSeo } from '../lib/seo';
 import { PUBLIC_ROUTES, SITE } from '../seo/site';
 
@@ -17,6 +19,7 @@ const RULE_ACCENTS = ['var(--gradient-molten)', 'var(--gradient-lagoon)', 'var(-
 export default function HomePage() {
   const { t } = useTranslation();
   usePublicSeo(PUBLIC_ROUTES[0]);
+  const [introDelay] = useState(() => (isIntroPending() ? 1500 : 150));
   const rules = t('promises.items', { returnObjects: true }) as { title: string; body: string }[];
 
   return (
@@ -31,10 +34,10 @@ export default function HomePage() {
             text={t('hero.title')}
             accent={t('hero.accent')}
             className="display-xl max-w-[13ch]"
-            delay={1500}
+            delay={introDelay}
           />
           <Reveal
-            delay={2000}
+            delay={introDelay + 500}
             className="mt-10 grid gap-8 border-t border-line pt-8 md:grid-cols-[1fr_auto] md:items-end"
           >
             <p className="max-w-lg text-base text-ink/75 md:text-lg">{t('hero.lead')}</p>

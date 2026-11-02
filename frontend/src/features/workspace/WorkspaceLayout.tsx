@@ -146,7 +146,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
           </div>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 space-y-6 p-4 md:p-10">
+      <main id="main" className="min-w-0 flex-1 space-y-6 p-4 md:p-10">
         <div className="flex justify-end md:hidden">
           <LanguageSwitcher />
         </div>

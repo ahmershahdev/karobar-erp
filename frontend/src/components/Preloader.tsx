@@ -1,15 +1,13 @@
 import { animate } from 'animejs';
 import { useEffect, useRef, useState } from 'react';
 
-import { prefersReducedMotion } from '../lib/motion';
+import { finishIntro, isIntroPending } from '../lib/intro';
 
 // Shown once per page load: a counter runs to 100 while fonts settle, then the panel lifts.
 // It never waits on the network, so it can't hold the page hostage on a slow connection.
 export function Preloader() {
   // The app screens are for work, so they skip the intro.
-  const [done, setDone] = useState(
-    () => prefersReducedMotion() || window.location.pathname.startsWith('/app'),
-  );
+  const [done, setDone] = useState(() => !isIntroPending());
   const panel = useRef<HTMLDivElement>(null);
   const counter = useRef<HTMLSpanElement>(null);
   const bar = useRef<HTMLDivElement>(null);
@@ -32,7 +30,10 @@ export function Preloader() {
           translateY: ['0%', '-100%'],
           duration: 900,
           ease: 'inOutExpo',
-          onComplete: () => setDone(true),
+          onComplete: () => {
+            finishIntro();
+            setDone(true);
+          },
         });
       },
     });
