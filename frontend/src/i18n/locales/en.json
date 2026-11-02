@@ -1,0 +1,173 @@
+{
+  "nav": {
+    "home": "Home",
+    "modules": "Modules",
+    "security": "Security",
+    "signIn": "Sign in",
+    "source": "Source code",
+    "skip": "Skip to content",
+    "language": "Language",
+    "breadcrumb": "Breadcrumb"
+  },
+  "hero": {
+    "eyebrow": "Open-source ERP for shops and distributors",
+    "title": "Every rupee and every unit, in balance.",
+    "lead": "Stock, sales, purchasing, books and payroll for small businesses. Every document posts its own double-entry journal, so your trial balance is right the moment the sale is.",
+    "primary": "Explore the modules",
+    "secondary": "Read the code"
+  },
+  "marquee": [
+    "Inventory",
+    "Point of sale",
+    "Purchasing",
+    "Double-entry books",
+    "GST and VAT",
+    "Warehouses",
+    "Batches and expiry",
+    "HR",
+    "Payroll",
+    "Audit log"
+  ],
+  "promises": {
+    "eyebrow": "Built around three rules",
+    "title": "The forms are easy. These are not.",
+    "items": [
+      {
+        "title": "Books that always balance",
+        "body": "Debits equal credits before anything is saved. Posted entries never change; corrections are reversals and credit notes."
+      },
+      {
+        "title": "Stock that stays right",
+        "body": "Two cashiers selling the last item at the same moment cannot both succeed. Stock levels change only under row locks."
+      },
+      {
+        "title": "Businesses that never meet",
+        "body": "One installation, many businesses. Every query is scoped to one of them, and a test calls every endpoint as an outsider."
+      }
+    ]
+  },
+  "ledger": {
+    "eyebrow": "One sale, posted",
+    "title": "Watch an invoice become accounting.",
+    "body": "A sale of 12 cartons moves stock out of the warehouse and writes a balanced journal entry in the same database transaction. If any step fails, nothing is saved.",
+    "account": "Account",
+    "debit": "Debit",
+    "credit": "Credit",
+    "total": "Total",
+    "rows": [
+      "Accounts receivable",
+      "Sales revenue",
+      "Sales tax payable",
+      "Cost of goods sold",
+      "Inventory"
+    ]
+  },
+  "modules": {
+    "eyebrow": "Everything a counter and a back office need",
+    "title": "Modules",
+    "lead": "Each module ships with its screens, its posting rules and its tests.",
+    "items": [
+      {
+        "title": "Inventory",
+        "body": "Variants, units, warehouses, transfers, batches with expiry dates, FIFO or moving average."
+      },
+      {
+        "title": "Sales",
+        "body": "Quotations, orders, invoices, receipts, returns, credit notes and customer credit limits."
+      },
+      {
+        "title": "Point of sale",
+        "body": "Barcode scan, cash and card, printed receipts and an end-of-day close."
+      },
+      {
+        "title": "Purchasing",
+        "body": "Suppliers, purchase orders, goods received, bills and supplier payments."
+      },
+      {
+        "title": "Accounting",
+        "body": "Chart of accounts, fiscal periods, journal entries, trial balance and ledgers."
+      },
+      {
+        "title": "Tax",
+        "body": "Rates as dated data, tax on every line, and a GST or VAT report for any period."
+      },
+      {
+        "title": "HR",
+        "body": "Employees, departments, contracts, attendance and leave on working days."
+      },
+      {
+        "title": "Payroll",
+        "body": "Monthly runs, deductions, income tax from slabs per tax year, and payslips."
+      }
+    ]
+  },
+  "languages": {
+    "eyebrow": "Three languages, both directions",
+    "title": "Speaks the way your shop speaks.",
+    "body": "English, Urdu and Arabic in every screen and every printed invoice, with right-to-left layouts where they belong."
+  },
+  "security": {
+    "eyebrow": "Security",
+    "title": "Your books are nobody else's business.",
+    "lead": "What protects your data, in plain words.",
+    "items": [
+      {
+        "title": "Fail-closed tenancy",
+        "body": "Queries without an active business raise an error instead of returning everyone's rows. Another business's record answers 404."
+      },
+      {
+        "title": "Sessions, not tokens in the browser",
+        "body": "HttpOnly, Secure, SameSite cookies with CSRF checks on every change, including sign-in itself."
+      },
+      {
+        "title": "Argon2id passwords",
+        "body": "Memory-hard hashing, a 12 character minimum, and common passwords refused."
+      },
+      {
+        "title": "Rate limits everywhere",
+        "body": "Every endpoint has a throttle, with strict ones on sign-in, sign-up and password reset, plus limits at the proxy."
+      },
+      {
+        "title": "Content Security Policy",
+        "body": "A fresh nonce on every response and strict-dynamic, so injected scripts do not run."
+      },
+      {
+        "title": "Row locks and one lock order",
+        "body": "Stock, numbering and balances are read and written under SELECT ... FOR UPDATE, always in primary key order."
+      },
+      {
+        "title": "An audit trail",
+        "body": "Every create, update, post and delete writes who, what, when and the request it came from."
+      },
+      {
+        "title": "Nothing leaks in errors",
+        "body": "Unexpected errors return a request id and nothing else. The details stay in the server log."
+      }
+    ],
+    "report": "Found a problem? Report it privately through GitHub security advisories or support@ahmershah.dev."
+  },
+  "cta": {
+    "title": "Open source, MIT licensed.",
+    "body": "Read every line, run it on your own server, or follow along as it is built.",
+    "button": "Star on GitHub"
+  },
+  "footer": {
+    "built": "Built by",
+    "rights": "MIT License",
+    "status": "Status: in development"
+  },
+  "signIn": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "working": "Signing in",
+    "failed": "Email or password is incorrect.",
+    "unavailable": "The server could not be reached. Try again in a moment."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page does not exist, or it moved.",
+    "home": "Back to home"
+  }
+}

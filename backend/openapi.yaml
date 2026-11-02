@@ -1,0 +1,269 @@
+openapi: 3.0.3
+info:
+  title: Karobar ERP API
+  version: 0.1.0
+paths:
+  /api/accounts/csrf/:
+    get:
+      operationId: accounts_csrf_retrieve
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/login/:
+    post:
+      operationId: accounts_login_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/accounts/logout/:
+    post:
+      operationId: accounts_logout_create
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/me/:
+    get:
+      operationId: accounts_me_retrieve
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/audit/:
+    get:
+      operationId: audit_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - audit
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditEventList'
+          description: ''
+  /api/audit/{id}/:
+    get:
+      operationId: audit_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - audit
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEvent'
+          description: ''
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      tags:
+      - health
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+  /api/tenants/:
+    get:
+      operationId: tenants_list
+      tags:
+      - tenants
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Membership'
+          description: ''
+components:
+  schemas:
+    ActionEnum:
+      enum:
+      - create
+      - update
+      - delete
+      - post
+      type: string
+      description: |-
+        * `create` - Create
+        * `update` - Update
+        * `delete` - Delete
+        * `post` - Post
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        action:
+          allOf:
+          - $ref: '#/components/schemas/ActionEnum'
+          readOnly: true
+        model:
+          type: string
+          readOnly: true
+        object_id:
+          type: string
+          readOnly: true
+        changes:
+          readOnly: true
+        user:
+          type: string
+          format: email
+          readOnly: true
+        at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - at
+      - changes
+      - id
+      - model
+      - object_id
+      - user
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 128
+      required:
+      - email
+      - password
+    Me:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - full_name
+      - id
+    Membership:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          readOnly: true
+        tenant_name:
+          type: string
+          readOnly: true
+        role:
+          type: string
+          readOnly: true
+        is_owner:
+          type: boolean
+          readOnly: true
+      required:
+      - is_owner
+      - role
+      - tenant_id
+      - tenant_name
+    PaginatedAuditEventList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: kb_session

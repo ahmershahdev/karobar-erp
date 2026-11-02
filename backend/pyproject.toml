@@ -1,0 +1,48 @@
+[project]
+name = "karobar-erp"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+
+[tool.ruff]
+line-length = 99
+target-version = "py312"
+extend-exclude = ["**/migrations/**", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "DJ", "SIM", "RUF", "PT", "C4", "N", "PL"]
+ignore = ["PLR2004", "RUF012"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "PLR0913"]
+"config/settings/*.py" = ["F405"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+exclude = ["migrations/", ".venv/"]
+
+[[tool.mypy.overrides]]
+module = ["environ.*", "csp.*", "factory.*", "celery.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+addopts = "--strict-markers --reuse-db --cov=apps --cov-branch --cov-report=term-missing:skip-covered"
+testpaths = ["tests"]
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.coverage.run]
+omit = ["*/migrations/*"]
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:"]
+
+[[tool.mypy.overrides]]
+module = ["tests.factories"]
+disallow_untyped_calls = false
+disallow_subclassing_any = false
+disable_error_code = ["type-arg", "attr-defined", "untyped-decorator"]

@@ -6,7 +6,7 @@ a task needs them. When a decision changes, update the matching doc in the same 
 Karobar ERP: a multi-tenant ERP for small shops and distributors (inventory, sales and POS,
 purchasing, double-entry accounting, tax reports, HR and payroll) in English, Urdu and Arabic.
 Owner: Syed Ahmer Shah, <https://ahmershah.dev>, support@ahmershah.dev. Goes live at
-`karobar.ahmershah.dev`.
+`karobarerp.ahmershah.dev`.
 
 ## Read on demand
 
@@ -15,6 +15,9 @@ Owner: Syed Ahmer Shah, <https://ahmershah.dev>, support@ahmershah.dev. Goes liv
 | Starting a session | [docs/status.md](docs/status.md) |
 | What is done and what is left | [docs/roadmap.md](docs/roadmap.md) |
 | Modules, data model, tenancy, posting rules, every decision | [docs/architecture.md](docs/architecture.md) |
+| Auth, headers, CSP, rate limits, locking, anything an attacker touches | [docs/security.md](docs/security.md) |
+| Public pages, meta tags, structured data, sitemap, llms.txt | [docs/seo.md](docs/seo.md) |
+| Look, motion, colours, components | [docs/design.md](docs/design.md) |
 
 ## Stack
 
@@ -29,10 +32,13 @@ Tailwind CSS, TanStack Query and Table, Recharts, i18next. pytest, factory_boy, 
 backend/config/       settings/{base,dev,test,prod}.py, urls, celery
 backend/apps/core/    pure business logic (posting rules, stock valuation, tax and payroll maths):
                       no Django imports, 100% branch coverage
+backend/apps/platform/ cross-cutting web concerns: health, security headers, throttles, errors
+backend/apps/accounts/ the user model and sign-in flows
 backend/apps/tenancy/ tenants, members, roles and permissions, tenant scoping, audit log
 backend/apps/{accounting,inventory,purchasing,sales,pos,hr,payroll,reports}/
 backend/tests/        mirrors apps/
-frontend/             React app
+frontend/             React app: src/{app,pages,features,components,lib,i18n,styles}
+deploy/               nginx and production compose
 docs/                 roadmap, architecture, status
 ```
 
@@ -57,13 +63,51 @@ docs/                 roadmap, architecture, status
 - No new dependency without a reason in the PR. Pin exact versions.
 - The maintainer reviews `apps/core` and must be able to explain every line of it.
 - No emojis in code, UI text or docs.
+- No hardcoded hosts, URLs or keys: the API base, the public site URL and every secret come from
+  environment variables (`VITE_*` for the frontend, read in one module each side).
+
+## Security rules
+
+Details and the reasoning are in [docs/security.md](docs/security.md). The short version:
+
+- SQL only through the ORM. No `raw()`, `extra()` or string-built SQL; Ruff's `S608` stays on.
+- No `dangerouslySetInnerHTML`, `eval` or `new Function` in the frontend; ESLint blocks them.
+  The JSON-LD component is the one exception and escapes `<`.
+- Session cookies (HttpOnly, Secure, SameSite=Lax) and Django CSRF for the SPA. No tokens in
+  `localStorage`.
+- Passwords hashed with Argon2id; minimum length 12; common and all-numeric passwords rejected.
+- Content Security Policy with a per-request nonce and `strict-dynamic`; no `unsafe-inline` for
+  scripts. New third-party origins need a line in `docs/security.md`.
+- Every endpoint has a throttle scope. Sign-in, sign-up and password reset have strict ones.
+- Request body, page size and upload sizes are capped; slow work goes to Celery.
+- Anything read-then-written under concurrency (stock, numbering, balances) runs inside
+  `transaction.atomic()` with `select_for_update()`, in a fixed lock order (by primary key).
+- Errors never leak stack traces, SQL or another tenant's identifiers.
+
+## SEO rules
+
+Public pages only; everything under `/app` is `noindex`. See [docs/seo.md](docs/seo.md).
+
+- Every public route has a title under 60 characters, a description under 160, a canonical URL,
+  Open Graph and Twitter tags, and JSON-LD (including a `BreadcrumbList`). A test enforces the
+  lengths.
+- `robots.txt`, `sitemap.xml`, `llms.txt` and `llms-full.txt` are generated at build time from
+  the route list and `VITE_SITE_URL`; never edit copies by hand.
+
+## Design rules
+
+See [docs/design.md](docs/design.md). Colours, gradients, radii and motion timings are tokens in
+`frontend/src/styles/tokens.css`; components never use raw hex values. All motion honours
+`prefers-reduced-motion`, WebGL is lazy-loaded and has a static fallback, and the app screens
+favour speed and clarity over effects.
 
 ## Comments
 
 Default is no comment. Write one only for what the code can't say: why it's done this way, an
 accounting or tax rule with its source, or a trap for the next person. Not: restating the code,
 section banners, history, owner-less TODOs, or filler (simply, robust, seamless, ensure, leverage,
-comprehensive).
+comprehensive). Write comments the way you'd explain it to a colleague: plain sentences, no
+headings, no decoration.
 
 ## Workflow
 

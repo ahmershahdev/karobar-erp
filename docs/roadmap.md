@@ -10,16 +10,20 @@ in CI, and seed data.
 
 ## M1. Platform skeleton (target 2026-11-29)
 
-- [ ] Django project, settings per environment (`dev`, `test`, `prod`), health endpoint
-- [ ] MySQL 8.4, Redis and one Celery worker in Docker Compose (MySQL in tests too, never SQLite)
-- [ ] pytest with coverage, Ruff, mypy (strict); Vite + React + TypeScript app with Vitest, ESLint
-- [ ] GitHub Actions: `backend`, `frontend`, CodeQL; add them as required checks in the ruleset
-- [ ] Dependabot for Actions, Python, npm and Docker
-- [ ] Accounts: sign up, sign in, password reset, email verification
-- [ ] Tenants and members, roles with permissions per module, invitations
-- [ ] Tenant-scoped managers and an isolation test that runs against every endpoint
-- [ ] Audit log for every change to business data
-- [ ] English, Urdu and Arabic in the app shell, right to left for Urdu and Arabic
+- [x] Django project, settings per environment (`dev`, `test`, `prod`), health endpoint
+- [x] MySQL 8.4, Redis and one Celery worker in Docker Compose (MySQL in tests too, never SQLite)
+- [x] pytest with coverage, Ruff, mypy (strict); Vite + React + TypeScript app with Vitest, ESLint
+- [x] GitHub Actions: `backend`, `frontend`, CodeQL
+- [ ] Make `backend`, `frontend` and CodeQL required checks in the ruleset (after the first green run)
+- [x] Dependabot for Actions, Python, npm and Docker
+- [ ] Accounts: sign up, sign in, password reset, email verification (sign in and out done)
+- [ ] Tenants and members, roles with permissions per module, invitations (invitations left)
+- [x] Tenant-scoped managers and an isolation test that runs against every endpoint
+- [ ] Audit log for every change to business data (model, service and API done; wire into modules)
+- [x] English, Urdu and Arabic in the app shell, right to left for Urdu and Arabic
+
+- [x] Security baseline: Argon2id, CSRF on sign-in, nonce CSP, rate limits, row-lock helper
+- [x] Public site with SEO (per-route heads, JSON-LD, sitemap, robots, llms.txt) and the design system
 
 ## M2. Accounting core (target 2026-12-20)
 
@@ -68,4 +72,4 @@ in CI, and seed data.
 - [ ] Seed data: two invented businesses with a year of documents
 - [ ] README setup steps and screenshots
 - [ ] End-to-end tests with Playwright for the main flows
-- [ ] Deploy at `karobar.ahmershah.dev`; tag `v1.0.0`
+- [ ] Deploy at `karobarerp.ahmershah.dev`; tag `v1.0.0`
