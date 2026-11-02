@@ -1,0 +1,57 @@
+# Local development. Production lives in deploy/compose.prod.yaml.
+name: karobar
+
+x-backend: &backend
+  build:
+    context: ./backend
+    args:
+      REQUIREMENTS: dev
+  env_file: ./backend/.env
+  environment:
+    DATABASE_URL: mysql://karobar:karobar@mysql:3306/karobar
+    REDIS_URL: redis://redis:6379/0
+  volumes:
+    - ./backend:/app
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  mysql:
+    image: mysql:8.4.13
+    environment:
+      MYSQL_DATABASE: karobar
+      MYSQL_USER: karobar
+      MYSQL_PASSWORD: karobar
+      MYSQL_ROOT_PASSWORD: karobar-root
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    ports: ["127.0.0.1:3306:3306"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./deploy/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pkarobar-root"]
+      interval: 5s
+      retries: 30
+
+  redis:
+    image: redis:8.10.3-alpine
+    ports: ["127.0.0.1:6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
+  api:
+    <<: *backend
+    command: python manage.py runserver 0.0.0.0:8000
+    ports: ["127.0.0.1:8000:8000"]
+
+  worker:
+    <<: *backend
+    command: celery -A config worker --loglevel=info --concurrency=2
+
+volumes:
+  mysql-data:

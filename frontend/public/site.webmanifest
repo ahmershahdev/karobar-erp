@@ -1,0 +1,13 @@
+{
+  "name": "Karobar ERP",
+  "short_name": "Karobar",
+  "description": "Stock, sales, books and payroll for small businesses.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b10",
+  "theme_color": "#0b0b10",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

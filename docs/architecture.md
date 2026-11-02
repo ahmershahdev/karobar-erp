@@ -1,15 +1,20 @@
-# Architecture (planned)
+# Architecture
 
-This is the design before any code. Change it in the same pull request that changes the code.
+The platform skeleton (M1) is in place; the business modules are still design. Change this file in
+the same pull request that changes the code.
 
 ## Parts
 
 ```
-React web app  ──>  Django + DRF API  ──>  MySQL 8.4 (all tenants, one schema)
-                         │           ──>  Redis (Celery queue, cache)
-                         v
-                    Celery workers   ──>  PDFs, emails, alerts, heavy reports
+browser ──> nginx (static app, CSP nonce, rate limits) ──> Django + DRF (gunicorn)
+                                                              │  ──> MySQL 8.4 (all tenants, one schema)
+                                                              │  ──> Redis (cache, throttles, Celery queue)
+                                                              v
+                                                         Celery workers ──> PDFs, emails, alerts, reports
 ```
+
+The app and the API share one origin: nginx serves the built React app and proxies `/api/`. That
+keeps cookies first-party and removes CORS entirely.
 
 The web app only calls the API. Long work (PDF batches, alerts, big reports, payroll runs) runs in
 Celery, never inside a web request.
@@ -27,12 +32,32 @@ Celery, never inside a web request.
 | `hr`, `payroll` | employees, attendance, leave, salary structures, payroll runs, payslips |
 | `reports` | trial balance, P&L, balance sheet, tax and stock reports |
 | `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
+| `platform` | health check, request ids, security headers, error handler, pagination, row locking |
+| `accounts` | the user model (email sign-in, public UUID) and the session endpoints |
+
+## Frontend layout
+
+```
+frontend/src/
+  app/        router and shell
+  pages/      one file per route, lazy loaded except home
+  features/   pieces with their own logic (hero shader, ledger demo, module grid)
+  components/ shared UI (header, footer, reveal, page transition, breadcrumbs)
+  lib/        env, API client, SEO hooks, motion helpers
+  i18n/       en, ur, ar
+  seo/        route list and JSON-LD, shared with the build
+  styles/     tokens.css and global.css
+```
+
+API types in `src/lib/api/schema.d.ts` are generated from `backend/openapi.yaml`
+(`npm run api:types`); CI fails if either is stale.
 
 ## Tenancy
 
 One database and one schema. Every tenant-owned table has a `tenant_id` column, first in its
 indexes. Models use a manager that filters by the current tenant; the request's tenant comes from
-the member's chosen business. Rows of another tenant answer `404`. An isolation test calls every
+the `X-Tenant` header (the tenant's public UUID), which the app's tenant switcher sets; the
+middleware checks membership before activating it. Rows of another tenant answer `404`. An isolation test calls every
 endpoint as a member of another tenant.
 
 ## Data model (first draft)
@@ -75,11 +100,15 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | Immutable posted documents | Accounting needs an audit trail; corrections are reversals and credit notes |
 | Row locks on stock levels | Two cashiers selling the last item must not both succeed |
 | Tax rates and payroll slabs as dated data | They change by law every year; old documents keep their old rates |
+| Session cookies, not JWTs | HttpOnly cookies can't be read by injected script; CSRF is solved by Django |
+| `X-Tenant` header, not subdomains | One certificate and one origin; a user with several businesses switches without signing in again |
+| Cursor pagination | Constant cost per page on large tables; no `OFFSET` scans |
+| `READ COMMITTED` plus explicit locks | Fewer gap-lock deadlocks than `REPEATABLE READ`; locks say exactly what is protected |
+| Fail-closed tenant manager | A forgotten filter raises instead of leaking every tenant's rows |
+| Per-route HTML generated at build | Crawlers and link previews get the right head without server rendering |
 
 ## Open questions
 
-- How a user picks the tenant: a tenant switcher with a header on each request, or one subdomain
-  per tenant.
 - Which chart of accounts template to start from, and which tax and payroll rules to ship first
   (Pakistan, then Gulf countries); each needs official sources before it is coded.
 - Whether HR uses the `holidays` library directly or the HolidayOps API for working days.

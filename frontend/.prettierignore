@@ -1,0 +1,4 @@
+dist
+src/lib/api/schema.d.ts
+package-lock.json
+public

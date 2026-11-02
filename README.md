@@ -8,8 +8,11 @@ each with its own warehouses, customers, books and staff. Every sale, purchase a
 its own double-entry journal entry, so the trial balance, profit and loss and balance sheet are
 always up to date. The app speaks English, Urdu and Arabic, right to left where needed.
 
-> Status: planning. Nothing is built yet. See [docs/roadmap.md](docs/roadmap.md) for the
-> milestones and [docs/status.md](docs/status.md) for where the work is.
+> Status: M1, platform skeleton. Sign-in, tenancy, the audit log and the public site work; the
+> business modules are next. See [docs/roadmap.md](docs/roadmap.md) for the milestones and
+> [docs/status.md](docs/status.md) for where the work is.
+>
+> Website: [karobarerp.ahmershah.dev](https://karobarerp.ahmershah.dev)
 
 ## What it will do
 
@@ -42,12 +45,48 @@ The hard parts of an ERP are not the forms: they are books that always balance, 
 right when two cashiers sell the last item at the same moment, and one business never seeing
 another's data. Karobar ERP is built around those three rules, with tests for each.
 
+## Run it locally
+
+You need Docker, Python 3.12 and Node 22.
+
+```sh
+git clone https://github.com/ahmershahdev/karobar-erp.git
+cd karobar-erp
+docker compose up -d mysql redis
+
+cd backend
+python -m venv .venv
+.venv/bin/pip install -r requirements/dev.txt     # .venv\Scripts\pip on Windows
+cp .env.example .env                              # then set DJANGO_SECRET_KEY
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py createsuperuser
+.venv/bin/python manage.py runserver
+
+cd ../frontend
+npm ci
+npm run dev                                       # http://localhost:5173, proxies /api to :8000
+```
+
+The test database needs one grant on a fresh MySQL volume; `deploy/mysql/init.sql` does it for
+the Compose service.
+
+## Checks
+
+```sh
+cd backend  && ruff check . && ruff format --check . && mypy . && pytest
+cd frontend && npm run lint && npm run typecheck && npm test && npm run build
+```
+
 ## Documentation
 
 - [docs/roadmap.md](docs/roadmap.md): milestones M1 to M7 and what "done" means
 - [docs/architecture.md](docs/architecture.md): modules, data model, tenancy and decisions
 - [docs/status.md](docs/status.md): current state, updated every session
-- [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md)
+- [docs/security.md](docs/security.md): tenancy, sessions, CSP, rate limits, locking
+- [docs/seo.md](docs/seo.md) and [docs/design.md](docs/design.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and
+  [SECURITY.md](SECURITY.md)
+- [Wiki](https://github.com/ahmershahdev/karobar-erp/wiki): guides for users and self-hosters
 
 ## Related
 
