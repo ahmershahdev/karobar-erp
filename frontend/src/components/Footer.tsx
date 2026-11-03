@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { SITE } from '../seo/site';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { Logo } from './Logo';
+import { Logo, Wordmark } from './Logo';
 import { Magnetic } from './Magnetic';
 import { Reveal } from './Reveal';
 import { RollText } from './RollText';
@@ -78,13 +78,13 @@ export function Footer() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(45% 55% at 90% 0%, rgb(216 178 106 / 0.12), transparent 70%), radial-gradient(35% 45% at 0% 100%, rgb(116 98 201 / 0.08), transparent 70%)',
+            'radial-gradient(45% 55% at 90% 0%, color-mix(in srgb, var(--color-ember) 12%, transparent), transparent 70%), radial-gradient(35% 45% at 0% 100%, color-mix(in srgb, var(--color-azure) 8%, transparent), transparent 70%)',
         }}
       />
 
       <Reveal className="shell relative grid items-center gap-12 py-20 md:grid-cols-[1fr_auto] md:py-28">
         <div className="space-y-6">
-          <span className="label !text-gold">[{t('footer.next')}]</span>
+          <span className="label !text-ember">[{t('footer.next')}]</span>
           <h2 className="display-lg max-w-[13ch]">
             {t('footer.ctaTitle')} <em className="text-gradient">{t('footer.ctaAccent')}</em>
           </h2>
@@ -107,7 +107,7 @@ export function Footer() {
         <div className="space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
             <Logo className="size-8" />
-            <span className="font-display text-3xl">Karobar</span>
+            <Wordmark className="text-2xl" />
           </Link>
           <p className="max-w-xs text-sm text-muted">{t('footer.tagline')}</p>
           <div className="flex items-center gap-3">
@@ -142,7 +142,7 @@ export function Footer() {
               {Array.from({ length: MILESTONES }, (_, index) => (
                 <span
                   key={index}
-                  className={`h-1 flex-1 rounded-full ${index < SHIPPED ? 'bg-gold' : 'bg-line-strong'}`}
+                  className={`h-1 flex-1 rounded-full ${index < SHIPPED ? 'bg-ember' : 'bg-line-strong'}`}
                 />
               ))}
             </div>
@@ -151,7 +151,7 @@ export function Footer() {
               <a
                 href={`${SITE.repo}/releases`}
                 rel="noopener"
-                className="!text-gold hover:underline"
+                className="!text-ember hover:underline"
               >
                 {LATEST}
               </a>
@@ -161,7 +161,7 @@ export function Footer() {
             href={SITE.repo}
             rel="noopener"
             data-cursor-stick
-            className="inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm transition-colors hover:border-gold hover:text-gold"
+            className="inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm transition-colors hover:border-ember hover:text-ember"
           >
             <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
               <path

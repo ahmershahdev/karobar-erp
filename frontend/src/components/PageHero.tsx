@@ -19,7 +19,7 @@ export function PageHero({ trail, index, eyebrow, title, accent, lead }: Props) 
     >
       <Breadcrumbs trail={trail} />
       <Reveal className="mt-14 flex items-center gap-4">
-        <span className="label !text-gold">[{index}]</span>
+        <span className="label !text-ember">[{index}]</span>
         <span className="h-px w-10 bg-line-strong" />
         <span className="label">{eyebrow}</span>
       </Reveal>

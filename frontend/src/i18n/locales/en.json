@@ -502,8 +502,8 @@
   },
   "preloader": {
     "words": ["Stock", "Sales", "Books", "Payroll"],
-    "tag": "In balance",
-    "loading": "Opening the ledger"
+    "tag": "Your business, in the cloud",
+    "loading": "Getting your books ready"
   },
   "inv": {
     "products": "Products",

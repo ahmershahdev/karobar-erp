@@ -17,7 +17,7 @@ export function Backdrop({ side = 'right' }: { side?: 'left' | 'right' }) {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(55% 45% at 72% 38%, rgb(216 178 106 / 0.16), transparent 70%), radial-gradient(40% 40% at 18% 80%, rgb(116 98 201 / 0.12), transparent 70%), radial-gradient(35% 30% at 90% 90%, rgb(79 209 193 / 0.07), transparent 70%)',
+            'radial-gradient(55% 45% at 72% 38%, color-mix(in srgb, var(--color-ember) 16%, transparent), transparent 70%), radial-gradient(40% 40% at 18% 80%, color-mix(in srgb, var(--color-azure) 12%, transparent), transparent 70%), radial-gradient(35% 30% at 90% 90%, color-mix(in srgb, var(--color-sky) 7%, transparent), transparent 70%)',
         }}
       />
       {!failed && (

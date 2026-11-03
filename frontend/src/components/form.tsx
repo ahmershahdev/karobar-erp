@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { passwordScore } from '../lib/password';
 
 const INPUT =
-  'w-full rounded-xl border border-line bg-black/50 px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/50 focus:border-gold focus:shadow-[0_0_0_4px_rgb(216_178_106/0.12)] disabled:opacity-60';
+  'w-full rounded-xl border border-line bg-black/50 px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/50 focus:border-ember focus:shadow-[0_0_0_4px_color-mix(in_srgb,_var(--color-ember)_12%,_transparent)] disabled:opacity-60';
 
 export function Field({
   label,
@@ -56,7 +56,7 @@ export function PasswordField({
           aria-pressed={visible}
           aria-controls={id}
           onClick={() => setVisible(!visible)}
-          className="absolute inset-y-0 end-0 flex w-12 items-center justify-center text-muted transition-colors hover:text-gold"
+          className="absolute inset-y-0 end-0 flex w-12 items-center justify-center text-muted transition-colors hover:text-ember"
         >
           <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
             <path
@@ -116,7 +116,7 @@ export function Button({
 }: { variant?: 'primary' | 'ghost' | 'danger' } & ComponentProps<'button'>) {
   const styles = {
     primary: 'text-black [background:var(--gradient-molten)] hover:brightness-110',
-    ghost: 'border border-line-strong text-ink hover:border-gold hover:text-gold',
+    ghost: 'border border-line-strong text-ink hover:border-ember hover:text-ember',
     danger: 'border border-coral/40 text-coral hover:bg-coral/10',
   }[variant];
   return (

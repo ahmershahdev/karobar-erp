@@ -19,7 +19,7 @@ export function StatusChip({ status, milestone }: { status: string; milestone: s
       }`}
     >
       <span
-        className={`size-1.5 rounded-full ${built ? 'bg-mint' : status === 'next' ? 'bg-gold' : 'bg-muted/50'}`}
+        className={`size-1.5 rounded-full ${built ? 'bg-mint' : status === 'next' ? 'bg-ember' : 'bg-muted/50'}`}
       />
       {built ? t('modules.status.built', { milestone }) : t('modules.status.coming', { milestone })}
     </span>
@@ -32,7 +32,7 @@ export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy })
   if (!meta) return null;
   return (
     <TiltCard className="h-full rounded-[var(--radius-card)]">
-      <article className="relative flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-[linear-gradient(160deg,rgb(31_28_25/0.95),rgb(10_9_8/0.92))] p-7 md:p-8">
+      <article className="relative flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-[linear-gradient(160deg,color-mix(in_srgb,_var(--color-raised)_95%,_transparent),color-mix(in_srgb,_var(--color-canvas)_92%,_transparent))] p-7 md:p-8">
         <div
           aria-hidden="true"
           className="absolute inset-x-0 top-0 h-px"
@@ -67,7 +67,7 @@ export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy })
           </ul>
           <Link
             to={`/modules#${meta.key}`}
-            className="mt-auto inline-flex items-center gap-2 pt-8 font-mono text-[0.7rem] tracking-[0.14em] text-gold uppercase"
+            className="mt-auto inline-flex items-center gap-2 pt-8 font-mono text-[0.7rem] tracking-[0.14em] text-ember uppercase"
             data-cursor={t('cursor.open')}
           >
             {t('modules.more')}
@@ -151,7 +151,7 @@ export function ModuleGallery() {
           <div className="h-px w-full bg-line">
             <div
               ref={bar}
-              className="h-px origin-left bg-gold rtl:origin-right"
+              className="h-px origin-left bg-ember rtl:origin-right"
               style={{ transform: 'scaleX(0)' }}
             />
           </div>

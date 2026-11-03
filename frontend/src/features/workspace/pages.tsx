@@ -220,7 +220,7 @@ export function MembersPage() {
                 <div className="text-xs text-muted">{row.email}</div>
               </div>
               {row.is_owner ? (
-                <span className="text-xs text-gold">{t('workspace.owner')}</span>
+                <span className="text-xs text-ember">{t('workspace.owner')}</span>
               ) : (
                 <div className="flex items-center gap-2">
                   <select
@@ -415,7 +415,7 @@ export function RolesPage() {
                             <input
                               type="checkbox"
                               aria-label={`${module} ${a}`}
-                              className="size-4 accent-[var(--color-gold)]"
+                              className="size-4 accent-[var(--color-ember)]"
                               checked={(grants[module] ?? []).includes(a)}
                               onChange={() => toggle(module, a)}
                             />

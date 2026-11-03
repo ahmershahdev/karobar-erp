@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
-import { Logo } from '../../components/Logo';
+import { Logo, Wordmark } from '../../components/Logo';
 import { Reveal } from '../../components/Reveal';
 import { useMediaQuery } from '../../lib/motion';
 import { usePrivateSeo } from '../../lib/seo';
@@ -34,16 +34,16 @@ export function AuthCard({
       <aside className="relative hidden flex-col justify-between p-12 lg:flex" data-morph="0">
         <Link to="/" className="flex items-center gap-2.5">
           <Logo className="size-8" />
-          <span className="font-display text-3xl">Karobar</span>
+          <Wordmark className="text-2xl" />
         </Link>
         <div className="max-w-md space-y-8">
-          <p className="font-display text-6xl leading-[0.95] tracking-tight xl:text-7xl">
+          <p className="font-display text-5xl leading-none font-extrabold tracking-[-0.04em] xl:text-6xl">
             {t('hero.title')} <em className="text-gradient">{t('hero.accent')}</em>
           </p>
           <ul className="space-y-3">
             {benefits.map((benefit) => (
               <li key={benefit} className="flex items-center gap-3 text-ink/85">
-                <svg viewBox="0 0 16 16" className="size-4 shrink-0 text-gold" aria-hidden="true">
+                <svg viewBox="0 0 16 16" className="size-4 shrink-0 text-ember" aria-hidden="true">
                   <path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.6" />
                 </svg>
                 {benefit}
@@ -58,7 +58,7 @@ export function AuthCard({
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 lg:invisible">
             <Logo className="size-7" />
-            <span className="font-display text-2xl">Karobar</span>
+            <Wordmark className="text-xl" />
           </Link>
           <LanguageSwitcher />
         </div>
@@ -67,7 +67,7 @@ export function AuthCard({
           className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-12"
         >
           <div className="space-y-3">
-            <span className="label !text-gold lg:hidden">{t('auth.panelTitle')}</span>
+            <span className="label !text-ember lg:hidden">{t('auth.panelTitle')}</span>
             <h1 className="display-md">{title}</h1>
             {subtitle && <p className="text-muted">{subtitle}</p>}
           </div>

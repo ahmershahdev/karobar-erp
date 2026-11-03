@@ -32,7 +32,7 @@ function submitting(handler: () => void) {
   };
 }
 
-const LINK = 'text-gold underline-offset-4 hover:underline';
+const LINK = 'text-ember underline-offset-4 hover:underline';
 
 export function SignInPage() {
   const { t } = useTranslation();

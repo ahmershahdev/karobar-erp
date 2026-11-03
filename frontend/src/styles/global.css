@@ -2,8 +2,7 @@
 @import './tokens.css';
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/geist-mono';
-@import '@fontsource/instrument-serif/400.css';
-@import '@fontsource/instrument-serif/400-italic.css';
+@import '@fontsource-variable/montserrat';
 
 @layer base {
   html {
@@ -13,7 +12,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    scrollbar-color: var(--color-gold) var(--color-black);
+    scrollbar-color: var(--color-ember) var(--color-black);
     scrollbar-width: thin;
     -webkit-tap-highlight-color: transparent;
   }
@@ -35,7 +34,7 @@
   }
 
   ::selection {
-    background: var(--color-gold);
+    background: var(--color-ember);
     color: var(--color-black);
   }
 
@@ -50,11 +49,11 @@
 
   ::-webkit-scrollbar-thumb {
     border-radius: 999px;
-    background: linear-gradient(var(--color-gold), var(--color-coral));
+    background: linear-gradient(var(--color-ember), var(--color-coral));
   }
 
   :focus-visible {
-    outline: 1.5px solid var(--color-gold);
+    outline: 1.5px solid var(--color-ember);
     outline-offset: 4px;
     border-radius: 6px;
   }
@@ -63,9 +62,9 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 0.95;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
     text-wrap: balance;
   }
 
@@ -115,23 +114,25 @@
   }
 
   .display-xl {
-    font-size: clamp(3.25rem, 13vw, 11.5rem);
-    line-height: 0.88;
-    letter-spacing: -0.035em;
+    font-size: clamp(2.75rem, 9vw, 8rem);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
   }
 
   .display-lg {
-    font-size: clamp(2.5rem, 7vw, 6.5rem);
-    line-height: 0.92;
-    letter-spacing: -0.03em;
+    font-size: clamp(2.25rem, 5.5vw, 5rem);
+    line-height: 0.96;
+    letter-spacing: -0.04em;
   }
 
   .display-md {
-    font-size: clamp(2rem, 4.4vw, 3.75rem);
+    font-size: clamp(1.75rem, 3.6vw, 3rem);
     line-height: 1;
   }
 
+  /* The accent word in a heading is the orange of "ERP": upright, like the logo. */
   .text-gradient {
+    font-style: normal;
     background: var(--gradient, var(--gradient-molten));
     -webkit-background-clip: text;
     background-clip: text;
@@ -142,7 +143,11 @@
     position: relative;
     border: 1px solid var(--color-line);
     border-radius: var(--radius-card);
-    background: linear-gradient(180deg, rgb(26 24 21 / 0.82), rgb(12 11 10 / 0.74));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-raised) 82%, transparent),
+      color-mix(in srgb, var(--color-surface) 74%, transparent)
+    );
     backdrop-filter: blur(18px);
   }
 
@@ -253,7 +258,7 @@ html.lenis body {
   opacity: 0;
   background: radial-gradient(
     420px circle at var(--x, 50%) var(--y, 50%),
-    rgb(241 233 218 / 0.09),
+    color-mix(in srgb, var(--color-cream) 9%, transparent),
     transparent 45%
   );
   transition: opacity 0.4s;
@@ -274,7 +279,7 @@ html[data-cursor-visible='true'] .cursor-layer {
 }
 
 .cursor-ring {
-  border: 1px solid rgb(241 233 218 / 0.45);
+  border: 1px solid color-mix(in srgb, var(--color-cream) 45%, transparent);
   transition:
     background-color 0.35s,
     border-color 0.35s,
@@ -283,24 +288,24 @@ html[data-cursor-visible='true'] .cursor-layer {
 }
 
 .cursor-ring[data-mode='link'] {
-  border-color: var(--color-gold);
-  background: rgb(216 178 106 / 0.12);
+  border-color: var(--color-ember);
+  background: color-mix(in srgb, var(--color-ember) 12%, transparent);
   backdrop-filter: blur(2px);
 }
 
 .cursor-ring[data-mode='stick'] {
-  border-color: rgb(216 178 106 / 0.7);
-  background: rgb(216 178 106 / 0.08);
+  border-color: color-mix(in srgb, var(--color-ember) 70%, transparent);
+  background: color-mix(in srgb, var(--color-ember) 8%, transparent);
 }
 
 .cursor-ring[data-mode='text'] {
   border-color: transparent;
-  background: var(--color-gold);
+  background: var(--color-ember);
 }
 
 .cursor-ring[data-mode='media'] {
   border-color: transparent;
-  background: rgb(241 233 218 / 0.92);
+  background: color-mix(in srgb, var(--color-cream) 92%, transparent);
   mix-blend-mode: difference;
 }
 
@@ -309,11 +314,11 @@ html[data-cursor-visible='true'] .cursor-layer {
   font-size: 0.6rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-gold);
+  color: var(--color-ember);
 }
 
 .cursor-dot {
-  background: var(--color-gold);
+  background: var(--color-ember);
   transition: transform 0.2s var(--ease-out-expo);
   will-change: transform;
 }

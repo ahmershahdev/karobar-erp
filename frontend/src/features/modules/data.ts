@@ -11,7 +11,7 @@ export const MODULES = [
     key: 'sales',
     status: 'next',
     milestone: 'M4',
-    color: 'var(--color-gold)',
+    color: 'var(--color-ember)',
     gradient: 'var(--gradient-molten)',
   },
   {

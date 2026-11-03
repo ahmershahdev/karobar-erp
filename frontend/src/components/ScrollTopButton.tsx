@@ -51,7 +51,7 @@ export function ScrollTopButton() {
           cy="24"
           r="22"
           fill="none"
-          stroke="var(--color-gold)"
+          stroke="var(--color-ember)"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeDasharray={circumference}

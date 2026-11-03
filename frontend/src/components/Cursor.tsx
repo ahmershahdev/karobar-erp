@@ -9,7 +9,7 @@ const TEXT = 'input, textarea, [contenteditable="true"]';
 const MEDIA = 'img, canvas, video, [data-cursor-media]';
 
 /**
- * Karobar's cursor: a gold ledger tick inside a trailing ring.
+ * Karobar's cursor: an orange ledger tick inside a trailing ring.
  *
  * - Over links the ring opens up and shows the element's data-cursor label.
  * - Over buttons and pills marked data-cursor-stick it wraps the element's own shape, like a

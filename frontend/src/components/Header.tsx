@@ -8,7 +8,7 @@ import { useScroll } from '../lib/scroll';
 import { useLenis } from '../lib/smooth-scroll';
 import { SITE } from '../seo/site';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { Logo } from './Logo';
+import { Logo, Wordmark } from './Logo';
 import { RollText } from './RollText';
 
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -51,7 +51,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            'radial-gradient(70% 50% at 100% 0%, rgb(216 178 106 / 0.18), transparent 70%), radial-gradient(60% 40% at 0% 100%, rgb(116 98 201 / 0.14), transparent 70%)',
+            'radial-gradient(70% 50% at 100% 0%, color-mix(in srgb, var(--color-ember) 18%, transparent), transparent 70%), radial-gradient(60% 40% at 0% 100%, color-mix(in srgb, var(--color-azure) 14%, transparent), transparent 70%)',
         }}
       />
       <span className="label mb-6">{t('nav.menu')}</span>
@@ -66,19 +66,19 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                 className="flex items-baseline justify-between py-5 font-display text-5xl"
               >
                 {link.label}
-                <span className="label !text-gold">0{index + 1}</span>
+                <span className="label !text-ember">0{index + 1}</span>
               </Link>
             </li>
           ))}
         </ul>
       </nav>
       <div className="space-y-6">
-        <a href={`mailto:${SITE.email}`} className="block text-lg text-gold">
+        <a href={`mailto:${SITE.email}`} className="block text-lg text-ember">
           {SITE.email}
         </a>
         <div className="flex items-center justify-between">
           <LanguageSwitcher />
-          <a href={SITE.repo} rel="noopener" className="label hover:!text-gold">
+          <a href={SITE.repo} rel="noopener" className="label hover:!text-ember">
             GitHub
           </a>
         </div>
@@ -157,13 +157,13 @@ export function Header() {
         <div
           className={`relative mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 rounded-full border ps-4 pe-2 transition-[background-color,border-color,box-shadow] duration-500 ${
             y > 24 || open
-              ? 'border-line bg-black/60 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.8)] backdrop-blur-xl'
+              ? 'border-line bg-black/60 shadow-[0_20px_60px_-20px_color-mix(in_srgb,_var(--color-black)_80%,_transparent)] backdrop-blur-xl'
               : 'border-transparent bg-transparent'
           }`}
         >
           <Link to="/" className="group flex items-center gap-2.5" aria-label="Karobar ERP">
-            <Logo className="size-7 transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:rotate-[180deg]" />
-            <span className="font-display text-2xl leading-none">Karobar</span>
+            <Logo className="size-7 transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:-translate-y-0.5" />
+            <Wordmark className="text-xl leading-none" />
             <span className="label hidden !text-[0.6rem] lg:inline">v0.2</span>
           </Link>
 
@@ -188,7 +188,7 @@ export function Header() {
                 onPointerEnter={moveIndicator}
                 className={({ isActive }) =>
                   `group relative px-4 py-2 font-mono text-[0.7rem] tracking-[0.14em] uppercase ${
-                    isActive ? 'text-gold' : 'text-ink/75'
+                    isActive ? 'text-ember' : 'text-ink/75'
                   }`
                 }
               >

@@ -509,7 +509,7 @@ export function ChartPage() {
               className={`flex items-baseline gap-4 border-t border-line py-3 ${account.is_group ? 'font-medium' : 'text-ink/85'}`}
               style={{ paddingInlineStart: `${depth(account) * 1.25}rem` }}
             >
-              <span className="w-14 shrink-0 font-mono text-sm text-gold">{account.code}</span>
+              <span className="w-14 shrink-0 font-mono text-sm text-ember">{account.code}</span>
               <span className={account.is_group ? 'font-display text-xl' : ''}>{account.name}</span>
               <span className="label ms-auto hidden sm:inline">
                 {t(`acc.types.${account.type}`)}
@@ -596,7 +596,7 @@ export function TrialBalancePage() {
             <tbody>
               {report.data?.rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
-                  <td className={`${TD} font-mono text-gold`}>{row.code}</td>
+                  <td className={`${TD} font-mono text-ember`}>{row.code}</td>
                   <td className={TD}>{row.name}</td>
                   <td className={NUM}>
                     {toMinor(row.debit) ? formatMoney(row.debit, i18n.resolvedLanguage) : ''}
@@ -609,7 +609,7 @@ export function TrialBalancePage() {
             </tbody>
             {report.data && (
               <tfoot>
-                <tr className="border-t border-gold/40 text-gold">
+                <tr className="border-t border-ember/40 text-ember">
                   <td className={TD} colSpan={2}>
                     {t('ledger.total')}{' '}
                     <span className={`label ms-2 ${balanced ? '!text-mint' : '!text-coral'}`}>
@@ -745,7 +745,7 @@ export function LedgerPage() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t border-gold/40 text-gold">
+                <tr className="border-t border-ember/40 text-ember">
                   <td className={TD} colSpan={5}>
                     {t('acc.closing')}
                   </td>

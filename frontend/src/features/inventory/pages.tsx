@@ -109,7 +109,7 @@ function ProductPicker({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(product)}
               >
-                <span className="font-mono text-xs text-gold">{product.sku}</span> {product.name}
+                <span className="font-mono text-xs text-ember">{product.sku}</span> {product.name}
               </button>
             </li>
           ))}
@@ -238,7 +238,7 @@ export function ProductsPage() {
             <label className="flex items-center gap-3 self-end pb-3 text-sm">
               <input
                 type="checkbox"
-                className="size-4 accent-[var(--color-gold)]"
+                className="size-4 accent-[var(--color-ember)]"
                 checked={form.batches}
                 onChange={(e) => setForm({ ...form, batches: e.target.checked })}
               />
@@ -282,7 +282,7 @@ export function ProductsPage() {
             <tbody>
               {products.data?.results.map((product: Product) => (
                 <tr key={product.id} className="border-t border-line">
-                  <td className={`${TD} font-mono text-gold`}>{product.sku}</td>
+                  <td className={`${TD} font-mono text-ember`}>{product.sku}</td>
                   <td className={TD}>
                     {product.name}
                     {product.track_batches && (
@@ -576,7 +576,7 @@ function EntryRow({ entry }: { entry: StockEntry }) {
                 {entry.lines.map((line) => (
                   <tr key={line.id} className="border-t border-line">
                     <td className={TD}>
-                      <span className="font-mono text-xs text-gold">{line.sku}</span>{' '}
+                      <span className="font-mono text-xs text-ember">{line.sku}</span>{' '}
                       {line.product_name}
                       {line.batch_number && <span className="label ms-2">{line.batch_number}</span>}
                     </td>
@@ -732,7 +732,7 @@ export function StockOnHandPage() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
-                  <td className={`${TD} font-mono text-gold`}>{row.sku}</td>
+                  <td className={`${TD} font-mono text-ember`}>{row.sku}</td>
                   <td className={TD}>{row.product_name}</td>
                   <td className={TD}>{row.warehouse_code}</td>
                   <td className={NUM}>
@@ -743,7 +743,7 @@ export function StockOnHandPage() {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-gold/40 text-gold">
+              <tr className="border-t border-ember/40 text-ember">
                 <td className={TD} colSpan={4}>
                   {t('inv.totalValue')}
                 </td>
@@ -801,7 +801,7 @@ export function AlertsPage() {
           {low.map((row) => (
             <li key={row.product} className="flex justify-between gap-4 border-t border-line py-3">
               <span>
-                <span className="font-mono text-xs text-gold">{row.sku}</span> {row.name}
+                <span className="font-mono text-xs text-ember">{row.sku}</span> {row.name}
               </span>
               <span className="font-mono text-sm text-coral">
                 {formatQuantity(row.on_hand, i18n.resolvedLanguage)} /{' '}
@@ -854,7 +854,7 @@ export function InventorySetupPage() {
           <ul className="mb-5">
             {units.data?.map((item) => (
               <li key={item.id} className="flex gap-4 border-t border-line py-2.5">
-                <span className="w-16 font-mono text-gold">{item.code}</span> {item.name}
+                <span className="w-16 font-mono text-ember">{item.code}</span> {item.name}
               </li>
             ))}
           </ul>
@@ -891,7 +891,7 @@ export function InventorySetupPage() {
           <ul className="mb-5">
             {warehouses.data?.map((item) => (
               <li key={item.id} className="flex gap-4 border-t border-line py-2.5">
-                <span className="w-16 font-mono text-gold">{item.code}</span> {item.name}
+                <span className="w-16 font-mono text-ember">{item.code}</span> {item.name}
               </li>
             ))}
           </ul>

@@ -1,20 +1,51 @@
-// Two ledger columns that meet in the middle: debits on one side, credits on the other.
+import { useId } from 'react';
+
+import { MARK } from './mark';
+
+/** The Karobar mark from the logo: a cloud of figures with the growth arrow leaving it. */
 export function Logo({ className = 'size-8' }: { className?: string }) {
+  const id = useId();
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
+    <svg viewBox={MARK.viewBox} className={className} aria-hidden="true">
       <defs>
-        <linearGradient id="logo-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--color-gold)" />
-          <stop offset="1" stopColor="var(--color-coral)" />
+        <linearGradient id={`${id}c`} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stopColor="var(--color-blue)" />
+          <stop offset="1" stopColor="var(--color-sky)" />
         </linearGradient>
-        <linearGradient id="logo-b" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="var(--color-indigo)" />
-          <stop offset="1" stopColor="var(--color-turquoise)" />
+        <linearGradient id={`${id}a`} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stopColor="var(--color-ember)" />
+          <stop offset="1" stopColor="var(--color-yellow)" />
         </linearGradient>
       </defs>
-      <rect x="3" y="4" width="11" height="24" rx="3" fill="url(#logo-a)" />
-      <rect x="18" y="4" width="11" height="24" rx="3" fill="url(#logo-b)" />
-      <rect x="9" y="14.5" width="14" height="3" rx="1.5" fill="var(--color-cream)" />
+      <path d={MARK.cloud} fill="none" stroke={`url(#${id}c)`} strokeWidth="3.4" />
+      {MARK.bars.map((bar) => (
+        <rect
+          key={bar.x}
+          x={bar.x}
+          y={bar.y}
+          width={MARK.barWidth}
+          height={bar.height}
+          rx="0.8"
+          fill={`url(#${id}c)`}
+        />
+      ))}
+      <path
+        d={MARK.arrow}
+        fill="none"
+        stroke={`url(#${id}a)`}
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <polygon points={MARK.arrowHead} fill="var(--color-yellow)" />
     </svg>
+  );
+}
+
+/** "Karobar" in the page's ink and "ERP" in the arrow's orange, as in the logo. */
+export function Wordmark({ className = '' }: { className?: string }) {
+  return (
+    <span className={`font-display font-extrabold tracking-[-0.04em] ${className}`} dir="ltr">
+      Karobar<span className="text-gradient">ERP</span>
+    </span>
   );
 }

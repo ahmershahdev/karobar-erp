@@ -61,7 +61,7 @@ export default function ModulesPage() {
               type="button"
               data-cursor-stick
               onClick={() => jump(meta.key)}
-              className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm transition-colors hover:border-gold hover:text-gold"
+              className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm transition-colors hover:border-ember hover:text-ember"
             >
               <span className="size-1.5 rounded-full" style={{ background: meta.color }} />
               {items[index]?.title}
@@ -79,7 +79,7 @@ export default function ModulesPage() {
             <section key={meta.key} id={meta.key} data-morph="2" className="scroll-mt-28">
               <Reveal>
                 <TiltCard className="rounded-[2rem]">
-                  <article className="relative grid overflow-hidden rounded-[2rem] border border-line bg-[linear-gradient(160deg,rgb(31_28_25/0.96),rgb(10_9_8/0.94))] lg:grid-cols-2">
+                  <article className="relative grid overflow-hidden rounded-[2rem] border border-line bg-[linear-gradient(160deg,color-mix(in_srgb,_var(--color-raised)_96%,_transparent),color-mix(in_srgb,_var(--color-canvas)_94%,_transparent))] lg:grid-cols-2">
                     <div
                       aria-hidden="true"
                       className="absolute inset-x-0 top-0 h-px"
@@ -124,8 +124,8 @@ export default function ModulesPage() {
                           </li>
                         ))}
                       </ul>
-                      <div className="mt-auto rounded-2xl border border-gold/25 bg-gold/[0.05] p-5">
-                        <p className="label !text-gold">{t('modules.inBooks')}</p>
+                      <div className="mt-auto rounded-2xl border border-ember/25 bg-ember/[0.05] p-5">
+                        <p className="label !text-ember">{t('modules.inBooks')}</p>
                         <p className="mt-2 text-sm text-ink/85">{copy.books}</p>
                       </div>
                     </div>

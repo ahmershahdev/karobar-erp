@@ -53,7 +53,7 @@ export function StatsBand() {
   return (
     <section className="border-y border-line bg-black/60 backdrop-blur-sm" data-morph="1">
       <div className="shell py-16 md:py-20">
-        <span className="label mb-10 block !text-gold">{t('home.stats.eyebrow')}</span>
+        <span className="label mb-10 block !text-ember">{t('home.stats.eyebrow')}</span>
         <Reveal stagger className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
           {items.map((item) => (
             <div key={item.label} className="space-y-3 border-s border-line ps-5">
@@ -70,7 +70,7 @@ export function StatsBand() {
 }
 
 const SHOP_ACCENTS = [
-  'var(--color-gold)',
+  'var(--color-ember)',
   'var(--color-turquoise)',
   'var(--color-lavender)',
   'var(--color-coral)',
@@ -124,13 +124,13 @@ export function HowItWorks() {
         {items.map((item, index) => (
           <article key={item.title} className="relative">
             <div className="flex items-center gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-gold/50 font-mono text-sm text-gold">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-ember/50 font-mono text-sm text-ember">
                 {index + 1}
               </span>
               {index < items.length - 1 && (
                 <span
                   aria-hidden="true"
-                  className="hidden h-px flex-1 bg-gradient-to-r from-gold/50 to-transparent md:block rtl:bg-gradient-to-l"
+                  className="hidden h-px flex-1 bg-gradient-to-r from-ember/50 to-transparent md:block rtl:bg-gradient-to-l"
                 />
               )}
             </div>
@@ -167,14 +167,14 @@ export function Roadmap() {
                   state === 'done'
                     ? 'border-mint/30 bg-mint/[0.04]'
                     : state === 'next'
-                      ? 'border-gold/50 bg-gold/[0.06]'
+                      ? 'border-ember/50 bg-ember/[0.06]'
                       : 'border-line bg-black/50'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm text-gold">{item.key}</span>
+                  <span className="font-mono text-sm text-ember">{item.key}</span>
                   <span
-                    className={`label ${state === 'done' ? '!text-mint' : state === 'next' ? '!text-gold' : ''}`}
+                    className={`label ${state === 'done' ? '!text-mint' : state === 'next' ? '!text-ember' : ''}`}
                   >
                     {t(`home.roadmap.${state}`)}
                   </span>
@@ -214,8 +214,8 @@ export function Faq() {
                   aria-hidden="true"
                   className={`relative size-4 shrink-0 transition-transform duration-500 ${expanded ? 'rotate-45' : ''}`}
                 >
-                  <span className="absolute inset-x-0 top-1/2 h-px bg-gold" />
-                  <span className="absolute inset-y-0 start-1/2 w-px bg-gold" />
+                  <span className="absolute inset-x-0 top-1/2 h-px bg-ember" />
+                  <span className="absolute inset-y-0 start-1/2 w-px bg-ember" />
                 </span>
               </button>
               <div

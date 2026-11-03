@@ -14,7 +14,7 @@ export function SectionHeading({ index, eyebrow, title, lead, className = '' }: 
   return (
     <Reveal stagger className={`space-y-6 ${className}`}>
       <div className="flex items-center gap-4">
-        <span className="label !text-gold">[{index}]</span>
+        <span className="label !text-ember">[{index}]</span>
         <span className="h-px w-10 bg-line-strong" />
         <span className="label">{eyebrow}</span>
       </div>

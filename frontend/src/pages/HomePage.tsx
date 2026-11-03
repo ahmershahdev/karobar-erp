@@ -59,7 +59,7 @@ export default function HomePage() {
               <Link
                 to="/modules"
                 data-cursor-stick
-                className="rounded-full border border-line-strong px-7 py-4 transition-colors hover:border-gold hover:text-gold"
+                className="rounded-full border border-line-strong px-7 py-4 transition-colors hover:border-ember hover:text-ember"
               >
                 {t('hero.primary')}
               </Link>
@@ -68,13 +68,13 @@ export default function HomePage() {
         </div>
         <div className="shell hidden justify-center pb-6 md:flex">
           <span className="relative h-10 w-px overflow-hidden bg-line" aria-hidden="true">
-            <span className="absolute inset-0 bg-gold [animation:scroll-cue_2.4s_var(--ease-in-out-expo)_infinite]" />
+            <span className="absolute inset-0 bg-ember [animation:scroll-cue_2.4s_var(--ease-in-out-expo)_infinite]" />
           </span>
         </div>
       </section>
 
       <section data-morph="0" className="shell py-28 md:py-44">
-        <span className="label mb-8 block !text-gold">[01] {t('manifesto.eyebrow')}</span>
+        <span className="label mb-8 block !text-ember">[01] {t('manifesto.eyebrow')}</span>
         <ScrollWords
           text={t('manifesto.body')}
           className="display-md max-w-5xl font-display !leading-[1.12]"
@@ -129,7 +129,7 @@ export default function HomePage() {
             title={t('modules.title')}
             lead={t('modules.lead')}
           />
-          <Link to="/modules" className="label !text-gold hover:underline">
+          <Link to="/modules" className="label !text-ember hover:underline">
             {t('modules.all')}
           </Link>
         </div>
@@ -172,7 +172,7 @@ export default function HomePage() {
         <a
           href={SITE.repo}
           rel="noopener"
-          className="label inline-flex items-center gap-2 hover:!text-gold"
+          className="label inline-flex items-center gap-2 hover:!text-ember"
         >
           {t('cta.title')} &middot; {t('cta.button')}
         </a>

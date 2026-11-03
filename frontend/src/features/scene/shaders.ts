@@ -50,11 +50,11 @@ export const vertexShader = /* glsl */ `
 
 export const fragmentShader = /* glsl */ `
   precision highp float;
-  uniform vec3 uGold;
-  uniform vec3 uPeach;
-  uniform vec3 uCoral;
-  uniform vec3 uLavender;
-  uniform vec3 uTurquoise;
+  uniform vec3 uAzure;
+  uniform vec3 uSky;
+  uniform vec3 uEmber;
+  uniform vec3 uAmber;
+  uniform vec3 uSpark;
   uniform float uOpacity;
 
   varying float vSeed;
@@ -67,11 +67,12 @@ export const fragmentShader = /* glsl */ `
     float core = smoothstep(0.5, 0.0, d);
     float glow = pow(core, 1.7);
 
-    // Mostly warm metals, with a few cool sparks for depth.
-    vec3 color = mix(uGold, uPeach, smoothstep(0.0, 0.55, vSeed));
-    color = mix(color, uCoral, smoothstep(0.55, 0.82, vSeed));
-    color = mix(color, uLavender, step(0.9, vSeed) * 0.85);
-    color = mix(color, uTurquoise, step(0.965, vSeed));
+    // The logo's colours: mostly cloud blues, with a quarter of the points in the orange of the
+    // growth arrow and a few white sparks.
+    vec3 color = mix(uAzure, uSky, smoothstep(0.0, 0.6, vSeed));
+    color = mix(color, uEmber, smoothstep(0.66, 0.74, vSeed));
+    color = mix(color, uAmber, smoothstep(0.86, 0.94, vSeed));
+    color = mix(color, uSpark, step(0.975, vSeed));
 
     float alpha = glow * uOpacity * mix(0.95, 0.4, vDepth);
     gl_FragColor = vec4(color * (0.9 + glow * 0.9), alpha);

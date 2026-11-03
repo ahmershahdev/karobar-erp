@@ -4,7 +4,7 @@ import { Link, NavLink, Navigate, Outlet, useNavigate, useParams } from 'react-r
 
 import { Alert, Button } from '../../components/form';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
-import { Logo } from '../../components/Logo';
+import { Logo, Wordmark } from '../../components/Logo';
 import { api } from '../../lib/api/client';
 import { setActiveTenant } from '../../lib/api/client';
 import { can, type Me, type Membership } from '../../lib/api/types';
@@ -109,11 +109,11 @@ export function WorkspaceLayout({ me }: { me: Me }) {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5">
               <Logo className="size-7" />
-              <span className="font-display text-2xl">Karobar</span>
+              <Wordmark className="text-xl" />
             </Link>
             <button
               type="button"
-              className="label rounded-full border border-line px-3 py-1.5 hover:border-gold hover:!text-gold md:hidden"
+              className="label rounded-full border border-line px-3 py-1.5 hover:border-ember hover:!text-ember md:hidden"
               onClick={() => {
                 void signOut().then(() => navigate('/app/sign-in'));
               }}
@@ -124,7 +124,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
           <label className="block space-y-2">
             <span className="label">{t('workspace.business')}</span>
             <select
-              className="w-full rounded-xl border border-line bg-black/40 px-3 py-2.5 outline-none focus:border-gold"
+              className="w-full rounded-xl border border-line bg-black/40 px-3 py-2.5 outline-none focus:border-ember"
               value={membership.tenant_id}
               onChange={(event) => {
                 if (event.target.value === 'new') void navigate('/app/new-business');

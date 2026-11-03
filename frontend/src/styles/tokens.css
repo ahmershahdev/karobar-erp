@@ -1,58 +1,61 @@
 /*
-  The whole palette lives here. Components use these names (bg-gold, text-cream, from-coral)
+  The whole palette lives here. Components use these names (bg-ember, text-cream, from-coral)
   or the semantic ones below; a raw hex value anywhere else is a review comment.
 
-  The 30 named colours are tuned to sit on warm ink: slightly desaturated, never neon, so the
-  gold accents and the WebGL light read as the brightest things on the page.
+  The palette comes from the logo: a midnight navy canvas (the wordmark's navy, deepened), the
+  royal blue of the cloud as `azure`, and the orange of the growth arrow and "ERP" as `ember`,
+  the one accent everything clickable uses. The other named colours are tuned to sit on navy.
 */
 @theme {
-  --color-red: #d9534f;
-  --color-blue: #4b6bd6;
-  --color-green: #3e9b6b;
-  --color-yellow: #e8c547;
-  --color-orange: #e8793a;
-  --color-purple: #8a5cc2;
-  --color-black: #0a0908;
-  --color-white: #fffdf8;
-  --color-grey: #8a857d;
-  --color-pink: #e0749a;
-  --color-brown: #7a5238;
-  --color-navy: #141c33;
-  --color-sky: #8cc4ec;
-  --color-maroon: #6b1f2a;
-  --color-violet: #7462c9;
-  --color-turquoise: #4fd1c1;
-  --color-cyan: #2fa8c8;
-  --color-magenta: #c94b98;
-  --color-cream: #f1e9da;
-  --color-beige: #ddd0b8;
-  --color-silver: #b9b5ad;
-  --color-gold: #d8b26a;
+  --color-red: #ef5350;
+  --color-blue: #1d4ed8;
+  --color-green: #22a06b;
+  --color-yellow: #fbb03b;
+  --color-orange: #f7931e;
+  --color-purple: #7c5cdb;
+  --color-black: #030817;
+  --color-white: #ffffff;
+  --color-grey: #8590a8;
+  --color-pink: #e879a6;
+  --color-brown: #8a5a32;
+  --color-navy: #0f1d45;
+  --color-sky: #5b9cff;
+  --color-maroon: #7a1f33;
+  --color-violet: #6d5df0;
+  --color-turquoise: #2dd4bf;
+  --color-cyan: #22b8e0;
+  --color-magenta: #d64fa4;
+  --color-cream: #f2f5fc;
+  --color-beige: #d9dfee;
+  --color-silver: #b4bdd2;
+  --color-ember: #f7931e;
+  --color-azure: #2563eb;
   /* Third-party brand marks on the sign-in buttons; their colours are set by each brand. */
   --color-brand-google-blue: #4285f4;
   --color-brand-google-green: #34a853;
   --color-brand-google-yellow: #fbbc05;
   --color-brand-google-red: #ea4335;
   --color-brand-facebook: #1877f2;
-  --color-olive: #7d7f3c;
-  --color-teal: #1f8f84;
-  --color-indigo: #3d3f9e;
-  --color-lavender: #b9aee8;
-  --color-peach: #f2b48c;
-  --color-coral: #ee7b66;
-  --color-mint: #9fdcc3;
-  --color-charcoal: #161412;
+  --color-olive: #7d8a3c;
+  --color-teal: #14958a;
+  --color-indigo: #2b3fae;
+  --color-lavender: #b3c0f2;
+  --color-peach: #ffc477;
+  --color-coral: #f26a1b;
+  --color-mint: #8fe0c4;
+  --color-charcoal: #08112b;
 
   --color-canvas: var(--color-black);
   --color-surface: var(--color-charcoal);
-  --color-raised: #1f1c19;
+  --color-raised: #0f1a3a;
   --color-ink: var(--color-cream);
-  --color-muted: #9b958b;
-  --color-accent: var(--color-gold);
-  --color-line: rgb(241 233 218 / 0.1);
-  --color-line-strong: rgb(241 233 218 / 0.22);
+  --color-muted: #94a0bc;
+  --color-accent: var(--color-ember);
+  --color-line: rgb(214 224 255 / 0.1);
+  --color-line-strong: rgb(214 224 255 / 0.22);
 
-  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  /* Montserrat's heavy weights echo the logo's wordmark. */
+  --font-display: 'Montserrat Variable', 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --font-arabic: 'Noto Kufi Arabic Variable', 'Geist Variable', sans-serif;
@@ -64,18 +67,26 @@
 }
 
 :root {
+  /* The arrow and "ERP" in the logo: amber into deep orange. */
   --gradient-molten: linear-gradient(
     100deg,
-    var(--color-gold) 0%,
-    var(--color-peach) 45%,
+    var(--color-yellow) 0%,
+    var(--color-ember) 45%,
     var(--color-coral) 100%
+  );
+  /* The cloud: royal blue lifting to sky. */
+  --gradient-cloud: linear-gradient(
+    120deg,
+    var(--color-blue) 0%,
+    var(--color-azure) 45%,
+    var(--color-sky) 100%
   );
   --gradient-aurora: linear-gradient(
     120deg,
     var(--color-navy) 0%,
     var(--color-indigo) 35%,
-    var(--color-violet) 65%,
-    var(--color-magenta) 100%
+    var(--color-azure) 70%,
+    var(--color-sky) 100%
   );
   --gradient-lagoon: linear-gradient(
     120deg,

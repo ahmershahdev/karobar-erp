@@ -56,7 +56,7 @@ export function OAuthButtons({ next }: { next?: string | null }) {
           <a
             key={name}
             href={`${env.apiBaseUrl}/api/accounts/oauth/${name}/start/${query}`}
-            className="flex w-full items-center justify-center gap-3 rounded-full border border-line px-5 py-3 text-sm transition-colors hover:border-gold"
+            className="flex w-full items-center justify-center gap-3 rounded-full border border-line px-5 py-3 text-sm transition-colors hover:border-ember"
           >
             <Mark />
             {t(`auth.continueWith.${name}`)}

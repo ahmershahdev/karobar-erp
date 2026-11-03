@@ -75,7 +75,7 @@ export function LedgerDemo() {
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t border-gold/40 text-base text-gold md:text-lg">
+          <tr className="border-t border-ember/40 text-base text-ember md:text-lg">
             <td className="px-5 py-4 font-sans md:px-7">{t('ledger.total')}</td>
             <td className="px-3 py-4 text-end">{cell(TOTAL)}</td>
             <td className="px-5 py-4 text-end md:px-7">{cell(TOTAL)}</td>

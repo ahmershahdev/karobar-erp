@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, type Location } from 'react-router';
 
 import { prefersReducedMotion } from '../lib/motion';
+import { Wordmark } from './Logo';
 import { scrollToTop, useLenis } from '../lib/smooth-scroll';
 
 function bothInApp(a: Location, b: Location): boolean {
@@ -66,7 +67,7 @@ export function PageTransition({ children }: Props) {
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-[85] flex items-center justify-center bg-black [clip-path:inset(100%_0_0_0)]"
       >
-        <span className="text-gradient font-display text-[18vw] leading-none">Karobar</span>
+        <Wordmark className="text-[13vw] leading-none" />
         <div
           className="absolute inset-x-0 bottom-0 h-px"
           style={{ background: 'var(--gradient-molten)' }}

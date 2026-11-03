@@ -9,7 +9,7 @@ export function Marquee({ items }: { items: string[] }) {
           }`}
         >
           {item}
-          <span className="text-2xl text-gold md:text-4xl">&#10022;</span>
+          <span className="text-2xl text-ember md:text-4xl">&#10022;</span>
         </li>
       ))}
     </ul>

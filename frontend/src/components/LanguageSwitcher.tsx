@@ -21,7 +21,7 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
               aria-pressed={active}
               onClick={() => void i18n.changeLanguage(language.code)}
               className={`px-1 py-1 text-xs transition-colors duration-300 ${
-                active ? 'text-gold' : 'text-muted hover:text-ink'
+                active ? 'text-ember' : 'text-muted hover:text-ink'
               } ${language.code === 'en' ? 'font-mono uppercase tracking-widest' : ''}`}
             >
               {language.code === 'en' ? 'En' : language.label}

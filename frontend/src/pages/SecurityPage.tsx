@@ -7,7 +7,7 @@ import { SectionHeading } from '../components/SectionHeading';
 import { usePublicSeo } from '../lib/seo';
 import { PUBLIC_ROUTES, SITE } from '../seo/site';
 
-const LOCK_COLORS = ['var(--color-gold)', 'var(--color-turquoise)', 'var(--color-lavender)'];
+const LOCK_COLORS = ['var(--color-ember)', 'var(--color-turquoise)', 'var(--color-lavender)'];
 
 export default function SecurityPage() {
   const { t } = useTranslation();
@@ -89,7 +89,7 @@ export default function SecurityPage() {
               key={item.title}
               className="space-y-4 bg-black/85 p-7 backdrop-blur transition-colors duration-500 hover:bg-raised md:p-10"
             >
-              <span className="label !text-gold">{String(index + 1).padStart(2, '0')}</span>
+              <span className="label !text-ember">{String(index + 1).padStart(2, '0')}</span>
               <h3 className="font-display text-3xl md:text-4xl">{item.title}</h3>
               <p className="text-muted">{item.body}</p>
             </article>

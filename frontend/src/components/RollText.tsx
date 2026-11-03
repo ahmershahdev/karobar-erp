@@ -8,7 +8,7 @@ export function RollText({ children }: { children: string }) {
       </span>
       <span
         aria-hidden="true"
-        className="absolute inset-x-0 top-full block text-gold transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:-translate-y-full group-focus-visible:-translate-y-full"
+        className="absolute inset-x-0 top-full block text-ember transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:-translate-y-full group-focus-visible:-translate-y-full"
       >
         {children}
       </span>

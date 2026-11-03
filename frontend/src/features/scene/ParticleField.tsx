@@ -97,11 +97,11 @@ export default function ParticleField({ animate, onFailure, side = 'right' }: Pr
       uPointer: { value: new Vector2(10, 10) },
       uPointerStrength: { value: 0 },
       uOpacity: { value: 0 },
-      uGold: { value: token('gold') },
-      uPeach: { value: token('peach') },
-      uCoral: { value: token('coral') },
-      uLavender: { value: token('lavender') },
-      uTurquoise: { value: token('turquoise') },
+      uAzure: { value: token('azure') },
+      uSky: { value: token('sky') },
+      uEmber: { value: token('ember') },
+      uAmber: { value: token('yellow') },
+      uSpark: { value: token('cream') },
     };
     const material = new ShaderMaterial({
       vertexShader,
