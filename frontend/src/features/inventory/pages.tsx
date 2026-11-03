@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,21 +7,12 @@ import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { can, type Product, type StockEntry } from '../../lib/api/types';
 import { formatMoney } from '../../lib/money';
-import { ensureCsrf } from '../auth/session';
-import { errorText, useWorkspace } from '../workspace/hooks';
+import { today } from '../../lib/dates';
+import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
+import { CELL_INPUT, NUM, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
-const TABLE = 'w-full text-sm';
-const TH = 'label py-3 pe-4 text-start font-normal';
-const TD = 'py-3 pe-4 align-top';
-const NUM = 'py-3 pe-4 text-end font-mono tabular-nums';
-const CELL_INPUT = 'w-full rounded-lg border border-line bg-black/50 px-2 py-2';
 type Kind = 'receipt' | 'issue' | 'transfer' | 'adjustment';
-
-function today(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
 
 function formatQuantity(value: string, locale: string | undefined): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(Number(value));
@@ -117,21 +108,6 @@ function ProductPicker({
   );
 }
 
-function useInventoryAction(keys: string[]) {
-  const client = useQueryClient();
-  const { membership } = useWorkspace();
-  return useMutation({
-    mutationFn: async (call: () => Promise<unknown>) => {
-      await ensureCsrf();
-      return call();
-    },
-    onSuccess: () =>
-      Promise.all(
-        keys.map((key) => client.invalidateQueries({ queryKey: [membership.tenant_id, key] })),
-      ),
-  });
-}
-
 export function ProductsPage() {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
@@ -146,7 +122,7 @@ export function ProductsPage() {
         }),
       ),
   });
-  const save = useInventoryAction(['products', 'products-all']);
+  const save = useTenantAction(['products', 'products-all']);
   const [form, setForm] = useState({ sku: '', name: '', unit: '', reorder: '', batches: false });
   const [pack, setPack] = useState({ unit: '', factor: '', barcode: '' });
 
@@ -340,7 +316,7 @@ function StockEditor({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const warehouses = useWarehouses();
   const [picked, setPicked] = useState<Map<string, Product>>(new Map());
-  const save = useInventoryAction(['stock-entries']);
+  const save = useTenantAction(['stock-entries']);
   const [kind, setKind] = useState<Kind>('receipt');
   const [date, setDate] = useState(today());
   const [memo, setMemo] = useState('');
@@ -564,7 +540,7 @@ function EntryRow({ entry }: { entry: StockEntry }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
   const [open, setOpen] = useState(false);
-  const action = useInventoryAction(['stock-entries', 'levels', 'products', 'alerts']);
+  const action = useTenantAction(['stock-entries', 'levels', 'products', 'alerts']);
   const posted = entry.status === 'posted';
   return (
     <li className="border-t border-line">
@@ -854,7 +830,7 @@ export function InventorySetupPage() {
   const { membership } = useWorkspace();
   const units = useUnits();
   const warehouses = useWarehouses();
-  const save = useInventoryAction(['units', 'warehouses']);
+  const save = useTenantAction(['units', 'warehouses']);
   const [unit, setUnit] = useState({ code: '', name: '' });
   const [store, setStore] = useState({ code: '', name: '' });
   const allowed = can(membership, 'inventory', 'create');

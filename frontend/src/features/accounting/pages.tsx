@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,44 +8,16 @@ import { saveBlob } from '../../lib/api/download';
 import { unwrap } from '../../lib/api/errors';
 import { can, type Account, type JournalEntry } from '../../lib/api/types';
 import { formatMoney, fromMinor, toMinor } from '../../lib/money';
-import { ensureCsrf } from '../auth/session';
-import { errorText, useWorkspace } from '../workspace/hooks';
+import { today } from '../../lib/dates';
+import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
+import { NUM, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
-
-const TABLE = 'w-full text-sm';
-const TH = 'label py-3 pe-4 text-start font-normal';
-const TD = 'py-3 pe-4 align-top';
-const NUM = 'py-3 pe-4 text-end font-mono tabular-nums';
-
-// The local calendar date. toISOString() would give the UTC date, which is yesterday in
-// Pakistan and the Gulf until 5 in the morning.
-function today(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
 
 function useAccounts() {
   const { membership } = useWorkspace();
   return useQuery({
     queryKey: [membership.tenant_id, 'accounts'],
     queryFn: () => unwrap(api.GET('/api/accounting/accounts/')),
-  });
-}
-
-function useAccountingAction(keys: string[]) {
-  const client = useQueryClient();
-  const { membership } = useWorkspace();
-  return useMutation({
-    mutationFn: async (call: () => Promise<unknown>) => {
-      await ensureCsrf();
-      return call();
-    },
-    onSuccess: () =>
-      Promise.all(
-        keys.map((key) => client.invalidateQueries({ queryKey: [membership.tenant_id, key] })),
-      ),
   });
 }
 
@@ -81,7 +53,7 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
         }))
       : [blankLine(0), blankLine(1)],
   );
-  const save = useAccountingAction(['entries']);
+  const save = useTenantAction(['entries']);
   const debits = lines.reduce((sum, line) => sum + (toMinor(line.debit) || 0), 0);
   const credits = lines.reduce((sum, line) => sum + (toMinor(line.credit) || 0), 0);
   const invalid = lines.some(
@@ -260,7 +232,7 @@ function EntryRow({ entry, onEdit }: { entry: JournalEntry; onEdit: () => void }
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
   const [open, setOpen] = useState(false);
-  const action = useAccountingAction(['entries', 'trial-balance']);
+  const action = useTenantAction(['entries', 'trial-balance']);
   const posted = entry.status === 'posted';
   return (
     <li className="border-t border-line">
@@ -446,7 +418,7 @@ export function ChartPage() {
   const { t } = useTranslation();
   const { membership } = useWorkspace();
   const accounts = useAccounts();
-  const save = useAccountingAction(['accounts']);
+  const save = useTenantAction(['accounts']);
   const [form, setForm] = useState({ code: '', name: '', type: 'expense', parent: '' });
   const groups = (accounts.data ?? []).filter((account) => account.is_group);
   const depth = (account: Account): number => {
@@ -795,7 +767,7 @@ export function PeriodsPage() {
     queryKey: [membership.tenant_id, 'fiscal-years'],
     queryFn: () => unwrap(api.GET('/api/accounting/fiscal-years/')),
   });
-  const action = useAccountingAction(['fiscal-years']);
+  const action = useTenantAction(['fiscal-years']);
   const latest = years.data?.[0];
   const createNext = () => {
     if (!latest) return;
