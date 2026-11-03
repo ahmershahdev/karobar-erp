@@ -212,11 +212,16 @@ html.lenis body {
   overflow: hidden;
 }
 
-/* The custom cursor replaces the system one only where a fine pointer exists. */
+/* The custom cursor replaces the system one only where a fine pointer exists; text fields keep
+   the system I-beam so the caret position is never a guess. */
 @media (pointer: fine) {
   html.has-cursor,
   html.has-cursor * {
     cursor: none !important;
+  }
+
+  html.has-cursor :is(input, textarea, [contenteditable='true']) {
+    cursor: text !important;
   }
 }
 
@@ -268,7 +273,8 @@ html.lenis body {
   opacity: 1;
 }
 
-/* Cursor states live in CSS so the animation loop only writes position and size. */
+/* Cursor states live in CSS so the animation loop only writes position and size. Nothing here
+   paints over what is under the pointer: no fills, blurs or blend modes. */
 .cursor-layer {
   opacity: 0;
   transition: opacity 0.3s;
@@ -279,48 +285,27 @@ html[data-cursor-visible='true'] .cursor-layer {
 }
 
 .cursor-ring {
-  border: 1px solid color-mix(in srgb, var(--color-cream) 45%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--color-ember) 55%, transparent);
   transition:
-    background-color 0.35s,
-    border-color 0.35s,
-    backdrop-filter 0.35s;
+    border-color 0.3s,
+    opacity 0.3s;
   will-change: transform, width, height;
 }
 
-.cursor-ring[data-mode='link'] {
+.cursor-ring[data-state='hover'] {
   border-color: var(--color-ember);
-  background: color-mix(in srgb, var(--color-ember) 12%, transparent);
-  backdrop-filter: blur(2px);
-}
-
-.cursor-ring[data-mode='stick'] {
-  border-color: color-mix(in srgb, var(--color-ember) 70%, transparent);
-  background: color-mix(in srgb, var(--color-ember) 8%, transparent);
-}
-
-.cursor-ring[data-mode='text'] {
-  border-color: transparent;
-  background: var(--color-ember);
-}
-
-.cursor-ring[data-mode='media'] {
-  border-color: transparent;
-  background: color-mix(in srgb, var(--color-cream) 92%, transparent);
-  mix-blend-mode: difference;
-}
-
-.cursor-label {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-ember);
 }
 
 .cursor-dot {
   background: var(--color-ember);
-  transition: transform 0.2s var(--ease-out-expo);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-ember) 70%, transparent);
+  transition: opacity 0.2s;
   will-change: transform;
+}
+
+.cursor-dot[data-state='hover'],
+:is(.cursor-ring, .cursor-dot)[data-state='typing'] {
+  opacity: 0;
 }
 
 @keyframes marquee {
@@ -363,4 +348,117 @@ html[data-cursor-visible='true'] .cursor-layer {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* The v3 badge is replaced by the notice under each protected form (allowed by Google's FAQ). */
+.grecaptcha-badge {
+  visibility: hidden;
+}
+
+/* While the loading screen or a page transition covers the page, nothing scrolls and no scrollbar
+   shows. The gutter stays reserved all the time, so the page doesn't shift sideways when the
+   scrollbar comes back. */
+html {
+  scrollbar-gutter: stable;
+}
+
+html.scroll-locked {
+  overflow: hidden;
+}
+
+html.scroll-locked body {
+  overflow: hidden;
+  touch-action: none;
+}
+
+.preloader-halo {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--color-azure) 70%, transparent) 90deg,
+    transparent 180deg,
+    color-mix(in srgb, var(--color-ember) 70%, transparent) 270deg,
+    transparent 360deg
+  );
+  mask: radial-gradient(closest-side, transparent 86%, black 88%, black 100%, transparent 100%);
+  filter: blur(0.5px);
+  animation: halo-spin 3.2s linear infinite;
+}
+
+@keyframes halo-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Footer links draw an orange underline from the start edge on hover. */
+.footer-link {
+  position: relative;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--color-ember);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+
+[dir='rtl'] .footer-link::after {
+  transform-origin: right;
+}
+
+.footer-link:hover::after,
+.footer-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* The giant footer wordmark: ink at low contrast, lit in orange around the pointer. */
+.footer-giant p {
+  color: transparent;
+  background:
+    radial-gradient(
+      320px circle at var(--gx, 50%) var(--gy, 120%),
+      var(--color-ember),
+      color-mix(in srgb, var(--color-ember) 35%, transparent) 40%,
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-cream) 14%, transparent) 0%,
+      color-mix(in srgb, var(--color-cream) 2%, transparent) 90%
+    );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Module cards: a hairline border in the module's own gradient that brightens on hover. */
+.module-card {
+  position: relative;
+  isolation: isolate;
+}
+
+.module-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--module-gradient);
+  opacity: 0.25;
+  pointer-events: none;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: opacity 0.6s var(--ease-out-expo);
+}
+
+.group:hover .module-card::before {
+  opacity: 1;
 }

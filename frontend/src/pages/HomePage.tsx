@@ -46,7 +46,6 @@ export default function HomePage() {
               <Magnetic>
                 <Link
                   to="/app/sign-up"
-                  data-cursor-stick
                   className="inline-flex items-center gap-3 rounded-full px-7 py-4 font-medium text-black"
                   style={{ background: 'var(--gradient-molten)' }}
                 >
@@ -58,7 +57,6 @@ export default function HomePage() {
               </Magnetic>
               <Link
                 to="/modules"
-                data-cursor-stick
                 className="rounded-full border border-line-strong px-7 py-4 transition-colors hover:border-ember hover:text-ember"
               >
                 {t('hero.primary')}

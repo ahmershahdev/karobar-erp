@@ -20,7 +20,9 @@ export function Field({
   );
 }
 
-const STRENGTH_COLORS = ['bg-coral', 'bg-coral', 'bg-yellow', 'bg-mint', 'bg-mint'];
+// Red to amber to green, so the four steps read as a scale and not four shades of the accent.
+const STRENGTH_COLORS = ['bg-red', 'bg-red', 'bg-yellow', 'bg-green', 'bg-green'];
+const STRENGTH_TEXT = ['text-red', 'text-red', 'text-yellow', 'text-green', 'text-green'];
 
 export function PasswordField({
   label,
@@ -87,7 +89,9 @@ export function PasswordField({
               />
             ))}
           </div>
-          <p className="text-xs text-muted">{t(`auth.strength.${score}`)}</p>
+          <p className={`text-xs font-medium ${STRENGTH_TEXT[score]}`}>
+            {t(`auth.strength.${score}`)}
+          </p>
         </div>
       )}
     </div>
@@ -115,7 +119,7 @@ export function Button({
   ...props
 }: { variant?: 'primary' | 'ghost' | 'danger' } & ComponentProps<'button'>) {
   const styles = {
-    primary: 'text-black [background:var(--gradient-molten)] hover:brightness-110',
+    primary: 'text-black [background:var(--gradient-molten)] hover:[background:var(--color-coral)]',
     ghost: 'border border-line-strong text-ink hover:border-ember hover:text-ember',
     danger: 'border border-coral/40 text-coral hover:bg-coral/10',
   }[variant];
@@ -134,11 +138,10 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      data-cursor-stick
       className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full py-4 font-medium text-black transition disabled:opacity-70"
       style={{ background: 'var(--gradient-molten)' }}
     >
-      <span className="absolute inset-0 origin-left scale-x-0 bg-cream/40 transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
+      <span className="absolute inset-0 origin-left scale-x-0 bg-coral transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
       <span className="relative">{children}</span>
       {pending ? (
         <span

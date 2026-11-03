@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -27,7 +27,7 @@ function useLahoreTime(locale: string | undefined): string {
 }
 
 function FooterLink({ to, href, children }: { to?: string; href?: string; children: string }) {
-  const className = 'group inline-flex text-ink/75 transition-colors hover:text-ink';
+  const className = 'footer-link group inline-flex text-ink/75 transition-colors hover:text-ink';
   return to ? (
     <Link to={to} className={className}>
       <RollText>{children}</RollText>
@@ -36,6 +36,33 @@ function FooterLink({ to, href, children }: { to?: string; href?: string; childr
     <a href={href} rel="noopener" className={className}>
       <RollText>{children}</RollText>
     </a>
+  );
+}
+
+// The wordmark set across the full width at the foot of every page. It sits in the page's
+// ink at low contrast and lights up in the arrow's orange where the pointer is.
+function GiantWordmark() {
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      dir="ltr"
+      className="footer-giant relative overflow-hidden px-[var(--gutter)] pt-6"
+      onPointerMove={(event) => {
+        const element = ref.current;
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        element.style.setProperty('--gx', `${event.clientX - rect.left}px`);
+        element.style.setProperty('--gy', `${event.clientY - rect.top}px`);
+      }}
+    >
+      <Reveal>
+        <p className="text-center font-display text-[15.5vw] leading-[0.78] font-extrabold tracking-[-0.06em] whitespace-nowrap">
+          KarobarERP
+        </p>
+      </Reveal>
+    </div>
   );
 }
 
@@ -93,7 +120,6 @@ export function Footer() {
         <Magnetic strength={0.4}>
           <Link
             to="/app/sign-up"
-            data-cursor={t('cursor.open')}
             className="group relative flex size-40 items-center justify-center overflow-hidden rounded-full text-center font-medium text-black md:size-48"
             style={{ background: 'var(--gradient-molten)' }}
           >
@@ -160,7 +186,6 @@ export function Footer() {
           <a
             href={SITE.repo}
             rel="noopener"
-            data-cursor-stick
             className="inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm transition-colors hover:border-ember hover:text-ember"
           >
             <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
@@ -176,6 +201,8 @@ export function Footer() {
           </a>
         </div>
       </div>
+
+      <GiantWordmark />
 
       <div className="shell relative flex flex-wrap items-center justify-between gap-6 border-t border-line py-6">
         <span className="label">

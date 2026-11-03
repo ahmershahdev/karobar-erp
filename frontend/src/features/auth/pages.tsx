@@ -121,6 +121,7 @@ export function SignInPage() {
         <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
         </SubmitButton>
+        {human.notice}
       </form>
     </AuthCard>
   );
@@ -212,6 +213,7 @@ export function SignUpPage() {
         <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
           {t('auth.signUp')}
         </SubmitButton>
+        {human.notice}
       </form>
     </AuthCard>
   );
@@ -287,6 +289,7 @@ export function ForgotPasswordPage() {
           <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
             {t('auth.sendLink')}
           </SubmitButton>
+          {human.notice}
         </form>
       )}
       <Link className={`${LINK} mt-6 inline-block text-sm`} to="/app/sign-in">

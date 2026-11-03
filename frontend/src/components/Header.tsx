@@ -209,11 +209,10 @@ export function Header() {
             <LanguageSwitcher className="hidden lg:flex" />
             <Link
               to="/app"
-              data-cursor={t('cursor.open')}
               className="group hidden items-center gap-2 overflow-hidden rounded-full py-2.5 ps-5 pe-2.5 text-sm font-medium text-black sm:inline-flex"
               style={{ background: 'var(--gradient-molten)' }}
             >
-              <RollText>{t('nav.signIn')}</RollText>
+              <RollText tone="inherit">{t('nav.signIn')}</RollText>
               <span className="relative flex size-6 items-center justify-center overflow-hidden rounded-full bg-black/85 text-cream">
                 <span className="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-6 rtl:rotate-180 rtl:group-hover:-translate-x-6">
                   &rarr;

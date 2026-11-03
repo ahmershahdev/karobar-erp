@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -32,7 +33,10 @@ export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy })
   if (!meta) return null;
   return (
     <TiltCard className="h-full rounded-[var(--radius-card)]">
-      <article className="relative flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[var(--radius-card)] border border-line bg-[linear-gradient(160deg,color-mix(in_srgb,_var(--color-raised)_95%,_transparent),color-mix(in_srgb,_var(--color-canvas)_92%,_transparent))] p-7 md:p-8">
+      <article
+        style={{ '--module-gradient': meta.gradient } as CSSProperties}
+        className="module-card relative flex h-full min-h-[30rem] flex-col overflow-hidden rounded-[var(--radius-card)] bg-[linear-gradient(160deg,color-mix(in_srgb,_var(--color-raised)_95%,_transparent),color-mix(in_srgb,_var(--color-canvas)_92%,_transparent))] p-7 md:p-8"
+      >
         <div
           aria-hidden="true"
           className="absolute inset-x-0 top-0 h-px"
@@ -43,17 +47,26 @@ export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy })
           className="absolute -end-24 -top-24 size-72 rounded-full opacity-20 blur-3xl transition-opacity duration-700 group-hover:opacity-40"
           style={{ background: meta.gradient }}
         />
+        <span
+          aria-hidden="true"
+          className="outline-text absolute end-6 bottom-4 font-display text-[7rem] leading-none font-extrabold select-none"
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
         <div className="relative flex items-start justify-between gap-4">
           <span className="label">{String(index + 1).padStart(2, '0')} / 08</span>
           <StatusChip status={meta.status} milestone={meta.milestone} />
         </div>
-        <div className="relative my-8" style={{ color: meta.color }}>
-          <ModuleGlyph module={meta.key} className="size-20 md:size-24" />
+        <div
+          className="relative my-8 grid size-24 place-items-center rounded-2xl border border-line bg-black/40 transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:-translate-y-1 md:size-28"
+          style={{ color: meta.color }}
+        >
+          <ModuleGlyph module={meta.key} className="size-16 md:size-20" />
         </div>
         <div className="relative flex flex-1 flex-col">
           <h3 className="font-display text-4xl leading-none md:text-5xl">{copy.title}</h3>
           <p className="mt-4 text-sm leading-relaxed text-muted">{copy.body}</p>
-          <ul className="mt-6 space-y-2.5 text-sm">
+          <ul className="mt-6 mb-8 space-y-2.5 text-sm">
             {copy.points.slice(0, 3).map((point) => (
               <li key={point} className="flex gap-3 text-ink/85">
                 <span
@@ -67,8 +80,7 @@ export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy })
           </ul>
           <Link
             to={`/modules#${meta.key}`}
-            className="mt-auto inline-flex items-center gap-2 pt-8 font-mono text-[0.7rem] tracking-[0.14em] text-ember uppercase"
-            data-cursor={t('cursor.open')}
+            className="relative mt-auto inline-flex w-fit items-center gap-2 rounded-full border border-ember/40 px-4 py-2 font-mono text-[0.7rem] tracking-[0.14em] text-ember uppercase transition-colors hover:border-ember hover:bg-ember/10"
           >
             {t('modules.more')}
             <span

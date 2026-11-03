@@ -65,8 +65,8 @@ Headings and imagery can't be selected or dragged; body text, tables and forms s
 - `Preloader`: tells the logo's story. The cloud outline draws itself, the three bars rise with
   a little overshoot, the growth arrow shoots out of the cloud and its head pops, then
   "KarobarERP" lifts in letter by letter over the orange swoosh while stock, sales, books and
-  payroll cycle below. A percentage and an orange bar fill along the bottom; the panel then slides
-  up with rounded lower corners. About two and a half seconds, public pages only, with a 5 second
+  payroll cycle below, with a blue and orange halo turning behind the mark. A percentage and an
+  orange bar fill along the bottom; the screen then lifts away in six panels from the centre out. About two and a half seconds, public pages only, with a 5 second
   failsafe so it can never trap the page. The mark's geometry lives in `components/mark.ts`, shared
   with `Logo` and the favicon.
 - `Header`: a floating glass capsule. Links roll their text on hover and a soft pill glides to the
@@ -74,12 +74,19 @@ Headings and imagery can't be selected or dragged; body text, tables and forms s
   hairline along its edge shows reading progress.
 - `Footer`: a closing call to action with a large magnetic round button, link columns that roll
   on hover, the live time in Lahore, and a back-to-top button ringed by scroll progress.
-- `Cursor`: a dot and a trailing ring that grows over anything clickable and shows its
-  `data-cursor` label. Fine pointers only.
 - `Magnetic`: primary buttons lean toward the pointer.
-- `Cursor`: an orange ledger tick inside a trailing ring. The ring opens with a label over links,
-  wraps the exact shape of anything marked `data-cursor-stick` (buttons, pills), becomes a caret
-  over fields and inverts over imagery. Fine pointers only.
+- `Cursor`: an orange dot exactly on the pointer and a thin ring that trails it and opens over
+  anything clickable. It never paints over the element under it (no fills, blurs or blend
+  modes), so buttons keep their colours; over text fields it steps aside for the system I-beam.
+  Fine pointers only, never with reduced motion.
+- `PageTransition`: an orange wave and then a navy panel, both with curved leading edges, sweep
+  up; the mark and wordmark show while the route swaps, then both continue upward. App screens
+  switch instantly.
+- Scroll lock (`lib/scroll-lock.ts`): the preloader and the page transition each hold a named lock
+  while they cover the page, so nothing scrolls and no scrollbar shows; `scrollbar-gutter: stable`
+  keeps the page from shifting when it comes back.
+- `Footer`: links underline in orange from the start edge, and a full-width "KarobarERP" sits at
+  the foot in low-contrast ink that lights up orange around the pointer.
 - `ScrollTopButton`: floats bottom-right once you are a screen down, ringed by reading progress.
 - Module cards: each module has a line-drawn glyph (`features/modules/catalog.tsx`) that redraws
   on hover, a status chip (live since, or arriving in, a milestone), its feature points, a 3D tilt

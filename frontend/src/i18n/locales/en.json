@@ -340,7 +340,7 @@
     "welcomeBody": "Sign in to your business.",
     "forgotBody": "Enter your email and we will send you a link to choose a new password.",
     "resetBody": "Choose a new password for your account.",
-    "robotCheck": "One more step: tick the box to show you're not a robot.",
+    "robotCheck": "Quick check: tick the box to confirm you're a person.",
     "continueWith": {
       "google": "Continue with Google",
       "facebook": "Continue with Facebook"
@@ -354,6 +354,13 @@
       "email_missing": "That account didn't share an email address, so we can't sign you in with it.",
       "email_in_use": "An account with this email already exists. Sign in with your password instead.",
       "account_disabled": "This account has been disabled."
+    },
+    "recaptchaNotice": {
+      "protected": "Protected by reCAPTCHA. Google's",
+      "privacy": "Privacy Policy",
+      "and": "and",
+      "terms": "Terms of Service",
+      "apply": "apply."
     }
   },
   "workspace": {

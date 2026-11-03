@@ -131,7 +131,6 @@ export default function SecurityPage() {
             <a
               href={`${SITE.repo}/security/advisories/new`}
               rel="noopener"
-              data-cursor-stick
               className="inline-flex rounded-full px-7 py-4 font-medium text-black"
               style={{ background: 'var(--gradient-molten)' }}
             >
