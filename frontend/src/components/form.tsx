@@ -1,7 +1,7 @@
 import { useId, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { passwordScore } from '../lib/password';
+import { passwordChecks, passwordScore } from '../lib/password';
 
 const INPUT =
   'w-full rounded-xl border border-line bg-black/50 px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/50 focus:border-ember focus:shadow-[0_0_0_4px_color-mix(in_srgb,_var(--color-ember)_12%,_transparent)] disabled:opacity-60';
@@ -15,7 +15,7 @@ export function Field({
     <label className="block space-y-2">
       <span className="label">{label}</span>
       <input {...props} className={INPUT} />
-      {hint}
+      {hint && <Hint>{hint}</Hint>}
     </label>
   );
 }
@@ -77,40 +77,78 @@ export function PasswordField({
           <span aria-hidden="true">&#8679;</span> {t('auth.caps')}
         </p>
       )}
-      {showStrength && value && (
-        <div className="space-y-1.5" aria-live="polite">
-          <div className="flex gap-1" aria-hidden="true">
-            {[1, 2, 3, 4].map((step) => (
-              <span
-                key={step}
-                className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                  score >= step ? STRENGTH_COLORS[score] : 'bg-line-strong'
-                }`}
-              />
-            ))}
-          </div>
-          <p className={`text-xs font-medium ${STRENGTH_TEXT[score]}`}>
-            {t(`auth.strength.${score}`)}
-          </p>
-        </div>
-      )}
+      {showStrength && value && <StrengthMeter value={value} score={score} />}
+    </div>
+  );
+}
+
+// The meter fills as you type, even before the 12-character minimum, so it never sits blank
+// and looks broken. Under it, three plain checks tick green as they are met.
+function StrengthMeter({ value, score }: { value: string; score: number }) {
+  const { t } = useTranslation();
+  const checks = passwordChecks(value);
+  const fill = score === 0 ? Math.min(checks.length / 12, 1) * 25 : score * 25;
+  const items = [
+    { ok: checks.longEnough, label: t('auth.passwordChecks.length', { count: checks.length }) },
+    { ok: checks.varied, label: t('auth.passwordChecks.variety') },
+    { ok: checks.noRepeats, label: t('auth.passwordChecks.repeats') },
+  ];
+  return (
+    <div className="space-y-3 rounded-xl border border-line bg-black/30 p-3.5" aria-live="polite">
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className={`font-semibold ${STRENGTH_TEXT[score]}`}>
+          {t(`auth.strength.${score}`)}
+        </span>
+        <span className="text-muted">{t(`auth.strengthTips.${score}`)}</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-line-strong" aria-hidden="true">
+        <div
+          className={`h-full rounded-full transition-[width,background-color] duration-500 ease-[var(--ease-out-expo)] ${STRENGTH_COLORS[score]}`}
+          style={{ width: `${fill}%` }}
+        />
+      </div>
+      <ul className="space-y-1.5 text-xs">
+        {items.map((item) => (
+          <li
+            key={item.label}
+            className={`flex items-center gap-2 transition-colors ${item.ok ? 'text-green' : 'text-muted'}`}
+          >
+            <span
+              aria-hidden="true"
+              className={`grid size-4 shrink-0 place-items-center rounded-full border text-[0.6rem] ${
+                item.ok ? 'border-green bg-green/15' : 'border-line-strong'
+              }`}
+            >
+              {item.ok ? '\u2713' : ''}
+            </span>
+            {item.label}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 export function Select({
   label,
+  hint,
   children,
   ...props
-}: { label: string; children: ReactNode } & ComponentProps<'select'>) {
+}: { label: string; hint?: ReactNode; children: ReactNode } & ComponentProps<'select'>) {
   return (
     <label className="block space-y-2">
       <span className="label">{label}</span>
       <select {...props} className={INPUT}>
         {children}
       </select>
+      {hint && <Hint>{hint}</Hint>}
     </label>
   );
+}
+
+/** One plain sentence under a field saying what to put in it, for people new to business software. */
+export function Hint({ children }: { children: ReactNode }) {
+  return <span className="block text-xs leading-relaxed text-muted">{children}</span>;
 }
 
 export function Button({

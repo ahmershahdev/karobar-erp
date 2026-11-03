@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { passwordScore } from './password';
+import { passwordChecks, passwordScore } from './password';
 
 it('scores passwords by length and variety', () => {
   expect(passwordScore('short')).toBe(0);
@@ -12,4 +12,20 @@ it('scores passwords by length and variety', () => {
 it('does not reward repeated characters or patterns', () => {
   expect(passwordScore('aaaaaaaaaaaaaaaaaaaaaaa1')).toBe(1);
   expect(passwordScore('abc1abc1abc1abc1abc1abc1')).toBe(1);
+});
+
+it('lists what a password still needs', () => {
+  expect(passwordChecks('')).toEqual({
+    length: 0,
+    longEnough: false,
+    varied: false,
+    noRepeats: false,
+  });
+  expect(passwordChecks('lantern river cardamom')).toMatchObject({
+    longEnough: true,
+    varied: true,
+    noRepeats: true,
+  });
+  expect(passwordChecks('aaaaaaaaaaaaaaaa').noRepeats).toBe(false);
+  expect(passwordChecks('short').longEnough).toBe(false);
 });

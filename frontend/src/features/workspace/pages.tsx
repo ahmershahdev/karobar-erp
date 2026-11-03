@@ -55,6 +55,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         {!me.email_verified && <Alert tone="error">{t('workspace.unverified')}</Alert>}
         <Field
           label={t('workspace.businessName')}
+          hint={t('hints.businessName')}
           required
           maxLength={150}
           value={name}
@@ -62,6 +63,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         />
         <Select
           label={t('workspace.currency')}
+          hint={t('hints.currency')}
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
         >
@@ -71,6 +73,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         </Select>
         <Select
           label={t('workspace.fiscalStart')}
+          hint={t('hints.fiscalStart')}
           value={startMonth}
           onChange={(e) => setStartMonth(Number(e.target.value))}
         >
@@ -109,6 +112,7 @@ export function OverviewPage() {
   return (
     <>
       <PageTitle
+        guide="overview"
         title={membership.tenant_name}
         subtitle={t('workspace.welcome', { name: me.full_name || me.email })}
       />
@@ -183,7 +187,7 @@ export function MembersPage() {
 
   return (
     <>
-      <PageTitle title={t('workspace.members')} />
+      <PageTitle guide="members" title={t('workspace.members')} />
       {mutation.isError && (
         <Alert tone="error">{errorText(mutation.error, t('signIn.unavailable'))}</Alert>
       )}
@@ -340,7 +344,7 @@ export function RolesPage() {
 
   return (
     <>
-      <PageTitle title={t('workspace.roles')} subtitle={t('workspace.rolesBody')} />
+      <PageTitle guide="roles" title={t('workspace.roles')} subtitle={t('workspace.rolesBody')} />
       {error && <Alert tone="error">{errorText(error, t('signIn.unavailable'))}</Alert>}
       <Panel title={t('workspace.roles')}>
         <ul className="divide-y divide-line">
@@ -464,7 +468,7 @@ export function AuditPage() {
   });
   return (
     <>
-      <PageTitle title={t('workspace.audit')} subtitle={t('workspace.auditBody')} />
+      <PageTitle guide="audit" title={t('workspace.audit')} subtitle={t('workspace.auditBody')} />
       <Panel title={t('workspace.recent')}>
         <div className="overflow-x-auto" data-lenis-prevent>
           <table className="w-full text-sm">

@@ -371,7 +371,7 @@ export function JournalPage() {
   });
   return (
     <>
-      <PageTitle title={t('acc.journal')} subtitle={t('acc.journalBody')} />
+      <PageTitle guide="journal" title={t('acc.journal')} subtitle={t('acc.journalBody')} />
       {editing !== null ? (
         <EntryEditor
           key={editing === 'new' ? 'new' : editing.id}
@@ -435,7 +435,7 @@ export function ChartPage() {
   };
   return (
     <>
-      <PageTitle title={t('acc.chart')} subtitle={t('acc.chartBody')} />
+      <PageTitle guide="chart" title={t('acc.chart')} subtitle={t('acc.chartBody')} />
       {can(membership, 'accounting', 'create') && (
         <Panel title={t('acc.newAccount')}>
           <form
@@ -545,7 +545,11 @@ export function TrialBalancePage() {
   const balanced = report.data && report.data.total_debit === report.data.total_credit;
   return (
     <>
-      <PageTitle title={t('acc.trialBalance')} subtitle={t('acc.trialBalanceBody')} />
+      <PageTitle
+        guide="trialBalance"
+        title={t('acc.trialBalance')}
+        subtitle={t('acc.trialBalanceBody')}
+      />
       <Panel
         title={t('acc.period')}
         action={
@@ -656,7 +660,7 @@ export function LedgerPage() {
   const download = useDownload();
   return (
     <>
-      <PageTitle title={t('acc.ledger')} subtitle={t('acc.ledgerBody')} />
+      <PageTitle guide="ledger" title={t('acc.ledger')} subtitle={t('acc.ledgerBody')} />
       <Panel
         title={t('ledger.account')}
         action={
@@ -787,7 +791,7 @@ export function PeriodsPage() {
   };
   return (
     <>
-      <PageTitle title={t('acc.periods')} subtitle={t('acc.periodsBody')} />
+      <PageTitle guide="periods" title={t('acc.periods')} subtitle={t('acc.periodsBody')} />
       {action.isError && (
         <Alert tone="error">{errorText(action.error, t('signIn.unavailable'))}</Alert>
       )}

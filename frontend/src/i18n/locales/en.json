@@ -361,6 +361,18 @@
       "and": "and",
       "terms": "Terms of Service",
       "apply": "apply."
+    },
+    "passwordChecks": {
+      "length": "At least 12 characters ({{count}} so far)",
+      "variety": "Mix in a capital letter, number, symbol or space",
+      "repeats": "No repeated letters or patterns like aaaa or 1212"
+    },
+    "strengthTips": {
+      "0": "Keep going: it needs at least 12 characters.",
+      "1": "Easy to guess. Add another word or two.",
+      "2": "Okay. One more word would make it much stronger.",
+      "3": "Good password.",
+      "4": "Strong password. Nice."
     }
   },
   "workspace": {
@@ -422,7 +434,7 @@
     "valuation": "Stock valuation",
     "average": "Moving average",
     "fifo": "FIFO (first in, first out)",
-    "valuationHint": "How stock is costed when it leaves. It can't be changed once stock has moved.",
+    "valuationHint": "How the cost of goods you sell is worked out. Moving average suits most shops. Pick FIFO (first in, first out) if you sell things that expire. This can't be changed later.",
     "groups": {
       "accounting": "Accounting",
       "inventory": "Inventory"
@@ -711,5 +723,76 @@
         }
       ]
     }
+  },
+  "guides": {
+    "title": "How to use this page",
+    "overview": [
+      "This is your business at a glance. Use the menu on the left to open any part of Karobar.",
+      "New here? Start with Inventory, then Setup: add your units (piece, carton) and your shop or store room.",
+      "Then add your products, record the stock you already have, and you're ready to buy and sell."
+    ],
+    "members": [
+      "Invite the people who work with you by typing their email and choosing a role.",
+      "They get an email with a link. Once they accept, they can sign in to this business.",
+      "Remove someone at any time; they lose access straight away."
+    ],
+    "roles": [
+      "A role decides what a person can see and change, for example a cashier or an accountant.",
+      "Tick only what that job needs. View lets them look, Create and Update let them change, Post makes it final.",
+      "Give each member one role on the Members page."
+    ],
+    "audit": [
+      "Every change anyone makes is written here: who did it, when, and what changed.",
+      "Nothing here can be edited or deleted, so you can always find out what happened."
+    ],
+    "journal": [
+      "Most entries are made for you when you post a sale, purchase or stock change. Use this page for anything else, like rent paid or money you put into the business.",
+      "Press New entry, pick the accounts, and enter the amounts. The money going in (debit) must equal the money going out (credit).",
+      "Save a draft while you work, then press Post. Posted entries can't be changed; if you made a mistake, press Reverse."
+    ],
+    "chart": [
+      "These are the headings your money is sorted under, like Cash, Bank, Sales and Rent. A standard list is already set up for you.",
+      "You only need to add an account if you want a new heading, for example a second bank account.",
+      "Group accounts only add up the accounts under them; you can't post to a group directly."
+    ],
+    "trialBalance": [
+      "This shows the balance of every account on a date. The two totals must always be equal.",
+      "Pick a date to see how things stood then. Use Export to send it to your accountant as a spreadsheet."
+    ],
+    "ledger": [
+      "Pick an account to see every entry that touched it, with the running balance.",
+      "Choose dates to look at one month or one year. Export downloads the list."
+    ],
+    "periods": [
+      "Your financial year is split into months. New entries can only go into open months.",
+      "When a month's books are final, close it so nobody adds to it by mistake. You can reopen it if needed."
+    ],
+    "products": [
+      "Add everything you buy or sell. Give each one a short code (SKU), a name and the unit you count it in.",
+      "If you also buy it by the carton or box, add a pack with how many pieces it holds and its barcode.",
+      "Set a reorder level and Karobar warns you when stock falls below it."
+    ],
+    "entries": [
+      "Use this page to change stock by hand: receive goods, take some out, move it between stores, or correct a count.",
+      "Choose the type, the store and the date, then add the products and quantities.",
+      "Save a draft, check it, then press Post. Posting changes your stock and your books together."
+    ],
+    "onHand": [
+      "This shows how much of each product you have in each store, and what it is worth at cost.",
+      "Pick a store to see only that one. The total at the top is the value of all your stock."
+    ],
+    "alerts": [
+      "Products below their reorder level, and batches that expire soon, are listed here.",
+      "You also get this list by email every morning."
+    ],
+    "setup": [
+      "Add the units you count in, like PCS for pieces or KG for kilograms.",
+      "Add each place you keep stock, like your shop and your store room. Every stock change needs one."
+    ]
+  },
+  "hints": {
+    "businessName": "The name of your shop or company, as you want it on invoices.",
+    "currency": "The money you keep your accounts in. PKR for Pakistan, AED for the UAE, SAR for Saudi Arabia.",
+    "fiscalStart": "The month your financial year begins. In Pakistan it is July; most Gulf businesses use January."
   }
 }

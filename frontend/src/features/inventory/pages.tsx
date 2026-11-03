@@ -167,7 +167,7 @@ export function ProductsPage() {
 
   return (
     <>
-      <PageTitle title={t('inv.products')} subtitle={t('inv.productsBody')} />
+      <PageTitle guide="products" title={t('inv.products')} subtitle={t('inv.productsBody')} />
       {can(membership, 'inventory', 'create') && (
         <Panel title={t('inv.newProduct')}>
           {units.data?.length === 0 && <Alert tone="error">{t('inv.needUnits')}</Alert>}
@@ -651,7 +651,7 @@ export function StockEntriesPage() {
   const entries = useList('stock-entries', () => unwrap(api.GET('/api/inventory/stock-entries/')));
   return (
     <>
-      <PageTitle title={t('inv.entries')} subtitle={t('inv.entriesBody')} />
+      <PageTitle guide="entries" title={t('inv.entries')} subtitle={t('inv.entriesBody')} />
       {creating ? (
         <StockEditor onDone={() => setCreating(false)} />
       ) : (
@@ -699,7 +699,7 @@ export function StockOnHandPage() {
   const rows = levels.data?.pages.flatMap((page) => page.results) ?? [];
   return (
     <>
-      <PageTitle title={t('inv.onHandTitle')} subtitle={t('inv.onHandBody')} />
+      <PageTitle guide="onHand" title={t('inv.onHandTitle')} subtitle={t('inv.onHandBody')} />
       <Panel
         title={t('inv.levels')}
         action={
@@ -794,7 +794,7 @@ export function AlertsPage() {
   const expiring = (alerts.data?.expiring ?? []) as unknown as ExpiringRow[];
   return (
     <>
-      <PageTitle title={t('inv.alerts')} subtitle={t('inv.alertsBody')} />
+      <PageTitle guide="alerts" title={t('inv.alerts')} subtitle={t('inv.alertsBody')} />
       <Panel title={t('inv.lowStock')}>
         <ul>
           {low.length === 0 && <li className="py-3 text-sm text-muted">{t('workspace.none')}</li>}
@@ -847,7 +847,7 @@ export function InventorySetupPage() {
   const allowed = can(membership, 'inventory', 'create');
   return (
     <>
-      <PageTitle title={t('inv.setup')} subtitle={t('inv.setupBody')} />
+      <PageTitle guide="setup" title={t('inv.setup')} subtitle={t('inv.setupBody')} />
       {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title={t('inv.units')}>
