@@ -221,6 +221,7 @@ export function Faq() {
               <div
                 id={`faq-${index}`}
                 role="region"
+                aria-hidden={!expanded}
                 className={`grid transition-[grid-template-rows] duration-500 ease-[var(--ease-out-expo)] ${expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
               >
                 <p className="overflow-hidden pe-10 text-muted">

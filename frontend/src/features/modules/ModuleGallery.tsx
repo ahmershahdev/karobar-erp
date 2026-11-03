@@ -1,24 +1,13 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { prefersReducedMotion } from '../../lib/motion';
+import { useMediaQuery, useReducedMotion } from '../../lib/motion';
 import { ModuleGlyph, TiltCard } from './catalog';
 import { MODULES, type ModuleCopy } from './data';
 
-const WIDE = '(min-width: 1024px)';
-
-function useWide(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const media = window.matchMedia(WIDE);
-      media.addEventListener('change', onChange);
-      return () => media.removeEventListener('change', onChange);
-    },
-    () => window.matchMedia(WIDE).matches,
-    () => false,
-  );
-}
+// Pinning needs room for a whole card: the 70vh slot must fit the card's 30rem minimum.
+const ROOMY = '(min-width: 1024px) and (min-height: 700px)';
 
 export function StatusChip({ status, milestone }: { status: string; milestone: string }) {
   const { t } = useTranslation();
@@ -103,8 +92,9 @@ export function ModuleCard({ index, copy }: { index: number; copy: ModuleCopy })
 export function ModuleGallery() {
   const { t, i18n } = useTranslation();
   const items = t('modules.items', { returnObjects: true }) as ModuleCopy[];
-  const wide = useWide();
-  const pinned = wide && !prefersReducedMotion();
+  const roomy = useMediaQuery(ROOMY);
+  const reduced = useReducedMotion();
+  const pinned = roomy && !reduced;
   const section = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);

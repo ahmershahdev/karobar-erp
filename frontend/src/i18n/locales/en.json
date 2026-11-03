@@ -313,6 +313,8 @@
     "passwordChanged": "Your password is changed and other sessions are signed out.",
     "joinTitle": "Start keeping books",
     "joinBody": "Free and open source. Takes a minute.",
+    "inviteTitle": "Join this business",
+    "inviteBody": "You are signed in as {{email}}. Accepting adds this account to the business.",
     "join": "Accept invitation",
     "emailPlaceholder": "you@yourshop.pk",
     "passwordPlaceholder": "Your password",

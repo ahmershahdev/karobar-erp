@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { prefersReducedMotion } from '../lib/motion';
+import { useMediaQuery, useReducedMotion } from '../lib/motion';
 
 type Mode = 'idle' | 'link' | 'stick' | 'text' | 'media';
 
@@ -22,9 +22,11 @@ export function Cursor() {
   const ring = useRef<HTMLDivElement>(null);
   const dot = useRef<HTMLDivElement>(null);
   const label = useRef<HTMLSpanElement>(null);
+  const fine = useMediaQuery('(pointer: fine)');
+  const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (!window.matchMedia('(pointer: fine)').matches || prefersReducedMotion()) return;
+    if (!fine || reduced) return;
     const root = document.documentElement;
     const ringEl = ring.current;
     const dotEl = dot.current;
@@ -126,7 +128,7 @@ export function Cursor() {
       root.classList.remove('has-cursor');
       delete root.dataset.cursorVisible;
     };
-  }, []);
+  }, [fine, reduced]);
 
   return (
     <div

@@ -367,9 +367,10 @@ def _issue(
     # Rounding each issue's cost to paisa would drift: a 0.1060 unit cost issued one unit at a
     # time costs 0.11 every time and walks the value below zero. Instead the level is revalued
     # from the layers that remain, and the cost is exactly the drop in value. Books and stock
-    # stay equal, and the value never goes negative or up on an issue.
-    remaining = quantize_money(
-        sum((layer.quantity_left * layer.unit_cost for layer in layers), ZERO)
+    # stay equal, and the value never goes negative or up on an issue. Each layer is rounded on
+    # its own, as its receipt was, so many small receipts don't lose their rounding all at once.
+    remaining = sum(
+        (quantize_money(layer.quantity_left * layer.unit_cost) for layer in layers), ZERO
     )
     before = quantize_money(level.value)
     level.value = ZERO if level.quantity == 0 else min(before, max(remaining, ZERO))

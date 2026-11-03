@@ -313,6 +313,8 @@
     "passwordChanged": "پاس ورڈ بدل گیا اور باقی سیشن ختم کر دیے گئے۔",
     "joinTitle": "کھاتے رکھنا شروع کریں",
     "joinBody": "مفت اور اوپن سورس۔ ایک منٹ لگتا ہے۔",
+    "inviteTitle": "اس کاروبار میں شامل ہوں",
+    "inviteBody": "آپ {{email}} کے طور پر سائن ان ہیں۔ قبول کرنے سے یہ اکاؤنٹ کاروبار میں شامل ہو جائے گا۔",
     "join": "دعوت قبول کریں",
     "emailPlaceholder": "you@yourshop.pk",
     "passwordPlaceholder": "آپ کا پاس ورڈ",

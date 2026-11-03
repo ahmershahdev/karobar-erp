@@ -319,8 +319,8 @@ export function AcceptInvitePage() {
     return <Navigate to={`/app/sign-in?next=${next}`} replace />;
   }
   return (
-    <AuthCard title={t('auth.joinTitle')}>
-      <p className="text-muted">{t('auth.joinBody', { email: me.data.email })}</p>
+    <AuthCard title={t('auth.inviteTitle')}>
+      <p className="text-muted">{t('auth.inviteBody', { email: me.data.email })}</p>
       {mutation.isError && (
         <Alert tone="error">{messageOf(mutation.error, t('auth.badLink'))}</Alert>
       )}

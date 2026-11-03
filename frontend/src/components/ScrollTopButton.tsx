@@ -16,8 +16,19 @@ export function ScrollTopButton() {
     <button
       type="button"
       onClick={() => {
-        if (lenis) lenis.scrollTo(0, { duration: 1.4, lock: true, force: true });
-        else scrollToTop(null);
+        // The button fades out at the top, so focus moves to the page itself; keyboard users
+        // carry on from there instead of from an invisible control.
+        const main = document.getElementById('main');
+        const land = () => {
+          if (!main) return;
+          main.tabIndex = -1;
+          main.focus({ preventScroll: true });
+        };
+        if (lenis) lenis.scrollTo(0, { duration: 1.4, lock: true, force: true, onComplete: land });
+        else {
+          scrollToTop(null);
+          land();
+        }
       }}
       aria-label={t('footer.top')}
       tabIndex={shown ? 0 : -1}

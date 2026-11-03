@@ -8,3 +8,8 @@ it('scores passwords by length and variety', () => {
   expect(passwordScore('ledger lantern cardamom')).toBe(3);
   expect(passwordScore('Ledger lantern 42 cardamom!')).toBe(4);
 });
+
+it('does not reward repeated characters or patterns', () => {
+  expect(passwordScore('aaaaaaaaaaaaaaaaaaaaaaa1')).toBe(1);
+  expect(passwordScore('abc1abc1abc1abc1abc1abc1')).toBe(1);
+});

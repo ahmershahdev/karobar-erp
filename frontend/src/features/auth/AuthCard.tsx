@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { Logo } from '../../components/Logo';
 import { Reveal } from '../../components/Reveal';
+import { useMediaQuery } from '../../lib/motion';
 import { usePrivateSeo } from '../../lib/seo';
 import { Backdrop } from '../scene/Backdrop';
 
@@ -24,13 +25,12 @@ export function AuthCard({
   const { t } = useTranslation();
   usePrivateSeo(title);
   const benefits = t('auth.benefits', { returnObjects: true }) as string[];
+  // Mounted, not just hidden, only on wide screens: a hidden canvas would still animate.
+  const wide = useMediaQuery('(min-width: 1024px)');
 
   return (
     <div className="relative grid min-h-[100svh] lg:grid-cols-[1.15fr_1fr]">
-      {/* display: contents keeps this wrapper out of the grid; the backdrop itself is fixed. */}
-      <div className="hidden lg:contents">
-        <Backdrop side="left" />
-      </div>
+      {wide && <Backdrop side="left" />}
       <aside className="relative hidden flex-col justify-between p-12 lg:flex" data-morph="0">
         <Link to="/" className="flex items-center gap-2.5">
           <Logo className="size-8" />

@@ -56,10 +56,22 @@ function ProductPicker({
       ),
   });
   const pick = (product: Product) => {
-    const pack = product.packs?.find((item) => item.barcode === query);
+    // The database compares barcodes without case, so this has to as well, or a pack found by
+    // its barcode would fall back to the base unit.
+    const code = query.toLowerCase();
+    const pack = product.packs?.find((item) => item.barcode?.toLowerCase() === code);
     onPick(product, pack?.unit ?? product.unit);
     setTerm('');
     setOpen(false);
+  };
+  // Enter after a scan takes the product that owns the barcode, even when another product has
+  // the same digits in its name or SKU, or the owner fell outside the first page of results.
+  const pickExact = async () => {
+    const scanned = await unwrap(
+      api.GET('/api/inventory/products/', { params: { query: { barcode: query } as never } }),
+    ).catch(() => null);
+    const product = scanned?.results[0] ?? results.data?.results[0];
+    if (product) pick(product);
   };
   return (
     <div className="relative">
@@ -75,10 +87,9 @@ function ProductPicker({
           setOpen(true);
         }}
         onKeyDown={(e) => {
-          const first = results.data?.results[0];
-          if (e.key === 'Enter' && first) {
+          if (e.key === 'Enter' && query) {
             e.preventDefault();
-            pick(first);
+            void pickExact();
           }
         }}
       />

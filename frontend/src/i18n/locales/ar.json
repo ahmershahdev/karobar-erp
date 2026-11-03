@@ -313,6 +313,8 @@
     "passwordChanged": "تم تغيير كلمة المرور وتسجيل الخروج من الجلسات الأخرى.",
     "joinTitle": "ابدأ مسك الدفاتر",
     "joinBody": "مجاني ومفتوح المصدر، ويستغرق دقيقة.",
+    "inviteTitle": "انضم إلى هذا النشاط",
+    "inviteBody": "أنت مسجل الدخول باسم {{email}}. القبول يضيف هذا الحساب إلى النشاط التجاري.",
     "join": "قبول الدعوة",
     "emailPlaceholder": "you@yourshop.pk",
     "passwordPlaceholder": "كلمة المرور",

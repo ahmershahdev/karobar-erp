@@ -1,10 +1,13 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router';
 
 import { PageHero } from '../components/PageHero';
 import { Reveal } from '../components/Reveal';
 import { ModuleGlyph, TiltCard } from '../features/modules/catalog';
 import { MODULES, type ModuleCopy } from '../features/modules/data';
 import { StatusChip } from '../features/modules/ModuleGallery';
+import { prefersReducedMotion } from '../lib/motion';
 import { usePublicSeo } from '../lib/seo';
 import { useLenis } from '../lib/smooth-scroll';
 import { PUBLIC_ROUTES } from '../seo/site';
@@ -19,8 +22,22 @@ export default function ModulesPage() {
     const target = document.getElementById(key);
     if (!target) return;
     if (lenis) lenis.scrollTo(target, { offset: -100, duration: 1.2 });
-    else target.scrollIntoView({ behavior: 'smooth' });
+    else target.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
+
+  // A Details link from the home page lands here with a hash. The page transition scrolls to
+  // the top as it swaps routes, so the jump to the module has to run once this page is mounted.
+  const { hash } = useLocation();
+  useEffect(() => {
+    const key = decodeURIComponent(hash.slice(1));
+    const target = key ? document.getElementById(key) : null;
+    if (!target) return;
+    const frame = requestAnimationFrame(() => {
+      if (lenis) lenis.scrollTo(target, { offset: -100, immediate: true });
+      else target.scrollIntoView();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hash, lenis]);
 
   return (
     <>
