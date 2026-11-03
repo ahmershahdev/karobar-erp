@@ -34,6 +34,7 @@ Celery, never inside a web request.
 | `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
 | `accounting` (built) | accounts, fiscal years and periods, number series, journal entries and lines, trial balance and ledger reports |
 | `inventory` (built) | units, categories, products and packs, warehouses, batches, stock levels, FIFO layers, stock entries and moves, alerts |
+| `purchasing` (built) | suppliers, purchase orders, goods receipts, supplier bills and payments with their allocations |
 | `platform` | health check, request ids, security headers, error handler, pagination, row locking |
 | `accounts` | the user model (email sign-in, public UUID) and the session endpoints |
 
@@ -117,6 +118,10 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | Costing method fixed per business | Moving average or FIFO is chosen when the business is created; switching later would revalue every past issue |
 | Transfers carry cost, not value | A transfer posts no journal entry; the destination receives exactly the cost (and, under FIFO, the layers) that left the source |
 | Counts post the difference | An adjustment line holds the counted quantity; posting books only what was found or lost |
+| Goods receipts post through the inventory engine | A receipt creates and posts a stock receipt (Dr inventory, Cr GRNI), so locking, batches and FIFO layers have one implementation; the receipt shares its GRN number |
+| Bills clear GRNI at the receipt's booked value | The bill takes the same value off GRNI that the receipt put on, in running-total slices (`core.documents.share`) so partial bills never strand a paisa; any price difference goes to purchase price variance, not back into stock that may already be sold |
+| Unallocated supplier payments are advances | The whole payment debits payables; allocations only mark which bills it settles, so an overpayment shows as a debit balance on the supplier |
+| Draft documents check their links when saved | A draft can't point at a draft order or an unposted receipt, so deleting one draft never fails on another's reference |
 | Books set up through a `tenant_created` signal | Tenancy doesn't import accounting; later modules hook in the same way |
 
 ## Open questions

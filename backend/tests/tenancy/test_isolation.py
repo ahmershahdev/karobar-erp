@@ -25,6 +25,8 @@ from apps.inventory.models import (
     Unit,
     Warehouse,
 )
+from apps.purchasing import services as purchasing
+from apps.purchasing.models import Bill, GoodsReceipt, PurchaseOrder, Supplier, SupplierPayment
 from apps.tenancy import audit, services
 from apps.tenancy.models import AuditEvent, Membership, Role, Tenant
 from tests.conftest import Member
@@ -254,6 +256,63 @@ tenant_endpoint("api/inventory/stock-value/")(
 tenant_endpoint("api/inventory/batches/")(lambda m: ("/api/inventory/batches/", _batch(m)))
 tenant_endpoint("api/inventory/alerts/")(_alerts)
 
+
+def _supplier(member: Member) -> Supplier:
+    _shop(member)
+    supplier: Supplier = Supplier.objects.get_or_create(code="S-P", defaults={"name": "Private"})[
+        0
+    ]
+    return supplier
+
+
+def _order(member: Member, confirm: bool = False) -> PurchaseOrder:
+    shop = _shop(member)
+    order = purchasing.save_order(
+        member.user,
+        {
+            "supplier": _supplier(member),
+            "date": timezone.localdate(),
+            "warehouse": shop["warehouse"],
+        },
+        [purchasing.OrderLineInput(shop["product"], shop["unit"], Decimal(2), Decimal(5))],
+    )
+    return purchasing.confirm_order(member.user, order) if confirm else order
+
+
+def _receipt(member: Member, post: bool = False) -> int:
+    receipt = purchasing.receive_order(member.user, _order(member, True), timezone.localdate())
+    return (purchasing.post_receipt(member.user, receipt) if post else receipt).pk
+
+
+def _bill(member: Member) -> int:
+    receipt = GoodsReceipt.objects.get(pk=_receipt(member, post=True))
+    return purchasing.bill_receipt(member.user, receipt, timezone.localdate()).pk
+
+
+def _posted_bill(member: Member) -> Bill:
+    return purchasing.post_bill(member.user, Bill.objects.get(pk=_bill(member)))
+
+
+def _payment(member: Member) -> int:
+    payment = purchasing.save_payment(
+        member.user,
+        {
+            "supplier": _supplier(member),
+            "date": timezone.localdate(),
+            "amount": Decimal(10),
+            "paid_from": Account.objects.get(role="cash"),
+        },
+        [purchasing.AllocationInput(_posted_bill(member), Decimal(10))],
+    )
+    return payment.pk
+
+
+_register("purchasing/suppliers", lambda m: _supplier(m).pk)
+_register("purchasing/orders", lambda m: _order(m).pk)
+_register("purchasing/receipts", _receipt)
+_register("purchasing/bills", _bill)
+_register("purchasing/payments", _payment)
+
 # POST-only actions on one tenant-owned row. An outsider must get 404 and change nothing.
 TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/accounting/entries/<int:pk>/post/": lambda m: (
@@ -264,6 +323,25 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     ),
     "api/accounting/entries/<int:pk>/reverse/": lambda m: (
         f"/api/accounting/entries/{_posted(m)}/reverse/"
+    ),
+    "api/purchasing/orders/<int:pk>/confirm/": lambda m: (
+        f"/api/purchasing/orders/{_order(m).pk}/confirm/"
+    ),
+    "api/purchasing/orders/<int:pk>/close/": lambda m: (
+        f"/api/purchasing/orders/{_order(m, True).pk}/close/"
+    ),
+    "api/purchasing/orders/<int:pk>/receive/": lambda m: (
+        f"/api/purchasing/orders/{_order(m, True).pk}/receive/"
+    ),
+    "api/purchasing/receipts/<int:pk>/post/": lambda m: (
+        f"/api/purchasing/receipts/{_receipt(m)}/post/"
+    ),
+    "api/purchasing/receipts/<int:pk>/bill/": lambda m: (
+        f"/api/purchasing/receipts/{_receipt(m, post=True)}/bill/"
+    ),
+    "api/purchasing/bills/<int:pk>/post/": lambda m: f"/api/purchasing/bills/{_bill(m)}/post/",
+    "api/purchasing/payments/<int:pk>/post/": lambda m: (
+        f"/api/purchasing/payments/{_payment(m)}/post/"
     ),
 }
 
@@ -343,7 +421,12 @@ def test_other_tenants_rows_cannot_be_acted_on(
     url = TENANT_ACTIONS[route](owner)
     before = list(JournalEntry.all_tenants.values_list("id", "status", "number"))
     stock_before = list(StockEntry.all_tenants.values_list("id", "status"))
+    documents = [PurchaseOrder, GoodsReceipt, Bill, SupplierPayment]
+    documents_before = [list(m.all_tenants.values_list("id", "status")) for m in documents]
     response = outsider.client().post(url, {"date": str(timezone.localdate())}, format="json")
     assert response.status_code == 404
     assert list(JournalEntry.all_tenants.values_list("id", "status", "number")) == before
     assert list(StockEntry.all_tenants.values_list("id", "status")) == stock_before
+    assert [list(m.all_tenants.values_list("id", "status")) for m in documents] == (
+        documents_before
+    )

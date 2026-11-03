@@ -403,7 +403,8 @@
     "valuationHint": "How stock is costed when it leaves. It can't be changed once stock has moved.",
     "groups": {
       "accounting": "Accounting",
-      "inventory": "Inventory"
+      "inventory": "Inventory",
+      "purchasing": "Purchasing"
     }
   },
   "modulesShort": {
@@ -688,6 +689,66 @@
           "a": "Posted entries never change. You post a reversal, which keeps a complete and honest audit trail."
         }
       ]
+    }
+  },
+  "pur": {
+    "suppliers": "Suppliers",
+    "suppliersBody": "Who you buy from, their payment terms and what you still owe them.",
+    "newSupplier": "New supplier",
+    "addSupplier": "Add supplier",
+    "supplier": "Supplier",
+    "code": "Code",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "taxNumber": "Tax number",
+    "terms": "Payment terms (days)",
+    "balance": "Owed",
+    "orders": "Purchase orders",
+    "ordersBody": "What you have ordered and how much of it has arrived. Confirming gives the order its number.",
+    "newOrder": "New purchase order",
+    "expected": "Expected on",
+    "unitPrice": "Unit price",
+    "receivedOf": "{{received}} received",
+    "confirm": "Confirm",
+    "receive": "Receive goods",
+    "close": "Close order",
+    "receiptStarted": "A goods receipt draft is waiting under Goods received.",
+    "receipts": "Goods received",
+    "receiptsBody": "Stock that arrived from suppliers. Posting moves it into the warehouse at the order price.",
+    "newReceipt": "Receipt without an order",
+    "againstOrder": "Against {{number}}",
+    "receiveHint": "Change a quantity if less arrived; leave it at zero to skip a line. Posting moves the stock.",
+    "postReceipt": "Post receipt",
+    "createBill": "Create bill",
+    "bills": "Supplier bills",
+    "billsBody": "What suppliers charge you. A difference from the order price goes to purchase price variance.",
+    "newExpenseBill": "New expense bill",
+    "account": "Account",
+    "description": "Description",
+    "amount": "Amount",
+    "tax": "Sales tax",
+    "reference": "Supplier's invoice no.",
+    "due": "Due",
+    "paid": "Paid",
+    "billHint": "Enter the supplier's price and sales tax as printed on their invoice, then post.",
+    "postBill": "Post bill",
+    "bill": "Bill",
+    "payments": "Supplier payments",
+    "paymentsBody": "Money paid to suppliers, set against their bills. Anything left over is an advance.",
+    "newPayment": "New payment",
+    "paidFrom": "Paid from",
+    "owing": "Owing",
+    "allocate": "Pay now",
+    "nothingOwing": "Nothing is owed to this supplier.",
+    "allocated": "{{allocated}} of {{amount}} set against bills",
+    "status": {
+      "draft": "Draft",
+      "confirmed": "Confirmed",
+      "closed": "Closed",
+      "posted": "Posted",
+      "open": "Unpaid",
+      "paid": "Paid"
     }
   }
 }

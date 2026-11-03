@@ -25,6 +25,13 @@ import {
   StockEntriesPage,
   StockOnHandPage,
 } from '../features/inventory/pages';
+import {
+  BillsPage,
+  OrdersPage,
+  PaymentsPage,
+  ReceiptsPage,
+  SuppliersPage,
+} from '../features/purchasing/pages';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
   AuditPage,
@@ -104,6 +111,11 @@ export default function AppRoutes() {
         <Route path="inventory/on-hand" element={<StockOnHandPage />} />
         <Route path="inventory/alerts" element={<AlertsPage />} />
         <Route path="inventory/setup" element={<InventorySetupPage />} />
+        <Route path="purchasing/suppliers" element={<SuppliersPage />} />
+        <Route path="purchasing/orders" element={<OrdersPage />} />
+        <Route path="purchasing/receipts" element={<ReceiptsPage />} />
+        <Route path="purchasing/bills" element={<BillsPage />} />
+        <Route path="purchasing/payments" element={<PaymentsPage />} />
       </Route>
       <Route path="*" element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>} />
     </Routes>
