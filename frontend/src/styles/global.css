@@ -78,6 +78,18 @@
   p {
     text-wrap: pretty;
   }
+
+  /* Headings and imagery are decoration to select or drag; body text stays selectable. */
+  img,
+  svg,
+  canvas,
+  video,
+  h1,
+  h2 {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
 }
 
 @layer components {
@@ -201,6 +213,109 @@ html.lenis body {
   html.has-cursor * {
     cursor: none !important;
   }
+}
+
+/* Module illustrations redraw themselves when their card is hovered. */
+.glyph-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.group:hover .glyph-line {
+  animation: glyph-draw 1.4s var(--ease-out-expo) both;
+}
+
+.group:hover .glyph-line:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.group:hover .glyph-line:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.group:hover .glyph-line:nth-child(n + 4) {
+  animation-delay: 0.24s;
+}
+
+@keyframes glyph-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* The spotlight that follows the pointer across a TiltCard. */
+.tilt-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    420px circle at var(--x, 50%) var(--y, 50%),
+    rgb(241 233 218 / 0.09),
+    transparent 45%
+  );
+  transition: opacity 0.4s;
+}
+
+.tilt-card:hover::after {
+  opacity: 1;
+}
+
+/* Cursor states live in CSS so the animation loop only writes position and size. */
+.cursor-layer {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+html[data-cursor-visible='true'] .cursor-layer {
+  opacity: 1;
+}
+
+.cursor-ring {
+  border: 1px solid rgb(241 233 218 / 0.45);
+  transition:
+    background-color 0.35s,
+    border-color 0.35s,
+    backdrop-filter 0.35s;
+  will-change: transform, width, height;
+}
+
+.cursor-ring[data-mode='link'] {
+  border-color: var(--color-gold);
+  background: rgb(216 178 106 / 0.12);
+  backdrop-filter: blur(2px);
+}
+
+.cursor-ring[data-mode='stick'] {
+  border-color: rgb(216 178 106 / 0.7);
+  background: rgb(216 178 106 / 0.08);
+}
+
+.cursor-ring[data-mode='text'] {
+  border-color: transparent;
+  background: var(--color-gold);
+}
+
+.cursor-ring[data-mode='media'] {
+  border-color: transparent;
+  background: rgb(241 233 218 / 0.92);
+  mix-blend-mode: difference;
+}
+
+.cursor-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.cursor-dot {
+  background: var(--color-gold);
+  transition: transform 0.2s var(--ease-out-expo);
+  will-change: transform;
 }
 
 @keyframes marquee {

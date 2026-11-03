@@ -74,40 +74,103 @@
     "items": [
       {
         "title": "Inventory",
-        "body": "Variants, units, warehouses, transfers, batches with expiry dates, FIFO or moving average."
+        "body": "Every unit in every warehouse, valued the way your accountant expects.",
+        "points": [
+          "Packs and barcodes: buy by the carton, sell by the piece",
+          "Batches with expiry dates, and an alert before they expire",
+          "FIFO or moving-average costing, chosen per business",
+          "Two cashiers can never sell the same last item"
+        ],
+        "books": "Receipts, issues and counts post their cost to Inventory automatically."
       },
       {
         "title": "Sales",
-        "body": "Quotations, orders, invoices, receipts, returns, credit notes and customer credit limits."
+        "body": "From quotation to cash, with the customer's balance always current.",
+        "points": [
+          "Quotations, orders, invoices, receipts",
+          "Returns and credit notes instead of edits",
+          "Credit limits checked before an order goes out",
+          "Printable invoices in English, Urdu and Arabic"
+        ],
+        "books": "An invoice debits Receivables, credits Sales and Output tax, and moves cost to COGS."
       },
       {
         "title": "Point of sale",
-        "body": "Barcode scan, cash and card, printed receipts and an end-of-day close."
+        "body": "A counter screen built for speed: scan, total, take payment, print.",
+        "points": [
+          "Barcode scanning straight into the cart",
+          "Cash and card, with change worked out",
+          "Receipt printing",
+          "End-of-day close with cash count"
+        ],
+        "books": "Each counter sale posts like an invoice; the day close reconciles the till."
       },
       {
         "title": "Purchasing",
-        "body": "Suppliers, purchase orders, goods received, bills and supplier payments."
+        "body": "Suppliers, orders and bills, matched to what actually arrived.",
+        "points": [
+          "Purchase orders and goods received notes",
+          "Supplier bills with input tax",
+          "Supplier payments and statements",
+          "Payables ageing at a glance"
+        ],
+        "books": "A bill debits Inventory and Input tax, and credits Payables."
       },
       {
         "title": "Accounting",
-        "body": "Chart of accounts, fiscal periods, journal entries, trial balance and ledgers."
+        "body": "Real double-entry books that balance by construction, not by luck.",
+        "points": [
+          "A chart of accounts ready on day one",
+          "Journal entries that can't be edited once posted",
+          "Gapless numbering, even under load",
+          "Trial balance and ledger with CSV export"
+        ],
+        "books": "Every other module posts here; nothing reaches the books any other way."
       },
       {
         "title": "Tax",
-        "body": "Rates as dated data, tax on every line, and a GST or VAT report for any period."
+        "body": "Sales tax as data with dates, so this year's rate never rewrites last year.",
+        "points": [
+          "Rates with validity periods per business",
+          "Tax worked out on every document line",
+          "Input and output tax kept apart",
+          "A GST or VAT report for any period"
+        ],
+        "books": "Output tax builds a liability; input tax builds a recoverable asset."
       },
       {
         "title": "HR",
-        "body": "Employees, departments, contracts, attendance and leave on working days."
+        "body": "People, departments, contracts and the days they actually worked.",
+        "points": [
+          "Employee records and contracts",
+          "Departments and reporting lines",
+          "Attendance on working days",
+          "Leave that knows weekends and holidays"
+        ],
+        "books": "HR feeds payroll; it posts nothing on its own."
       },
       {
         "title": "Payroll",
-        "body": "Monthly runs, deductions, income tax from slabs per tax year, and payslips."
+        "body": "Monthly pay with deductions and income tax from the official slabs.",
+        "points": [
+          "Salary structures per employee",
+          "Income tax from slabs stored per tax year",
+          "Deductions and allowances",
+          "Payslips as PDF"
+        ],
+        "books": "A payroll run debits Salaries and credits Salaries payable and Withholding tax."
       }
     ],
     "all": "All modules",
     "pageTitle": "Everything a shop",
-    "pageAccent": "runs on."
+    "pageAccent": "runs on.",
+    "more": "Details",
+    "status": {
+      "built": "Live since {{milestone}}",
+      "coming": "Arrives in {{milestone}}"
+    },
+    "inBooks": "In the books",
+    "jump": "Jump to a module"
   },
   "languages": {
     "eyebrow": "Three languages, both directions",
@@ -154,7 +217,39 @@
     ],
     "report": "Found a problem? Report it privately through GitHub security advisories or support@ahmershah.dev.",
     "pageTitle": "Your books are",
-    "pageAccent": "yours alone."
+    "pageAccent": "yours alone.",
+    "pageLead": "What protects your data, in plain words, and how we prove it on every change.",
+    "flow": {
+      "eyebrow": "How isolation works",
+      "title": "Three locks between you and anyone else.",
+      "items": [
+        {
+          "title": "Who you are",
+          "body": "Sessions live in HttpOnly cookies, checked on every request, with CSRF on every change."
+        },
+        {
+          "title": "Which business",
+          "body": "The business you choose is checked against your membership before anything runs."
+        },
+        {
+          "title": "Which rows",
+          "body": "Every query is filtered to that business. Without one, the query refuses to run at all."
+        }
+      ]
+    },
+    "tested": {
+      "eyebrow": "Tested on every change",
+      "title": "Not a policy. A test suite.",
+      "items": [
+        "Every API route is called as an outsider and must answer 404",
+        "Two cashiers sell the last item at once; exactly one succeeds",
+        "Six journal entries post in parallel; numbers come out 1 to 6",
+        "CodeQL and dependency audits run on every pull request"
+      ]
+    },
+    "reportTitle": "Found something?",
+    "reportBody": "Report it privately. You will get a first answer within 7 days.",
+    "reportButton": "Report a vulnerability"
   },
   "cta": {
     "title": "Open source, MIT licensed.",
@@ -163,7 +258,7 @@
   },
   "footer": {
     "rights": "MIT License",
-    "status": "Status: in development",
+    "status": "Status",
     "tagline": "Built for the counter, the back office and the books.",
     "explore": "Explore",
     "project": "Project",
@@ -178,7 +273,10 @@
     "report": "Report a vulnerability",
     "contact": "Contact",
     "top": "Back to top",
-    "topShort": "Top"
+    "topShort": "Top",
+    "shipped": "{{count}} of 7 milestones shipped",
+    "latest": "Latest release",
+    "github": "Star on GitHub"
   },
   "signIn": {
     "title": "Sign in",
@@ -213,9 +311,35 @@
     "newPassword": "New password",
     "savePassword": "Save password",
     "passwordChanged": "Your password is changed and other sessions are signed out.",
-    "joinTitle": "Join a business",
-    "joinBody": "You are signed in as {{email}}. Accept the invitation to join.",
-    "join": "Accept invitation"
+    "joinTitle": "Start keeping books",
+    "joinBody": "Free and open source. Takes a minute.",
+    "inviteTitle": "Join this business",
+    "inviteBody": "You are signed in as {{email}}. Accepting adds this account to the business.",
+    "join": "Accept invitation",
+    "emailPlaceholder": "you@yourshop.pk",
+    "passwordPlaceholder": "Your password",
+    "newPasswordPlaceholder": "At least 12 characters",
+    "namePlaceholder": "Ahmed Raza",
+    "show": "Show password",
+    "hide": "Hide password",
+    "caps": "Caps Lock is on",
+    "strength": {
+      "0": "Too short",
+      "1": "Weak",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Strong"
+    },
+    "panelTitle": "Your books, balanced from the first sale.",
+    "benefits": [
+      "Every sale posts its own journal entry",
+      "Stock that stays right under row locks",
+      "Open source, MIT, and your data stays yours"
+    ],
+    "welcome": "Welcome back",
+    "welcomeBody": "Sign in to your business.",
+    "forgotBody": "Enter your email and we will send you a link to choose a new password.",
+    "resetBody": "Choose a new password for your account."
   },
   "workspace": {
     "overview": "Overview",
@@ -424,5 +548,146 @@
     "units": "Units",
     "warehouses": "Warehouses",
     "loadMore": "Load more ({{shown}} of {{total}})"
+  },
+  "home": {
+    "builtFor": {
+      "eyebrow": "Who it is for",
+      "title": "Made for the businesses that run the bazaar.",
+      "items": [
+        {
+          "title": "Kiryana and general stores",
+          "body": "Hundreds of SKUs, cash at the counter, credit for regulars."
+        },
+        {
+          "title": "Wholesalers",
+          "body": "Cartons in, pieces out, and customers who buy on account."
+        },
+        {
+          "title": "Distributors",
+          "body": "Several warehouses, transfers between them, routes to settle."
+        },
+        {
+          "title": "Pharmacies",
+          "body": "Batches and expiry dates on every box, flagged before they lapse."
+        },
+        {
+          "title": "Hardware and paint",
+          "body": "Units that don't match: litres, kilograms, packs of ten."
+        },
+        {
+          "title": "Textile and garments",
+          "body": "Variants by size and colour, all under one product."
+        }
+      ]
+    },
+    "steps": {
+      "eyebrow": "How it works",
+      "title": "Running in an afternoon.",
+      "items": [
+        {
+          "title": "Create your business",
+          "body": "Pick your currency, fiscal year and costing method. The chart of accounts and first fiscal year are set up for you."
+        },
+        {
+          "title": "Add stock",
+          "body": "Add products with their packs and barcodes, then post opening stock. It lands in the books at cost."
+        },
+        {
+          "title": "Sell and see the books",
+          "body": "Every document posts its own journal entry, so the trial balance is right the moment the sale is."
+        }
+      ]
+    },
+    "stats": {
+      "eyebrow": "Proof, not promises",
+      "items": [
+        {
+          "value": "100%",
+          "label": "branch coverage on the business rules"
+        },
+        {
+          "value": "0",
+          "label": "gaps in document numbers, even under load"
+        },
+        {
+          "value": "180+",
+          "label": "automated tests on every change"
+        },
+        {
+          "value": "3",
+          "label": "languages, in both directions"
+        }
+      ]
+    },
+    "roadmap": {
+      "eyebrow": "Roadmap",
+      "title": "Built in the open, one milestone at a time.",
+      "done": "Shipped",
+      "next": "Next",
+      "later": "Planned",
+      "items": [
+        {
+          "key": "M1",
+          "title": "Platform",
+          "body": "Accounts, businesses, roles, audit log, security baseline."
+        },
+        {
+          "key": "M2",
+          "title": "Accounting core",
+          "body": "Chart, periods, posting, reversals, trial balance."
+        },
+        {
+          "key": "M3",
+          "title": "Inventory",
+          "body": "Products, warehouses, batches, FIFO and average costing."
+        },
+        {
+          "key": "M4",
+          "title": "Purchasing and sales",
+          "body": "Suppliers, customers, invoices, bills, payments."
+        },
+        {
+          "key": "M5",
+          "title": "POS, tax and reports",
+          "body": "Counter screen, GST and VAT, financial statements."
+        },
+        {
+          "key": "M6",
+          "title": "HR and payroll",
+          "body": "Employees, attendance, payroll runs, payslips."
+        },
+        {
+          "key": "M7",
+          "title": "Launch",
+          "body": "Seed data, end-to-end tests, version 1.0."
+        }
+      ]
+    },
+    "faq": {
+      "eyebrow": "Questions",
+      "title": "What people ask first.",
+      "items": [
+        {
+          "q": "Is Karobar ERP free?",
+          "a": "Yes. It is open source under the MIT license. You can run it on your own server at no cost."
+        },
+        {
+          "q": "Can several businesses share one installation?",
+          "a": "Yes. Each business has its own books, stock and staff, and the server refuses any request for another business's data."
+        },
+        {
+          "q": "Does it work in Urdu and Arabic?",
+          "a": "Every screen does, with right-to-left layouts. Printed invoices in all three languages arrive with sales."
+        },
+        {
+          "q": "Which countries' taxes are supported?",
+          "a": "Tax arrives in milestone M5, starting with Pakistan and then the Gulf. Rates are stored as dated data, never hard-coded."
+        },
+        {
+          "q": "What happens if I make a mistake in a posted entry?",
+          "a": "Posted entries never change. You post a reversal, which keeps a complete and honest audit trail."
+        }
+      ]
+    }
   }
 }

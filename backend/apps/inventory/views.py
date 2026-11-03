@@ -1,6 +1,6 @@
 from typing import Any, cast
 
-from django.db.models import Count, DecimalField, Prefetch, QuerySet, Sum
+from django.db.models import Count, DecimalField, Exists, OuterRef, Prefetch, Q, QuerySet, Sum
 from django.db.models.functions import Coalesce
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import generics, serializers
@@ -104,6 +104,10 @@ def products() -> QuerySet[Product]:
     return query
 
 
+def _has_barcode(code: str) -> Exists:
+    return Exists(ProductUnit.objects.filter(product=OuterRef("pk"), barcode=code))
+
+
 def _packs(data: list[dict[str, Any]] | None) -> list[services.PackInput] | None:
     if data is None:
         return None
@@ -117,10 +121,15 @@ class ProductListView(InventoryView, generics.ListCreateAPIView[Product]):
     def get_queryset(self) -> QuerySet[Product]:
         query = products()
         params = self.request.query_params
+        # Barcodes are matched with Exists, not a join: joining packs would repeat each stock
+        # level once per pack and multiply on_hand.
         if barcode := params.get("barcode", "").strip()[:64]:
-            query = query.filter(packs__barcode=barcode)
+            query = query.filter(_has_barcode(barcode))
         if term := params.get("q", "").strip()[:80]:
-            query = query.filter(name__icontains=term) | query.filter(sku__icontains=term)
+            # One box for names, SKUs and scanned barcodes: no guessing which one was typed.
+            query = query.filter(
+                Q(name__icontains=term) | Q(sku__icontains=term) | _has_barcode(term)
+            )
         return query
 
     def perform_create(self, serializer: ProductSerializer) -> None:  # type: ignore[override]

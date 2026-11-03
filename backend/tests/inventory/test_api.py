@@ -4,7 +4,7 @@ import pytest
 from django.utils import timezone
 
 from apps.inventory import services
-from apps.inventory.models import StockEntry, Unit, Warehouse
+from apps.inventory.models import ProductUnit, StockEntry, Unit, Warehouse
 from tests.conftest import make_member
 
 from .conftest import Shop, line, post
@@ -40,6 +40,8 @@ def test_products_with_packs_and_barcodes(shop: Shop) -> None:
     assert services.find_by_barcode("8960000000024") is not None
     assert services.find_by_barcode("missing") is None
 
+    by_code = client.get("/api/inventory/products/?q=8960000000024").json()["results"]
+    assert [row["sku"] for row in by_code] == ["TEA-500"]
     duplicate = client.post(
         "/api/inventory/products/",
         {"sku": "TEA-500", "name": "Again", "unit": shop.pcs.pk},
@@ -65,6 +67,16 @@ def test_products_with_packs_and_barcodes(shop: Shop) -> None:
     )
     assert bad_attrs.status_code == 400
     assert client.delete(f"/api/inventory/products/{tea['id']}/").status_code == 204
+
+
+def test_search_by_barcode_does_not_multiply_stock(shop: Shop) -> None:
+    box = Unit.objects.create(code="BOX", name="Box")
+    ProductUnit.objects.create(product=shop.soap, unit=box, factor=D(6), barcode="8960000000031")
+    post(shop, "receipt", [line(shop, "10", "5")])
+    client = shop.member.client()
+    for query in ("q=soap", "q=8960000000031", "barcode=8960000000017"):
+        rows = client.get(f"/api/inventory/products/?{query}").json()["results"]
+        assert [row["on_hand"] for row in rows] == ["10.0000"], query
 
 
 def test_master_data_crud(shop: Shop) -> None:

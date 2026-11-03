@@ -8,6 +8,7 @@ import { Reveal } from '../components/Reveal';
 import { ScrollWords } from '../components/ScrollWords';
 import { SectionHeading } from '../components/SectionHeading';
 import { SplitHeadline } from '../components/SplitHeadline';
+import { BuiltFor, Faq, HowItWorks, Roadmap, StatsBand } from '../features/home/sections';
 import { LedgerDemo } from '../features/ledger/LedgerDemo';
 import { ModuleGallery } from '../features/modules/ModuleGallery';
 import { isIntroPending } from '../lib/intro';
@@ -44,34 +45,31 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-3">
               <Magnetic>
                 <Link
-                  to="/modules"
-                  data-cursor={t('cursor.open')}
+                  to="/app/sign-up"
+                  data-cursor-stick
                   className="inline-flex items-center gap-3 rounded-full px-7 py-4 font-medium text-black"
                   style={{ background: 'var(--gradient-molten)' }}
                 >
-                  {t('hero.primary')}
+                  {t('auth.joinTitle')}
                   <span aria-hidden="true" className="rtl:rotate-180">
                     &rarr;
                   </span>
                 </Link>
               </Magnetic>
-              <a
-                href={SITE.repo}
-                rel="noopener"
-                data-cursor="Git"
+              <Link
+                to="/modules"
+                data-cursor-stick
                 className="rounded-full border border-line-strong px-7 py-4 transition-colors hover:border-gold hover:text-gold"
               >
-                {t('hero.secondary')}
-              </a>
+                {t('hero.primary')}
+              </Link>
             </div>
           </Reveal>
         </div>
-        <div className="shell hidden items-center justify-between pb-6 md:flex">
-          <span className="label">{t('hero.scroll')}</span>
-          <span className="relative h-10 w-px overflow-hidden bg-line">
+        <div className="shell hidden justify-center pb-6 md:flex">
+          <span className="relative h-10 w-px overflow-hidden bg-line" aria-hidden="true">
             <span className="absolute inset-0 bg-gold [animation:scroll-cue_2.4s_var(--ease-in-out-expo)_infinite]" />
           </span>
-          <span className="label">EN / UR / AR</span>
         </div>
       </section>
 
@@ -84,6 +82,7 @@ export default function HomePage() {
       </section>
 
       <Marquee items={t('marquee', { returnObjects: true }) as string[]} />
+      <StatsBand />
 
       <section data-morph="1" className="shell py-28 md:py-40">
         <SectionHeading index="02" eyebrow={t('promises.eyebrow')} title={t('promises.title')} />
@@ -137,8 +136,11 @@ export default function HomePage() {
         <ModuleGallery />
       </section>
 
-      <section data-morph="2" className="shell py-28 md:py-40">
-        <SectionHeading index="05" eyebrow={t('languages.eyebrow')} title={t('languages.title')} />
+      <BuiltFor />
+      <HowItWorks />
+
+      <section data-morph="2" className="shell py-20 md:py-32">
+        <SectionHeading index="07" eyebrow={t('languages.eyebrow')} title={t('languages.title')} />
         <Reveal stagger className="mt-14 divide-y divide-line border-y border-line">
           <p lang="en" dir="ltr" className="py-6 font-display text-5xl md:text-8xl">
             Invoice <em className="text-gradient">paid.</em>
@@ -163,32 +165,17 @@ export default function HomePage() {
         <p className="mt-8 max-w-xl text-muted">{t('languages.body')}</p>
       </section>
 
-      <section data-morph="2" className="shell pb-10">
-        <Reveal className="card overflow-hidden px-6 py-16 text-center md:px-16 md:py-28">
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 -z-10 opacity-60"
-            style={{
-              background:
-                'radial-gradient(60% 80% at 50% 120%, rgb(216 178 106 / 0.35), transparent 70%)',
-            }}
-          />
-          <span className="label !text-gold">[06] MIT</span>
-          <h2 className="display-lg mx-auto mt-6 max-w-[14ch]">{t('cta.title')}</h2>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted">{t('cta.body')}</p>
-          <div className="mt-10">
-            <Magnetic>
-              <a
-                href={SITE.repo}
-                rel="noopener"
-                data-cursor="Star"
-                className="inline-flex rounded-full bg-cream px-8 py-4 font-medium text-black"
-              >
-                {t('cta.button')}
-              </a>
-            </Magnetic>
-          </div>
-        </Reveal>
+      <Roadmap />
+      <Faq />
+
+      <section data-morph="2" className="shell pb-6 text-center">
+        <a
+          href={SITE.repo}
+          rel="noopener"
+          className="label inline-flex items-center gap-2 hover:!text-gold"
+        >
+          {t('cta.title')} &middot; {t('cta.button')}
+        </a>
       </section>
     </>
   );

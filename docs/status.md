@@ -4,9 +4,13 @@ Last updated: 2026-11-03. Update at the end of every work session.
 
 ## Where we are
 
-- Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core). The Ledger Noir design,
-  the floating navbar, the new footer and the ledger-opening intro are on `main`.
-- M3 (inventory) is complete on `feat/m3-inventory`:
+- Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
+  The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
+  on `main`.
+- PR #19 (`feat/design-pass-2`) is open: richer pages, module cards, redesigned auth, the FIFO
+  rounding fix, and a cleanup that moves the table class strings to `workspace/table.ts`, the
+  local-date helper to `lib/dates.ts`, and both modules onto the shared `useTenantAction` hook.
+- M3 (inventory), merged in #18:
   - `apps/core`: moving-average and FIFO valuation, unit conversion, stock posting rules, at
     100% branch coverage.
   - `apps/inventory`: units, categories, products with variants, packs and barcodes,
@@ -20,7 +24,7 @@ Last updated: 2026-11-03. Update at the end of every work session.
 
 ## Next session
 
-1. Merge the M3 pull request after CI; tag `v0.3.0`.
+1. Merge PR #19 after CI.
 2. Start M4 (purchasing and sales): suppliers, purchase orders, goods received, bills and
    payments; customers, quotations, orders, invoices, receipts, returns and credit notes; each
    posting its stock moves and journal entry in one transaction through the posting rules.

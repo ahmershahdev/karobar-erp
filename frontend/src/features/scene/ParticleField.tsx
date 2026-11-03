@@ -53,9 +53,11 @@ function morphTarget(): number {
 interface Props {
   animate: boolean;
   onFailure: () => void;
+  // Which side of a wide screen the shape sits on, leaving the other side for content.
+  side?: 'left' | 'right';
 }
 
-export default function ParticleField({ animate, onFailure }: Props) {
+export default function ParticleField({ animate, onFailure, side = 'right' }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -129,8 +131,10 @@ export default function ParticleField({ animate, onFailure }: Props) {
       // Narrow screens pull the camera back so the whole shape stays in frame.
       camera.position.z = width < 768 ? 9.6 : 6.2;
       camera.updateProjectionMatrix();
-      points.position.x = width >= 1024 ? 1.15 : 0;
-      points.position.y = width < 768 ? 1.9 : 0;
+      // On the left it shares its panel with a headline, so it sits smaller and up out of the way.
+      points.position.x = width >= 1024 ? (side === 'left' ? -0.95 : 1.15) : 0;
+      points.scale.setScalar(side === 'left' ? 0.72 : 1);
+      points.position.y = width < 768 ? 1.9 : side === 'left' ? 0.85 : 0;
     };
     const onPointer = (event: PointerEvent) => {
       pointer.set(
@@ -186,7 +190,7 @@ export default function ParticleField({ animate, onFailure }: Props) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [animate, onFailure]);
+  }, [animate, onFailure, side]);
 
   return <div ref={hostRef} className="absolute inset-0" />;
 }

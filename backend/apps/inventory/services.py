@@ -351,7 +351,7 @@ def _issue(
                 product_id=level.product_id, warehouse_id=level.warehouse_id, quantity_left__gt=0
             ).order_by("id")
         )
-        taken, cost = fifo_issue(
+        taken, _ = fifo_issue(
             [Layer(layer.pk, layer.quantity_left, layer.unit_cost) for layer in layers], quantity
         )
     except InsufficientStockError as exc:
@@ -364,13 +364,17 @@ def _issue(
         layer.save(update_fields=["quantity_left"])
         pieces.append((part.quantity, layer.unit_cost))
     level.quantity = quantize_quantity(level.quantity - quantity)
-    if level.quantity == 0:
-        # The last units take whatever value is left, so rounding residue can't stay on the
-        # level while the books credit a slightly different cost.
-        cost, level.value = quantize_money(level.value), ZERO
-    else:
-        level.value = quantize_money(level.value - cost)
-    return cost, pieces
+    # Rounding each issue's cost to paisa would drift: a 0.1060 unit cost issued one unit at a
+    # time costs 0.11 every time and walks the value below zero. Instead the level is revalued
+    # from the layers that remain, and the cost is exactly the drop in value. Books and stock
+    # stay equal, and the value never goes negative or up on an issue. Each layer is rounded on
+    # its own, as its receipt was, so many small receipts don't lose their rounding all at once.
+    remaining = sum(
+        (quantize_money(layer.quantity_left * layer.unit_cost) for layer in layers), ZERO
+    )
+    before = quantize_money(level.value)
+    level.value = ZERO if level.quantity == 0 else min(before, max(remaining, ZERO))
+    return quantize_money(before - level.value), pieces
 
 
 def _receive_pieces(

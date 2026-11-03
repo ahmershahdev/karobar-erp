@@ -1,4 +1,4 @@
-import { PUBLIC_ROUTES, SITE, absoluteUrl, type PublicRoute } from './site';
+import { HOME_FAQ, PUBLIC_ROUTES, SITE, absoluteUrl, type PublicRoute } from './site';
 
 type JsonLd = Record<string, unknown>;
 
@@ -56,6 +56,14 @@ export function structuredData(siteUrl: string, route: PublicRoute): JsonLd {
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       author: { '@type': 'Person', name: SITE.author, url: SITE.authorUrl },
       codeRepository: SITE.repo,
+    });
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: HOME_FAQ.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
     });
   }
   return { '@context': 'https://schema.org', '@graph': graph };
