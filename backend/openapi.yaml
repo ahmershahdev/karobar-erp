@@ -422,6 +422,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/TrialBalance'
           description: ''
+  /api/accounts/config/:
+    get:
+      operationId: accounts_config_retrieve
+      description: Public keys the sign-in screens need. Site keys are public by design;
+        secrets stay here.
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthConfig'
+          description: ''
   /api/accounts/csrf/:
     get:
       operationId: accounts_csrf_retrieve
@@ -478,6 +495,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+  /api/accounts/oauth/{provider}/callback/:
+    get:
+      operationId: accounts_oauth_callback_retrieve
+      parameters:
+      - in: path
+        name: provider
+        schema:
+          type: string
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '302':
+          description: No response body
+  /api/accounts/oauth/{provider}/start/:
+    get:
+      operationId: accounts_oauth_start_retrieve
+      parameters:
+      - in: path
+        name: provider
+        schema:
+          type: string
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '302':
+          description: No response body
   /api/accounts/password-reset/:
     post:
       operationId: accounts_password_reset_create
@@ -1730,6 +1781,21 @@ components:
       - model
       - object_id
       - user
+    AuthConfig:
+      type: object
+      properties:
+        recaptcha_v3_site_key:
+          type: string
+        recaptcha_v2_site_key:
+          type: string
+        oauth_providers:
+          type: array
+          items:
+            type: string
+      required:
+      - oauth_providers
+      - recaptcha_v2_site_key
+      - recaptcha_v3_site_key
     Batch:
       type: object
       properties:
@@ -1766,7 +1832,17 @@ components:
       - name
     Email:
       type: object
+      description: Fields every protected form accepts; mixed into the form serializers.
       properties:
+        website:
+          type: string
+          maxLength: 200
+        captcha_v3:
+          type: string
+          maxLength: 4000
+        captcha_v2:
+          type: string
+          maxLength: 4000
         email:
           type: string
           format: email
@@ -2038,7 +2114,17 @@ components:
         * `ar` - ar
     Login:
       type: object
+      description: Fields every protected form accepts; mixed into the form serializers.
       properties:
+        website:
+          type: string
+          maxLength: 200
+        captcha_v3:
+          type: string
+          maxLength: 4000
+        captcha_v2:
+          type: string
+          maxLength: 4000
         email:
           type: string
           format: email
@@ -2541,7 +2627,17 @@ components:
       - permissions
     SignUp:
       type: object
+      description: Fields every protected form accepts; mixed into the form serializers.
       properties:
+        website:
+          type: string
+          maxLength: 200
+        captcha_v3:
+          type: string
+          maxLength: 4000
+        captcha_v2:
+          type: string
+          maxLength: 4000
         email:
           type: string
           format: email

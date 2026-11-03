@@ -206,6 +206,45 @@ USE_TZ = True
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Karobar ERP <no-reply@localhost>")
 
+# Email goes out through Resend's SMTP relay when RESEND_API_KEY is set (the API key is the SMTP
+# password, the user is literally "resend"), so no SDK is needed. Any other SMTP provider works
+# through the EMAIL_* variables instead. Without either, mail is printed to the console.
+RESEND_API_KEY: str = env("RESEND_API_KEY", default="")
+if RESEND_API_KEY:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.resend.com"
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = "resend"
+    EMAIL_HOST_PASSWORD = RESEND_API_KEY
+    EMAIL_USE_TLS = True
+else:
+    EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+    EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+    EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_TIMEOUT = 10
+
+# Bot checks on the sign-in, sign-up and password-reset forms. v3 scores every submission
+# invisibly; a score under RECAPTCHA_V3_MIN_SCORE asks for the v2 checkbox instead. Leaving the
+# keys empty turns the check off (local development and tests); production refuses to start
+# without them. The honeypot field works either way.
+RECAPTCHA_V3_SITE_KEY: str = env("RECAPTCHA_V3_SITE_KEY", default="")
+RECAPTCHA_V3_SECRET_KEY: str = env("RECAPTCHA_V3_SECRET_KEY", default="")
+RECAPTCHA_V2_SITE_KEY: str = env("RECAPTCHA_V2_SITE_KEY", default="")
+RECAPTCHA_V2_SECRET_KEY: str = env("RECAPTCHA_V2_SECRET_KEY", default="")
+RECAPTCHA_V3_MIN_SCORE: float = env.float("RECAPTCHA_V3_MIN_SCORE", default=0.5)
+
+# Sign in with Google and Facebook. A provider shows up on the sign-in page only when both its
+# id and secret are set. Redirect URIs to register with each provider:
+#   {SITE_URL}/api/accounts/oauth/google/callback/
+#   {SITE_URL}/api/accounts/oauth/facebook/callback/
+GOOGLE_OAUTH_CLIENT_ID: str = env("GOOGLE_OAUTH_CLIENT_ID", default="")
+GOOGLE_OAUTH_CLIENT_SECRET: str = env("GOOGLE_OAUTH_CLIENT_SECRET", default="")
+FACEBOOK_APP_ID: str = env("FACEBOOK_APP_ID", default="")
+FACEBOOK_APP_SECRET: str = env("FACEBOOK_APP_SECRET", default="")
+
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 

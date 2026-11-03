@@ -339,7 +339,22 @@
     "welcome": "Welcome back",
     "welcomeBody": "Sign in to your business.",
     "forgotBody": "Enter your email and we will send you a link to choose a new password.",
-    "resetBody": "Choose a new password for your account."
+    "resetBody": "Choose a new password for your account.",
+    "robotCheck": "One more step: tick the box to show you're not a robot.",
+    "continueWith": {
+      "google": "Continue with Google",
+      "facebook": "Continue with Facebook"
+    },
+    "orEmail": "or with email",
+    "oauthErrors": {
+      "oauth_failed": "Signing in with that account didn't work. Try again or use your email.",
+      "oauth_state": "That sign-in link expired. Start again from this page.",
+      "oauth_cancelled": "Sign-in was cancelled.",
+      "provider_unavailable": "That sign-in option isn't available right now.",
+      "email_missing": "That account didn't share an email address, so we can't sign you in with it.",
+      "email_in_use": "An account with this email already exists. Sign in with your password instead.",
+      "account_disabled": "This account has been disabled."
+    }
   },
   "workspace": {
     "overview": "Overview",

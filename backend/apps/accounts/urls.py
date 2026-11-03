@@ -4,6 +4,11 @@ from . import views
 
 urlpatterns = [
     path("csrf/", views.CsrfView.as_view(), name="csrf"),
+    path("config/", views.AuthConfigView.as_view(), name="auth-config"),
+    path("oauth/<str:provider>/start/", views.OAuthStartView.as_view(), name="oauth-start"),
+    path(
+        "oauth/<str:provider>/callback/", views.OAuthCallbackView.as_view(), name="oauth-callback"
+    ),
     path("login/", views.LoginView.as_view(), name="login"),
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("me/", views.MeView.as_view(), name="me"),

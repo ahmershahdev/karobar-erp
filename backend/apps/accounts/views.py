@@ -1,7 +1,9 @@
 from typing import cast
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, transaction
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
@@ -11,11 +13,13 @@ from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
-from . import emails
+from . import emails, humans, oauth
 from .models import User
 from .serializers import (
+    AuthConfigSerializer,
     EmailSerializer,
     LoginSerializer,
     MeSerializer,
@@ -45,13 +49,26 @@ class CsrfView(APIView):
 class AnonymousFormView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "auth"
+    # The reCAPTCHA v3 action the form's token must carry.
+    captcha_action = ""
+
+    def is_bot(self, request: Request, data: dict[str, object]) -> bool:
+        """Honeypot first (bots get a normal-looking answer), then reCAPTCHA if configured."""
+        if humans.is_bot(data):
+            return True
+        humans.check(data, self.captcha_action, AnonRateThrottle().get_ident(request))
+        return False
 
 
 class LoginView(AnonymousFormView):
+    captcha_action = "login"
+
     @extend_schema(request=LoginSerializer, responses=MeSerializer)
     def post(self, request: Request) -> Response:
         data = LoginSerializer(data=request.data)
         data.is_valid(raise_exception=True)
+        if self.is_bot(request, data.validated_data):
+            raise AuthenticationFailed("Email or password is incorrect.")
         user = authenticate(
             request._request,
             username=data.validated_data["email"].lower(),
@@ -66,10 +83,14 @@ class LoginView(AnonymousFormView):
 
 
 class SignUpView(AnonymousFormView):
+    captcha_action = "signup"
+
     @extend_schema(request=SignUpSerializer, responses={202: None})
     def post(self, request: Request) -> Response:
         data = SignUpSerializer(data=request.data)
         data.is_valid(raise_exception=True)
+        if self.is_bot(request, data.validated_data):
+            return Response(status=status.HTTP_202_ACCEPTED)
         email = data.validated_data["email"]
         # New and existing addresses get the same answer; the owner of an existing one gets an
         # email instead, so sign-up can't be used to find out who has an account.
@@ -113,10 +134,14 @@ class ResendVerificationView(APIView):
 
 
 class PasswordResetView(AnonymousFormView):
+    captcha_action = "password_reset"
+
     @extend_schema(request=EmailSerializer, responses={204: None})
     def post(self, request: Request) -> Response:
         data = EmailSerializer(data=request.data)
         data.is_valid(raise_exception=True)
+        if self.is_bot(request, data.validated_data):
+            return Response(status=status.HTTP_204_NO_CONTENT)
         email = data.validated_data["email"].lower()
         user = User.objects.filter(email=email, is_active=True).first()
         if user is not None and user.has_usable_password():
@@ -156,3 +181,56 @@ class MeView(APIView):
     @extend_schema(responses=MeSerializer)
     def get(self, request: Request) -> Response:
         return Response(MeSerializer(cast(User, request.user)).data)
+
+
+class AuthConfigView(APIView):
+    """Public keys the sign-in screens need. Site keys are public by design; secrets stay here."""
+
+    permission_classes = [AllowAny]
+    throttle_scope = "session"
+
+    @extend_schema(responses=AuthConfigSerializer)
+    def get(self, request: Request) -> Response:
+        return Response(
+            {
+                "recaptcha_v3_site_key": settings.RECAPTCHA_V3_SITE_KEY,
+                "recaptcha_v2_site_key": settings.RECAPTCHA_V2_SITE_KEY,
+                "oauth_providers": oauth.enabled_providers(),
+            }
+        )
+
+
+def _back_to_sign_in(code: str) -> HttpResponseRedirect:
+    return HttpResponseRedirect(f"{settings.SITE_URL.rstrip('/')}/app/sign-in?error={code}")
+
+
+class OAuthStartView(APIView):
+    permission_classes = [AllowAny]
+    throttle_scope = "auth"
+
+    @extend_schema(responses={302: None})
+    def get(self, request: Request, provider: str) -> HttpResponseRedirect:
+        try:
+            chosen = oauth.get_provider(provider)
+        except oauth.OAuthError as exc:
+            return _back_to_sign_in(exc.code)
+        url = oauth.start(request.session, chosen, request.query_params.get("next"))
+        return HttpResponseRedirect(url)
+
+
+class OAuthCallbackView(APIView):
+    permission_classes = [AllowAny]
+    throttle_scope = "auth"
+
+    @extend_schema(responses={302: None})
+    def get(self, request: Request, provider: str) -> HttpResponseRedirect:
+        params = {
+            key: str(request.query_params.get(key, ""))[:2000]
+            for key in ("state", "code", "error")
+        }
+        try:
+            user, next_path = oauth.finish(request.session, provider, params)
+        except oauth.OAuthError as exc:
+            return _back_to_sign_in(exc.code)
+        login(request._request, user, backend="django.contrib.auth.backends.ModelBackend")
+        return HttpResponseRedirect(f"{settings.SITE_URL.rstrip('/')}{next_path}")

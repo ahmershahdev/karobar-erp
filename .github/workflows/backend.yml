@@ -64,9 +64,11 @@ jobs:
         run: pytest tests/core --noconftest -p no:django --cov=apps/core --cov-branch --cov-fail-under=100 -o addopts=""
       - run: python manage.py check --deploy --fail-level WARNING --settings=config.settings.prod
         env:
-          EMAIL_HOST: smtp.invalid
-          EMAIL_HOST_USER: ci
-          EMAIL_HOST_PASSWORD: ci
+          RESEND_API_KEY: ci-not-a-key
           DEFAULT_FROM_EMAIL: ci@example.test
+          RECAPTCHA_V3_SITE_KEY: ci
+          RECAPTCHA_V3_SECRET_KEY: ci
+          RECAPTCHA_V2_SITE_KEY: ci
+          RECAPTCHA_V2_SECRET_KEY: ci
           DJANGO_ALLOWED_HOSTS: karobarerp.ahmershah.dev
           DJANGO_SECRET_KEY: ci-only-a-long-enough-key-for-the-deploy-check-0123456789abcdefghij
