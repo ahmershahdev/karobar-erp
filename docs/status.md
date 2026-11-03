@@ -22,6 +22,14 @@ Last updated: 2026-11-03. Update at the end of every work session.
     first-ever receipts racing to create a stock level.
 - `npm run dev` now also runs Celery beat for scheduled jobs.
 
+- Open and stacked: #20 (M4 purchasing, on #19), #21 (Resend, reCAPTCHA v3 and v2, honeypot,
+  Google and Facebook sign-in, on #19), #22 (brand theme from the logo: navy, azure and ember,
+  Montserrat, new mark, preloader, curtain page transition, cursor, footer, on #21).
+- Google sign-in is configured in the Google Cloud project "Karobar ERP"
+  (`storied-catwalk-513610-u1`, in testing mode with the owner's Gmail as test user); a duplicate
+  empty "Karobar ERP" project was created by mistake and can be deleted. Facebook is waiting for
+  the owner to sign in at developers.facebook.com.
+
 ## Next session
 
 1. Merge PR #19 after CI.
