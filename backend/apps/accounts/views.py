@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
-from kombu.exceptions import OperationalError  # type: ignore[import-untyped]
+from kombu.exceptions import OperationalError  # type: ignore[import-untyped, unused-ignore]
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
