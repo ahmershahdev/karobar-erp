@@ -10,6 +10,7 @@ import { MODULES, can, type Me, type Role } from '../../lib/api/types';
 import { ScreenIcon } from './icons';
 import { AuthCard } from '../auth/AuthCard';
 import { ensureCsrf, sessionKeys } from '../auth/session';
+import { Home } from './Home';
 import { errorText, useTenantAction, useWorkspace } from './hooks';
 import { PageTitle, Panel } from './ui';
 
@@ -157,6 +158,7 @@ export function OverviewPage() {
         title={membership.tenant_name}
         subtitle={t('workspace.welcome', { name: me.full_name || me.email })}
       />
+      <Home />
       {tasks.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-2xl">{t('workspace.tasks.title')}</h2>

@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 
-from django.db.models import Q, Sum
+from django.db.models import F, Q, Sum
 
 from apps.accounting.models import Account, JournalLine
 from apps.accounting.reports import posted, trial_balance
@@ -22,7 +22,9 @@ from apps.core.financials import (
     profit_and_loss,
 )
 from apps.core.money import quantize_money
-from apps.inventory.models import StockLevel
+from apps.inventory.models import Product, StockLevel, Warehouse
+from apps.inventory.services import low_stock
+from apps.pos.models import PosSession
 from apps.purchasing.models import Bill
 from apps.sales.models import CreditNote, CreditNoteLine, Invoice, InvoiceLine
 from apps.tenancy.context import get_current_tenant
@@ -132,6 +134,27 @@ def _net_by_day(first: date, last: date) -> dict[date, Decimal]:
     for day, amount in returns:
         days[day] = days.get(day, ZERO) - amount
     return days
+
+
+def home(on: date) -> dict[str, Any]:
+    """What a new business still has to set up, and what needs someone's attention today."""
+    posted_sales = Invoice.objects.filter(status=POSTED)
+    overdue = posted_sales.filter(
+        due_date__lt=on, total__gt=F("amount_paid") + F("amount_credited")
+    )
+    return {
+        "setup": {
+            "store": Warehouse.objects.exists(),
+            "product": Product.objects.exists(),
+            "price": Product.objects.filter(sale_price__isnull=False).exists(),
+            "sale": posted_sales.exists(),
+        },
+        "attention": {
+            "low_stock": len(low_stock()),
+            "overdue": overdue.count(),
+            "open_tills": PosSession.objects.filter(status=PosSession.Status.OPEN).count(),
+        },
+    }
 
 
 def dashboard(on: date) -> dict[str, Any]:

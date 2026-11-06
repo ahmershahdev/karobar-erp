@@ -13,6 +13,7 @@ from .serializers import (
     BalanceSheetSerializer,
     CashFlowSerializer,
     DashboardSerializer,
+    HomeSerializer,
     PeriodSerializer,
     ProfitLossSerializer,
     SalesTaxSerializer,
@@ -56,6 +57,12 @@ class SalesTaxView(ReportView):
     @extend_schema(parameters=[PeriodSerializer], responses=SalesTaxSerializer)
     def get(self, request: Request) -> Response:
         return Response(SalesTaxSerializer(services.sales_tax(*period(request))).data)
+
+
+class HomeView(ReportView):
+    @extend_schema(responses=HomeSerializer)
+    def get(self, request: Request) -> Response:
+        return Response(HomeSerializer(services.home(timezone.localdate())).data)
 
 
 class DashboardView(ReportView):

@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -10,6 +11,7 @@ from apps.purchasing import services as purchasing
 from apps.purchasing.models import Supplier
 from apps.reports import services
 from apps.sales import services as sales
+from apps.sales.models import Invoice
 from apps.tenancy.context import tenant_context
 from tests.sales.test_sales import Seller, invoice, make_seller, receipt
 
@@ -136,3 +138,18 @@ def test_a_fully_returned_product_leaves_the_best_sellers(seller: Seller) -> Non
     sold = invoice(seller, quantity="1", price="100", tax="0")
     sales.post_credit_note(seller.user, sales.credit_invoice(seller.user, sold, today()))
     assert services.dashboard(today())["top_products"] == []
+
+
+def test_home_shows_what_is_done_and_what_needs_attention(seller: Seller) -> None:
+    before = services.home(today())
+    assert before["setup"]["store"]
+    assert before["setup"]["product"]
+    assert not before["setup"]["sale"]
+    assert before["attention"]["overdue"] == 0
+
+    bill = invoice(seller)
+    Invoice.objects.filter(pk=bill.pk).update(due_date=today() - timedelta(days=1))
+
+    after = services.home(today())
+    assert after["setup"]["sale"]
+    assert after["attention"]["overdue"] == 1
