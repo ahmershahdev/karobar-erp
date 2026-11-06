@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 
@@ -432,6 +432,10 @@ export function PosPage() {
   // A store named in the address is never swapped for another: sales would land in the wrong one.
   const onlyStore = stores.length === 1 ? String(stores[0]?.id) : '';
   const store = picked ? (known ? picked : '') : onlyStore;
+  // Written down too, or adding a second store would clear the choice and close an open sale.
+  useEffect(() => {
+    if (!picked && onlyStore) setParams({ store: onlyStore }, { replace: true });
+  }, [picked, onlyStore, setParams]);
   const till = (tills.data as Till[] | undefined)?.find((item) => String(item.warehouse) === store);
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
 
