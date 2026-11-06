@@ -39,7 +39,7 @@ export default function HomePage() {
           <p className="max-w-xl text-lg text-muted md:text-xl">{t('hero.lead')}</p>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <Magnetic strength={0.2}>
-              <Link to="/app/sign-up" className="btn btn-primary">
+              <Link to="/signup" className="btn btn-primary">
                 {t('auth.joinTitle')}
                 <span aria-hidden="true" className="btn-arrow">
                   &rarr;

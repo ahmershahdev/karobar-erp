@@ -15,7 +15,7 @@ export default function NotFoundPage() {
   const links = [
     { to: '/modules', label: t('nav.modules') },
     { to: '/security', label: t('nav.security') },
-    { to: '/app', label: t('nav.signIn') },
+    { to: '/login', label: t('nav.signIn') },
   ];
 
   return (

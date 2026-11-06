@@ -75,7 +75,7 @@ export function Footer() {
         { label: t('nav.home'), to: '/' },
         { label: t('nav.modules'), to: '/modules' },
         { label: t('nav.security'), to: '/security' },
-        { label: t('nav.signIn'), to: '/app' },
+        { label: t('nav.signIn'), to: '/login' },
       ],
     },
     {
@@ -106,7 +106,7 @@ export function Footer() {
           <p className="max-w-md text-lg text-muted">{t('footer.ctaBody')}</p>
         </div>
         <Magnetic strength={0.25}>
-          <Link to="/app/sign-up" className="btn btn-primary !px-7 !py-4">
+          <Link to="/signup" className="btn btn-primary !px-7 !py-4">
             {t('footer.ctaButton')}
             <span aria-hidden="true" className="btn-arrow">
               &rarr;

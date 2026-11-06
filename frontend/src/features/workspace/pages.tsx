@@ -38,7 +38,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
     },
     onSuccess: async (membership) => {
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
-      void navigate(`/app/t/${membership.tenant_slug}`);
+      void navigate(`/app/${membership.tenant_slug}`);
     },
   });
   usePrivateSeo(t('workspace.newBusiness'));
@@ -136,7 +136,7 @@ export function OverviewPage() {
             {tasks.map((task) => (
               <Link
                 key={task.key}
-                to={`/app/t/${membership.tenant_slug}/${task.path}`}
+                to={`/app/${membership.tenant_slug}/${task.path}`}
                 className="group flex min-h-24 items-center gap-4 rounded-[var(--radius-card)] border border-line bg-canvas p-4 transition-colors hover:border-ink"
               >
                 <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-raised text-ink">

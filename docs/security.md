@@ -70,7 +70,8 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
   verified. Facebook doesn't promise that, so a Facebook sign-in for an email that already has
   an account is refused (`email_in_use`) instead of linked: otherwise anyone who added a
   victim's address to a Facebook account could take over the Karobar account.
-- `next` is only followed when it is a path under `/app` with no `//` or backslash.
+- `next` is only followed when it is a path under `/app` or `/accept-invite` with no `//` or
+  backslash.
 - Disabled users can't sign in through a provider.
 
 ## Rate limiting and denial of service
@@ -144,7 +145,7 @@ HSTS with preload (one year), `X-Content-Type-Options: nosniff`, `X-Frame-Option
 `Referrer-Policy: strict-origin-when-cross-origin`, `Cross-Origin-Opener-Policy: same-origin`,
 `Cross-Origin-Resource-Policy: same-origin` on the API, a `Permissions-Policy` that turns off
 camera, microphone, location, payment and USB, and `Cache-Control: no-store` on every API
-response. `/app` also gets `X-Robots-Tag: noindex`.
+response. `/app` and the sign-in screens also get `X-Robots-Tag: noindex`.
 
 ## Concurrency and race conditions
 

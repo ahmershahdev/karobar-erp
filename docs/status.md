@@ -10,7 +10,7 @@ Last updated: 2026-11-06. Update at the end of every work session.
   animated mascot, connection lost and restored notices, torch password toggle, door on the
   sign-in and sign-up buttons. Page transition only between public pages. Removed WebGL, `three`,
   Montserrat and the custom cursor. Footer clock now says Hyderabad (Sindh, Asia/Karachi).
-- Also on #22: bcrypt fallback for Argon2id, business slugs in app URLs (`/app/t/al-madina-traders`,
+- Also on #22: bcrypt fallback for Argon2id, business slugs in app URLs (`/app/al-madina-traders`,
   migration `tenancy.0006`), Brotli and gzip at build time, a service worker, real 404 statuses,
   and `connect-src` for reCAPTCHA. Checked live through the real nginx config against Django, MySQL,
   Redis and Google: CSRF, honeypot, forged tokens, a real v3 token, nonce rotation, and offline.

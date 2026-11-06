@@ -9,7 +9,7 @@ from .tokens import make_email_token, make_reset_token
 
 
 def app_link(path: str, **params: str) -> str:
-    return f"{settings.SITE_URL.rstrip('/')}/app/{path}?{urlencode(params)}"
+    return f"{settings.SITE_URL.rstrip('/')}/{path}?{urlencode(params)}"
 
 
 def send_verification(user: User) -> None:

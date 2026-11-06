@@ -10,12 +10,14 @@ import { OfflineScreen } from '../components/OfflineScreen';
 import { PageTransition } from '../components/PageTransition';
 import { Preloader } from '../components/Preloader';
 import { ScrollTopButton } from '../components/ScrollTopButton';
+import { AUTH_PATHS } from '../lib/paths';
 import HomePage from '../pages/HomePage';
 
 const ModulesPage = lazy(() => import('../pages/ModulesPage'));
 const SecurityPage = lazy(() => import('../pages/SecurityPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const AppRoutes = lazy(() => import('./AppRoutes'));
+const AuthPage = lazy(() => import('./AppRoutes').then((module) => ({ default: module.AuthPage })));
 
 function PublicLayout() {
   return (
@@ -56,6 +58,9 @@ export function App() {
                   <Route path="/security" element={<SecurityPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
+                {AUTH_PATHS.map((path) => (
+                  <Route key={path} path={path} element={<AuthPage path={path} />} />
+                ))}
                 <Route path="/app/*" element={<AppRoutes />} />
               </Routes>
             </Suspense>

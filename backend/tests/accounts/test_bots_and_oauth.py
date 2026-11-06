@@ -160,7 +160,7 @@ def fake_provider(
     return seen
 
 
-def sign_in(provider: str, next_path: str = "/app/t/abc") -> tuple[APIClient, Any]:
+def sign_in(provider: str, next_path: str = "/app/abc") -> tuple[APIClient, Any]:
     client = APIClient()
     start = client.get(f"/api/accounts/oauth/{provider}/start/?next={next_path}")
     assert start.status_code == 302
@@ -182,7 +182,7 @@ def test_google_creates_a_verified_user_and_signs_in(
     )
     client, back = sign_in("google")
     assert back.status_code == 302
-    assert back["Location"] == "https://erp.example.test/app/t/abc"
+    assert back["Location"] == "https://erp.example.test/app/abc"
     user = User.objects.get(email="new@example.test")
     assert user.email_verified_at is not None
     assert not user.has_usable_password()
@@ -203,12 +203,12 @@ def test_google_links_an_existing_account_only_with_a_verified_email(
         monkeypatch, {"sub": "g-2", "email": "owner@example.test", "email_verified": False}
     )
     _, back = sign_in("google")
-    assert back["Location"].endswith("/app/sign-in?error=email_in_use")
+    assert back["Location"].endswith("/login?error=email_in_use")
     fake_provider(
         monkeypatch, {"sub": "g-2", "email": "owner@example.test", "email_verified": True}
     )
     _, back = sign_in("google")
-    assert back["Location"] == "https://erp.example.test/app/t/abc"
+    assert back["Location"] == "https://erp.example.test/app/abc"
     assert SocialAccount.objects.get(uid="g-2").user == existing
 
 
@@ -289,7 +289,8 @@ def test_unconfigured_or_unknown_providers_bounce_back(settings: SettingsWrapper
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("/app/t/1", "/app/t/1"),
+        ("/app/one", "/app/one"),
+        ("/accept-invite?token=abc", "/accept-invite?token=abc"),
         ("https://evil.test", "/app"),
         ("//evil.test", "/app"),
         ("/app//evil.test", "/app"),

@@ -16,7 +16,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     { to: '/', label: t('nav.home') },
     { to: '/modules', label: t('nav.modules') },
     { to: '/security', label: t('nav.security') },
-    { to: '/app', label: t('nav.signIn') },
+    { to: '/login', label: t('nav.signIn') },
   ];
   return (
     <div
@@ -134,7 +134,7 @@ export function Header() {
 
           <div className="flex items-center gap-2 sm:gap-4">
             <LanguageSwitcher className="max-[359px]:hidden" />
-            <Link to="/app" className="btn btn-primary hidden !py-2.5 !text-sm sm:inline-flex">
+            <Link to="/login" className="btn btn-primary hidden !py-2.5 !text-sm sm:inline-flex">
               {t('nav.signIn')}
             </Link>
             <button

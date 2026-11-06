@@ -37,6 +37,7 @@ import {
   RolesPage,
 } from '../features/workspace/pages';
 import type { Me } from '../lib/api/types';
+import type { AuthPath } from '../lib/paths';
 
 function RequireUser({ children }: { children: (me: Me) => ReactNode }) {
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ function RequireUser({ children }: { children: (me: Me) => ReactNode }) {
   }
   if (!me.data) {
     const next = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/app/sign-in?next=${next}`} replace />;
+    return <Navigate to={`/login?next=${next}`} replace />;
   }
   return children(me.data);
 }
@@ -65,35 +66,59 @@ function GuestOnly({ children }: { children: ReactNode }) {
   return me.data ? <Navigate to="/app" replace /> : children;
 }
 
+const AUTH_PAGES: Record<AuthPath, ReactNode> = {
+  '/login': (
+    <GuestOnly>
+      <SignInPage />
+    </GuestOnly>
+  ),
+  '/signup': (
+    <GuestOnly>
+      <SignUpPage />
+    </GuestOnly>
+  ),
+  '/forgot-password': <ForgotPasswordPage />,
+  '/reset-password': <ResetPasswordPage />,
+  '/verify-email': <VerifyEmailPage />,
+  '/accept-invite': <AcceptInvitePage />,
+  '/new-business': <RequireUser>{(me) => <NewBusinessPage me={me} />}</RequireUser>,
+};
+
+export function AuthPage({ path }: { path: AuthPath }) {
+  return AUTH_PAGES[path];
+}
+
+// Addresses from before the move. Emails already sent still point at these, so they must keep
+// working, with their tokens.
+const MOVED = [
+  ['sign-in', '/login'],
+  ['sign-up', '/signup'],
+  ['forgot-password', '/forgot-password'],
+  ['reset-password', '/reset-password'],
+  ['verify-email', '/verify-email'],
+  ['accept-invite', '/accept-invite'],
+  ['new-business', '/new-business'],
+] as const;
+
+function Moved({ to }: { to: string }) {
+  const { search } = useLocation();
+  return <Navigate to={`${to}${search}`} replace />;
+}
+
+function MovedBusiness() {
+  const { pathname, search } = useLocation();
+  return <Navigate to={`${pathname.replace('/app/t/', '/app/')}${search}`} replace />;
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
+      {MOVED.map(([from, to]) => (
+        <Route key={from} path={from} element={<Moved to={to} />} />
+      ))}
+      <Route path="t/*" element={<MovedBusiness />} />
       <Route
-        path="sign-in"
-        element={
-          <GuestOnly>
-            <SignInPage />
-          </GuestOnly>
-        }
-      />
-      <Route
-        path="sign-up"
-        element={
-          <GuestOnly>
-            <SignUpPage />
-          </GuestOnly>
-        }
-      />
-      <Route path="forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="reset-password" element={<ResetPasswordPage />} />
-      <Route path="verify-email" element={<VerifyEmailPage />} />
-      <Route path="accept-invite" element={<AcceptInvitePage />} />
-      <Route
-        path="new-business"
-        element={<RequireUser>{(me) => <NewBusinessPage me={me} />}</RequireUser>}
-      />
-      <Route
-        path="t/:business"
+        path=":business"
         element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>}
       >
         <Route index element={<OverviewPage />} />

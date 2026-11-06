@@ -3,13 +3,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, type Location } from 'react-router';
 
 import { prefersReducedMotion } from '../lib/motion';
+import { isAppPath } from '../lib/paths';
 import { lockScroll, unlockScroll } from '../lib/scroll-lock';
 import { scrollToTop, useLenis } from '../lib/smooth-scroll';
 
 // The veil belongs to the public site. Going to or from sign-in, or anywhere in the app, someone
 // is trying to get something done, so the screen just changes.
 function touchesApp(a: Location, b: Location): boolean {
-  return a.pathname.startsWith('/app') || b.pathname.startsWith('/app');
+  return isAppPath(a.pathname) || isAppPath(b.pathname);
 }
 
 interface Props {

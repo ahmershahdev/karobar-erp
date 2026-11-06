@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { env } from '../../lib/env';
+import { safeNext } from '../../lib/paths';
 import { useAuthConfig } from './human';
 
 function GoogleMark() {
@@ -47,7 +48,8 @@ export function OAuthButtons({ next }: { next?: string | null }) {
   const config = useAuthConfig();
   const providers = (config.data?.oauth_providers ?? []).filter((name) => name in MARKS);
   if (providers.length === 0) return null;
-  const query = next?.startsWith('/app') ? `?next=${encodeURIComponent(next)}` : '';
+  const target = safeNext(next);
+  const query = target ? `?next=${encodeURIComponent(target)}` : '';
   return (
     <div className="space-y-3">
       {providers.map((name) => {

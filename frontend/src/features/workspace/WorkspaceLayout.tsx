@@ -65,7 +65,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
   const membership = list.find((row) => row.tenant_slug === business || row.tenant_id === business);
   if (!membership) {
     const first = list[0];
-    return <Navigate to={first ? `/app/t/${first.tenant_slug}` : '/app/new-business'} replace />;
+    return <Navigate to={first ? `/app/${first.tenant_slug}` : '/new-business'} replace />;
   }
   // Links from before business URLs had names still work, and land on the readable address.
   if (business === membership.tenant_id) {
@@ -74,7 +74,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
   // Set before the children render so every query they start carries the right X-Tenant.
   setActiveTenant(membership.tenant_id);
 
-  const base = `/app/t/${membership.tenant_slug}`;
+  const base = `/app/${membership.tenant_slug}`;
   const links = [
     { to: base, label: t('workspace.overview'), icon: 'overview', show: true, end: true },
     {
@@ -133,7 +133,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
               type="button"
               className="label rounded-full border border-line px-3 py-1.5 hover:border-ink hover:!text-ink md:hidden"
               onClick={() => {
-                void signOut().then(() => navigate('/app/sign-in'));
+                void signOut().then(() => navigate('/login'));
               }}
             >
               {t('workspace.signOut')}
@@ -145,8 +145,8 @@ export function WorkspaceLayout({ me }: { me: Me }) {
               className="w-full rounded-xl border border-line bg-canvas px-3 py-2.5 outline-none focus:border-ink"
               value={membership.tenant_slug}
               onChange={(event) => {
-                if (event.target.value === 'new') void navigate('/app/new-business');
-                else void navigate(`/app/t/${event.target.value}`);
+                if (event.target.value === 'new') void navigate('/new-business');
+                else void navigate(`/app/${event.target.value}`);
               }}
             >
               {list.map((row) => (
@@ -198,7 +198,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
               variant="ghost"
               className="w-full"
               onClick={() => {
-                void signOut().then(() => navigate('/app/sign-in'));
+                void signOut().then(() => navigate('/login'));
               }}
             >
               {t('workspace.signOut')}

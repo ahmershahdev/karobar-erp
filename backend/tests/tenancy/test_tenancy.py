@@ -92,3 +92,9 @@ def test_tenant_slugs_are_readable_and_unique() -> None:
     first.save()
     first.refresh_from_db()
     assert first.slug == "al-madina-traders-sons"
+
+
+@pytest.mark.django_db
+def test_a_business_cannot_take_a_reserved_address() -> None:
+    tenant = Tenant.objects.create(name="Sign In")
+    assert tenant.slug == f"sign-in-{tenant.public_id.hex[:6]}"

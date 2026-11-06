@@ -11,6 +11,20 @@ from django.utils.text import slugify
 from .context import get_current_tenant
 from .managers import TenantScopedManager
 
+# Old app addresses that still redirect; a business can't take these as its slug.
+RESERVED_SLUGS = frozenset(
+    {
+        "t",
+        "sign-in",
+        "sign-up",
+        "forgot-password",
+        "reset-password",
+        "verify-email",
+        "accept-invite",
+        "new-business",
+    }
+)
+
 
 class Tenant(models.Model):
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -36,7 +50,8 @@ class Tenant(models.Model):
         # Urdu and Arabic names slugify to nothing, so those businesses get a generic stem.
         stem = slugify(self.name)[:50].strip("-") or "business"
         fallback = f"{stem}-{self.public_id.hex[:6]}"
-        self.slug = fallback if Tenant.objects.filter(slug=stem).exists() else stem
+        taken = stem in RESERVED_SLUGS or Tenant.objects.filter(slug=stem).exists()
+        self.slug = fallback if taken else stem
         try:
             with transaction.atomic():
                 super().save(*args, **kwargs)

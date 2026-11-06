@@ -1,6 +1,6 @@
 # SEO
 
-Public pages are the marketing site at `https://karobarerp.ahmershah.dev`. Everything under `/app`
+Public pages are the marketing site at `https://karobarerp.ahmershah.dev`. The sign-in screens and everything under `/app`
 is the product and is `noindex`.
 
 ## One source of truth

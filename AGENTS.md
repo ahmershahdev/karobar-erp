@@ -83,6 +83,7 @@ Details and the reasoning are in [docs/security.md](docs/security.md). The short
   length 12; common and all-numeric passwords rejected.
 - Content Security Policy with a per-request nonce and `strict-dynamic`; no `unsafe-inline` for
   scripts. New third-party origins need a line in `docs/security.md`.
+- A new top-level app screen goes in `AUTH_PATHS` and in nginx, or it answers 404 in production.
 - Every endpoint has a throttle scope. Sign-in, sign-up and password reset have strict ones.
 - Request body, page size and upload sizes are capped; slow work goes to Celery.
 - The service worker stores code only. `/api/` responses are never cached.
