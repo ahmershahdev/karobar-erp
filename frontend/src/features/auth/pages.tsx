@@ -119,6 +119,9 @@ export function SignInPage() {
               : messageOf(mutation.error, t('signIn.unavailable'))}
           </Alert>
         )}
+        {mutation.error instanceof ApiError && mutation.error.status === 403 && (
+          <p className="text-sm text-muted">{t('auth.googleHint')}</p>
+        )}
         <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
         </SubmitButton>

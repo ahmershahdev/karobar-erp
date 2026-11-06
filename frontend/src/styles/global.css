@@ -343,6 +343,61 @@ select:focus {
   border-color: var(--color-ink);
 }
 
+/* The open list. Browsers draw it themselves, so only those with customisable selects (Chrome
+   and Edge 135+) can theme it; others keep their own list under the themed box. Staying a real
+   select keeps keyboard, screen reader and phone behaviour. */
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+
+  select::picker-icon {
+    display: none;
+  }
+
+  select:open {
+    border-color: var(--color-ink);
+  }
+
+  ::picker(select) {
+    margin-block: 0.375rem;
+    padding: 0.375rem;
+    max-height: 20rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 0.875rem;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    box-shadow: 0 16px 40px -12px rgb(11 26 60 / 0.22);
+  }
+
+  option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+
+  option:hover,
+  option:focus-visible {
+    outline: none;
+    background: var(--color-surface);
+  }
+
+  option:checked {
+    background: var(--color-raised);
+    font-weight: 500;
+  }
+
+  option::checkmark {
+    color: var(--color-flame);
+  }
+}
+
 /* Nastaliq and Kufi need far more height than Latin. These rules sit outside the layers so they
    beat the tight line heights of the type scale and the small-text utilities, which would
    otherwise clip the script inside masks like RollText. */

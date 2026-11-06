@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useSignedIn } from '../features/auth/session';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { Mascot } from '../features/mascot/Mascot';
@@ -11,11 +12,12 @@ export default function NotFoundPage() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   usePrivateSeo(t('notFound.title'));
+  const signedIn = useSignedIn();
   const reasons = t('notFound.reasons', { returnObjects: true }) as string[];
   const links = [
     { to: '/modules', label: t('nav.modules') },
     { to: '/security', label: t('nav.security') },
-    { to: '/login', label: t('nav.signIn') },
+    signedIn ? { to: '/app', label: t('nav.openApp') } : { to: '/login', label: t('nav.signIn') },
   ];
 
   return (

@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.conf import settings
 
-from apps.platform.tasks import send_email
+from apps.platform.mail import send_message
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import Membership, Tenant
 
@@ -36,8 +36,14 @@ def send_stock_alerts() -> int:
                 for row in soon
             ]
         link = f"{settings.SITE_URL.rstrip('/')}/app/{tenant.slug}/inventory/alerts"
-        lines += ["", link]
+        paragraphs = [line for line in lines if line]
         for email in owners:
-            send_email.delay(email, f"Stock alerts: {tenant.name}", "\n".join(lines))
+            send_message(
+                email,
+                f"Stock alerts: {tenant.name}",
+                f"Stock alerts for {tenant.name}",
+                paragraphs,
+                ("Open stock alerts", link),
+            )
             sent += 1
     return sent

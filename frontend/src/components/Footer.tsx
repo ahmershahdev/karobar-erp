@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
+import { useSignedIn } from '../features/auth/session';
 import { SITE } from '../seo/site';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
@@ -66,6 +67,7 @@ function GiantWordmark() {
 
 export function Footer() {
   const { t, i18n } = useTranslation();
+  const signedIn = useSignedIn();
   const time = useLocalTime(i18n.resolvedLanguage);
 
   const columns = [
@@ -75,7 +77,9 @@ export function Footer() {
         { label: t('nav.home'), to: '/' },
         { label: t('nav.modules'), to: '/modules' },
         { label: t('nav.security'), to: '/security' },
-        { label: t('nav.signIn'), to: '/login' },
+        signedIn
+          ? { label: t('nav.openApp'), to: '/app' }
+          : { label: t('nav.signIn'), to: '/login' },
       ],
     },
     {
@@ -106,8 +110,8 @@ export function Footer() {
           <p className="max-w-md text-lg text-muted">{t('footer.ctaBody')}</p>
         </div>
         <Magnetic strength={0.25}>
-          <Link to="/signup" className="btn btn-primary !px-7 !py-4">
-            {t('footer.ctaButton')}
+          <Link to={signedIn ? '/app' : '/signup'} className="btn btn-primary !px-7 !py-4">
+            {signedIn ? t('nav.openApp') : t('footer.ctaButton')}
             <span aria-hidden="true" className="btn-arrow">
               &rarr;
             </span>

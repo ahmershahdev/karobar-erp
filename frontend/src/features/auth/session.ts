@@ -21,6 +21,11 @@ export function useMe() {
   });
 }
 
+/** Where the site's account link goes: straight to the app for someone already signed in. */
+export function useSignedIn(): boolean {
+  return Boolean(useMe().data);
+}
+
 export function useMemberships(enabled = true) {
   return useQuery({
     queryKey: sessionKeys.tenants,

@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router';
 
 import { Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
@@ -412,7 +413,9 @@ export function PosPage() {
   const { membership } = useWorkspace();
   const [closingId, setClosingId] = useState<number | null>(null);
   const [closed, setClosed] = useState<Till | null>(null);
-  const [picked, setPicked] = useState('');
+  // In the address, so a reload keeps it and each till can be bookmarked to its own store.
+  const [params, setParams] = useSearchParams();
+  const picked = params.get('store') ?? '';
   const client = useQueryClient();
   const tills = useQuery({
     queryKey: [membership.tenant_id, 'pos', 'open-tills'],
@@ -425,7 +428,8 @@ export function PosPage() {
   // Stock and cash belong to one store, so with several stores the cashier says which is theirs.
   // Another store's open till must never be picked up by accident.
   const stores = warehouses.data ?? [];
-  const store = stores.length === 1 ? String(stores[0]?.id) : picked;
+  const known = stores.some((item) => String(item.id) === picked);
+  const store = stores.length === 1 ? String(stores[0]?.id) : known ? picked : '';
   const till = (tills.data as Till[] | undefined)?.find((item) => String(item.warehouse) === store);
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
 
@@ -447,9 +451,9 @@ export function PosPage() {
         <div className="mb-6 sm:max-w-sm">
           <Select
             label={t('inv.warehouse')}
-            value={picked}
+            value={store}
             onChange={(e) => {
-              setPicked(e.target.value);
+              setParams(e.target.value ? { store: e.target.value } : {}, { replace: true });
               setClosed(null);
             }}
           >
@@ -462,7 +466,14 @@ export function PosPage() {
           </Select>
         </div>
       )}
-      {tills.isPending || warehouses.isPending ? null : !store ? (
+      {tills.isPending || warehouses.isPending ? null : stores.length === 0 ? (
+        <Panel title={t('pos.noStore')}>
+          <p className="mb-4 text-muted">{t('pos.noStoreBody')}</p>
+          <Link to={`/app/${membership.tenant_slug}/inventory/setup`} className="btn btn-primary">
+            {t('pos.addStore')}
+          </Link>
+        </Panel>
+      ) : !store ? (
         <p className="text-muted">{t('pos.pickStore')}</p>
       ) : !till ? (
         <OpenTill key={store} warehouse={Number(store)} />

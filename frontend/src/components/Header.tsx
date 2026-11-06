@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router';
 
+import { useSignedIn } from '../features/auth/session';
 import { useScroll } from '../lib/scroll';
 import { useLenis } from '../lib/smooth-scroll';
 import { SITE } from '../seo/site';
@@ -11,12 +12,13 @@ import { RollText } from './RollText';
 
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
+  const signedIn = useSignedIn();
   if (!open) return null;
   const links = [
     { to: '/', label: t('nav.home') },
     { to: '/modules', label: t('nav.modules') },
     { to: '/security', label: t('nav.security') },
-    { to: '/login', label: t('nav.signIn') },
+    signedIn ? { to: '/app', label: t('nav.openApp') } : { to: '/login', label: t('nav.signIn') },
   ];
   return (
     <div
@@ -63,6 +65,7 @@ export function Header() {
   const { t } = useTranslation();
   const location = useLocation();
   const lenis = useLenis();
+  const signedIn = useSignedIn();
   const { y } = useScroll();
   const [open, setOpen] = useState(false);
   const [openedAt, setOpenedAt] = useState(location.pathname);
@@ -134,8 +137,11 @@ export function Header() {
 
           <div className="flex items-center gap-2 sm:gap-4">
             <LanguageSwitcher className="max-[359px]:hidden" />
-            <Link to="/login" className="btn btn-primary hidden !py-2.5 !text-sm sm:inline-flex">
-              {t('nav.signIn')}
+            <Link
+              to={signedIn ? '/app' : '/login'}
+              className="btn btn-primary hidden !py-2.5 !text-sm sm:inline-flex"
+            >
+              {signedIn ? t('nav.openApp') : t('nav.signIn')}
             </Link>
             <button
               type="button"
