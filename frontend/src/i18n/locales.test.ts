@@ -17,3 +17,9 @@ it.each([
 ])('%s has exactly the same keys as English', (_, locale) => {
   expect(shape(locale)).toEqual(shape(en));
 });
+
+it('home page lists stay lists, in every language', () => {
+  for (const locale of [en, ur, ar]) {
+    expect(Array.isArray(locale.home.steps.items)).toBe(true);
+  }
+});
