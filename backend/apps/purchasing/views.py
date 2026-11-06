@@ -18,7 +18,7 @@ from apps.accounts.models import User
 from apps.inventory.services import InventoryError
 from apps.tenancy.permissions import HasModulePermission
 
-from . import services
+from . import reports, services
 from .models import (
     Bill,
     BillLine,
@@ -31,10 +31,13 @@ from .models import (
     SupplierPayment,
 )
 from .serializers import (
+    AgeingRowSerializer,
     BillSerializer,
     DateSerializer,
     GoodsReceiptSerializer,
     PurchaseOrderSerializer,
+    StatementQuerySerializer,
+    StatementSerializer,
     SupplierPaymentSerializer,
     SupplierSerializer,
 )
@@ -319,3 +322,28 @@ class ReceiptBillView(PurchasingView, generics.GenericAPIView[GoodsReceipt]):
     def post(self, request: Request, pk: int) -> Response:
         bill = run(services.bill_receipt, actor(request), self.get_object(), _on(request))
         return Response(BillSerializer(BILL.queryset().get(pk=bill.pk)).data, 201)
+
+
+class SupplierStatementView(PurchasingView, generics.GenericAPIView[Supplier]):
+    def get_queryset(self) -> QuerySet[Supplier]:
+        return Supplier.objects.all()
+
+    @extend_schema(parameters=[StatementQuerySerializer], responses=StatementSerializer)
+    def get(self, request: Request, pk: int) -> Response:
+        query = StatementQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        statement = reports.statement(
+            self.get_object(),
+            query.validated_data.get("start"),
+            query.validated_data.get("end") or timezone.localdate(),
+        )
+        return Response(StatementSerializer(statement).data)
+
+
+class PayablesAgeingView(PurchasingView, generics.GenericAPIView[Supplier]):
+    pagination_class = None
+
+    @extend_schema(responses=AgeingRowSerializer(many=True))
+    def get(self, request: Request) -> Response:
+        rows = reports.ageing(suppliers(), timezone.localdate())
+        return Response(AgeingRowSerializer(rows, many=True).data)

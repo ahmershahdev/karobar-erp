@@ -358,6 +358,27 @@ def _credit_note(member: Member) -> CreditNote:
     return sales.credit_invoice(member.user, _invoice(member, True), timezone.localdate())
 
 
+tenant_endpoint("api/sales/customers/<int:pk>/statement/")(
+    lambda m: (f"/api/sales/customers/{_customer(m).pk}/statement/", _customer(m).pk)
+)
+tenant_endpoint("api/purchasing/suppliers/<int:pk>/statement/")(
+    lambda m: (f"/api/purchasing/suppliers/{_supplier(m).pk}/statement/", _supplier(m).pk)
+)
+tenant_endpoint("api/sales/ageing/")(
+    lambda m: ("/api/sales/ageing/", _invoice(m, True).customer_id)
+)
+tenant_endpoint("api/purchasing/ageing/")(
+    lambda m: ("/api/purchasing/ageing/", _posted_bill(m).supplier_id)
+)
+tenant_endpoint("api/sales/invoices/<int:pk>/pdf/")(
+    lambda m: (f"/api/sales/invoices/{_invoice(m, True).pk}/pdf/", 0)
+)
+tenant_endpoint("api/sales/receipts/<int:pk>/pdf/")(
+    lambda m: (
+        f"/api/sales/receipts/{sales.post_receipt(m.user, _sales_receipt(m)).pk}/pdf/",
+        0,
+    )
+)
 _register("sales/customers", lambda m: _customer(m).pk)
 _register("sales/orders", lambda m: _sales_order(m).pk)
 _register("sales/invoices", lambda m: _invoice(m).pk)
@@ -459,8 +480,14 @@ def test_every_endpoint_is_classified() -> None:
 @pytest.mark.django_db
 @pytest.mark.parametrize("route", sorted(TENANT_OWNED))
 def test_other_tenants_rows_are_invisible(
-    route: str, owner: Member, outsider: Member, in_tenant: Callable[[Tenant], None]
+    route: str,
+    owner: Member,
+    outsider: Member,
+    in_tenant: Callable[[Tenant], None],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # The PDF libraries aren't on every machine; who may fetch one is what's under test here.
+    monkeypatch.setattr("apps.sales.documents.to_pdf", lambda html: b"%PDF")
     in_tenant(owner.tenant)
     url, row_id = TENANT_OWNED[route](owner)
 

@@ -1,0 +1,23 @@
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: "Noto Sans", sans-serif; color: #0b1a3c; font-size: 11pt; line-height: 1.5; }
+  html[lang="ur"] body { font-family: "Noto Nastaliq Urdu", "Noto Sans", serif; line-height: 2.1; }
+  html[lang="ar"] body { font-family: "Noto Kufi Arabic", "Noto Sans", sans-serif; line-height: 1.8; }
+  h1 { font-size: 20pt; font-weight: 500; margin: 0 0 2mm; }
+  .head { display: flex; justify-content: space-between; border-bottom: 1px solid #c8cdd8; padding-bottom: 5mm; margin-bottom: 7mm; }
+  .business { font-size: 14pt; font-weight: 600; }
+  .muted { color: #566076; }
+  .facts { width: 100%; margin-bottom: 7mm; }
+  table.lines { width: 100%; border-collapse: collapse; }
+  table.lines th { text-align: start; color: #566076; font-weight: 400; border-bottom: 1px solid #c8cdd8; padding: 2mm 1mm; }
+  table.lines td { border-bottom: 1px solid #eef0f4; padding: 2.5mm 1mm; }
+  /* Figures stay left to right in Urdu and Arabic, so their side is set by hand, not with end. */
+  .num { font-family: "Noto Sans", sans-serif; font-weight: 400; direction: ltr; unicode-bidi: isolate; }
+  table.lines th.num { font-family: inherit; }
+  html[dir="ltr"] table.lines .num { text-align: right; }
+  html[dir="rtl"] table.lines .num { text-align: left; }
+  .totals { margin-top: 6mm; margin-inline-start: auto; width: 45%; }
+  .totals div { display: flex; justify-content: space-between; padding: 1mm 0; }
+  .grand .num { font-weight: 600; }
+  .grand { border-top: 1px solid #0b1a3c; font-weight: 600; margin-top: 1mm; padding-top: 2mm !important; }
+</style>

@@ -763,6 +763,22 @@ export interface paths {
         patch: operations["members_partial_update"];
         trace?: never;
     };
+    "/api/purchasing/ageing/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["purchasing_ageing_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/bills/": {
         parameters: {
             query?: never;
@@ -1037,6 +1053,22 @@ export interface paths {
         patch: operations["purchasing_suppliers_partial_update"];
         trace?: never;
     };
+    "/api/purchasing/suppliers/{id}/statement/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["purchasing_suppliers_statement_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles/": {
         parameters: {
             query?: never;
@@ -1067,6 +1099,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["roles_partial_update"];
+        trace?: never;
+    };
+    "/api/sales/ageing/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_ageing_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/sales/credit-notes/": {
@@ -1149,6 +1197,22 @@ export interface paths {
         patch: operations["sales_customers_partial_update"];
         trace?: never;
     };
+    "/api/sales/customers/{id}/statement/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_customers_statement_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sales/invoices/": {
         parameters: {
             query?: never;
@@ -1192,6 +1256,22 @@ export interface paths {
         put?: never;
         /** @description Start a credit note for everything on the invoice not yet returned. */
         post: operations["sales_invoices_credit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/invoices/{id}/pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_invoices_pdf_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1343,6 +1423,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sales/receipts/{id}/pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_receipts_pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sales/receipts/{id}/post/": {
         parameters: {
             query?: never;
@@ -1400,6 +1496,24 @@ export interface components {
          * @enum {string}
          */
         ActionEnum: "create" | "update" | "delete" | "post";
+        AgeingRow: {
+            id: number;
+            name: string;
+            /** Format: decimal */
+            current: string;
+            /** Format: decimal */
+            days_1_30: string;
+            /** Format: decimal */
+            days_31_60: string;
+            /** Format: decimal */
+            days_61_90: string;
+            /** Format: decimal */
+            over_90: string;
+            /** Format: decimal */
+            advance: string;
+            /** Format: decimal */
+            total: string;
+        };
         Alerts: {
             low_stock: {
                 [key: string]: unknown;
@@ -2246,6 +2360,25 @@ export interface components {
             email: string;
             password: string;
             full_name?: string;
+        };
+        Statement: {
+            /** Format: decimal */
+            opening: string;
+            lines: components["schemas"]["StatementLine"][];
+            /** Format: decimal */
+            closing: string;
+        };
+        StatementLine: {
+            /** Format: date */
+            date: string;
+            number: string;
+            kind: string;
+            /** Format: decimal */
+            charged: string;
+            /** Format: decimal */
+            paid: string;
+            /** Format: decimal */
+            balance: string;
         };
         /**
          * @description * `draft` - Draft
@@ -4052,6 +4185,25 @@ export interface operations {
             };
         };
     };
+    purchasing_ageing_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgeingRow"][];
+                };
+            };
+        };
+    };
     purchasing_bills_list: {
         parameters: {
             query?: {
@@ -4795,6 +4947,30 @@ export interface operations {
             };
         };
     };
+    purchasing_suppliers_statement_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statement"];
+                };
+            };
+        };
+    };
     roles_list: {
         parameters: {
             query?: never;
@@ -4924,6 +5100,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    sales_ageing_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgeingRow"][];
                 };
             };
         };
@@ -5183,6 +5378,30 @@ export interface operations {
             };
         };
     };
+    sales_customers_statement_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statement"];
+                };
+            };
+        };
+    };
     sales_invoices_list: {
         parameters: {
             query?: {
@@ -5322,6 +5541,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreditNote"];
+                };
+            };
+        };
+    };
+    sales_invoices_pdf_retrieve: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -5668,6 +5910,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    sales_receipts_pdf_retrieve: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
             };
         };
     };

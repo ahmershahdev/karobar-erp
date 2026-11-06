@@ -5,7 +5,7 @@ Last updated: 2026-11-06. Update at the end of every work session.
 ## Where we are
 
 - On `main`: #21 (Resend, reCAPTCHA, OAuth, with the Google account takeover closed), #22 (white design, real logo, offline and 404 screens, Brotli, service worker, business slugs, clean URLs) and #20 (M4 purchasing).
-- On `feat/m4-sales`: customers, quotes and orders, invoices, money received and returns, with credit limits checked under the customer's lock. Screens are in English, Urdu and Arabic. Driven end to end through the real UI.
+- M4 is finished: sales (#23), and on `feat/m4-documents` statements, ageing and PDF invoices and receipts in three languages. Real Urdu and Arabic PDFs were checked by eye in the Linux image; a Windows machine answers with a plain message because it has no Pango.
 - Not tested: the v2 checkbox being ticked by a person, Google and Facebook sign-in end to end, and the sales screens in Urdu and Arabic by a native reader.
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
   The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
@@ -48,8 +48,8 @@ Last updated: 2026-11-06. Update at the end of every work session.
 
 ## Next session
 
-1. Finish M4: PDF invoices and receipts (WeasyPrint) in three languages, customer and supplier statements, receivables and payables ageing.
-2. Tag `v0.4.0` when M4 is done.
+1. Tag `v0.4.0`.
+2. Start M5: point of sale, tax rates as data, sales tax report, profit and loss, balance sheet, dashboard.
 
 ## Open questions
 

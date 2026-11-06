@@ -20,6 +20,7 @@ import { today } from '../../lib/dates';
 import { formatMoney, toMinor } from '../../lib/money';
 import { ProductPicker } from '../inventory/ProductPicker';
 import { formatQuantity, useWarehouses } from '../inventory/shared';
+import { StatementPanel } from '../sales/ledgers';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
 import { CELL_INPUT, NUM, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
@@ -186,6 +187,7 @@ export function SuppliersPage() {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
   const suppliers = useSuppliers();
+  const [viewing, setViewing] = useState<Supplier | null>(null);
   const save = useTenantAction(KEYS);
   const empty = { code: '', name: '', phone: '', email: '', tax_number: '', terms: '0' };
   const [form, setForm] = useState(empty);
@@ -194,6 +196,21 @@ export function SuppliersPage() {
   return (
     <>
       <PageTitle title={t('pur.suppliers')} subtitle={t('pur.suppliersBody')} />
+      {viewing && (
+        <StatementPanel
+          key={viewing.id}
+          title={viewing.name}
+          queryKey={`supplier-statement-${viewing.id}`}
+          onClose={() => setViewing(null)}
+          load={(query) =>
+            unwrap(
+              api.GET('/api/purchasing/suppliers/{id}/statement/', {
+                params: { path: { id: viewing.id }, query },
+              }),
+            )
+          }
+        />
+      )}
       {can(membership, 'purchasing', 'create') && (
         <Panel title={t('pur.newSupplier')}>
           <form
@@ -280,7 +297,15 @@ export function SuppliersPage() {
               {suppliers.data?.results.map((item: Supplier) => (
                 <tr key={item.id} className="border-t border-line">
                   <td className={`${TD} font-mono text-xs text-gold`}>{item.code}</td>
-                  <td className={TD}>{item.name}</td>
+                  <td className={TD}>
+                    <button
+                      type="button"
+                      className="text-start underline underline-offset-4"
+                      onClick={() => setViewing(item)}
+                    >
+                      {item.name}
+                    </button>
+                  </td>
                   <td className={`${TD} text-muted`}>{item.phone}</td>
                   <td className={NUM}>{item.payment_terms_days}</td>
                   <td className={NUM}>{formatMoney(item.balance ?? '0', i18n.resolvedLanguage)}</td>

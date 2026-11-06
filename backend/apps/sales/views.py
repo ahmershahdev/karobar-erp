@@ -4,10 +4,11 @@ from decimal import Decimal
 from typing import Any, cast
 
 from django.db.models import Prefetch, Q, QuerySet
+from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,10 +16,15 @@ from rest_framework.views import APIView
 from apps.accounting.services import AccountingError
 from apps.accounts.models import User
 from apps.inventory.services import InventoryError
-from apps.purchasing.serializers import DateSerializer
+from apps.purchasing.serializers import (
+    AgeingRowSerializer,
+    DateSerializer,
+    StatementQuerySerializer,
+    StatementSerializer,
+)
 from apps.tenancy.permissions import HasModulePermission
 
-from . import services
+from . import documents, reports, services
 from .models import (
     CreditNote,
     CreditNoteLine,
@@ -288,3 +294,71 @@ class InvoiceCreditView(SalesView, generics.GenericAPIView[Invoice]):
     def post(self, request: Request, pk: int) -> Response:
         note = run(services.credit_invoice, actor(request), self.get_object(), _on(request))
         return Response(CreditNoteSerializer(CREDIT.queryset().get(pk=note.pk)).data, 201)
+
+
+class CustomerStatementView(SalesView, generics.GenericAPIView[Customer]):
+    def get_queryset(self) -> QuerySet[Customer]:
+        return Customer.objects.all()
+
+    @extend_schema(parameters=[StatementQuerySerializer], responses=StatementSerializer)
+    def get(self, request: Request, pk: int) -> Response:
+        query = StatementQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        statement = reports.statement(
+            self.get_object(),
+            query.validated_data.get("start"),
+            query.validated_data.get("end") or timezone.localdate(),
+        )
+        return Response(StatementSerializer(statement).data)
+
+
+class ReceivablesAgeingView(SalesView, generics.GenericAPIView[Customer]):
+    pagination_class = None
+
+    @extend_schema(responses=AgeingRowSerializer(many=True))
+    def get(self, request: Request) -> Response:
+        rows = reports.ageing(timezone.localdate())
+        return Response(AgeingRowSerializer(rows, many=True).data)
+
+
+class PrintingUnavailable(APIException):
+    status_code = 503
+    default_detail = documents.PdfUnavailableError.message
+    default_code = "pdf_unavailable"
+
+
+def _pdf(request: Request, render: Callable[[Any, str], str], document: Any) -> HttpResponse:
+    if document.status != "posted":
+        raise ValidationError({"detail": "Only posted documents can be printed."})
+    language = request.query_params.get("lang", "")
+    if language not in documents.LANGUAGES:
+        language = "en"
+    try:
+        pdf = documents.to_pdf(render(document, language))
+    except documents.PdfUnavailableError as exc:
+        raise PrintingUnavailable from exc
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="{document.number}.pdf"'
+    return response
+
+
+LANGUAGE = OpenApiParameter("lang", str)
+PDF = {(200, "application/pdf"): bytes}
+
+
+class InvoicePdfView(SalesView, generics.GenericAPIView[Invoice]):
+    def get_queryset(self) -> QuerySet[Invoice]:
+        return Invoice.objects.select_related("customer")
+
+    @extend_schema(parameters=[LANGUAGE], responses=PDF)
+    def get(self, request: Request, pk: int) -> HttpResponse:
+        return _pdf(request, documents.invoice_html, self.get_object())
+
+
+class ReceiptPdfView(SalesView, generics.GenericAPIView[CustomerReceipt]):
+    def get_queryset(self) -> QuerySet[CustomerReceipt]:
+        return CustomerReceipt.objects.select_related("customer")
+
+    @extend_schema(parameters=[LANGUAGE], responses=PDF)
+    def get(self, request: Request, pk: int) -> HttpResponse:
+        return _pdf(request, documents.receipt_html, self.get_object())

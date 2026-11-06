@@ -41,7 +41,7 @@ function VerifyBanner() {
 
 type Group = 'workspace' | 'sales' | 'accounting' | 'inventory' | 'purchasing';
 
-// The part after /app/<business>/, so a business whose slug is  doesn't look like a group.
+// The part after /app/<business>/, so a business called sales doesn't look like a group.
 function groupOf(path: string): Group {
   const area = path.split('/')[3];
   return area === 'sales' || area === 'accounting' || area === 'inventory' || area === 'purchasing'
@@ -105,6 +105,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       { path: 'customers', label: t('sal.customers'), icon: 'members' },
       { path: 'orders', label: t('sal.orders'), icon: 'orders' },
       { path: 'returns', label: t('sal.returns'), icon: 'entries' },
+      { path: 'owed-to-me', label: t('led.receivables'), icon: 'audit' },
     ].map((item) => ({
       to: `${base}/sales/${item.path}`,
       label: item.label,
@@ -141,10 +142,11 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       { path: 'receipts', label: t('pur.receipts') },
       { path: 'bills', label: t('pur.bills') },
       { path: 'payments', label: t('pur.payments') },
+      { path: 'owed-by-me', label: t('led.payables'), icon: 'audit' },
     ].map((item) => ({
       to: `${base}/purchasing/${item.path}`,
       label: item.label,
-      icon: item.path,
+      icon: item.icon ?? item.path,
       show: can(membership, 'purchasing', 'view'),
     })),
   ];

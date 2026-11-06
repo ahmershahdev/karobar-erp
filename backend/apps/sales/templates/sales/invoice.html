@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="{{ language }}" dir="{{ dir }}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ labels.invoice }} {{ invoice.number }}</title>
+    {% include "sales/_print.css.html" %}
+  </head>
+  <body>
+    <div class="head">
+      <div class="business">{{ business }}</div>
+      <div>
+        <h1>{{ labels.invoice }}</h1>
+        <div class="muted">{{ labels.number }}: <span class="num">{{ invoice.number }}</span></div>
+      </div>
+    </div>
+    <div class="facts">
+      <div>{{ labels.customer }}: {{ invoice.customer.name }}</div>
+      <div class="muted">{{ labels.date }}: <span class="num">{{ invoice.date|date:"Y-m-d" }}</span></div>
+      {% if invoice.due_date %}
+        <div class="muted">{{ labels.due }}: <span class="num">{{ invoice.due_date|date:"Y-m-d" }}</span></div>
+      {% endif %}
+    </div>
+    <table class="lines">
+      <thead>
+        <tr>
+          <th>{{ labels.item }}</th>
+          <th class="num">{{ labels.quantity }}</th>
+          <th class="num">{{ labels.price }}</th>
+          <th class="num">{{ labels.tax }}</th>
+          <th class="num">{{ labels.amount }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+          <tr>
+            <td>{{ line.name }}</td>
+            <td class="num">{{ line.quantity }}</td>
+            <td class="num">{{ line.price }}</td>
+            <td class="num">{{ line.tax }}</td>
+            <td class="num">{{ line.amount }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="totals">
+      <div><span>{{ labels.net }}</span><span class="num">{{ net }}</span></div>
+      <div><span>{{ labels.tax }}</span><span class="num">{{ tax }}</span></div>
+      <div class="grand"><span>{{ labels.total }} ({{ currency }})</span><span class="num">{{ total }}</span></div>
+      <div><span>{{ labels.paid }}</span><span class="num">{{ paid }}</span></div>
+      <div><span>{{ labels.left }}</span><span class="num">{{ left }}</span></div>
+    </div>
+  </body>
+</html>

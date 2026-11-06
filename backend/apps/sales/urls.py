@@ -5,6 +5,14 @@ from . import views
 urlpatterns = [
     path("customers/", views.CustomerListView.as_view(), name="customer-list"),
     path("customers/<int:pk>/", views.CustomerDetailView.as_view(), name="customer-detail"),
+    path(
+        "customers/<int:pk>/statement/",
+        views.CustomerStatementView.as_view(),
+        name="customer-statement",
+    ),
+    path("ageing/", views.ReceivablesAgeingView.as_view(), name="receivables-ageing"),
+    path("invoices/<int:pk>/pdf/", views.InvoicePdfView.as_view(), name="invoice-pdf"),
+    path("receipts/<int:pk>/pdf/", views.ReceiptPdfView.as_view(), name="sales-receipt-pdf"),
     path("orders/", views.OrderListView.as_view(), name="so-list"),
     path("orders/<int:pk>/", views.OrderDetailView.as_view(), name="so-detail"),
     path("orders/<int:pk>/quote/", views.OrderQuoteView.as_view(), name="so-quote"),
