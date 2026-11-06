@@ -55,6 +55,8 @@ class Product(TenantOwnedModel):
     attributes = models.JSONField(default=dict, blank=True)
     track_batches = models.BooleanField(default=False)
     reorder_level = quantity_field(default=0)
+    # Per base unit, before tax. Empty means it can't be sold at the counter until it has one.
+    sale_price = quantity_field(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

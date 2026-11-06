@@ -39,6 +39,7 @@
     {"code": "6300", "name": "Utilities", "type": "expense", "parent": "6000"},
     {"code": "6400", "name": "Bank charges", "type": "expense", "parent": "6000"},
     {"code": "6500", "name": "Depreciation", "type": "expense", "parent": "6000"},
+    {"code": "6800", "name": "Cash over and short", "type": "expense", "parent": "6000", "role": "cash_over_short"},
     {"code": "6900", "name": "Rounding differences", "type": "expense", "parent": "6000", "role": "rounding"}
   ]
 }

@@ -86,6 +86,12 @@ export function WorkspaceLayout({ me }: { me: Me }) {
   const links = [
     { to: base, label: t('workspace.overview'), icon: 'overview', show: true, end: true },
     {
+      to: `${base}/counter`,
+      label: t('pos.title'),
+      icon: 'counter',
+      show: can(membership, 'pos', 'view'),
+    },
+    {
       to: `${base}/members`,
       icon: 'members',
       label: t('workspace.members'),

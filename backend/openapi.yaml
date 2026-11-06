@@ -1637,6 +1637,196 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/pos/products/:
+    get:
+      operationId: pos_products_list
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - pos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoundProduct'
+          description: ''
+  /api/pos/sales/{id}/receipt/:
+    get:
+      operationId: pos_sales_receipt_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: lang
+        schema:
+          type: string
+      tags:
+      - pos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/pos/sessions/:
+    get:
+      operationId: pos_sessions_list
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - pos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Till'
+          description: ''
+    post:
+      operationId: pos_sessions_create
+      tags:
+      - pos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenTill'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Till'
+          description: ''
+  /api/pos/sessions/{id}/:
+    get:
+      operationId: pos_sessions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Till'
+          description: ''
+  /api/pos/sessions/{id}/close/:
+    post:
+      operationId: pos_sessions_close_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseTill'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Till'
+          description: ''
+  /api/pos/sessions/{id}/sale/:
+    post:
+      operationId: pos_sessions_sale_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - pos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaleResult'
+          description: ''
+  /api/pos/tax-rates/:
+    get:
+      operationId: pos_tax_rates_list
+      tags:
+      - pos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRate'
+          description: ''
+  /api/pos/warehouses/:
+    get:
+      operationId: pos_warehouses_list
+      tags:
+      - pos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PosWarehouse'
+          description: ''
   /api/purchasing/ageing/:
     get:
       operationId: purchasing_ageing_list
@@ -3960,6 +4150,21 @@ components:
       - id
       - quantity
       - unit_price
+    CartLine:
+      type: object
+      properties:
+        product:
+          type: integer
+        unit:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+      required:
+      - product
+      - quantity
+      - unit
     CashFlow:
       type: object
       properties:
@@ -4001,6 +4206,15 @@ components:
       required:
       - id
       - name
+    CloseTill:
+      type: object
+      properties:
+        counted_cash:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - counted_cash
     CreditLine:
       type: object
       properties:
@@ -4369,6 +4583,34 @@ components:
       - id
       - periods
       - start
+    FoundProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+        name:
+          type: string
+        unit:
+          type: integer
+        unit_code:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          nullable: true
+        exact:
+          type: boolean
+      required:
+      - exact
+      - id
+      - name
+      - price
+      - sku
+      - unit
+      - unit_code
     GoodsReceipt:
       type: object
       properties:
@@ -4906,6 +5148,26 @@ components:
       - tenant_id
       - tenant_name
       - tenant_slug
+    MethodEnum:
+      enum:
+      - cash
+      - card
+      type: string
+      description: |-
+        * `cash` - Cash
+        * `card` - Card
+    OpenTill:
+      type: object
+      properties:
+        warehouse:
+          type: integer
+        opening_float:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          default: '0.00'
+      required:
+      - warehouse
     OrderLine:
       type: object
       properties:
@@ -5467,6 +5729,11 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        sale_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          nullable: true
         is_active:
           type: boolean
         packs:
@@ -5577,6 +5844,22 @@ components:
           maxLength: 100
         is_active:
           type: boolean
+    PosWarehouse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+      required:
+      - code
+      - id
+      - name
     Product:
       type: object
       properties:
@@ -5607,6 +5890,11 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        sale_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          nullable: true
         is_active:
           type: boolean
         packs:
@@ -5853,6 +6141,61 @@ components:
       - id
       - name
       - permissions
+    SaleRequest:
+      type: object
+      properties:
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartLine'
+        method:
+          $ref: '#/components/schemas/MethodEnum'
+        tendered:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        tax_rate:
+          type: integer
+          nullable: true
+      required:
+      - lines
+      - method
+    SaleResult:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+        method:
+          allOf:
+          - $ref: '#/components/schemas/MethodEnum'
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tendered:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        change:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - amount
+      - change
+      - id
+      - method
+      - number
+      - tendered
     SalesOrder:
       type: object
       properties:
@@ -6452,6 +6795,85 @@ components:
           default: average
       required:
       - name
+    Till:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        warehouse:
+          type: integer
+          readOnly: true
+        warehouse_name:
+          type: string
+          readOnly: true
+        opening_float:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        expected_cash:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        counted_cash:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        difference:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        opened_by:
+          type: string
+          format: email
+          readOnly: true
+        opened_at:
+          type: string
+          format: date-time
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        sales_count:
+          type: integer
+          readOnly: true
+        cash_sales:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        card_sales:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - card_sales
+      - cash_sales
+      - closed_at
+      - counted_cash
+      - difference
+      - expected_cash
+      - id
+      - opened_at
+      - opened_by
+      - opening_float
+      - sales_count
+      - status
+      - warehouse
+      - warehouse_name
     Token:
       type: object
       properties:

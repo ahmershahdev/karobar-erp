@@ -28,6 +28,7 @@ const PATHS: Record<string, ReactNode> = {
       <path d="M3.5 10h17M8 3v4M16 3v4" />
     </>
   ),
+  counter: <path d="M3 10h18v9H3zM6 10V5h12v5M8 14h3M8 16.5h3M15 14v2.5" />,
   dashboard: <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" />,
   suppliers: (
     <>

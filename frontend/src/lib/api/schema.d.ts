@@ -795,6 +795,134 @@ export interface paths {
         patch: operations["members_partial_update"];
         trace?: never;
     };
+    "/api/pos/products/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pos_products_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/sales/{id}/receipt/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pos_sales_receipt_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/sessions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pos_sessions_list"];
+        put?: never;
+        post: operations["pos_sessions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/sessions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pos_sessions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/sessions/{id}/close/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pos_sessions_close_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/sessions/{id}/sale/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pos_sessions_sale_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/tax-rates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pos_tax_rates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pos/warehouses/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pos_warehouses_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/ageing/": {
         parameters: {
             query?: never;
@@ -1733,6 +1861,12 @@ export interface components {
             /** Format: decimal */
             tax_amount?: string;
         };
+        CartLine: {
+            product: number;
+            unit: number;
+            /** Format: decimal */
+            quantity: string;
+        };
         CashFlow: {
             /** Format: decimal */
             opening: string;
@@ -1748,6 +1882,10 @@ export interface components {
         Category: {
             readonly id: number;
             name: string;
+        };
+        CloseTill: {
+            /** Format: decimal */
+            counted_cash: string;
         };
         CreditLine: {
             readonly id: number;
@@ -1874,6 +2012,16 @@ export interface components {
             /** Format: date */
             end: string;
             readonly periods: components["schemas"]["FiscalPeriod"][];
+        };
+        FoundProduct: {
+            id: number;
+            sku: string;
+            name: string;
+            unit: number;
+            unit_code: string;
+            /** Format: decimal */
+            price: string | null;
+            exact: boolean;
         };
         GoodsReceipt: {
             readonly id: number;
@@ -2063,6 +2211,20 @@ export interface components {
             readonly permissions: {
                 [key: string]: string[];
             };
+        };
+        /**
+         * @description * `cash` - Cash
+         *     * `card` - Card
+         * @enum {string}
+         */
+        MethodEnum: "cash" | "card";
+        OpenTill: {
+            warehouse: number;
+            /**
+             * Format: decimal
+             * @default 0.00
+             */
+            opening_float: string;
         };
         OrderLine: {
             readonly id: number;
@@ -2379,6 +2541,8 @@ export interface components {
             track_batches?: boolean;
             /** Format: decimal */
             reorder_level?: string;
+            /** Format: decimal */
+            sale_price?: string | null;
             is_active?: boolean;
             packs?: components["schemas"]["Pack"][];
             /** Format: decimal */
@@ -2424,6 +2588,11 @@ export interface components {
             name?: string;
             is_active?: boolean;
         };
+        PosWarehouse: {
+            readonly id: number;
+            readonly code: string;
+            readonly name: string;
+        };
         Product: {
             readonly id: number;
             sku: string;
@@ -2436,6 +2605,8 @@ export interface components {
             track_batches?: boolean;
             /** Format: decimal */
             reorder_level?: string;
+            /** Format: decimal */
+            sale_price?: string | null;
             is_active?: boolean;
             packs?: components["schemas"]["Pack"][];
             /** Format: decimal */
@@ -2522,6 +2693,24 @@ export interface components {
             readonly id: number;
             name: string;
             permissions: unknown;
+        };
+        SaleRequest: {
+            lines: components["schemas"]["CartLine"][];
+            method: components["schemas"]["MethodEnum"];
+            /** Format: decimal */
+            tendered?: string | null;
+            tax_rate?: number | null;
+        };
+        SaleResult: {
+            readonly id: number;
+            readonly number: string;
+            readonly method: components["schemas"]["MethodEnum"];
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: decimal */
+            readonly tendered: string;
+            /** Format: decimal */
+            readonly change: string;
         };
         SalesOrder: {
             readonly id: number;
@@ -2730,6 +2919,31 @@ export interface components {
             fiscal_year_start_month: number;
             /** @default average */
             valuation_method: components["schemas"]["ValuationMethodEnum"];
+        };
+        Till: {
+            readonly id: number;
+            readonly status: string;
+            readonly warehouse: number;
+            readonly warehouse_name: string;
+            /** Format: decimal */
+            readonly opening_float: string;
+            /** Format: decimal */
+            readonly expected_cash: string | null;
+            /** Format: decimal */
+            readonly counted_cash: string | null;
+            /** Format: decimal */
+            readonly difference: string | null;
+            /** Format: email */
+            readonly opened_by: string;
+            /** Format: date-time */
+            readonly opened_at: string;
+            /** Format: date-time */
+            readonly closed_at: string | null;
+            readonly sales_count: number;
+            /** Format: decimal */
+            readonly cash_sales: string;
+            /** Format: decimal */
+            readonly card_sales: string;
         };
         Token: {
             token: string;
@@ -4525,6 +4739,203 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Member"];
+                };
+            };
+        };
+    };
+    pos_products_list: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FoundProduct"][];
+                };
+            };
+        };
+    };
+    pos_sales_receipt_retrieve: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    pos_sessions_list: {
+        parameters: {
+            query?: {
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Till"][];
+                };
+            };
+        };
+    };
+    pos_sessions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenTill"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Till"];
+                };
+            };
+        };
+    };
+    pos_sessions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Till"];
+                };
+            };
+        };
+    };
+    pos_sessions_close_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseTill"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Till"];
+                };
+            };
+        };
+    };
+    pos_sessions_sale_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResult"];
+                };
+            };
+        };
+    };
+    pos_tax_rates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRate"][];
+                };
+            };
+        };
+    };
+    pos_warehouses_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PosWarehouse"][];
                 };
             };
         };

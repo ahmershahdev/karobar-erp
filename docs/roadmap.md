@@ -54,7 +54,7 @@ in CI, and seed data.
 
 ## M5. Point of sale, tax and reports (target 2027-03-14)
 
-- [ ] POS screen: barcode scan, cart, cash and card payments, receipt print, end-of-day close
+- [x] POS screen: barcode scan, cart, cash and card payments, receipt print, end-of-day close
 - [x] Tax rates as data per tenant with validity dates; tax on every document line
 - [x] Sales tax (GST/VAT) report for a period
 - [x] Profit and loss, balance sheet and cash flow for any period

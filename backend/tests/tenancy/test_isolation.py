@@ -25,6 +25,8 @@ from apps.inventory.models import (
     Unit,
     Warehouse,
 )
+from apps.pos import services as pos
+from apps.pos.models import PosSession
 from apps.purchasing import services as purchasing
 from apps.purchasing.models import Bill, GoodsReceipt, PurchaseOrder, Supplier, SupplierPayment
 from apps.sales import services as sales
@@ -404,6 +406,34 @@ def _tax_rate(member: Member) -> int:
 
 _register("accounting/tax-rates", _tax_rate)
 tenant_endpoint("api/sales/tax-rates/")(lambda m: ("/api/sales/tax-rates/", _tax_rate(m)))
+
+
+def _till(member: Member) -> PosSession:
+    shop = _shop(member)
+    open_till = PosSession.objects.filter(status="open").first()
+    return open_till or pos.open_till(member.user, shop["warehouse"], Decimal(0))
+
+
+def _pos_sale(member: Member) -> int:
+    _stock_level(member)
+    shop = _shop(member)
+    shop["product"].sale_price = Decimal(5)
+    shop["product"].save()
+    line = pos.CartLine(shop["product"], shop["unit"], Decimal(1))
+    return pos.sell(member.user, _till(member), [line], "card").pk
+
+
+_register("pos/sessions", lambda m: _till(m).pk)
+tenant_endpoint("api/pos/sales/<int:pk>/receipt/")(
+    lambda m: (f"/api/pos/sales/{_pos_sale(m)}/receipt/", 0)
+)
+tenant_endpoint("api/pos/warehouses/")(
+    lambda m: ("/api/pos/warehouses/", _shop(m)["warehouse"].pk)
+)
+tenant_endpoint("api/pos/tax-rates/")(lambda m: ("/api/pos/tax-rates/", _tax_rate(m)))
+tenant_endpoint("api/pos/products/")(
+    lambda m: ("/api/pos/products/?q=Private", _shop(m)["product"].pk)
+)
 _register("sales/customers", lambda m: _customer(m).pk)
 _register("sales/orders", lambda m: _sales_order(m).pk)
 _register("sales/invoices", lambda m: _invoice(m).pk)
@@ -426,6 +456,8 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/accounting/entries/<int:pk>/reverse/": lambda m: (
         f"/api/accounting/entries/{_posted(m)}/reverse/"
     ),
+    "api/pos/sessions/<int:pk>/sale/": lambda m: f"/api/pos/sessions/{_till(m).pk}/sale/",
+    "api/pos/sessions/<int:pk>/close/": lambda m: f"/api/pos/sessions/{_till(m).pk}/close/",
     "api/sales/orders/<int:pk>/quote/": lambda m: f"/api/sales/orders/{_sales_order(m).pk}/quote/",
     "api/sales/orders/<int:pk>/confirm/": lambda m: (
         f"/api/sales/orders/{_sales_order(m).pk}/confirm/"

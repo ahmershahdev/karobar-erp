@@ -482,6 +482,10 @@
       "howBusiness": {
         "title": "How is my business?",
         "body": "Sales, profit and stock at a glance"
+      },
+      "counter": {
+        "title": "Open the counter",
+        "body": "Scan, take the money, done"
       }
     }
   },
@@ -1046,5 +1050,42 @@
     "sourceHint": "The notice or law that sets it, so you can always show why this rate was used.",
     "none": "No tax rates yet. Add one to have tax worked out for you.",
     "typeIt": "I will type the tax"
+  },
+  "pos": {
+    "title": "Counter",
+    "body": "Sell over the counter, fast.",
+    "startDay": "Start the day",
+    "startDayBody": "Count the cash in the drawer, then open the till.",
+    "cashInDrawer": "Cash in the drawer now",
+    "openTill": "Open the till",
+    "endDay": "End the day",
+    "closeTill": "Close the till",
+    "salesCount": "Sales today",
+    "cashSales": "Cash taken",
+    "cardSales": "Card taken",
+    "countedCash": "Cash you counted",
+    "countedHint": "Count all the notes and coins in the drawer.",
+    "dayClosed": "The till is closed",
+    "exact": "The cash is exactly right.",
+    "short": "The cash is {{amount}} short. This has been written in your books.",
+    "over": "There is {{amount}} extra cash. This has been written in your books.",
+    "scan": "Scan a barcode, or type a name",
+    "notFound": "Nothing found. Check the code and try again.",
+    "thisSale": "This sale",
+    "empty": "Scan something to start.",
+    "less": "One less",
+    "more": "One more",
+    "noPrice": "No price",
+    "needsPrice": "A product has no selling price. Add one under Products.",
+    "toPay": "To pay",
+    "noTax": "No tax",
+    "cashGiven": "Cash given by the customer",
+    "giveBack": "Give back",
+    "notEnough": "That is less than the total.",
+    "cash": "Cash",
+    "card": "Card",
+    "saleDone": "Sale done",
+    "nextCustomer": "Next customer",
+    "sellingPrice": "Selling price"
   }
 }

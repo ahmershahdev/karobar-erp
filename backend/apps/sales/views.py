@@ -345,7 +345,9 @@ class PrintingUnavailable(APIException):
     default_code = "pdf_unavailable"
 
 
-def _pdf(request: Request, render: Callable[[Any, str], str], document: Any) -> HttpResponse:
+def pdf_response(
+    request: Request, render: Callable[[Any, str], str], document: Any
+) -> HttpResponse:
     if document.status != "posted":
         raise ValidationError({"detail": "Only posted documents can be printed."})
     language = request.query_params.get("lang", "")
@@ -370,7 +372,7 @@ class InvoicePdfView(SalesView, generics.GenericAPIView[Invoice]):
 
     @extend_schema(parameters=[LANGUAGE], responses=PDF)
     def get(self, request: Request, pk: int) -> HttpResponse:
-        return _pdf(request, documents.invoice_html, self.get_object())
+        return pdf_response(request, documents.invoice_html, self.get_object())
 
 
 class ReceiptPdfView(SalesView, generics.GenericAPIView[CustomerReceipt]):
@@ -379,4 +381,4 @@ class ReceiptPdfView(SalesView, generics.GenericAPIView[CustomerReceipt]):
 
     @extend_schema(parameters=[LANGUAGE], responses=PDF)
     def get(self, request: Request, pk: int) -> HttpResponse:
-        return _pdf(request, documents.receipt_html, self.get_object())
+        return pdf_response(request, documents.receipt_html, self.get_object())

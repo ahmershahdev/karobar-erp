@@ -31,7 +31,14 @@ export function ProductsPage() {
       ),
   });
   const save = useTenantAction(['products', 'products-all']);
-  const [form, setForm] = useState({ sku: '', name: '', unit: '', reorder: '', batches: false });
+  const [form, setForm] = useState({
+    sku: '',
+    name: '',
+    unit: '',
+    reorder: '',
+    price: '',
+    batches: false,
+  });
   const [pack, setPack] = useState({ unit: '', factor: '', barcode: '' });
 
   const submit = () => {
@@ -48,6 +55,7 @@ export function ProductsPage() {
               name: form.name,
               unit: Number(form.unit),
               reorder_level: form.reorder || '0',
+              sale_price: form.price || null,
               track_batches: form.batches,
               packs,
             } as never,
@@ -55,7 +63,7 @@ export function ProductsPage() {
         ),
       {
         onSuccess: () => {
-          setForm({ sku: '', name: '', unit: form.unit, reorder: '', batches: false });
+          setForm({ sku: '', name: '', unit: form.unit, reorder: '', price: '', batches: false });
           setPack({ unit: '', factor: '', barcode: '' });
         },
       },
@@ -102,6 +110,12 @@ export function ProductsPage() {
                 </option>
               ))}
             </Select>
+            <Field
+              label={t('pos.sellingPrice')}
+              inputMode="decimal"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+            />
             <Field
               label={t('inv.reorderLevel')}
               inputMode="decimal"
