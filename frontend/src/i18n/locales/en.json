@@ -1086,6 +1086,7 @@
     "card": "Card",
     "saleDone": "Sale done",
     "nextCustomer": "Next customer",
-    "sellingPrice": "Selling price"
+    "sellingPrice": "Selling price",
+    "pickStore": "Choose your store to start."
   }
 }

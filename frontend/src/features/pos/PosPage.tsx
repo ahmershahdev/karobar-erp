@@ -6,7 +6,7 @@ import { Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { today } from '../../lib/dates';
-import { formatMoney, toMinor } from '../../lib/money';
+import { formatMoney, lineMinor, taxMinor, toMinor } from '../../lib/money';
 import { ActionError } from '../purchasing/pages';
 import { PrintButton } from '../sales/ledgers';
 import { useTenantAction, useWorkspace } from '../workspace/hooks';
@@ -30,6 +30,7 @@ interface CartLine extends Found {
 
 interface Till {
   id: number;
+  warehouse: number;
   warehouse_name: string;
   opening_float: string;
   sales_count: number;
@@ -49,40 +50,17 @@ interface Done {
 // What the screen shows before the sale is sent. The server works the real figures out again,
 // and those are what the receipt and the books use.
 function linePaisa(line: CartLine): number {
-  return Math.round(Number(line.price) * line.quantity * 100);
+  return line.price === null ? 0 : lineMinor(line.price, line.quantity);
 }
 
-function taxPaisa(amount: number, percent: number): number {
-  return Math.round((amount * percent) / 100);
-}
-
-function OpenTill() {
+function OpenTill({ warehouse }: { warehouse: number }) {
   const { t } = useTranslation();
-  const { membership } = useWorkspace();
   const save = useTenantAction(KEYS);
-  const warehouses = useQuery({
-    queryKey: [membership.tenant_id, 'pos', 'warehouses'],
-    queryFn: () => unwrap(api.GET('/api/pos/warehouses/')),
-  });
-  const [warehouse, setWarehouse] = useState('');
   const [opening, setOpening] = useState('');
   return (
     <Panel title={t('pos.startDay')}>
       <p className="mb-4 text-muted">{t('pos.startDayBody')}</p>
-      <div className="grid gap-4 md:max-w-xl md:grid-cols-2">
-        <Select
-          label={t('inv.warehouse')}
-          required
-          value={warehouse}
-          onChange={(e) => setWarehouse(e.target.value)}
-        >
-          <option value="">-</option>
-          {warehouses.data?.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </Select>
+      <div className="sm:max-w-sm">
         <Field
           label={t('pos.cashInDrawer')}
           inputMode="decimal"
@@ -92,12 +70,9 @@ function OpenTill() {
       </div>
       <div className="mt-4">
         <Button
-          disabled={save.isPending || !warehouse}
+          disabled={save.isPending}
           onClick={() => {
-            const body = {
-              warehouse: Number(warehouse),
-              opening_float: opening || '0',
-            } as never;
+            const body = { warehouse, opening_float: opening || '0' } as never;
             save.mutate(() => unwrap(api.POST('/api/pos/sessions/', { body })));
           }}
         >
@@ -238,7 +213,7 @@ function Counter({ till }: { till: Till }) {
 
   const net = cart.reduce((sum, line) => sum + linePaisa(line), 0);
   const tax = chosen
-    ? cart.reduce((sum, line) => sum + taxPaisa(linePaisa(line), Number(chosen.rate)), 0)
+    ? cart.reduce((sum, line) => sum + taxMinor(linePaisa(line), chosen.rate), 0)
     : 0;
   const total = net + tax;
   const change = toMinor(given) - total;
@@ -327,7 +302,7 @@ function Counter({ till }: { till: Till }) {
                     {item.name} <span className="text-sm text-muted">{item.unit_code}</span>
                   </span>
                   <span className="font-mono text-sm">
-                    {item.price === null ? t('pos.noPrice') : money(item.price)}
+                    {item.price === null ? t('pos.noPrice') : money(lineMinor(item.price, 1))}
                   </span>
                 </button>
               </li>
@@ -435,14 +410,23 @@ function Counter({ till }: { till: Till }) {
 export function PosPage() {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
-  const [closing, setClosing] = useState(false);
+  const [closingId, setClosingId] = useState<number | null>(null);
   const [closed, setClosed] = useState<Till | null>(null);
+  const [picked, setPicked] = useState('');
   const client = useQueryClient();
   const tills = useQuery({
     queryKey: [membership.tenant_id, 'pos', 'open-tills'],
     queryFn: () => unwrap(api.GET('/api/pos/sessions/', { params: { query: { status: 'open' } } })),
   });
-  const till = (tills.data as Till[] | undefined)?.[0];
+  const warehouses = useQuery({
+    queryKey: [membership.tenant_id, 'pos', 'warehouses'],
+    queryFn: () => unwrap(api.GET('/api/pos/warehouses/')),
+  });
+  // Stock and cash belong to one store, so with several stores the cashier says which is theirs.
+  // Another store's open till must never be picked up by accident.
+  const stores = warehouses.data ?? [];
+  const store = stores.length === 1 ? String(stores[0]?.id) : picked;
+  const till = (tills.data as Till[] | undefined)?.find((item) => String(item.warehouse) === store);
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
 
   return (
@@ -459,26 +443,48 @@ export function PosPage() {
           </p>
         </Panel>
       )}
-      {tills.isPending ? null : !till ? (
-        <OpenTill />
-      ) : closing ? (
+      {stores.length > 1 && (
+        <div className="mb-6 sm:max-w-sm">
+          <Select
+            label={t('inv.warehouse')}
+            value={picked}
+            onChange={(e) => {
+              setPicked(e.target.value);
+              setClosed(null);
+            }}
+          >
+            <option value="">-</option>
+            {stores.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+      {tills.isPending || warehouses.isPending ? null : !store ? (
+        <p className="text-muted">{t('pos.pickStore')}</p>
+      ) : !till ? (
+        <OpenTill key={store} warehouse={Number(store)} />
+      ) : closingId === till.id ? (
         <>
           <CloseTill
+            key={till.id}
             till={till}
             onClosed={(result) => {
               setClosed(result);
-              setClosing(false);
+              setClosingId(null);
               void client.invalidateQueries({ queryKey: [membership.tenant_id, 'pos'] });
             }}
           />
-          <Button variant="ghost" onClick={() => setClosing(false)}>
+          <Button variant="ghost" onClick={() => setClosingId(null)}>
             {t('workspace.cancel')}
           </Button>
         </>
       ) : (
         <>
-          <Counter till={till} />
-          <Button variant="ghost" onClick={() => setClosing(true)}>
+          <Counter key={till.id} till={till} />
+          <Button variant="ghost" onClick={() => setClosingId(till.id)}>
             {t('pos.endDay')}
           </Button>
         </>
