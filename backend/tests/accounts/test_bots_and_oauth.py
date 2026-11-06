@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from django.core import mail
 from django.test import override_settings
+from django.utils import timezone
 from pytest_django.fixtures import Settings as SettingsWrapper
 from rest_framework.test import APIClient
 
@@ -212,6 +213,37 @@ def test_google_links_an_existing_account_only_with_a_verified_email(
     assert SocialAccount.objects.get(uid="g-2").user == existing
 
 
+def test_google_takes_an_unverified_account_from_whoever_registered_it(
+    providers: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    squatter = create_user(email="owner@example.test", password="squatter password one")
+    assert squatter.email_verified_at is None
+    fake_provider(
+        monkeypatch, {"sub": "g-3", "email": "owner@example.test", "email_verified": True}
+    )
+    sign_in("google")
+    squatter.refresh_from_db()
+    assert squatter.email_verified_at is not None
+    assert not squatter.check_password("squatter password one")
+    assert not squatter.has_usable_password()
+
+
+def test_google_keeps_the_password_of_a_verified_account(
+    providers: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    owner = create_user(
+        email="owner@example.test",
+        password="owner password number one",
+        email_verified_at=timezone.now(),
+    )
+    fake_provider(
+        monkeypatch, {"sub": "g-4", "email": "owner@example.test", "email_verified": True}
+    )
+    sign_in("google")
+    owner.refresh_from_db()
+    assert owner.check_password("owner password number one")
+
+
 def test_facebook_never_takes_over_an_existing_email(
     providers: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -338,15 +370,30 @@ def opener(result: Callable[[], Any]) -> Callable[..., Any]:
 def test_http_helper_reads_json_objects_and_rejects_the_rest(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(urllib.request, "urlopen", opener(lambda: FakeResponse(b'{"a": 1}')))
+    monkeypatch.setattr(http.OPENER, "open", opener(lambda: FakeResponse(b'{"a": 1}')))
     assert http.get_json("https://example.test/x", bearer="t") == {"a": 1}
     assert http.post_form("https://example.test/x", {"k": "v"}) == {"a": 1}
     with pytest.raises(http.OutboundError, match="https"):
         http.get_json("http://example.test/x")
     for body, message in ((b"[1]", "object"), (b"nope", "JSON"), (b"x" * 300_000, "large")):
-        monkeypatch.setattr(urllib.request, "urlopen", opener(partial(FakeResponse, body)))
+        monkeypatch.setattr(http.OPENER, "open", opener(partial(FakeResponse, body)))
         with pytest.raises(http.OutboundError, match=message):
             http.get_json("https://example.test/x")
+
+
+def test_redirects_are_refused_so_a_token_cannot_follow_them(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def redirected() -> Any:
+        raise urllib.error.HTTPError(
+            "https://example.test", 302, "moved", Message(), io.BytesIO(b"{}")
+        )
+
+    monkeypatch.setattr(http.OPENER, "open", opener(redirected))
+    with pytest.raises(http.OutboundError, match="redirects"):
+        http.get_json("https://example.test/x", bearer="secret")
+    handler = http._NoRedirects()
+    assert handler.redirect_request() is None
 
 
 def test_http_errors_still_return_their_json_and_network_errors_raise(
@@ -361,13 +408,13 @@ def test_http_errors_still_return_their_json_and_network_errors_raise(
             io.BytesIO(b'{"error": "x"}'),
         )
 
-    monkeypatch.setattr(urllib.request, "urlopen", opener(bad_request))
+    monkeypatch.setattr(http.OPENER, "open", opener(bad_request))
     assert http.get_json("https://example.test/x") == {"error": "x"}
 
     def offline() -> Any:
         raise urllib.error.URLError("no route")
 
-    monkeypatch.setattr(urllib.request, "urlopen", opener(offline))
+    monkeypatch.setattr(http.OPENER, "open", opener(offline))
     with pytest.raises(http.OutboundError):
         http.get_json("https://example.test/x")
 

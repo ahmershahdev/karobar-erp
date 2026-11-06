@@ -1,7 +1,8 @@
 """Small HTTPS calls to third parties (reCAPTCHA, OAuth providers) without a client library.
 
-Only https URLs are allowed, every call has a timeout, and responses must be JSON objects. Any
-failure raises OutboundError, so callers decide once whether to fail open or closed.
+Only https URLs are allowed, redirects are never followed, every call has a timeout, and responses
+must be JSON objects. Any failure raises OutboundError, so callers decide once whether to fail open
+or closed.
 """
 
 import json
@@ -18,14 +19,26 @@ class OutboundError(Exception):
     pass
 
 
+class _NoRedirects(urllib.request.HTTPRedirectHandler):
+    # urllib would resend the request, bearer token included, wherever a redirect points, without
+    # the https check. The endpoints we call don't redirect, so one is treated as a failure.
+    def redirect_request(self, *args: Any, **kwargs: Any) -> urllib.request.Request | None:
+        return None
+
+
+OPENER = urllib.request.build_opener(_NoRedirects)
+
+
 def _send(request: urllib.request.Request) -> dict[str, Any]:
     if urllib.parse.urlsplit(request.full_url).scheme != "https":
         raise OutboundError("only https is allowed")
     try:
         # The scheme is checked above, so file: and other handlers can't be reached.
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:  # noqa: S310
+        with OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
             body = response.read(MAX_BYTES + 1)
     except urllib.error.HTTPError as exc:
+        if 300 <= exc.code < 400:
+            raise OutboundError("redirects are not followed") from exc
         body = exc.read(MAX_BYTES + 1)
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise OutboundError(str(exc)) from exc

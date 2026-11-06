@@ -41,13 +41,20 @@ export function useHumanCheck(action: string) {
   const [honeypot, setHoneypot] = useState('');
   const [checkbox, setCheckbox] = useState(false);
   const [v2Token, setV2Token] = useState('');
+  // Google accepts a v2 token once. After sending one the box has to be ticked again, and Google's
+  // widget can't be reset from a ticked state here, so a new key mounts a fresh one.
+  const [widget, setWidget] = useState(0);
 
   useEffect(() => {
     if (v3 || v2) void loadRecaptcha(v3).catch(() => undefined);
   }, [v3, v2]);
 
   const proof = useCallback(async (): Promise<HumanProof> => {
-    if (checkbox && v2Token) return { website: honeypot, captcha_v2: v2Token };
+    if (checkbox && v2Token) {
+      setV2Token('');
+      setWidget((value) => value + 1);
+      return { website: honeypot, captcha_v2: v2Token };
+    }
     if (!v3) return { website: honeypot };
     try {
       const grecaptcha = await loadRecaptcha(v3);
@@ -60,6 +67,7 @@ export function useHumanCheck(action: string) {
 
   const requireCheckbox = useCallback(() => {
     setV2Token('');
+    setWidget((value) => value + 1);
     setCheckbox(Boolean(v2));
   }, [v2]);
 
@@ -67,7 +75,7 @@ export function useHumanCheck(action: string) {
     proof,
     requireCheckbox,
     honeypot: <Honeypot value={honeypot} onChange={setHoneypot} />,
-    checkbox: checkbox ? <Checkbox siteKey={v2} v3Key={v3} onToken={setV2Token} /> : null,
+    checkbox: checkbox ? <Checkbox key={widget} siteKey={v2} v3Key={v3} onToken={setV2Token} /> : null,
     waitingForCheckbox: checkbox && !v2Token,
   };
 }

@@ -226,8 +226,12 @@ def _user_for(provider: str, profile: Profile) -> User:
             raise OAuthError("account_disabled")
         user = existing
         if user.email_verified_at is None:
+            # Nobody ever proved they own this address, so the password may be a stranger's who
+            # signed up with it first. The provider has now proved who does: drop that password,
+            # which also ends any session it opened. A real owner can set a new one by reset.
+            user.set_unusable_password()
             user.email_verified_at = now
-            user.save(update_fields=["email_verified_at"])
+            user.save(update_fields=["password", "email_verified_at"])
     else:
         try:
             with transaction.atomic():
