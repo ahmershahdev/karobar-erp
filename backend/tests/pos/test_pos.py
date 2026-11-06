@@ -219,3 +219,21 @@ def test_two_tills_selling_the_last_units_cannot_both_succeed() -> None:
     for thread in threads:
         thread.join()
     assert sorted(outcomes) == ["refused", "sold"]
+
+
+def test_a_deactivated_product_cannot_be_scanned(till: Till) -> None:
+    barcode = str(till.soap.packs.get().barcode)
+    till.soap.is_active = False
+    till.soap.save()
+    assert services.find_products(barcode) == []
+
+
+def test_a_product_can_be_given_its_price_later(till: Till) -> None:
+    client = till.seller.shop.member.client()
+    url = f"/api/inventory/products/{till.soap.pk}/"
+    assert client.patch(url, {"sale_price": "125.50"}, format="json").status_code == 200
+    till.soap.refresh_from_db()
+    assert till.soap.sale_price == D("125.5000")
+    assert client.patch(url, {"sale_price": None}, format="json").status_code == 200
+    till.soap.refresh_from_db()
+    assert till.soap.sale_price is None

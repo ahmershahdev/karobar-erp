@@ -16,6 +16,46 @@ import { formatQuantity, useList, useUnits, useWarehouses } from './shared';
 
 type Kind = 'receipt' | 'issue' | 'transfer' | 'adjustment';
 
+// Saved when the box is left, so filling in a whole catalogue of prices is just typing and Tab.
+function PriceCell({ product }: { product: Product }) {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const save = useTenantAction(['products']);
+  const stored = product.sale_price ?? '';
+  const [value, setValue] = useState(stored ? String(Number(stored)) : '');
+  if (!can(membership, 'inventory', 'update')) {
+    return <>{stored ? Number(stored) : t('pos.noPrice')}</>;
+  }
+  return (
+    <>
+      <input
+        aria-label={`${t('pos.sellingPrice')}: ${product.name}`}
+        inputMode="decimal"
+        placeholder={t('pos.noPrice')}
+        className={`${CELL_INPUT} w-28 text-end font-mono ${value ? '' : 'border-red/40'}`}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+        }}
+        onBlur={() => {
+          if (value === '' ? stored === '' : Number(value) === Number(stored)) return;
+          const body = { sale_price: value || null } as never;
+          save.mutate(() =>
+            unwrap(
+              api.PATCH('/api/inventory/products/{id}/', {
+                params: { path: { id: product.id } },
+                body,
+              }),
+            ),
+          );
+        }}
+      />
+      {save.isError && <span className="block text-xs text-red">{errorText(save.error, '')}</span>}
+    </>
+  );
+}
+
 export function ProductsPage() {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
@@ -187,6 +227,7 @@ export function ProductsPage() {
                 <th className={TH}>{t('inv.sku')}</th>
                 <th className={TH}>{t('acc.name')}</th>
                 <th className={TH}>{t('inv.packs')}</th>
+                <th className={`${TH} text-end`}>{t('pos.sellingPrice')}</th>
                 <th className={`${TH} text-end`}>{t('inv.onHand')}</th>
               </tr>
             </thead>
@@ -206,6 +247,9 @@ export function ProductsPage() {
                       (item) =>
                         ` · ${item.unit_code} ×${formatQuantity(item.factor, i18n.resolvedLanguage)}`,
                     )}
+                  </td>
+                  <td className={NUM}>
+                    <PriceCell product={product} />
                   </td>
                   <td className={NUM}>
                     {formatQuantity(product.on_hand, i18n.resolvedLanguage)} {product.unit_code}

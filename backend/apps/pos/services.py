@@ -78,7 +78,11 @@ def _price(product: Product, factor: Decimal) -> Decimal | None:
 
 def find_products(term: str) -> list[Found]:
     """A scanned barcode gives that one pack at its pack price; anything else searches."""
-    pack = ProductUnit.objects.select_related("product__unit", "unit").filter(barcode=term).first()
+    pack = (
+        ProductUnit.objects.select_related("product__unit", "unit")
+        .filter(barcode=term, product__is_active=True)
+        .first()
+    )
     if pack is not None:
         return [Found(pack.product, pack.unit, _price(pack.product, pack.factor), exact=True)]
     matches = Product.objects.select_related("unit").filter(is_active=True, sku__iexact=term)[:1]

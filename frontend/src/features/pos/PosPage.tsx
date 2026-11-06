@@ -179,6 +179,7 @@ function Counter({ till }: { till: Till }) {
   const [given, setGiven] = useState('');
   const [done, setDone] = useState<Done | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [scanFailed, setScanFailed] = useState(false);
   const money = (value: string | number) => formatMoney(value, i18n.resolvedLanguage);
 
   const rates = useQuery({
@@ -215,7 +216,14 @@ function Counter({ till }: { till: Till }) {
   const scan = async () => {
     const q = term.trim();
     if (!q) return;
-    const found = await lookup(q);
+    let found: Found[];
+    try {
+      found = await lookup(q);
+    } catch {
+      setScanFailed(true);
+      return;
+    }
+    setScanFailed(false);
     const only = found.length === 1 ? found[0] : undefined;
     if (only) add(only);
     else if (found.length === 0) setNotFound(true);
@@ -305,6 +313,7 @@ function Counter({ till }: { till: Till }) {
           />
         </label>
         {notFound && <p className="text-red">{t('pos.notFound')}</p>}
+        {scanFailed && <p className="text-red">{t('signIn.unavailable')}</p>}
         {term.trim().length >= 2 && (results.data?.length ?? 0) > 0 && (
           <ul className="divide-y divide-line rounded-xl border border-line">
             {results.data?.map((item) => (
