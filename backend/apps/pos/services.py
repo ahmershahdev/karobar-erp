@@ -162,9 +162,10 @@ def _sell(
 ) -> PosSale:
     """Stock, the invoice, the money and the till record commit together or not at all."""
     till = _open_session(session)
-    # Read from the database here, because a product can be withdrawn while it sits in a cart.
-    chosen = [line.product.pk for line in lines]
-    if Product.objects.filter(pk__in=chosen, is_active=False).exists():
+    # A product can be withdrawn while it sits in a cart, so its row is read and held here. The
+    # lock keeps a withdrawal from landing halfway through the sale.
+    chosen = lock_rows(Product.objects.filter(pk__in=[line.product.pk for line in lines]))
+    if not all(product.is_active for product in chosen):
         raise ProductInactiveError
     if not lines:
         raise EmptyCartError

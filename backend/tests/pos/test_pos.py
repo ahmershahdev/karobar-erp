@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from apps.accounting.models import Account, TaxRate
@@ -152,6 +153,13 @@ def test_a_product_withdrawn_while_in_the_cart_cannot_be_sold(till: Till) -> Non
     assert stock(till) == before
     assert not Invoice.objects.exists()
     assert not PosSale.objects.exists()
+
+
+def test_a_sale_holds_its_products_until_it_commits(till: Till) -> None:
+    with CaptureQueriesContext(connection) as queries:
+        services.sell(till.user, till.session, [till.line()], "card")
+    table = Product._meta.db_table
+    assert any(table in q["sql"] and "FOR UPDATE" in q["sql"] for q in queries.captured_queries)
 
 
 def test_an_empty_cart_is_refused(till: Till) -> None:
