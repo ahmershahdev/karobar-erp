@@ -3,10 +3,14 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.core import mail
+from django.db import connection, transaction
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
+from kombu.exceptions import OperationalError  # type: ignore[import-untyped, unused-ignore]
 from rest_framework.test import APIClient
 
-from apps.accounts.models import User
+from apps.accounts import emails, oauth
+from apps.accounts.models import SocialAccount, User
 from apps.accounts.tokens import make_email_token
 from tests.factories import TEST_PASSWORD, create_user
 
@@ -89,6 +93,18 @@ def test_resend_verification_only_for_unverified(user: User) -> None:
     assert len(mail.outbox) == 1
 
 
+def test_an_account_from_google_can_set_a_password_by_reset(user: User) -> None:
+    user.set_unusable_password()
+    user.save(update_fields=["password"])
+
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
+    confirm = {**link_params(str(mail.outbox[0].body)), "password": NEW_PASSWORD}
+    assert post("/api/accounts/password-reset/confirm/", confirm) == 204
+
+    user.refresh_from_db()
+    assert user.check_password(NEW_PASSWORD)
+
+
 def test_password_reset_round_trip_signs_out_other_sessions(user: User) -> None:
     other_session = APIClient()
     other_session.force_login(user)
@@ -103,6 +119,62 @@ def test_password_reset_round_trip_signs_out_other_sessions(user: User) -> None:
     assert user.email_verified_at is not None
     assert other_session.get("/api/accounts/me/").status_code == 403
     assert post("/api/accounts/password-reset/confirm/", confirm) == 400, "links work once"
+
+
+def reset_password(user: User) -> None:
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
+    confirm = {**link_params(str(mail.outbox[-1].body)), "password": NEW_PASSWORD}
+    assert post("/api/accounts/password-reset/confirm/", confirm) == 204
+
+
+def test_a_reset_removes_a_provider_link_nobody_had_proved(user: User) -> None:
+    user.email_verified_at = None
+    user.set_unusable_password()
+    user.save(update_fields=["email_verified_at", "password"])
+    SocialAccount.objects.create(user=user, provider="facebook", uid="fb-stranger")
+
+    reset_password(user)
+
+    assert not SocialAccount.objects.filter(uid="fb-stranger").exists()
+    user.refresh_from_db()
+    assert user.email_verified_at is not None
+
+
+def test_a_reset_holds_the_account_while_it_spends_the_link(user: User) -> None:
+    with CaptureQueriesContext(connection) as queries:
+        reset_password(user)
+    table = User._meta.db_table
+    assert any(table in q["sql"] and "FOR UPDATE" in q["sql"] for q in queries.captured_queries)
+
+
+def test_a_stale_claim_cannot_undo_a_reset_that_just_finished(user: User) -> None:
+    stale = User.objects.get(pk=user.pk)
+    reset_password(user)
+    with transaction.atomic():
+        oauth._claim(stale, timezone.now())
+    user.refresh_from_db()
+    assert user.check_password(NEW_PASSWORD)
+
+
+def test_a_reset_keeps_the_link_of_a_verified_account(user: User) -> None:
+    user.email_verified_at = timezone.now()
+    user.set_unusable_password()
+    user.save(update_fields=["email_verified_at", "password"])
+    SocialAccount.objects.create(user=user, provider="google", uid="g-owner")
+
+    reset_password(user)
+
+    assert SocialAccount.objects.filter(uid="g-owner").exists()
+
+
+def test_password_reset_says_nothing_when_the_queue_is_down(
+    user: User, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(_: User) -> None:
+        raise OperationalError("broker down")
+
+    monkeypatch.setattr(emails, "send_password_reset", fail)
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
 
 
 def test_password_reset_for_unknown_email_says_nothing() -> None:

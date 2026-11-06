@@ -1,3 +1,4 @@
+import logging
 from typing import cast
 
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
+from kombu.exceptions import OperationalError  # type: ignore[import-untyped, unused-ignore]
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
@@ -15,6 +17,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+
+from apps.platform.locking import lock_rows
 
 from . import emails, humans, oauth
 from .models import User
@@ -30,6 +34,8 @@ from .serializers import (
     check_password_strength,
 )
 from .tokens import read_email_token, read_reset_token
+
+logger = logging.getLogger(__name__)
 
 INVALID_LINK = "This link is invalid or has expired."
 
@@ -145,8 +151,13 @@ class PasswordResetView(AnonymousFormView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         email = data.validated_data["email"].lower()
         user = User.objects.filter(email=email, is_active=True).first()
-        if user is not None and user.has_usable_password():
-            emails.send_password_reset(user)
+        if user is not None:
+            # A failed send must look like an unknown address, or this form would tell a stranger
+            # which emails have accounts whenever the queue is down.
+            try:
+                emails.send_password_reset(user)
+            except OperationalError:
+                logger.exception("Could not queue a password reset email")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -159,11 +170,22 @@ class PasswordResetConfirmView(AnonymousFormView):
         if user is None:
             raise ValidationError({"token": [INVALID_LINK]})
         password = check_password_strength(data.validated_data["password"], user)
-        # A new password changes the session hash, which signs out every other session.
-        user.set_password(password)
-        # Opening the emailed link proves the address, so it also counts as verification.
-        user.email_verified_at = user.email_verified_at or timezone.now()
-        user.save(update_fields=["password", "email_verified_at"])
+        with transaction.atomic():
+            # Reading again under the lock makes the second of two racing uses of a link fail:
+            # the token hashes the password, so the first use has already spent it.
+            lock_rows(User.objects.filter(pk=user.pk))
+            user = read_reset_token(data.validated_data["uid"], data.validated_data["token"])
+            if user is None:
+                raise ValidationError({"token": [INVALID_LINK]})
+            # Nobody had proved this address, so a linked provider may be a stranger who claimed
+            # it. The owner has now proved it: drop the link, as oauth._claim does.
+            if user.email_verified_at is None:
+                user.social_accounts.all().delete()
+            # A new password changes the session hash, which signs out every other session.
+            user.set_password(password)
+            # Opening the emailed link proves the address, so it also counts as verification.
+            user.email_verified_at = user.email_verified_at or timezone.now()
+            user.save(update_fields=["password", "email_verified_at"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
