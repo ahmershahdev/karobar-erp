@@ -11,7 +11,8 @@ export class ApiError extends Error {
 function firstMessage(body: unknown): string | null {
   if (!body || typeof body !== 'object') return null;
   for (const [key, value] of Object.entries(body)) {
-    if (key === 'request_id' || key === 'code') continue;
+    // A string `code` is our machine-readable error code; a field named code holds a list.
+    if (key === 'request_id' || (key === 'code' && typeof value === 'string')) continue;
     if (typeof value === 'string') return value;
     if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
   }

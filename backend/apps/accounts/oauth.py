@@ -244,5 +244,15 @@ def _user_for(provider: str, profile: Profile) -> User:
                 )
         except IntegrityError as exc:
             raise OAuthError("email_in_use") from exc
-    SocialAccount.objects.create(user=user, provider=provider, uid=profile.uid, last_login_at=now)
+    try:
+        with transaction.atomic():
+            SocialAccount.objects.create(
+                user=user, provider=provider, uid=profile.uid, last_login_at=now
+            )
+    except IntegrityError as exc:
+        # A double click on the provider's consent screen: the other callback linked it first.
+        winner = SocialAccount.objects.filter(provider=provider, uid=profile.uid).first()
+        if winner is None:
+            raise OAuthError from exc
+        return winner.user
     return user

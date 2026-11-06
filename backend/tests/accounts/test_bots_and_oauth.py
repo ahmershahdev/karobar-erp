@@ -423,3 +423,14 @@ def test_http_errors_still_return_their_json_and_network_errors_raise(
 def test_without_keys_the_check_is_off() -> None:
     assert not humans.enabled()
     humans.check({}, "signup", None)
+
+
+def test_two_callbacks_racing_to_link_the_same_identity(
+    providers: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    user = create_user(email="owner@example.test", email_verified_at=timezone.now())
+    SocialAccount.objects.create(user=user, provider="google", uid="g-9")
+    # This callback looked before the other one committed, so it saw no link.
+    monkeypatch.setattr(SocialAccount.objects, "select_for_update", SocialAccount.objects.none)
+    profile = oauth.Profile(uid="g-9", email="owner@example.test", name="", email_verified=True)
+    assert oauth._user_for("google", profile) == user
