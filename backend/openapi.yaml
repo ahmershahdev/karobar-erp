@@ -3549,6 +3549,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/CustomerReceipt'
           description: ''
+  /api/sales/tax-rates/:
+    get:
+      operationId: sales_tax_rates_list
+      description: The rates to choose from on a sale. Setting them up stays with
+        accounting.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRate'
+          description: ''
   /api/tenants/:
     get:
       operationId: tenants_list

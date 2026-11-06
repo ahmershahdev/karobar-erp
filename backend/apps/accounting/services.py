@@ -360,13 +360,11 @@ class TaxRateInUseError(AccountingError):
 @transaction.atomic
 def save_tax_rate(actor: User, rate: TaxRate, values: dict[str, Any]) -> TaxRate:
     action = Action.UPDATE if rate.pk else Action.CREATE
-    before = {key: str(getattr(rate, key)) for key in values}
+    before = {key: getattr(rate, key) if rate.pk else None for key in values}
     for key, value in values.items():
         setattr(rate, key, value)
     rate.save()
-    audit.record(
-        action, rate, actor, {key: [before[key], str(value)] for key, value in values.items()}
-    )
+    audit.record(action, rate, actor, {key: [before[key], values[key]] for key in values})
     return rate
 
 

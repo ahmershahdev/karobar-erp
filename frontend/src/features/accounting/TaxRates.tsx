@@ -20,6 +20,15 @@ export function useTaxRates() {
   });
 }
 
+/** The rates to pick from on a sale, for people who sell but don't manage accounting. */
+export function useSaleTaxRates() {
+  const { membership } = useWorkspace();
+  return useQuery({
+    queryKey: [membership.tenant_id, 'tax-rates', 'sale'],
+    queryFn: () => unwrap(api.GET('/api/sales/tax-rates/')),
+  });
+}
+
 export function TaxRatesPage() {
   const { t } = useTranslation();
   const { membership } = useWorkspace();

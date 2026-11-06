@@ -16,7 +16,7 @@ import {
 } from '../../lib/api/types';
 import { today } from '../../lib/dates';
 import { formatMoney, toMinor } from '../../lib/money';
-import { useTaxRates } from '../accounting/TaxRates';
+import { useSaleTaxRates } from '../accounting/TaxRates';
 import { formatQuantity, useWarehouses } from '../inventory/shared';
 import {
   ActionError,
@@ -264,12 +264,14 @@ function SaleEditor({
   const [date, setDate] = useState(today());
   const [warehouse, setWarehouse] = useState('');
   const [lines, setLines] = useState<ItemLine[]>([itemLine(0)]);
-  const rates = useTaxRates();
-  const [rate, setRate] = useState('');
+  const rates = useSaleTaxRates();
+  const [picked, setPicked] = useState('');
   // Only rates that apply on this date. The server checks again, so this is a convenience.
   const usable = rates.data?.filter(
     (item) => item.valid_from <= date && (!item.valid_to || date <= item.valid_to),
   );
+  // Changing the date can rule the picked rate out; then it stops counting, here and on save.
+  const rate = usable?.some((item) => String(item.id) === picked) ? picked : '';
   return (
     <Panel title={title}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -294,7 +296,7 @@ function SaleEditor({
             </option>
           ))}
         </Select>
-        <Select label={t('pur.tax')} value={rate} onChange={(e) => setRate(e.target.value)}>
+        <Select label={t('pur.tax')} value={rate} onChange={(e) => setPicked(e.target.value)}>
           <option value="">{t('tax.typeIt')}</option>
           {usable?.map((item) => (
             <option key={item.id} value={item.id}>

@@ -28,6 +28,14 @@ class TaxRateSerializer(serializers.ModelSerializer[TaxRate]):
         }
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        # Documents point at this row, so what it says must never change under them. A new
+        # percentage is a new rate: end this one and add the next.
+        if self.instance is not None:
+            for field in ("rate", "valid_from"):
+                if field in attrs and attrs[field] != getattr(self.instance, field):
+                    raise serializers.ValidationError(
+                        {field: "End this rate and add a new one instead."}
+                    )
         start = attrs.get("valid_from") or getattr(self.instance, "valid_from", None)
         end = attrs.get("valid_to", getattr(self.instance, "valid_to", None))
         if start and end and end < start:

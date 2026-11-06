@@ -160,6 +160,14 @@ def _line_tax(line: OrderLineInput | InvoiceLineInput, on: date) -> Decimal:
     return tax_on(line_amount(line.quantity, line.unit_price), rate.rate)
 
 
+def _still_valid(rate: TaxRate | None, on: date) -> TaxRate | None:
+    """An order can outlive its rate, for example across a budget. It must still be invoiceable,
+    so a rate that has ended is dropped and the line keeps the tax the customer agreed to."""
+    if rate is None or not is_valid_on(rate.valid_from, rate.valid_to, on):
+        return None
+    return rate
+
+
 # Customers reuse the audited master-data helpers of inventory.
 save_customer = inventory.save_master
 delete_customer = inventory.delete_master
@@ -383,7 +391,7 @@ def invoice_order(actor: User, order: SalesOrder, on: date) -> Invoice:
                 line.quantity,
             ),
             line,
-            tax_rate=line.tax_rate,
+            tax_rate=_still_valid(line.tax_rate, on),
         )
         for line in locked.lines.select_related("product", "unit", "tax_rate")
         if line.invoiced_quantity < line.quantity

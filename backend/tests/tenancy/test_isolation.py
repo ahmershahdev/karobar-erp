@@ -403,6 +403,7 @@ def _tax_rate(member: Member) -> int:
 
 
 _register("accounting/tax-rates", _tax_rate)
+tenant_endpoint("api/sales/tax-rates/")(lambda m: ("/api/sales/tax-rates/", _tax_rate(m)))
 _register("sales/customers", lambda m: _customer(m).pk)
 _register("sales/orders", lambda m: _sales_order(m).pk)
 _register("sales/invoices", lambda m: _invoice(m).pk)

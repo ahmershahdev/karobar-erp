@@ -497,3 +497,17 @@ def test_an_order_passes_its_rate_on_to_the_invoice(seller: Seller) -> None:
     )
     assert made.tax == D("36.00")
     assert made.lines.get().tax_rate == rate
+
+
+def test_an_order_can_be_invoiced_after_its_rate_has_ended(seller: Seller) -> None:
+    rate = gst()
+    draft = services.save_order(
+        seller.user,
+        {"customer": seller.customer, "warehouse": seller.shop.main, "date": timezone.localdate()},
+        [services.OrderLineInput(seller.shop.soap, seller.shop.pcs, D(2), D(100), tax_rate=rate)],
+    )
+    confirmed = services.confirm_order(seller.user, draft)
+    TaxRate.objects.filter(pk=rate.pk).update(valid_to=timezone.localdate())
+    made = services.invoice_order(seller.user, confirmed, timezone.localdate() + timedelta(days=1))
+    assert made.tax == D("36.00")
+    assert made.lines.get().tax_rate is None

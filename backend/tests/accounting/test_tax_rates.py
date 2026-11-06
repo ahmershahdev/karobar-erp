@@ -50,3 +50,20 @@ def test_a_rate_can_be_ended_and_an_unused_one_deleted(bookkeeper: Member) -> No
     assert rate.valid_to == date(2027, 6, 30)
     services.delete_tax_rate(bookkeeper.user, rate)
     assert not TaxRate.objects.filter(pk=rate.pk).exists()
+
+
+def test_what_a_rate_says_cannot_change_once_saved(bookkeeper: Member) -> None:
+    rate = TaxRate.objects.create(
+        name="GST", rate=Decimal(18), valid_from=date(2026, 7, 1), source="Invented"
+    )
+    client = bookkeeper.client()
+    url = f"/api/accounting/tax-rates/{rate.pk}/"
+    assert client.patch(url, {"rate": "17"}, format="json").status_code == 400
+    assert client.patch(url, {"valid_from": "2026-08-01"}, format="json").status_code == 400
+    assert client.patch(url, {"rate": "18.0000"}, format="json").status_code == 200
+
+
+def test_a_new_rate_is_audited_with_nothing_before_it(bookkeeper: Member) -> None:
+    bookkeeper.client().post("/api/accounting/tax-rates/", BODY, format="json")
+    event = AuditEvent.objects.filter(action="create", model__icontains="taxrate").latest("id")
+    assert event.changes["name"] == [None, "GST"]

@@ -13,6 +13,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounting.models import TaxRate
+from apps.accounting.serializers import TaxRateSerializer
 from apps.accounting.services import AccountingError
 from apps.accounts.models import User
 from apps.inventory.services import InventoryError
@@ -300,6 +302,16 @@ class InvoiceCreditView(SalesView, generics.GenericAPIView[Invoice]):
     def post(self, request: Request, pk: int) -> Response:
         note = run(services.credit_invoice, actor(request), self.get_object(), _on(request))
         return Response(CreditNoteSerializer(CREDIT.queryset().get(pk=note.pk)).data, 201)
+
+
+class SalesTaxRateListView(SalesView, generics.ListAPIView[TaxRate]):
+    """The rates to choose from on a sale. Setting them up stays with accounting."""
+
+    serializer_class = TaxRateSerializer
+    pagination_class = None
+
+    def get_queryset(self) -> QuerySet[TaxRate]:
+        return TaxRate.objects.all()
 
 
 class CustomerStatementView(SalesView, generics.GenericAPIView[Customer]):
