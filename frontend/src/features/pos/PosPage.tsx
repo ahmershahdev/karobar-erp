@@ -424,13 +424,15 @@ export function PosPage() {
   const warehouses = useQuery({
     queryKey: [membership.tenant_id, 'pos', 'warehouses'],
     queryFn: () => unwrap(api.GET('/api/pos/warehouses/')),
+    refetchOnMount: 'always',
   });
   // Stock and cash belong to one store, so with several stores the cashier says which is theirs.
   // Another store's open till must never be picked up by accident.
   const stores = warehouses.data ?? [];
   const known = stores.some((item) => String(item.id) === picked);
   // A store named in the address is never swapped for another: sales would land in the wrong one.
-  const onlyStore = stores.length === 1 ? String(stores[0]?.id) : '';
+  // Only from a fresh list: a stale one showing a single store would lock in the wrong one.
+  const onlyStore = stores.length === 1 && !warehouses.isFetching ? String(stores[0]?.id) : '';
   const store = picked ? (known ? picked : '') : onlyStore;
   // Written down too, or adding a second store would clear the choice and close an open sale.
   useEffect(() => {
@@ -472,7 +474,9 @@ export function PosPage() {
           </Select>
         </div>
       )}
-      {tills.isPending || warehouses.isPending ? null : warehouses.isError && !warehouses.data ? (
+      {tills.isPending ||
+      warehouses.isPending ||
+      (!picked && warehouses.isFetching) ? null : warehouses.isError && !warehouses.data ? (
         <ActionError error={warehouses.error} />
       ) : stores.length === 0 ? (
         <Panel title={t('pos.noStore')}>
