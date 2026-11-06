@@ -6,7 +6,7 @@ Last updated: 2026-11-06. Update at the end of every work session.
 
 - On `main`: #21 (Resend, reCAPTCHA, OAuth, with the Google account takeover closed), #22 (white design, real logo, offline and 404 screens, Brotli, service worker, business slugs, clean URLs) and #20 (M4 purchasing).
 - M4 is released as `v0.4.0`: purchasing, sales, statements, ageing and PDF invoices and receipts. PDFs need Pango, so a Windows machine answers with a plain message.
-- M5 reports: profit and loss, balance sheet, cash flow, sales tax report and the dashboard.
+- M5: reports, tax rates as dated data, and the counter (POS): barcode scan, cash and card, change, printing, end-of-day count.
 - Not tested: the v2 checkbox being ticked by a person, Google and Facebook sign-in end to end, and the sales screens in Urdu and Arabic by a native reader.
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
   The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
@@ -49,8 +49,8 @@ Last updated: 2026-11-06. Update at the end of every work session.
 
 ## Next session
 
-1. M5: tax rates as data with validity dates, tax on every document line, then the POS screen.
-2. Indexes and query checks for reports on 1 million document lines.
+1. M5: indexes and query checks for reports on 1 million document lines, then tag `v0.5.0`.
+2. M6: HR and payroll.
 
 ## Open questions
 

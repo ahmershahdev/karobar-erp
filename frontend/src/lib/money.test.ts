@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { formatMoney, fromMinor, toMinor } from './money';
+import { formatMoney, fromMinor, lineMinor, taxMinor, toMinor } from './money';
 
 it('converts decimal strings to minor units without float drift', () => {
   expect(toMinor('0.1') + toMinor('0.2')).toBe(30);
@@ -22,4 +22,14 @@ it('reads strings as rupees and numbers as paisa, which callers must not mix up'
   expect(formatMoney('590', 'en')).toBe('590.00');
   expect(formatMoney(59000, 'en')).toBe('590.00');
   expect(formatMoney(toMinor('1180') - toMinor('590.50'), 'en')).toBe('589.50');
+});
+
+it('rounds a line and its tax the way the invoice does, without float error', () => {
+  // 1.005 * 100 is 100.49999... in floats, which would show one paisa less than the invoice.
+  expect(lineMinor('1.0050', 1)).toBe(101);
+  expect(taxMinor(lineMinor('1.0050', 1), '10.0000')).toBe(10);
+  expect(lineMinor('100.0000', 2)).toBe(20000);
+  expect(lineMinor('0.0049', 1)).toBe(0);
+  expect(taxMinor(50, '1.0000')).toBe(1);
+  expect(taxMinor(1999, '17.5000')).toBe(350);
 });

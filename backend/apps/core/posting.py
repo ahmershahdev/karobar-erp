@@ -115,6 +115,17 @@ def credit_note(net: Decimal, tax: Decimal = ZERO) -> list[Line]:
     )
 
 
+def cash_difference(difference: Decimal) -> list[Line]:
+    """What the till count found against what it should hold. Below zero means cash is missing.
+
+    Short: Dr cash over and short, Cr cash. Over: Dr cash, Cr cash over and short.
+    """
+    amount = abs(difference)
+    if difference < 0:
+        return _lines(("cash_over_short", amount, ZERO), ("cash", ZERO, amount))
+    return _lines(("cash", amount, ZERO), ("cash_over_short", ZERO, amount))
+
+
 def stock_in(value: Decimal, contra: str) -> list[Line]:
     """Stock arrives without a supplier bill (opening stock, a count that found more).
 

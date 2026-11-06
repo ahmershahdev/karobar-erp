@@ -37,7 +37,7 @@ def test_a_new_business_gets_a_chart_a_year_and_a_series() -> None:
     ).json()
     client.credentials(HTTP_X_TENANT=body["tenant_id"])
     accounts = client.get("/api/accounting/accounts/").json()
-    assert len(accounts) == 38
+    assert len(accounts) == 39
     assert {a["role"] for a in accounts} >= {"cash", "receivables", "sales", "tax_output"}
     years = client.get("/api/accounting/fiscal-years/").json()
     assert len(years) == 1
@@ -330,7 +330,7 @@ def test_account_parents_cannot_loop(bookkeeper: Member) -> None:
     top = Account.objects.get(code="6000")
     middle = client.post(
         "/api/accounting/accounts/",
-        {"code": "6800", "name": "Office", "type": "expense", "is_group": True, "parent": top.pk},
+        {"code": "6810", "name": "Office", "type": "expense", "is_group": True, "parent": top.pk},
         format="json",
     ).json()["id"]
     looped = client.patch(f"/api/accounting/accounts/{top.pk}/", {"parent": middle}, format="json")

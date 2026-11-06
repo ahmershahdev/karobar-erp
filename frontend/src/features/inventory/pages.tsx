@@ -16,6 +16,57 @@ import { formatQuantity, useList, useUnits, useWarehouses } from './shared';
 
 type Kind = 'receipt' | 'issue' | 'transfer' | 'adjustment';
 
+// Saved when the box is left, so filling in a whole catalogue of prices is just typing and Tab.
+// The typed text lives here only during an edit; otherwise the box shows the server's price, so
+// a price changed elsewhere can never be written back over by stale text. The box is locked while
+// its save runs, so saves for one product cannot overlap and land out of order.
+function PriceCell({ product }: { product: Product }) {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const save = useTenantAction(['products']);
+  const stored = product.sale_price ?? '';
+  const [draft, setDraft] = useState<string | null>(null);
+  const value = draft ?? (stored ? String(Number(stored)) : '');
+  if (!can(membership, 'inventory', 'update')) {
+    return <>{stored ? Number(stored) : t('pos.noPrice')}</>;
+  }
+  return (
+    <>
+      <input
+        aria-label={`${t('pos.sellingPrice')}: ${product.name}`}
+        inputMode="decimal"
+        placeholder={t('pos.noPrice')}
+        className={`${CELL_INPUT} w-28 text-end font-mono ${value ? '' : 'border-red/40'}`}
+        value={value}
+        readOnly={save.isPending}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+        }}
+        onBlur={() => {
+          if (draft === null || save.isPending) return;
+          if (draft === '' ? stored === '' : Number(draft) === Number(stored)) {
+            setDraft(null);
+            return;
+          }
+          const body = { sale_price: draft || null } as never;
+          save.mutate(
+            () =>
+              unwrap(
+                api.PATCH('/api/inventory/products/{id}/', {
+                  params: { path: { id: product.id } },
+                  body,
+                }),
+              ),
+            { onSuccess: () => setDraft(null) },
+          );
+        }}
+      />
+      {save.isError && <span className="block text-xs text-red">{errorText(save.error, '')}</span>}
+    </>
+  );
+}
+
 export function ProductsPage() {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
@@ -31,7 +82,14 @@ export function ProductsPage() {
       ),
   });
   const save = useTenantAction(['products', 'products-all']);
-  const [form, setForm] = useState({ sku: '', name: '', unit: '', reorder: '', batches: false });
+  const [form, setForm] = useState({
+    sku: '',
+    name: '',
+    unit: '',
+    reorder: '',
+    price: '',
+    batches: false,
+  });
   const [pack, setPack] = useState({ unit: '', factor: '', barcode: '' });
 
   const submit = () => {
@@ -48,6 +106,7 @@ export function ProductsPage() {
               name: form.name,
               unit: Number(form.unit),
               reorder_level: form.reorder || '0',
+              sale_price: form.price || null,
               track_batches: form.batches,
               packs,
             } as never,
@@ -55,7 +114,7 @@ export function ProductsPage() {
         ),
       {
         onSuccess: () => {
-          setForm({ sku: '', name: '', unit: form.unit, reorder: '', batches: false });
+          setForm({ sku: '', name: '', unit: form.unit, reorder: '', price: '', batches: false });
           setPack({ unit: '', factor: '', barcode: '' });
         },
       },
@@ -102,6 +161,12 @@ export function ProductsPage() {
                 </option>
               ))}
             </Select>
+            <Field
+              label={t('pos.sellingPrice')}
+              inputMode="decimal"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+            />
             <Field
               label={t('inv.reorderLevel')}
               inputMode="decimal"
@@ -173,6 +238,7 @@ export function ProductsPage() {
                 <th className={TH}>{t('inv.sku')}</th>
                 <th className={TH}>{t('acc.name')}</th>
                 <th className={TH}>{t('inv.packs')}</th>
+                <th className={`${TH} text-end`}>{t('pos.sellingPrice')}</th>
                 <th className={`${TH} text-end`}>{t('inv.onHand')}</th>
               </tr>
             </thead>
@@ -192,6 +258,9 @@ export function ProductsPage() {
                       (item) =>
                         ` · ${item.unit_code} ×${formatQuantity(item.factor, i18n.resolvedLanguage)}`,
                     )}
+                  </td>
+                  <td className={NUM}>
+                    <PriceCell product={product} />
                   </td>
                   <td className={NUM}>
                     {formatQuantity(product.on_hand, i18n.resolvedLanguage)} {product.unit_code}

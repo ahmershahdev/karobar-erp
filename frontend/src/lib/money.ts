@@ -25,3 +25,19 @@ export function formatMoney(value: string | number, locale: string | undefined):
     maximumFractionDigits: 2,
   }).format(minor / 100);
 }
+
+// Exact decimal text as a whole number, for example ("1.005", 4) is 10050n.
+function scaled(value: string, places: number): bigint {
+  const [whole = '0', fraction = ''] = value.split('.');
+  return BigInt(whole + fraction.padEnd(places, '0').slice(0, places));
+}
+
+/** Quantity times a price of up to four decimals, in paisa, rounded as the invoice rounds it. */
+export function lineMinor(price: string, quantity: number): number {
+  return Number((scaled(price, 4) * BigInt(quantity) + 50n) / 100n);
+}
+
+/** Tax in paisa on a line already rounded by lineMinor, rounded as the invoice rounds it. */
+export function taxMinor(amount: number, ratePercent: string): number {
+  return Number((BigInt(amount) * scaled(ratePercent, 4) + 500_000n) / 1_000_000n);
+}

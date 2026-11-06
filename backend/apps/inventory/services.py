@@ -179,6 +179,7 @@ def save_product(
         "variant_of_id",
         "track_batches",
         "reorder_level",
+        "sale_price",
         "is_active",
     )
     saved: Product = _save(actor, target, values, fields)

@@ -22,6 +22,7 @@ import {
 } from '../features/accounting/pages';
 import { TaxRatesPage } from '../features/accounting/TaxRates';
 import { useMe } from '../features/auth/session';
+import { PosPage } from '../features/pos/PosPage';
 import {
   BalanceSheetPage,
   CashFlowPage,
@@ -172,6 +173,7 @@ export default function AppRoutes() {
         <Route path="reports/balance-sheet" element={<BalanceSheetPage />} />
         <Route path="reports/cash-flow" element={<CashFlowPage />} />
         <Route path="reports/sales-tax" element={<SalesTaxPage />} />
+        <Route path="counter" element={<PosPage />} />
         <Route path="sales/invoices" element={<InvoicesPage />} />
         <Route path="sales/receipts" element={<MoneyReceivedPage />} />
         <Route path="sales/customers" element={<CustomersPage />} />

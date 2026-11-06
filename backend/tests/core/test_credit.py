@@ -37,3 +37,14 @@ def test_credit_note_without_tax_has_no_tax_line() -> None:
         "sales_returns",
         "receivables",
     ]
+
+
+def test_cash_difference_books_short_and_over_the_right_way_round() -> None:
+    assert posting.cash_difference(D("-10")) == [
+        Line("cash_over_short", D("10.00"), D("0.00")),
+        Line("cash", D("0.00"), D("10.00")),
+    ]
+    assert posting.cash_difference(D("5")) == [
+        Line("cash", D("5.00"), D("0.00")),
+        Line("cash_over_short", D("0.00"), D("5.00")),
+    ]

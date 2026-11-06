@@ -91,6 +91,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "attributes",
             "track_batches",
             "reorder_level",
+            "sale_price",
             "is_active",
             "packs",
             "on_hand",
@@ -100,6 +101,7 @@ class ProductSerializer(serializers.ModelSerializer[Product]):
             "sku": {"max_length": 40},
             "name": {"max_length": 150},
             "reorder_level": {"min_value": 0, "required": False},
+            "sale_price": {"min_value": 0, "required": False, "allow_null": True},
             "attributes": {"required": False},
         }
 
