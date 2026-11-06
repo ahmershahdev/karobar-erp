@@ -32,6 +32,7 @@ import {
   type ItemLine,
 } from '../purchasing/pages';
 import { useTenantAction, useWorkspace } from '../workspace/hooks';
+import { PrintButton, StatementPanel } from './ledgers';
 import { NUM, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
@@ -106,10 +107,26 @@ export function CustomersPage() {
   const save = useTenantAction(KEYS);
   const empty = { code: '', name: '', phone: '', limit: '', terms: '0' };
   const [form, setForm] = useState(empty);
+  const [viewing, setViewing] = useState<Customer | null>(null);
   const set = (patch: Partial<typeof empty>) => setForm({ ...form, ...patch });
   return (
     <>
       <PageTitle title={t('sal.customers')} subtitle={t('sal.customersBody')} />
+      {viewing && (
+        <StatementPanel
+          key={viewing.id}
+          title={viewing.name}
+          queryKey={`statement-${viewing.id}`}
+          onClose={() => setViewing(null)}
+          load={(query) =>
+            unwrap(
+              api.GET('/api/sales/customers/{id}/statement/', {
+                params: { path: { id: viewing.id }, query },
+              }),
+            )
+          }
+        />
+      )}
       {can(membership, 'sales', 'create') && (
         <Panel title={t('sal.newCustomer')}>
           <form
@@ -186,7 +203,15 @@ export function CustomersPage() {
             <tbody>
               {customers.data?.results.map((customer: Customer) => (
                 <tr key={customer.id} className="border-t border-line">
-                  <td className={TD}>{customer.name}</td>
+                  <td className={TD}>
+                    <button
+                      type="button"
+                      className="text-start underline underline-offset-4"
+                      onClick={() => setViewing(customer)}
+                    >
+                      {customer.name}
+                    </button>
+                  </td>
                   <td className={TD}>{customer.phone}</td>
                   <td className={NUM}>
                     {customer.credit_limit == null
@@ -466,6 +491,7 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
             {t('workspace.remove')}
           </Button>
         )}
+        {!draft && <PrintButton path={`/api/sales/invoices/${invoice.id}/pdf/`} />}
         {!draft && returnable && can(membership, 'sales', 'create') && (
           <Button
             variant="ghost"
@@ -677,6 +703,7 @@ function ReceiptRow({ receipt }: { receipt: CustomerReceipt }) {
             {t('sal.postReceipt')}
           </Button>
         )}
+        {!draft && <PrintButton path={`/api/sales/receipts/${receipt.id}/pdf/`} />}
         {draft && can(membership, 'sales', 'delete') && (
           <Button
             variant="danger"

@@ -1,3 +1,4 @@
+import sys
 import threading
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ from apps.accounting.reports import trial_balance
 from apps.accounts.models import User
 from apps.inventory import services as inventory
 from apps.inventory.models import StockEntry, StockLevel
-from apps.sales import services
+from apps.sales import documents, reports, services
 from apps.sales.models import CreditNote, Customer, CustomerReceipt, Invoice, SalesOrder
 from apps.tenancy.context import tenant_context
 from tests.inventory.conftest import Shop, make_shop
@@ -368,3 +369,72 @@ def test_two_invoices_cannot_both_slip_under_a_credit_limit() -> None:
     for thread in threads:
         thread.join()
     assert sorted(outcomes) == ["posted", "refused"]
+
+
+def test_a_statement_runs_from_sale_to_payment_to_return(seller: Seller) -> None:
+    sold = invoice(seller)
+    receipt(seller, "180", [(sold, "180")])
+    services.post_credit_note(
+        seller.user, services.credit_invoice(seller.user, sold, timezone.localdate())
+    )
+    statement = reports.statement(seller.customer, None, timezone.localdate())
+    assert sorted(line.entry.kind for line in statement.lines) == ["invoice", "receipt", "return"]
+    assert statement.closing == owed(seller)
+
+
+def test_ageing_splits_by_days_overdue_and_shows_advances(seller: Seller) -> None:
+    today = timezone.localdate()
+    sold = invoice(seller, quantity="1", tax="0")
+    Invoice.objects.filter(pk=sold.pk).update(due_date=today - timedelta(days=45))
+    invoice(seller, quantity="2", tax="0")
+    row = reports.ageing(today)[0]
+    assert row["name"] == "Invented Kiryana"
+    assert row["days_31_60"] == D("100.00")
+    assert row["total"] == D("300.00")
+    assert row["advance"] == D(0)
+    receipt(seller, "50", [])
+    row = reports.ageing(today)[0]
+    assert row["advance"] == D("50.00")
+    assert row["total"] == D("250.00")
+
+
+def test_paid_up_customers_are_left_out_of_ageing(seller: Seller) -> None:
+    assert reports.ageing(timezone.localdate()) == []
+
+
+@pytest.mark.parametrize("language", ["en", "ur", "ar"])
+def test_invoices_and_receipts_print_in_each_language(seller: Seller, language: str) -> None:
+    sold = invoice(seller)
+    paid = receipt(seller, "100", [(sold, "100")])
+    html = documents.invoice_html(Invoice.objects.get(pk=sold.pk), language)
+    assert str(sold.number) in html
+    assert documents.LABELS[language]["invoice"] in html
+    assert "1,180.00" in html
+    assert "1,080.00" not in html.split(documents.LABELS[language]["paid"])[0]
+    assert ('dir="ltr"' if language == "en" else 'dir="rtl"') in html
+    assert documents.LABELS[language]["receipt"] in documents.receipt_html(paid, language)
+
+
+def test_a_customer_name_cannot_inject_html_into_a_printout(seller: Seller) -> None:
+    seller.customer.name = "<script>alert(1)</script>"
+    seller.customer.save()
+    html = documents.invoice_html(invoice(seller), "en")
+    assert "<script>" not in html
+
+
+def test_printing_says_so_when_the_pdf_libraries_are_missing(
+    seller: Seller, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setitem(sys.modules, "weasyprint", None)
+    with pytest.raises(documents.PdfUnavailableError):
+        documents.to_pdf("<p>x</p>")
+
+
+def test_only_posted_documents_print(seller: Seller) -> None:
+    client = seller.shop.member.client()
+    draft = services.save_invoice(
+        seller.user,
+        {"customer": seller.customer, "warehouse": seller.shop.main, "date": timezone.localdate()},
+        [services.InvoiceLineInput(seller.shop.soap, seller.shop.pcs, D(1), D(1))],
+    )
+    assert client.get(f"/api/sales/invoices/{draft.pk}/pdf/").status_code == 400

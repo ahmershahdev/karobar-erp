@@ -473,6 +473,10 @@
       "takeMoney": {
         "title": "Money received",
         "body": "A customer paid you"
+      },
+      "whoOwes": {
+        "title": "Who owes me?",
+        "body": "See who has not paid, and for how long"
       }
     }
   },
@@ -945,5 +949,35 @@
     "returnsBody": "Goods that came back. Posting puts them in stock and takes the amount off what the customer owes.",
     "returnsHint": "To start a return, open the sale under Sales bills and press \"Customer returned goods\".",
     "postReturn": "Post return"
+  },
+  "led": {
+    "receivables": "Who owes me",
+    "receivablesBody": "What each customer still has to pay, by how late it is.",
+    "payables": "Who I owe",
+    "payablesBody": "What you still have to pay each supplier, by how late it is.",
+    "allClear": "Nothing is owed. All clear.",
+    "current": "Not due yet",
+    "days_1_30": "1 to 30 days late",
+    "days_31_60": "31 to 60 days late",
+    "days_61_90": "61 to 90 days late",
+    "over_90": "Over 90 days late",
+    "advance": "Advance held",
+    "total": "Total",
+    "from": "From",
+    "to": "To",
+    "document": "Document",
+    "charged": "Charged",
+    "paid": "Paid",
+    "balance": "Balance",
+    "opening": "Balance before this",
+    "closing": "Balance now",
+    "print": "Print",
+    "kind": {
+      "invoice": "Sale",
+      "receipt": "Money received",
+      "return": "Return",
+      "bill": "Bill",
+      "payment": "Payment"
+    }
   }
 }

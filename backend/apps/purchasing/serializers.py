@@ -279,5 +279,37 @@ class SupplierPaymentSerializer(_DocumentSerializer):
         return capped(value)
 
 
+class StatementQuerySerializer(serializers.Serializer[Any]):
+    start = serializers.DateField(required=False)
+    end = serializers.DateField(required=False)
+
+
+class StatementLineSerializer(serializers.Serializer[Any]):
+    date = serializers.DateField(source="entry.date")
+    number = serializers.CharField(source="entry.number")
+    kind = serializers.CharField(source="entry.kind")
+    charged = serializers.DecimalField(source="entry.charged", max_digits=18, decimal_places=2)
+    paid = serializers.DecimalField(source="entry.paid", max_digits=18, decimal_places=2)
+    balance = serializers.DecimalField(max_digits=18, decimal_places=2)
+
+
+class StatementSerializer(serializers.Serializer[Any]):
+    opening = serializers.DecimalField(max_digits=18, decimal_places=2)
+    lines = StatementLineSerializer(many=True)
+    closing = serializers.DecimalField(max_digits=18, decimal_places=2)
+
+
+class AgeingRowSerializer(serializers.Serializer[Any]):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    current = serializers.DecimalField(max_digits=18, decimal_places=2)
+    days_1_30 = serializers.DecimalField(max_digits=18, decimal_places=2)
+    days_31_60 = serializers.DecimalField(max_digits=18, decimal_places=2)
+    days_61_90 = serializers.DecimalField(max_digits=18, decimal_places=2)
+    over_90 = serializers.DecimalField(max_digits=18, decimal_places=2)
+    advance = serializers.DecimalField(max_digits=18, decimal_places=2)
+    total = serializers.DecimalField(max_digits=18, decimal_places=2)
+
+
 class DateSerializer(serializers.Serializer[None]):
     date = serializers.DateField(required=False)

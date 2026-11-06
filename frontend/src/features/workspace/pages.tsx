@@ -111,6 +111,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
 const TASKS = [
   { key: 'sell', icon: 'bills', path: 'sales/invoices', module: 'sales' },
   { key: 'takeMoney', icon: 'payments', path: 'sales/receipts', module: 'sales' },
+  { key: 'whoOwes', icon: 'audit', path: 'sales/owed-to-me', module: 'sales' },
   { key: 'addProduct', icon: 'products', path: 'inventory/products', module: 'inventory' },
   { key: 'moveStock', icon: 'entries', path: 'inventory/entries', module: 'inventory' },
   { key: 'seeStock', icon: 'on-hand', path: 'inventory/on-hand', module: 'inventory' },

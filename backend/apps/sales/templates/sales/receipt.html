@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="{{ language }}" dir="{{ dir }}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ labels.receipt }} {{ receipt.number }}</title>
+    {% include "sales/_print.css.html" %}
+  </head>
+  <body>
+    <div class="head">
+      <div class="business">{{ business }}</div>
+      <div>
+        <h1>{{ labels.receipt }}</h1>
+        <div class="muted">{{ labels.number }}: <span class="num">{{ receipt.number }}</span></div>
+      </div>
+    </div>
+    <div class="facts">
+      <div>{{ labels.customer }}: {{ receipt.customer.name }}</div>
+      <div class="muted">{{ labels.date }}: <span class="num">{{ receipt.date|date:"Y-m-d" }}</span></div>
+      {% if receipt.reference %}
+        <div class="muted">{{ labels.reference }}: {{ receipt.reference }}</div>
+      {% endif %}
+    </div>
+    <div class="totals">
+      <div class="grand"><span>{{ labels.amount }} ({{ currency }})</span><span class="num">{{ amount }}</span></div>
+    </div>
+    <p class="muted">{{ labels.received }}</p>
+  </body>
+</html>

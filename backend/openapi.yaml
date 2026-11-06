@@ -1543,6 +1543,22 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/purchasing/ageing/:
+    get:
+      operationId: purchasing_ageing_list
+      tags:
+      - purchasing
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgeingRow'
+          description: ''
   /api/purchasing/bills/:
     get:
       operationId: purchasing_bills_list
@@ -2302,6 +2318,36 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/purchasing/suppliers/{id}/statement/:
+    get:
+      operationId: purchasing_suppliers_statement_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - purchasing
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statement'
+          description: ''
   /api/roles/:
     get:
       operationId: roles_list
@@ -2421,6 +2467,22 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/sales/ageing/:
+    get:
+      operationId: sales_ageing_list
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgeingRow'
+          description: ''
   /api/sales/credit-notes/:
     get:
       operationId: sales_credit_notes_list
@@ -2678,6 +2740,36 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/sales/customers/{id}/statement/:
+    get:
+      operationId: sales_customers_statement_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statement'
+          description: ''
   /api/sales/invoices/:
     get:
       operationId: sales_invoices_list
@@ -2826,6 +2918,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreditNote'
+          description: ''
+  /api/sales/invoices/{id}/pdf/:
+    get:
+      operationId: sales_invoices_pdf_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: lang
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/sales/invoices/{id}/post/:
     post:
@@ -3179,6 +3296,31 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/sales/receipts/{id}/pdf/:
+    get:
+      operationId: sales_receipts_pdf_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: lang
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/sales/receipts/{id}/post/:
     post:
       operationId: sales_receipts_post_create
@@ -3287,6 +3429,51 @@ components:
         * `update` - Update
         * `delete` - Delete
         * `post` - Post
+    AgeingRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        current:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        days_1_30:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        days_31_60:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        days_61_90:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        over_90:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        advance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - advance
+      - current
+      - days_1_30
+      - days_31_60
+      - days_61_90
+      - id
+      - name
+      - over_90
+      - total
     Alerts:
       type: object
       properties:
@@ -5378,6 +5565,54 @@ components:
       required:
       - email
       - password
+    Statement:
+      type: object
+      properties:
+        opening:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementLine'
+        closing:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - closing
+      - lines
+      - opening
+    StatementLine:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        number:
+          type: string
+        kind:
+          type: string
+        charged:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - balance
+      - charged
+      - date
+      - kind
+      - number
+      - paid
     StatusEnum:
       enum:
       - draft

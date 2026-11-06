@@ -28,6 +28,7 @@ import {
   ReceiptsPage as MoneyReceivedPage,
   ReturnsPage,
 } from '../features/sales/pages';
+import { PayablesPage, ReceivablesPage } from '../features/sales/ledgers';
 import {
   AlertsPage,
   InventorySetupPage,
@@ -154,6 +155,8 @@ export default function AppRoutes() {
         <Route path="sales/customers" element={<CustomersPage />} />
         <Route path="sales/orders" element={<SalesOrdersPage />} />
         <Route path="sales/returns" element={<ReturnsPage />} />
+        <Route path="sales/owed-to-me" element={<ReceivablesPage />} />
+        <Route path="purchasing/owed-by-me" element={<PayablesPage />} />
         <Route path="purchasing/suppliers" element={<SuppliersPage />} />
         <Route path="purchasing/orders" element={<OrdersPage />} />
         <Route path="purchasing/receipts" element={<ReceiptsPage />} />
