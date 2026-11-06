@@ -466,7 +466,7 @@ export function PosPage() {
           </Select>
         </div>
       )}
-      {tills.isPending || warehouses.isPending ? null : warehouses.isError ? (
+      {tills.isPending || warehouses.isPending ? null : warehouses.isError && !warehouses.data ? (
         <ActionError error={warehouses.error} />
       ) : stores.length === 0 ? (
         <Panel title={t('pos.noStore')}>
