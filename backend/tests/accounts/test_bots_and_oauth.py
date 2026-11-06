@@ -228,6 +228,18 @@ def test_google_takes_an_unverified_account_from_whoever_registered_it(
     assert not squatter.has_usable_password()
 
 
+def test_google_removes_a_squatter_who_came_in_through_another_provider(
+    providers: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    squatter = create_user(email="owner@example.test")
+    SocialAccount.objects.create(user=squatter, provider="facebook", uid="fb-1")
+    fake_provider(
+        monkeypatch, {"sub": "g-5", "email": "owner@example.test", "email_verified": True}
+    )
+    sign_in("google")
+    assert list(squatter.social_accounts.values_list("provider", flat=True)) == ["google"]
+
+
 def test_google_keeps_the_password_of_a_verified_account(
     providers: None, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -434,3 +446,14 @@ def test_two_callbacks_racing_to_link_the_same_identity(
     monkeypatch.setattr(SocialAccount.objects, "select_for_update", SocialAccount.objects.none)
     profile = oauth.Profile(uid="g-9", email="owner@example.test", name="", email_verified=True)
     assert oauth._user_for("google", profile) == user
+
+
+def test_losing_a_race_leaves_no_account_behind(
+    providers: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    user = create_user(email="winner@example.test", email_verified_at=timezone.now())
+    SocialAccount.objects.create(user=user, provider="facebook", uid="fb-9")
+    monkeypatch.setattr(SocialAccount.objects, "select_for_update", SocialAccount.objects.none)
+    profile = oauth.Profile(uid="fb-9", email="other@example.test", name="", email_verified=False)
+    assert oauth._user_for("facebook", profile) == user
+    assert not User.objects.filter(email="other@example.test").exists()
