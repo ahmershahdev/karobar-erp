@@ -122,7 +122,7 @@ export function HowItWorks() {
 export function Roadmap() {
   const { t } = useTranslation();
   const items = t('home.roadmap.items', { returnObjects: true }) as (Titled & { key: string })[];
-  const shipped = 3;
+  const shipped = 4;
   return (
     <section className="shell py-24 md:py-36">
       <SectionHeading

@@ -30,12 +30,10 @@ export function Honeypot({
 
 export function Checkbox({
   siteKey,
-  v3Key,
   onToken,
   onFailed,
 }: {
   siteKey: string;
-  v3Key: string;
   onToken: (token: string) => void;
   onFailed: () => void;
 }) {
@@ -47,7 +45,7 @@ export function Checkbox({
     // StrictMode runs this twice before the script arrives; only the live run may render.
     let active = true;
     const render = async () => {
-      const grecaptcha = await loadRecaptcha(v3Key);
+      const grecaptcha = await loadRecaptcha();
       if (!active || container.childElementCount) return;
       grecaptcha.render(container, {
         sitekey: siteKey,
@@ -62,7 +60,7 @@ export function Checkbox({
     return () => {
       active = false;
     };
-  }, [siteKey, v3Key, onToken, onFailed]);
+  }, [siteKey, onToken, onFailed]);
   return (
     <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
       <p className="text-sm text-ink">{t('auth.robotCheck')}</p>
@@ -71,6 +69,38 @@ export function Checkbox({
       <div className="h-[78px] origin-left max-[360px]:scale-90 rtl:origin-right" ref={box} />
     </div>
   );
+}
+
+/**
+ * Google's v3 badge, in the form it protects rather than floating over the corner of the screen.
+ * The height is held so the form doesn't jump when the badge arrives.
+ */
+export function RecaptchaBadge({
+  siteKey,
+  onWidget,
+}: {
+  siteKey: string;
+  onWidget: (widget: number) => void;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = box.current;
+    if (!container) return;
+    let active = true;
+    void loadRecaptcha()
+      .then((grecaptcha) => {
+        if (!active || container.childElementCount) return;
+        onWidget(
+          grecaptcha.render(container, { sitekey: siteKey, size: 'invisible', badge: 'inline' }),
+        );
+      })
+      // Without the badge there is no token, so the server asks for the checkbox instead.
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [siteKey, onWidget]);
+  return <div ref={box} className="flex h-[60px] justify-center" />;
 }
 
 /**
