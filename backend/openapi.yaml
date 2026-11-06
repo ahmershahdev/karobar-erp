@@ -2348,6 +2348,120 @@ paths:
               schema:
                 $ref: '#/components/schemas/Statement'
           description: ''
+  /api/reports/balance-sheet/:
+    get:
+      operationId: reports_balance_sheet_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSheet'
+          description: ''
+  /api/reports/cash-flow/:
+    get:
+      operationId: reports_cash_flow_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashFlow'
+          description: ''
+  /api/reports/dashboard/:
+    get:
+      operationId: reports_dashboard_retrieve
+      tags:
+      - reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+          description: ''
+  /api/reports/profit-loss/:
+    get:
+      operationId: reports_profit_loss_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfitLoss'
+          description: ''
+  /api/reports/sales-tax/:
+    get:
+      operationId: reports_sales_tax_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - reports
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesTax'
+          description: ''
   /api/roles/:
     get:
       operationId: roles_list
@@ -3561,6 +3675,32 @@ components:
       - oauth_providers
       - recaptcha_v2_site_key
       - recaptcha_v3_site_key
+    BalanceSheet:
+      type: object
+      properties:
+        assets:
+          $ref: '#/components/schemas/ReportSection'
+        liabilities:
+          $ref: '#/components/schemas/ReportSection'
+        equity:
+          $ref: '#/components/schemas/ReportSection'
+        profit_to_date:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        total_liabilities_and_equity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        balanced:
+          type: boolean
+      required:
+      - assets
+      - balanced
+      - equity
+      - liabilities
+      - profit_to_date
+      - total_liabilities_and_equity
     Batch:
       type: object
       properties:
@@ -3708,6 +3848,35 @@ components:
       - id
       - quantity
       - unit_price
+    CashFlow:
+      type: object
+      properties:
+        opening:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        from_customers:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        to_suppliers:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        other:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        closing:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - closing
+      - from_customers
+      - opening
+      - other
+      - to_suppliers
     Category:
       type: object
       properties:
@@ -3949,12 +4118,75 @@ components:
       - posted_at
       - received_into
       - status
+    Dashboard:
+      type: object
+      properties:
+        sales_today:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        sales_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        gross_profit_month:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        margin_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        stock_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        receivable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        sales_by_day:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayAmount'
+        top_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAmount'
+      required:
+      - gross_profit_month
+      - margin_percent
+      - payable
+      - receivable
+      - sales_by_day
+      - sales_month
+      - sales_today
+      - stock_value
+      - top_products
     Date:
       type: object
       properties:
         date:
           type: string
           format: date
+    DayAmount:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - date
     Email:
       type: object
       description: Fields every protected form accepts; mixed into the form serializers.
@@ -5255,6 +5487,41 @@ components:
       - sku
       - unit
       - unit_code
+    ProductAmount:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - name
+    ProfitLoss:
+      type: object
+      properties:
+        income:
+          $ref: '#/components/schemas/ReportSection'
+        cost_of_sales:
+          $ref: '#/components/schemas/ReportSection'
+        gross_profit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        expenses:
+          $ref: '#/components/schemas/ReportSection'
+        net_profit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - cost_of_sales
+      - expenses
+      - gross_profit
+      - income
+      - net_profit
     PurchaseOrder:
       type: object
       properties:
@@ -5394,6 +5661,35 @@ components:
       - unit_code
       - unit_cost
       - value
+    ReportLine:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - code
+      - name
+    ReportSection:
+      type: object
+      properties:
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportLine'
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - lines
+      - total
     Reverse:
       type: object
       properties:
@@ -5530,6 +5826,35 @@ components:
       - unit
       - unit_code
       - unit_price
+    SalesTax:
+      type: object
+      properties:
+        taxable_sales:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        output_tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        taxable_purchases:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        input_tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - input_tax
+      - output_tax
+      - payable
+      - taxable_purchases
+      - taxable_sales
     Session:
       type: object
       properties:

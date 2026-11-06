@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Suspense, lazy, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,12 @@ import {
   TrialBalancePage,
 } from '../features/accounting/pages';
 import { useMe } from '../features/auth/session';
+import {
+  BalanceSheetPage,
+  CashFlowPage,
+  ProfitLossPage,
+  SalesTaxPage,
+} from '../features/reports/pages';
 import {
   CustomersPage,
   InvoicesPage,
@@ -53,6 +59,8 @@ import {
 } from '../features/workspace/pages';
 import type { Me } from '../lib/api/types';
 import type { AuthPath } from '../lib/paths';
+
+const DashboardPage = lazy(() => import('../features/reports/Dashboard'));
 
 function RequireUser({ children }: { children: (me: Me) => ReactNode }) {
   const { t } = useTranslation();
@@ -150,6 +158,18 @@ export default function AppRoutes() {
         <Route path="inventory/on-hand" element={<StockOnHandPage />} />
         <Route path="inventory/alerts" element={<AlertsPage />} />
         <Route path="inventory/setup" element={<InventorySetupPage />} />
+        <Route
+          path="reports/dashboard"
+          element={
+            <Suspense fallback={null}>
+              <DashboardPage />
+            </Suspense>
+          }
+        />
+        <Route path="reports/profit-loss" element={<ProfitLossPage />} />
+        <Route path="reports/balance-sheet" element={<BalanceSheetPage />} />
+        <Route path="reports/cash-flow" element={<CashFlowPage />} />
+        <Route path="reports/sales-tax" element={<SalesTaxPage />} />
         <Route path="sales/invoices" element={<InvoicesPage />} />
         <Route path="sales/receipts" element={<MoneyReceivedPage />} />
         <Route path="sales/customers" element={<CustomersPage />} />

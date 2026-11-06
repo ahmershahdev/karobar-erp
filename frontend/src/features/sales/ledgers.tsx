@@ -26,7 +26,7 @@ interface AgeingRow {
 }
 
 // Says what is happening instead of leaving a blank panel while a report loads or fails.
-function ReportState({ pending, failed }: { pending: boolean; failed: boolean }) {
+export function ReportState({ pending, failed }: { pending: boolean; failed: boolean }) {
   const { t } = useTranslation();
   if (failed) return <Alert tone="error">{t('signIn.unavailable')}</Alert>;
   return pending ? <p className="text-muted">{t('led.loading')}</p> : null;

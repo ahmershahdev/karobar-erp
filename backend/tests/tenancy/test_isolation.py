@@ -379,6 +379,19 @@ tenant_endpoint("api/sales/receipts/<int:pk>/pdf/")(
         0,
     )
 )
+
+
+def _report(path: str) -> Callable[[Member], tuple[str, int]]:
+    def make(member: Member) -> tuple[str, int]:
+        _invoice(member, True)
+        sales.post_receipt(member.user, _sales_receipt(member))
+        return f"/api/reports/{path}/", 0
+
+    return make
+
+
+for _path in ("dashboard", "profit-loss", "balance-sheet", "cash-flow", "sales-tax"):
+    tenant_endpoint(f"api/reports/{_path}/")(_report(_path))
 _register("sales/customers", lambda m: _customer(m).pk)
 _register("sales/orders", lambda m: _sales_order(m).pk)
 _register("sales/invoices", lambda m: _invoice(m).pk)
@@ -505,6 +518,11 @@ def test_other_tenants_rows_are_invisible(
     else:
         assert theirs.status_code == 200
         body = theirs.json()
+        if route.startswith("api/reports/"):
+            # The owner sold something worth 5.00; none of it may reach another business's report.
+            assert mine.json() != body
+            assert '"5.00"' not in theirs.content.decode()
+            return
         if isinstance(body, dict) and "total_value" in body:
             assert body == {"total_value": "0.00", "lines": 0}
             return

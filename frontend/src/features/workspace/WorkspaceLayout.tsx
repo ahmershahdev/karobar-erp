@@ -39,12 +39,16 @@ function VerifyBanner() {
   );
 }
 
-type Group = 'workspace' | 'sales' | 'accounting' | 'inventory' | 'purchasing';
+type Group = 'workspace' | 'sales' | 'reports' | 'accounting' | 'inventory' | 'purchasing';
 
 // The part after /app/<business>/, so a business called sales doesn't look like a group.
 function groupOf(path: string): Group {
   const area = path.split('/')[3];
-  return area === 'sales' || area === 'accounting' || area === 'inventory' || area === 'purchasing'
+  return area === 'sales' ||
+    area === 'reports' ||
+    area === 'accounting' ||
+    area === 'inventory' ||
+    area === 'purchasing'
     ? area
     : 'workspace';
 }
@@ -111,6 +115,18 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       label: item.label,
       icon: item.icon,
       show: can(membership, 'sales', 'view'),
+    })),
+    ...[
+      { path: 'dashboard', label: t('rep.dashboard'), icon: 'dashboard' },
+      { path: 'profit-loss', label: t('rep.profitLoss'), icon: 'trial-balance' },
+      { path: 'balance-sheet', label: t('rep.balanceSheet'), icon: 'ledger' },
+      { path: 'cash-flow', label: t('rep.cashFlow'), icon: 'payments' },
+      { path: 'sales-tax', label: t('rep.salesTax'), icon: 'bills' },
+    ].map((item) => ({
+      to: `${base}/reports/${item.path}`,
+      label: item.label,
+      icon: item.icon,
+      show: can(membership, 'reports', 'view'),
     })),
     ...[
       { path: 'journal', label: t('acc.journal') },
