@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/public/bills/<str:token>/", PublicBillView.as_view(), name="public-bill"),
     path("api/reports/", include("apps.reports.urls")),
     path("api/pos/", include("apps.pos.urls")),
+    path("api/assistant/", include("apps.assistant.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(settings.ADMIN_URL, admin.site.urls),
 ]
