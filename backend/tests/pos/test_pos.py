@@ -155,6 +155,13 @@ def test_a_product_withdrawn_while_in_the_cart_cannot_be_sold(till: Till) -> Non
     assert not PosSale.objects.exists()
 
 
+def test_a_price_changed_while_in_the_cart_is_the_price_charged(till: Till) -> None:
+    line = till.line("1")
+    Product.objects.filter(pk=till.soap.pk).update(sale_price=D("175"))
+    sale = services.sell(till.user, till.session, [line], "card")
+    assert sale.amount == D("175.00")
+
+
 def test_a_sale_holds_its_products_until_it_commits(till: Till) -> None:
     with CaptureQueriesContext(connection) as queries:
         services.sell(till.user, till.session, [till.line()], "card")

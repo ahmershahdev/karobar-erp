@@ -2,7 +2,7 @@
 books, reports and returns all work exactly as they do for any other sale.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Any
 
@@ -162,11 +162,13 @@ def _sell(
 ) -> PosSale:
     """Stock, the invoice, the money and the till record commit together or not at all."""
     till = _open_session(session)
-    # A product can be withdrawn while it sits in a cart, so its row is read and held here. The
-    # lock keeps a withdrawal from landing halfway through the sale.
+    # A product can be withdrawn or repriced while it sits in a cart, so its row is read and held
+    # here, and the sale uses that copy. The lock keeps either change from landing mid-sale.
     chosen = lock_rows(Product.objects.filter(pk__in=[line.product.pk for line in lines]))
     if not all(product.is_active for product in chosen):
         raise ProductInactiveError
+    current = {product.pk: product for product in chosen}
+    lines = [replace(line, product=current[line.product.pk]) for line in lines]
     if not lines:
         raise EmptyCartError
     today = timezone.localdate()
