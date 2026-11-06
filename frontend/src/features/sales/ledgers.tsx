@@ -25,10 +25,17 @@ interface AgeingRow {
   total: string;
 }
 
-function AgeingTable({ rows, nameLabel }: { rows: AgeingRow[] | undefined; nameLabel: string }) {
+// Says what is happening instead of leaving a blank panel while a report loads or fails.
+function ReportState({ pending, failed }: { pending: boolean; failed: boolean }) {
+  const { t } = useTranslation();
+  if (failed) return <Alert tone="error">{t('signIn.unavailable')}</Alert>;
+  return pending ? <p className="text-muted">{t('led.loading')}</p> : null;
+}
+
+function AgeingTable({ rows, nameLabel }: { rows: AgeingRow[]; nameLabel: string }) {
   const { t, i18n } = useTranslation();
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
-  if (rows?.length === 0) return <p className="text-muted">{t('led.allClear')}</p>;
+  if (rows.length === 0) return <p className="text-muted">{t('led.allClear')}</p>;
   return (
     <div className="overflow-x-auto" data-lenis-prevent>
       <table className={`${TABLE} min-w-[46rem]`}>
@@ -45,7 +52,7 @@ function AgeingTable({ rows, nameLabel }: { rows: AgeingRow[] | undefined; nameL
           </tr>
         </thead>
         <tbody>
-          {rows?.map((row) => (
+          {rows.map((row) => (
             <tr key={row.id} className="border-t border-line">
               <td className={TD}>{row.name}</td>
               {COLUMNS.map((column) => (
@@ -74,7 +81,8 @@ export function ReceivablesPage() {
     <>
       <PageTitle title={t('led.receivables')} subtitle={t('led.receivablesBody')} />
       <Panel title={t('led.receivables')}>
-        <AgeingTable rows={rows.data} nameLabel={t('sal.customer')} />
+        <ReportState pending={rows.isPending} failed={rows.isError} />
+        {rows.data && <AgeingTable rows={rows.data} nameLabel={t('sal.customer')} />}
       </Panel>
     </>
   );
@@ -91,7 +99,8 @@ export function PayablesPage() {
     <>
       <PageTitle title={t('led.payables')} subtitle={t('led.payablesBody')} />
       <Panel title={t('led.payables')}>
-        <AgeingTable rows={rows.data} nameLabel={t('pur.supplier')} />
+        <ReportState pending={rows.isPending} failed={rows.isError} />
+        {rows.data && <AgeingTable rows={rows.data} nameLabel={t('pur.supplier')} />}
       </Panel>
     </>
   );
@@ -153,6 +162,7 @@ export function StatementPanel({
           onChange={(e) => setEnd(e.target.value)}
         />
       </div>
+      <ReportState pending={statement.isPending} failed={statement.isError} />
       {statement.data && (
         <div className="overflow-x-auto" data-lenis-prevent>
           <table className={`${TABLE} min-w-[38rem]`}>
@@ -172,8 +182,8 @@ export function StatementPanel({
                 </td>
                 <td className={NUM}>{money(statement.data.opening)}</td>
               </tr>
-              {statement.data.lines.map((line) => (
-                <tr key={`${line.kind}-${line.number}`} className="border-t border-line">
+              {statement.data.lines.map((line, index) => (
+                <tr key={`${index}-${line.number}`} className="border-t border-line">
                   <td className={TD}>{line.date}</td>
                   <td className={TD}>
                     {t(`led.kind.${line.kind}`)} <span className="text-muted">{line.number}</span>
@@ -195,6 +205,15 @@ export function StatementPanel({
       )}
     </section>
   );
+}
+
+// A proxy in front of the API can answer with an HTML page, which must not surface as a JSON error.
+async function errorBody(response: Response): Promise<unknown> {
+  try {
+    return JSON.parse(await response.text());
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -221,7 +240,7 @@ export function PrintButton({ path }: { path: string }) {
           })
             .then(async (response) => {
               if (!response.ok) {
-                throw new ApiError(response.status, await response.json());
+                throw new ApiError(response.status, await errorBody(response));
               }
               const url = URL.createObjectURL(await response.blob());
               window.open(url, '_blank', 'noopener');

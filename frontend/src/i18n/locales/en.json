@@ -978,6 +978,7 @@
       "return": "Return",
       "bill": "Bill",
       "payment": "Payment"
-    }
+    },
+    "loading": "Loading..."
   }
 }

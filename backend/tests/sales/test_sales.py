@@ -438,3 +438,9 @@ def test_only_posted_documents_print(seller: Seller) -> None:
         [services.InvoiceLineInput(seller.shop.soap, seller.shop.pcs, D(1), D(1))],
     )
     assert client.get(f"/api/sales/invoices/{draft.pk}/pdf/").status_code == 400
+
+
+def test_small_unit_prices_are_not_rounded_away_on_a_printout() -> None:
+    assert documents._price(D("0.0040")) == "0.004"
+    assert documents._price(D("1250.5000")) == "1,250.50"
+    assert documents._price(D("10.1234")) == "10.1234"

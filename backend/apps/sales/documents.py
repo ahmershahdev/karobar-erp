@@ -84,6 +84,13 @@ def _money(value: Decimal) -> str:
     return f"{value:,.2f}"
 
 
+def _price(value: Decimal) -> str:
+    """Unit prices keep up to four places, or a price of 0.0040 would print as 0.00."""
+    whole = f"{value:,.2f}"
+    exact = f"{value:,.4f}".rstrip("0")
+    return exact if len(exact) > len(whole) else whole
+
+
 def _quantity(value: Decimal) -> str:
     return f"{value.normalize():f}"
 
@@ -110,7 +117,7 @@ def invoice_html(invoice: Invoice, language: str) -> str:
                 {
                     "name": line.product.name,
                     "quantity": f"{_quantity(line.quantity)} {line.unit.code}",
-                    "price": _money(line.unit_price),
+                    "price": _price(line.unit_price),
                     "tax": _money(line.tax_amount),
                     "amount": _money(line.amount),
                 }
