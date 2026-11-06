@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 
-from django.db.models import F, Q, Sum
+from django.db.models import Q, Sum
 
 from apps.accounting.models import Account, JournalEntry, JournalLine
 from apps.accounting.reports import trial_balance
@@ -124,6 +124,15 @@ def sales_tax(start: date, end: date) -> SalesTax:
     )
 
 
+def _net_by_day(first: date, last: date) -> dict[date, Decimal]:
+    window = {"status": POSTED, "date__gte": first, "date__lte": last}
+    days = dict(Invoice.objects.filter(**window).values_list("date").annotate(total=Sum("net")))
+    returns = CreditNote.objects.filter(**window).values_list("date").annotate(total=Sum("net"))
+    for day, amount in returns:
+        days[day] = days.get(day, ZERO) - amount
+    return days
+
+
 def dashboard(on: date) -> dict[str, Any]:
     month = on.replace(day=1)
     window = {"status": POSTED, "date__gte": month, "date__lte": on}
@@ -138,22 +147,33 @@ def dashboard(on: date) -> dict[str, Any]:
     )
     cost = _total(sold, "cost") - returned_cost
 
+    # Every sales figure here is net of returns, so they all agree with each other.
     first_day = on - timedelta(days=TREND_DAYS - 1)
-    by_day = dict(
-        Invoice.objects.filter(status=POSTED, date__gte=first_day, date__lte=on)
-        .values_list("date")
-        .annotate(total=Sum("net"))
-    )
-    top = (
+    by_day = _net_by_day(first_day, on)
+    sold_lines = (
         InvoiceLine.objects.filter(
             invoice__status=POSTED, invoice__date__gte=month, invoice__date__lte=on
         )
-        .values(name=F("product__name"))
+        .values_list("product__name")
         .annotate(amount=Sum("amount"))
-        .order_by("-amount")[:TOP_PRODUCTS]
     )
+    returned_lines = (
+        CreditNoteLine.objects.filter(
+            note__status=POSTED, note__date__gte=month, note__date__lte=on
+        )
+        .values_list("invoice_line__product__name")
+        .annotate(amount=Sum("amount"))
+    )
+    products = dict(sold_lines)
+    for name, amount in returned_lines:
+        products[name] = products.get(name, ZERO) - amount
+    top = sorted(
+        ({"name": name, "amount": amount} for name, amount in products.items() if amount > 0),
+        key=lambda row: row["amount"],
+        reverse=True,
+    )[:TOP_PRODUCTS]
     return {
-        "sales_today": _total(Invoice.objects.filter(status=POSTED, date=on), "net"),
+        "sales_today": by_day.get(on, ZERO),
         "sales_month": sales,
         "gross_profit_month": sales - cost,
         "margin_percent": margin_percent(sales, cost),
@@ -164,5 +184,5 @@ def dashboard(on: date) -> dict[str, Any]:
             {"date": day, "amount": by_day.get(day, ZERO)}
             for day in (first_day + timedelta(days=offset) for offset in range(TREND_DAYS))
         ],
-        "top_products": list(top),
+        "top_products": top,
     }

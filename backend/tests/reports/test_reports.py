@@ -119,3 +119,20 @@ def test_a_new_business_sees_zeros_not_an_error(seller: Seller) -> None:
     assert numbers["sales_month"] == D(0)
     assert numbers["margin_percent"] is None
     assert numbers["top_products"] == []
+
+
+def test_every_dashboard_sales_figure_is_net_of_returns(seller: Seller) -> None:
+    sold = invoice(seller, quantity="2", price="100", tax="0")
+    invoice(seller, quantity="1", price="100", tax="0")
+    sales.post_credit_note(seller.user, sales.credit_invoice(seller.user, sold, today()))
+    numbers = services.dashboard(today())
+    assert numbers["sales_today"] == D("100.00")
+    assert numbers["sales_month"] == D("100.00")
+    assert numbers["sales_by_day"][-1]["amount"] == D("100.00")
+    assert numbers["top_products"] == [{"name": "Invented Soap", "amount": D("100.00")}]
+
+
+def test_a_fully_returned_product_leaves_the_best_sellers(seller: Seller) -> None:
+    sold = invoice(seller, quantity="1", price="100", tax="0")
+    sales.post_credit_note(seller.user, sales.credit_invoice(seller.user, sold, today()))
+    assert services.dashboard(today())["top_products"] == []
