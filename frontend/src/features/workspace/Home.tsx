@@ -89,6 +89,8 @@ export function Home() {
     queryKey: [membership.tenant_id, 'report', 'home'],
     queryFn: () => unwrap(api.GET('/api/reports/home/')),
     enabled: allowed,
+    // Coming back from adding a product should tick the step straight away.
+    refetchOnMount: 'always',
   });
   const report = useQuery({
     queryKey: [membership.tenant_id, 'report', 'dashboard'],
@@ -103,8 +105,9 @@ export function Home() {
   const warnings = home.data ? WARNINGS.filter((item) => home.data.attention[item.key] > 0) : [];
   const data = report.data;
   const reports = `${base}/reports/dashboard`;
-  // The flag, not the amounts: returns can bring a month to zero, and that still needs the chart.
-  const hasSales = setup ? setup.sale : data?.sales_by_day.some((day) => day.amount !== '0.00');
+  // Either tells us: returns can bring a month to zero, and the two requests finish apart.
+  const hasSales =
+    (setup?.sale ?? false) || data?.sales_by_day.some((day) => day.amount !== '0.00');
   const failed = (home.isError && !home.data) || (report.isError && !data);
 
   return (
