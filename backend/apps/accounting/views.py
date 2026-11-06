@@ -17,7 +17,7 @@ from apps.platform.csv_export import csv_response
 from apps.tenancy.permissions import HasModulePermission
 
 from . import services
-from .models import Account, FiscalPeriod, FiscalYear, JournalEntry, JournalLine
+from .models import Account, FiscalPeriod, FiscalYear, JournalEntry, JournalLine, TaxRate
 from .reports import general_ledger, trial_balance
 from .serializers import (
     AccountSerializer,
@@ -27,6 +27,7 @@ from .serializers import (
     PeriodStateSerializer,
     ReportQuerySerializer,
     ReverseSerializer,
+    TaxRateSerializer,
 )
 
 
@@ -355,3 +356,32 @@ class LedgerView(AccountingView, generics.GenericAPIView[Account]):
                 ],
             }
         )
+
+
+class TaxRateListView(AccountingView, generics.ListCreateAPIView[TaxRate]):
+    serializer_class = TaxRateSerializer
+    pagination_class = None
+
+    def get_queryset(self) -> QuerySet[TaxRate]:
+        return TaxRate.objects.all()
+
+    def perform_create(self, serializer: TaxRateSerializer) -> None:  # type: ignore[override]
+        serializer.instance = services.save_tax_rate(
+            actor(self.request), TaxRate(), serializer.validated_data
+        )
+
+
+class TaxRateDetailView(AccountingView, generics.RetrieveUpdateDestroyAPIView[TaxRate]):
+    serializer_class = TaxRateSerializer
+    http_method_names = ["get", "patch", "delete", "head", "options"]
+
+    def get_queryset(self) -> QuerySet[TaxRate]:
+        return TaxRate.objects.all()
+
+    def perform_update(self, serializer: TaxRateSerializer) -> None:  # type: ignore[override]
+        serializer.instance = services.save_tax_rate(
+            actor(self.request), cast(TaxRate, serializer.instance), serializer.validated_data
+        )
+
+    def perform_destroy(self, instance: TaxRate) -> None:
+        run(services.delete_tax_rate, actor(self.request), instance)

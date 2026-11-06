@@ -19,13 +19,14 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounting import services as accounting
-from apps.accounting.models import Account
+from apps.accounting.models import Account, TaxRate
 from apps.accounts.models import User
 from apps.core import posting
 from apps.core.balances import AccountType
 from apps.core.credit import over_limit
 from apps.core.documents import line_amount, share
 from apps.core.money import quantize_money, quantize_quantity
+from apps.core.tax import is_valid_on, tax_on
 from apps.inventory import services as inventory
 from apps.inventory.models import Product, StockEntry, Unit, Warehouse
 from apps.platform.locking import lock_rows, retry_on_deadlock
@@ -107,6 +108,10 @@ class LineMismatchError(SalesError):
     message = "An invoice line must match its order line's product and unit."
 
 
+class TaxRateNotValidError(SalesError):
+    message = "That tax rate doesn't apply on this document's date."
+
+
 class CreditLimitError(SalesError):
     message = "This would take the customer over their credit limit."
 
@@ -118,6 +123,7 @@ class OrderLineInput:
     quantity: Decimal
     unit_price: Decimal
     tax_amount: Decimal = ZERO
+    tax_rate: TaxRate | None = None
 
 
 @dataclass(frozen=True)
@@ -129,6 +135,7 @@ class InvoiceLineInput:
     tax_amount: Decimal = ZERO
     order_line: SalesOrderLine | None = None
     batch_number: str = ""
+    tax_rate: TaxRate | None = None
 
 
 @dataclass(frozen=True)
@@ -141,6 +148,24 @@ class AllocationInput:
 class CreditLineInput:
     invoice_line: InvoiceLine
     quantity: Decimal
+
+
+def _line_tax(line: OrderLineInput | InvoiceLineInput, on: date) -> Decimal:
+    """A chosen rate decides the tax. Without one, the amount typed stands."""
+    rate = line.tax_rate
+    if rate is None:
+        return line.tax_amount
+    if not is_valid_on(rate.valid_from, rate.valid_to, on):
+        raise TaxRateNotValidError
+    return tax_on(line_amount(line.quantity, line.unit_price), rate.rate)
+
+
+def _still_valid(rate: TaxRate | None, on: date) -> TaxRate | None:
+    """An order can outlive its rate, for example across a budget. It must still be invoiceable,
+    so a rate that has ended is dropped and the line keeps the tax the customer agreed to."""
+    if rate is None or not is_valid_on(rate.valid_from, rate.valid_to, on):
+        return None
+    return rate
 
 
 # Customers reuse the audited master-data helpers of inventory.
@@ -241,8 +266,9 @@ def save_order(
     action = Action.UPDATE if order else Action.CREATE
     target = _locked_draft(SalesOrder, order) if order else SalesOrder(created_by=actor)
     _apply(target, header, ("customer", "warehouse", "date", "valid_until", "memo"))
+    taxes = [_line_tax(line, target.date) for line in lines]
     target.total = sum(
-        (line_amount(line.quantity, line.unit_price) + line.tax_amount for line in lines), ZERO
+        (line_amount(line.quantity, line.unit_price) for line in lines), sum(taxes, ZERO)
     )
     target.save()
     target.lines.all().delete()
@@ -254,9 +280,10 @@ def save_order(
             unit=line.unit,
             quantity=line.quantity,
             unit_price=line.unit_price,
-            tax_amount=line.tax_amount,
+            tax_rate=line.tax_rate,
+            tax_amount=tax,
         )
-        for line in lines
+        for line, tax in zip(lines, taxes, strict=True)
     )
     audit.record(action, target, actor, {"total": [None, str(target.total)]})
     return target
@@ -304,10 +331,8 @@ def close_order(actor: User, order: SalesOrder) -> SalesOrder:
 # Invoices
 
 
-def _invoice_totals(lines: list[InvoiceLineInput]) -> tuple[Decimal, Decimal]:
-    net = sum((line_amount(line.quantity, line.unit_price) for line in lines), ZERO)
-    tax = sum((quantize_money(line.tax_amount) for line in lines), ZERO)
-    return net, tax
+def _net(lines: list[InvoiceLineInput]) -> Decimal:
+    return sum((line_amount(line.quantity, line.unit_price) for line in lines), ZERO)
 
 
 @transaction.atomic
@@ -322,7 +347,8 @@ def save_invoice(
     action = Action.UPDATE if invoice else Action.CREATE
     target = _locked_draft(Invoice, invoice) if invoice else Invoice(created_by=actor)
     _apply(target, header, ("customer", "order", "warehouse", "date", "due_date", "memo"))
-    target.net, target.tax = _invoice_totals(lines)
+    taxes = [quantize_money(_line_tax(line, target.date)) for line in lines]
+    target.net, target.tax = _net(lines), sum(taxes, ZERO)
     target.total = target.net + target.tax
     target.save()
     target.lines.all().delete()
@@ -336,10 +362,11 @@ def save_invoice(
             quantity=line.quantity,
             unit_price=line.unit_price,
             amount=line_amount(line.quantity, line.unit_price),
-            tax_amount=line.tax_amount,
+            tax_rate=line.tax_rate,
+            tax_amount=tax,
             batch_number=line.batch_number,
         )
-        for line in lines
+        for line, tax in zip(lines, taxes, strict=True)
     )
     audit.record(action, target, actor, {"total": [None, str(target.total)]})
     return target
@@ -364,8 +391,9 @@ def invoice_order(actor: User, order: SalesOrder, on: date) -> Invoice:
                 line.quantity,
             ),
             line,
+            tax_rate=_still_valid(line.tax_rate, on),
         )
-        for line in locked.lines.select_related("product", "unit")
+        for line in locked.lines.select_related("product", "unit", "tax_rate")
         if line.invoiced_quantity < line.quantity
     ]
     header = {

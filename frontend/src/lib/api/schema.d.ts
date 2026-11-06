@@ -164,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounting/tax-rates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_tax_rates_list"];
+        put?: never;
+        post: operations["accounting_tax_rates_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounting/tax-rates/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounting_tax_rates_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["accounting_tax_rates_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["accounting_tax_rates_partial_update"];
+        trace?: never;
+    };
     "/api/accounts/config/": {
         parameters: {
             query?: never;
@@ -1535,6 +1567,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sales/tax-rates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The rates to choose from on a sale. Setting them up stays with accounting. */
+        get: operations["sales_tax_rates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tenants/": {
         parameters: {
             query?: never;
@@ -1903,6 +1952,7 @@ export interface components {
             unit_price: string;
             /** Format: decimal */
             readonly amount: string;
+            tax_rate?: number | null;
             /** Format: decimal */
             tax_amount?: string;
             batch_number?: string;
@@ -2352,6 +2402,17 @@ export interface components {
             /** Format: decimal */
             readonly balance?: string | null;
         };
+        PatchedTaxRate: {
+            readonly id?: number;
+            name?: string;
+            /** Format: decimal */
+            rate?: string;
+            /** Format: date */
+            valid_from?: string;
+            /** Format: date */
+            valid_to?: string | null;
+            source?: string;
+        };
         PatchedUnit: {
             readonly id?: number;
             code?: string;
@@ -2494,6 +2555,7 @@ export interface components {
             quantity: string;
             /** Format: decimal */
             unit_price: string;
+            tax_rate?: number | null;
             /** Format: decimal */
             tax_amount?: string;
             /** Format: decimal */
@@ -2646,6 +2708,17 @@ export interface components {
             readonly created_by: string;
             /** Format: date-time */
             readonly posted_at: string | null;
+        };
+        TaxRate: {
+            readonly id: number;
+            name: string;
+            /** Format: decimal */
+            rate: string;
+            /** Format: date */
+            valid_from: string;
+            /** Format: date */
+            valid_to?: string | null;
+            source: string;
         };
         TenantCreate: {
             name: string;
@@ -3123,6 +3196,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrialBalance"];
+                };
+            };
+        };
+    };
+    accounting_tax_rates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRate"][];
+                };
+            };
+        };
+    };
+    accounting_tax_rates_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxRate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRate"];
+                };
+            };
+        };
+    };
+    accounting_tax_rates_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRate"];
+                };
+            };
+        };
+    };
+    accounting_tax_rates_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accounting_tax_rates_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTaxRate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRate"];
                 };
             };
         };
@@ -6223,6 +6404,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
+    sales_tax_rates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxRate"][];
                 };
             };
         };

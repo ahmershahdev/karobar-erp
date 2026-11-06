@@ -16,6 +16,7 @@ import {
 } from '../../lib/api/types';
 import { today } from '../../lib/dates';
 import { formatMoney, toMinor } from '../../lib/money';
+import { useSaleTaxRates } from '../accounting/TaxRates';
 import { formatQuantity, useWarehouses } from '../inventory/shared';
 import {
   ActionError,
@@ -233,13 +234,14 @@ export function CustomersPage() {
 
 // Quotes and orders, and invoices: the same editor, because both are a customer and some goods.
 
-function saleLines(lines: ItemLine[]) {
+function saleLines(lines: ItemLine[], taxRate: unknown) {
   return lines.map((line) => ({
     product: Number(line.product),
     unit: Number(line.unit),
     quantity: line.quantity,
     unit_price: line.price || '0',
     tax_amount: line.tax || '0',
+    tax_rate: taxRate ?? null,
   }));
 }
 
@@ -262,9 +264,17 @@ function SaleEditor({
   const [date, setDate] = useState(today());
   const [warehouse, setWarehouse] = useState('');
   const [lines, setLines] = useState<ItemLine[]>([itemLine(0)]);
+  const rates = useSaleTaxRates();
+  const [picked, setPicked] = useState('');
+  // Only rates that apply on this date. The server checks again, so this is a convenience.
+  const usable = rates.data?.filter(
+    (item) => item.valid_from <= date && (!item.valid_to || date <= item.valid_to),
+  );
+  // Changing the date can rule the picked rate out; then it stops counting, here and on save.
+  const rate = usable?.some((item) => String(item.id) === picked) ? picked : '';
   return (
     <Panel title={title}>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <CustomerSelect value={customer} onChange={setCustomer} />
         <Field
           label={t('acc.date')}
@@ -286,20 +296,33 @@ function SaleEditor({
             </option>
           ))}
         </Select>
+        <Select label={t('pur.tax')} value={rate} onChange={(e) => setPicked(e.target.value)}>
+          <option value="">{t('tax.typeIt')}</option>
+          {usable?.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name} {Number(item.rate)}%
+            </option>
+          ))}
+        </Select>
       </div>
       <div className="mt-4 space-y-4">
         <ItemsEditor
           lines={lines}
           onChange={setLines}
           priceLabel={t('sal.price')}
-          taxLabel={t('pur.tax')}
+          {...(rate ? {} : { taxLabel: t('pur.tax') })}
         />
         <Actions>
           <Button
             disabled={pending || !customer || !warehouse || filled(lines).length === 0}
             onClick={() =>
               onSave(
-                { customer: Number(customer), date, warehouse: Number(warehouse) },
+                {
+                  customer: Number(customer),
+                  date,
+                  warehouse: Number(warehouse),
+                  taxRate: rate ? Number(rate) : null,
+                },
                 filled(lines),
               )
             }
@@ -422,7 +445,8 @@ export function OrdersPage() {
           error={save.error}
           onDone={() => setCreating(false)}
           onSave={(header, lines) => {
-            const body = { ...header, lines: saleLines(lines) } as never;
+            const { taxRate, ...fields } = header;
+            const body = { ...fields, lines: saleLines(lines, taxRate) } as never;
             save.mutate(() => unwrap(api.POST('/api/sales/orders/', { body })), {
               onSuccess: () => setCreating(false),
             });
@@ -531,7 +555,8 @@ export function InvoicesPage() {
           error={save.error}
           onDone={() => setCreating(false)}
           onSave={(header, lines) => {
-            const body = { ...header, lines: saleLines(lines) } as never;
+            const { taxRate, ...fields } = header;
+            const body = { ...fields, lines: saleLines(lines, taxRate) } as never;
             save.mutate(() => unwrap(api.POST('/api/sales/invoices/', { body })), {
               onSuccess: () => setCreating(false),
             });

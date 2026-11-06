@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -19,7 +19,15 @@ from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent, Tenant
 
-from .models import Account, FiscalPeriod, FiscalYear, JournalEntry, JournalLine, NumberSeries
+from .models import (
+    Account,
+    FiscalPeriod,
+    FiscalYear,
+    JournalEntry,
+    JournalLine,
+    NumberSeries,
+    TaxRate,
+)
 
 CHARTS = Path(__file__).parent / "charts"
 JOURNAL_SERIES = ("JV", "JV-")
@@ -343,3 +351,28 @@ def post_rule_lines(
     draft.save(update_fields=["source_type", "source_id"])
     posted: JournalEntry = post_entry(actor, draft)
     return posted
+
+
+class TaxRateInUseError(AccountingError):
+    message = "This rate is on saved documents. Give it an end date instead of deleting it."
+
+
+@transaction.atomic
+def save_tax_rate(actor: User, rate: TaxRate, values: dict[str, Any]) -> TaxRate:
+    action = Action.UPDATE if rate.pk else Action.CREATE
+    before = {key: getattr(rate, key) if rate.pk else None for key in values}
+    for key, value in values.items():
+        setattr(rate, key, value)
+    rate.save()
+    audit.record(action, rate, actor, {key: [before[key], values[key]] for key in values})
+    return rate
+
+
+@transaction.atomic
+def delete_tax_rate(actor: User, rate: TaxRate) -> None:
+    audit.record(Action.DELETE, rate, actor, {"name": [rate.name, None]})
+    try:
+        with transaction.atomic():
+            rate.delete()
+    except models.ProtectedError as exc:
+        raise TaxRateInUseError from exc

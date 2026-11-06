@@ -11,6 +11,7 @@ urlpatterns = [
         name="customer-statement",
     ),
     path("ageing/", views.ReceivablesAgeingView.as_view(), name="receivables-ageing"),
+    path("tax-rates/", views.SalesTaxRateListView.as_view(), name="sales-tax-rates"),
     path("invoices/<int:pk>/pdf/", views.InvoicePdfView.as_view(), name="invoice-pdf"),
     path("receipts/<int:pk>/pdf/", views.ReceiptPdfView.as_view(), name="sales-receipt-pdf"),
     path("orders/", views.OrderListView.as_view(), name="so-list"),

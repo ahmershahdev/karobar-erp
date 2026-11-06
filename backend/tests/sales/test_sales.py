@@ -10,7 +10,7 @@ import pytest
 from django.db import connection
 from django.utils import timezone
 
-from apps.accounting.models import Account, PostedEntryError
+from apps.accounting.models import Account, PostedEntryError, TaxRate
 from apps.accounting.reports import trial_balance
 from apps.accounts.models import User
 from apps.inventory import services as inventory
@@ -444,3 +444,70 @@ def test_small_unit_prices_are_not_rounded_away_on_a_printout() -> None:
     assert documents._price(D("0.0040")) == "0.004"
     assert documents._price(D("1250.5000")) == "1,250.50"
     assert documents._price(D("10.1234")) == "10.1234"
+
+
+def gst(**dates: Any) -> TaxRate:
+    fields = {"valid_from": timezone.localdate() - timedelta(days=30), **dates}
+    rate: TaxRate = TaxRate.objects.create(
+        name="GST", rate=D("18"), source="Invented notification 1 of 2026", **fields
+    )
+    return rate
+
+
+def test_a_chosen_rate_works_out_the_tax_on_each_line(seller: Seller) -> None:
+    rate = gst()
+    draft = services.save_invoice(
+        seller.user,
+        {"customer": seller.customer, "warehouse": seller.shop.main, "date": timezone.localdate()},
+        [
+            services.InvoiceLineInput(
+                seller.shop.soap, seller.shop.pcs, D(3), D("33.33"), D("999"), tax_rate=rate
+            )
+        ],
+    )
+    assert draft.net == D("99.99")
+    assert draft.tax == D("18.00")
+    assert draft.lines.get().tax_rate == rate
+
+
+def test_a_rate_outside_its_dates_is_refused(seller: Seller) -> None:
+    old = gst(valid_to=timezone.localdate() - timedelta(days=1))
+    with pytest.raises(services.TaxRateNotValidError):
+        services.save_order(
+            seller.user,
+            {
+                "customer": seller.customer,
+                "warehouse": seller.shop.main,
+                "date": timezone.localdate(),
+            },
+            [services.OrderLineInput(seller.shop.soap, seller.shop.pcs, D(1), D(1), tax_rate=old)],
+        )
+
+
+def test_an_order_passes_its_rate_on_to_the_invoice(seller: Seller) -> None:
+    rate = gst()
+    draft = services.save_order(
+        seller.user,
+        {"customer": seller.customer, "warehouse": seller.shop.main, "date": timezone.localdate()},
+        [services.OrderLineInput(seller.shop.soap, seller.shop.pcs, D(2), D(100), tax_rate=rate)],
+    )
+    assert draft.total == D("236.00")
+    made = services.invoice_order(
+        seller.user, services.confirm_order(seller.user, draft), timezone.localdate()
+    )
+    assert made.tax == D("36.00")
+    assert made.lines.get().tax_rate == rate
+
+
+def test_an_order_can_be_invoiced_after_its_rate_has_ended(seller: Seller) -> None:
+    rate = gst()
+    draft = services.save_order(
+        seller.user,
+        {"customer": seller.customer, "warehouse": seller.shop.main, "date": timezone.localdate()},
+        [services.OrderLineInput(seller.shop.soap, seller.shop.pcs, D(2), D(100), tax_rate=rate)],
+    )
+    confirmed = services.confirm_order(seller.user, draft)
+    TaxRate.objects.filter(pk=rate.pk).update(valid_to=timezone.localdate())
+    made = services.invoice_order(seller.user, confirmed, timezone.localdate() + timedelta(days=1))
+    assert made.tax == D("36.00")
+    assert made.lines.get().tax_rate is None

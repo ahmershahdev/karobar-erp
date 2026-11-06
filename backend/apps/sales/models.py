@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import F, Q
 
-from apps.accounting.models import Account, JournalEntry
+from apps.accounting.models import Account, JournalEntry, TaxRate
 from apps.inventory.models import Product, StockEntry, Unit, Warehouse, money_field, quantity_field
 from apps.purchasing.models import Document, PostedStatus
 from apps.tenancy.models import TenantOwnedModel
@@ -64,6 +64,9 @@ class SalesOrderLine(TenantOwnedModel):
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name="+")
     quantity = quantity_field()
     unit_price = quantity_field()
+    tax_rate = models.ForeignKey(
+        TaxRate, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
     tax_amount = money_field(default=0)
     invoiced_quantity = quantity_field(default=0)
 
@@ -129,6 +132,9 @@ class InvoiceLine(TenantOwnedModel):
     quantity = quantity_field()
     unit_price = quantity_field()
     amount = money_field()
+    tax_rate = models.ForeignKey(
+        TaxRate, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
     tax_amount = money_field(default=0)
     batch_number = models.CharField(max_length=40, blank=True)
     cost = money_field(default=0)

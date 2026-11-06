@@ -422,6 +422,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/TrialBalance'
           description: ''
+  /api/accounting/tax-rates/:
+    get:
+      operationId: accounting_tax_rates_list
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRate'
+          description: ''
+    post:
+      operationId: accounting_tax_rates_create
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaxRate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+          description: ''
+  /api/accounting/tax-rates/{id}/:
+    get:
+      operationId: accounting_tax_rates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+          description: ''
+    patch:
+      operationId: accounting_tax_rates_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaxRate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRate'
+          description: ''
+    delete:
+      operationId: accounting_tax_rates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - accounting
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/accounts/config/:
     get:
       operationId: accounts_config_retrieve
@@ -3455,6 +3549,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/CustomerReceipt'
           description: ''
+  /api/sales/tax-rates/:
+    get:
+      operationId: sales_tax_rates_list
+      description: The rates to choose from on a sale. Setting them up stays with
+        accounting.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRate'
+          description: ''
   /api/tenants/:
     get:
       operationId: tenants_list
@@ -4484,6 +4596,9 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        tax_rate:
+          type: integer
+          nullable: true
         tax_amount:
           type: string
           format: decimal
@@ -5413,6 +5528,29 @@ components:
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
           nullable: true
+    PatchedTaxRate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,4})?$
+        valid_from:
+          type: string
+          format: date
+        valid_to:
+          type: string
+          format: date
+          nullable: true
+        source:
+          type: string
+          maxLength: 255
     PatchedUnit:
       type: object
       properties:
@@ -5807,6 +5945,9 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        tax_rate:
+          type: integer
+          nullable: true
         tax_amount:
           type: string
           format: decimal
@@ -6257,6 +6398,35 @@ components:
       - status
       - supplier
       - supplier_name
+    TaxRate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,4})?$
+        valid_from:
+          type: string
+          format: date
+        valid_to:
+          type: string
+          format: date
+          nullable: true
+        source:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+      - rate
+      - source
+      - valid_from
     TenantCreate:
       type: object
       properties:

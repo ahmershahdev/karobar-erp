@@ -165,3 +165,31 @@ class JournalLine(TenantOwnedModel):
         if self.entry.status == JournalEntry.Status.POSTED:
             raise PostedEntryError("Lines of a posted entry can't be changed.")
         super().save(*args, **kwargs)
+
+
+class TaxRate(TenantOwnedModel):
+    """A sales tax rate as data: what it is, when it applies, and where that came from."""
+
+    name = models.CharField(max_length=80)
+    rate = models.DecimalField(max_digits=7, decimal_places=4)
+    valid_from = models.DateField()
+    valid_to = models.DateField(null=True, blank=True)
+    # The notification or law that sets it, so a figure in the books can always be traced.
+    source = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["-valid_from", "name"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(rate__gte=0, rate__lte=100), name="tax_rate_is_a_percentage"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(valid_to__isnull=True)
+                | models.Q(valid_to__gte=models.F("valid_from")),
+                name="tax_rate_dates_in_order",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name} {self.rate}%"
