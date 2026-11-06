@@ -768,6 +768,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuditEvent'
           description: ''
+  /api/automation/:
+    get:
+      operationId: automation_retrieve
+      tags:
+      - automation
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automation'
+          description: ''
+    patch:
+      operationId: automation_partial_update
+      tags:
+      - automation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAutomation'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Automation'
+          description: ''
   /api/health/:
     get:
       operationId: health_retrieve
@@ -1826,6 +1858,33 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PosWarehouse'
+          description: ''
+  /api/public/bills/{token}/:
+    get:
+      operationId: public_bills_retrieve
+      description: One bill for whoever holds its signed link. A bad, old or draft
+        link all look the same.
+      parameters:
+      - in: query
+        name: lang
+        schema:
+          type: string
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - public
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/purchasing/ageing/:
     get:
@@ -2893,7 +2952,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AgeingRow'
+                  $ref: '#/components/schemas/ReceivableRow'
           description: ''
   /api/sales/credit-notes/:
     get:
@@ -3375,6 +3434,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invoice'
+          description: ''
+  /api/sales/invoices/{id}/share/:
+    get:
+      operationId: sales_invoices_share_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillShare'
           description: ''
   /api/sales/orders/:
     get:
@@ -3991,6 +4070,13 @@ components:
       - oauth_providers
       - recaptcha_v2_site_key
       - recaptcha_v3_site_key
+    Automation:
+      type: object
+      properties:
+        daily_summary:
+          type: boolean
+      required:
+      - daily_summary
     BalanceSheet:
       type: object
       properties:
@@ -4164,6 +4250,16 @@ components:
       - id
       - quantity
       - unit_price
+    BillShare:
+      type: object
+      properties:
+        link:
+          type: string
+        whatsapp:
+          type: string
+      required:
+      - link
+      - whatsapp
     CartLine:
       type: object
       properties:
@@ -5666,6 +5762,11 @@ components:
           type: string
           readOnly: true
           nullable: true
+    PatchedAutomation:
+      type: object
+      properties:
+        daily_summary:
+          type: boolean
     PatchedCategory:
       type: object
       properties:
@@ -6140,6 +6241,54 @@ components:
       - unit_code
       - unit_cost
       - value
+    ReceivableRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        current:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        days_1_30:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        days_31_60:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        days_61_90:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        over_90:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        advance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        whatsapp:
+          type: string
+      required:
+      - advance
+      - current
+      - days_1_30
+      - days_31_60
+      - days_61_90
+      - id
+      - name
+      - over_90
+      - total
+      - whatsapp
     ReportLine:
       type: object
       properties:

@@ -200,7 +200,11 @@ CELERY_BEAT_SCHEDULE = {
     "stock-alerts": {
         "task": "apps.inventory.tasks.send_stock_alerts",
         "schedule": crontab(hour=2, minute=0),
-    }
+    },
+    "daily-summaries": {
+        "task": "apps.reports.tasks.send_daily_summaries",
+        "schedule": crontab(hour=2, minute=5),
+    },
 }
 
 LANGUAGE_CODE = "en"

@@ -13,6 +13,7 @@ urlpatterns = [
     path("ageing/", views.ReceivablesAgeingView.as_view(), name="receivables-ageing"),
     path("tax-rates/", views.SalesTaxRateListView.as_view(), name="sales-tax-rates"),
     path("invoices/<int:pk>/pdf/", views.InvoicePdfView.as_view(), name="invoice-pdf"),
+    path("invoices/<int:pk>/share/", views.InvoiceShareView.as_view(), name="invoice-share"),
     path("receipts/<int:pk>/pdf/", views.ReceiptPdfView.as_view(), name="sales-receipt-pdf"),
     path("orders/", views.OrderListView.as_view(), name="so-list"),
     path("orders/<int:pk>/", views.OrderDetailView.as_view(), name="so-detail"),

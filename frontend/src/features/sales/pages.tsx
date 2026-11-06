@@ -33,7 +33,7 @@ import {
   type ItemLine,
 } from '../purchasing/pages';
 import { useTenantAction, useWorkspace } from '../workspace/hooks';
-import { PrintButton, StatementPanel } from './ledgers';
+import { PrintButton, ShareButtons, StatementPanel } from './ledgers';
 import { NUM, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
@@ -516,6 +516,7 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
           </Button>
         )}
         {!draft && <PrintButton path={`/api/sales/invoices/${invoice.id}/pdf/`} />}
+        {!draft && <ShareButtons invoiceId={invoice.id} />}
         {!draft && returnable && can(membership, 'sales', 'create') && (
           <Button
             variant="ghost"

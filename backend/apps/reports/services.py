@@ -136,6 +136,11 @@ def _net_by_day(first: date, last: date) -> dict[date, Decimal]:
     return days
 
 
+def sales_on(day: date) -> Decimal:
+    """Sales of one day, net of returns."""
+    return _net_by_day(day, day).get(day, ZERO)
+
+
 def home(on: date) -> dict[str, Any]:
     """What a new business still has to set up, and what needs someone's attention today."""
     posted_sales = Invoice.objects.filter(status=POSTED)

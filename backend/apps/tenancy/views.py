@@ -1,5 +1,6 @@
 from typing import Any, cast
 
+from django.db import transaction
 from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
@@ -12,13 +13,14 @@ from apps.accounts.emails import app_link
 from apps.accounts.models import User
 from apps.platform.mail import send_message
 
-from . import services
+from . import audit, services
 from .context import get_current_tenant
 from .models import AuditEvent, Invitation, Membership, Role
 from .permissions import HasModulePermission
 from .serializers import (
     AcceptInvitationSerializer,
     AuditEventSerializer,
+    AutomationSerializer,
     InvitationSerializer,
     MemberSerializer,
     MembershipSerializer,
@@ -36,6 +38,33 @@ def run(call: Any, *args: Any) -> Any:
         return call(*args)
     except services.TenancyError as exc:
         raise ValidationError({"detail": type(exc).message}) from exc
+
+
+class AutomationView(APIView):
+    permission_classes = [HasModulePermission]
+    module = "members"
+    throttle_scope = "tenancy"
+
+    @extend_schema(responses=AutomationSerializer)
+    def get(self, request: Request) -> Response:
+        return Response(AutomationSerializer(get_current_tenant()).data)
+
+    @extend_schema(request=AutomationSerializer, responses=AutomationSerializer)
+    def patch(self, request: Request) -> Response:
+        tenant = get_current_tenant()
+        body = AutomationSerializer(tenant, data=request.data)
+        body.is_valid(raise_exception=True)
+        with transaction.atomic():
+            before = tenant.daily_summary
+            tenant.daily_summary = body.validated_data["daily_summary"]
+            tenant.save(update_fields=["daily_summary"])
+            audit.record(
+                AuditEvent.Action.UPDATE,
+                tenant,
+                actor(request),
+                {"daily_summary": [before, tenant.daily_summary]},
+            )
+        return Response(AutomationSerializer(tenant).data)
 
 
 class MyTenantsView(generics.ListAPIView[Membership]):

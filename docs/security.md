@@ -202,3 +202,7 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
   production.
 - Dependencies are pinned to exact versions; Dependabot proposes updates; CI runs CodeQL and
   `npm audit`. A new dependency needs a reason in its pull request.
+
+## Signed bill links
+
+A customer can open one posted bill without an account through `/api/public/bills/<token>/`. The token is signed with `django.core.signing` under its own salt, names the business and the bill, and stops working after 30 days. A changed, old or draft link all answer 404. The response carries `Cache-Control: private, no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`, because the link is the key to the bill. Anyone holding the link can read that one bill until it expires, so it must only go to the customer. A link can't be withdrawn early except by rotating `SECRET_KEY`.
