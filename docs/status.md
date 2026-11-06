@@ -7,6 +7,7 @@ Last updated: 2026-11-06. Update at the end of every work session.
 - On `main`: #21 (Resend, reCAPTCHA, OAuth, with the Google account takeover closed), #22 (white design, real logo, offline and 404 screens, Brotli, service worker, business slugs, clean URLs) and #20 (M4 purchasing).
 - M4 is released as `v0.4.0`: purchasing, sales, statements, ageing and PDF invoices and receipts. PDFs need Pango, so a Windows machine answers with a plain message.
 - M5: reports, tax rates as dated data, and the counter (POS): barcode scan, cash and card, change, printing, end-of-day count.
+- Emails use one branded layout with a plain text copy (`apps/platform/mail.py`); dropdown lists are themed with `appearance: base-select` where the browser supports it.
 - Not tested: the v2 checkbox being ticked by a person, Google and Facebook sign-in end to end, and the sales screens in Urdu and Arabic by a native reader.
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
   The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
@@ -53,6 +54,8 @@ Last updated: 2026-11-06. Update at the end of every work session.
 2. M6: HR and payroll.
 
 ## Open questions
+
+- A Facebook sign-up keeps its link when the address is confirmed by email, because that is how a real Facebook user confirms. Someone who claims another person's address and gets them to click the link would keep an account on it. Decide how Facebook accounts should be confirmed.
 
 - Reports that read all history stay slow at 1 million lines, on MySQL with its default 128 MB buffer pool: balance sheet and all-time trial balance about 4.7s, cash flow about 7s, dashboard about 4.4s. Each joins every line to its entry. A larger buffer pool should help, which was not measured; the real fix is keeping running balances per account or copying the date onto the line.
 

@@ -1,8 +1,10 @@
 import re
+from typing import cast
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.core import mail
+from django.core.mail import EmailMultiAlternatives
 from django.db import connection, transaction
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
@@ -12,6 +14,7 @@ from rest_framework.test import APIClient
 from apps.accounts import emails, oauth
 from apps.accounts.models import SocialAccount, User
 from apps.accounts.tokens import make_email_token
+from apps.platform.mail import send_message
 from tests.factories import TEST_PASSWORD, create_user
 
 pytestmark = pytest.mark.django_db
@@ -200,3 +203,29 @@ def test_me_reports_verification(user: User) -> None:
     client = APIClient()
     client.force_login(create_user(email_verified_at=timezone.now()))
     assert client.get("/api/accounts/me/").json()["email_verified"] is True
+
+
+def test_emails_carry_our_design_and_a_plain_text_copy(user: User) -> None:
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
+    message = mail.outbox[0]
+    assert isinstance(message, EmailMultiAlternatives)
+    html = str(message.alternatives[0][0])
+    assert message.alternatives[0][1] == "text/html"
+    assert "Choose a new password" in html
+    assert "<" not in str(message.body)
+    url = re.search(r"https?://\S+", str(message.body))
+    assert url is not None
+    assert url.group().replace("&", "&amp;") in html
+
+
+def test_a_line_break_in_a_name_cannot_stop_an_email() -> None:
+    send_message("a@example.test", "Stock alerts: Shop\r\nBcc: x@example.test", "Hi", ["Hello"])
+    assert mail.outbox[0].subject == "Stock alerts: Shop Bcc: x@example.test"
+
+
+def test_a_name_typed_by_a_user_cannot_put_html_in_an_email() -> None:
+    send_message("a@example.test", "Hi", "<b>Shop</b>", ["<script>x</script>"])
+    html = str(cast(EmailMultiAlternatives, mail.outbox[0]).alternatives[0][0])
+    assert "<script>" not in html
+    assert "<b>Shop" not in html
+    assert "&lt;script&gt;" in html

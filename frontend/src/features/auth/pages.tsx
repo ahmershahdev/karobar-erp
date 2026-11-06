@@ -35,6 +35,14 @@ function submitting(handler: () => void) {
 
 const LINK = 'text-ember underline-offset-4 hover:underline';
 
+// A CSRF rejection is a 403 too, and telling someone their password is wrong wouldn't help them.
+function badCredentials(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.body as { code?: unknown } | undefined)?.code === 'authentication_failed'
+  );
+}
+
 export function SignInPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -114,10 +122,13 @@ export function SignInPage() {
         {human.checkbox}
         {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">
-            {mutation.error instanceof ApiError && mutation.error.status === 403
+            {badCredentials(mutation.error)
               ? t('signIn.failed')
               : messageOf(mutation.error, t('signIn.unavailable'))}
           </Alert>
+        )}
+        {badCredentials(mutation.error) && (
+          <p className="text-sm text-muted">{t('auth.googleHint')}</p>
         )}
         <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}

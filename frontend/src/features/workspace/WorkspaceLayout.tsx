@@ -6,6 +6,7 @@ import { Alert, Button } from '../../components/form';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { Logo } from '../../components/Logo';
 import { api } from '../../lib/api/client';
+import { unwrap } from '../../lib/api/errors';
 import { setActiveTenant } from '../../lib/api/client';
 import { can, type Me, type Membership } from '../../lib/api/types';
 import { ensureCsrf, useMemberships, useSignOut } from '../auth/session';
@@ -21,7 +22,7 @@ function VerifyBanner() {
   const resend = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await api.POST('/api/accounts/verify-email/resend/');
+      await unwrap(api.POST('/api/accounts/verify-email/resend/'));
     },
   });
   return (

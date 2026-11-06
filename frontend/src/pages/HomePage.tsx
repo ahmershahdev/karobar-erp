@@ -7,6 +7,7 @@ import { Reveal } from '../components/Reveal';
 import { ScrollWords } from '../components/ScrollWords';
 import { SectionHeading } from '../components/SectionHeading';
 import { SplitHeadline } from '../components/SplitHeadline';
+import { useSignedIn } from '../features/auth/session';
 import { ProductWindow } from '../features/home/ProductWindow';
 import { BuiltFor, Faq, HowItWorks, Roadmap, StatsBand } from '../features/home/sections';
 import { ModuleGallery } from '../features/modules/ModuleGallery';
@@ -16,6 +17,7 @@ import { PUBLIC_ROUTES, SITE } from '../seo/site';
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const signedIn = useSignedIn();
   usePublicSeo(PUBLIC_ROUTES[0]);
   const [introDelay] = useState(() => (isIntroPending() ? 900 : 100));
   const rules = t('promises.items', { returnObjects: true }) as { title: string; body: string }[];
@@ -39,8 +41,8 @@ export default function HomePage() {
           <p className="max-w-xl text-lg text-muted md:text-xl">{t('hero.lead')}</p>
           <div className="flex shrink-0 flex-wrap items-center gap-3">
             <Magnetic strength={0.2}>
-              <Link to="/signup" className="btn btn-primary">
-                {t('auth.joinTitle')}
+              <Link to={signedIn ? '/app' : '/signup'} className="btn btn-primary">
+                {signedIn ? t('nav.openApp') : t('auth.joinTitle')}
                 <span aria-hidden="true" className="btn-arrow">
                   &rarr;
                 </span>

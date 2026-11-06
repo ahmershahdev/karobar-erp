@@ -8,13 +8,17 @@ import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { MODULES, can, type Me, type Role } from '../../lib/api/types';
 import { ScreenIcon } from './icons';
-import { usePrivateSeo } from '../../lib/seo';
+import { AuthCard } from '../auth/AuthCard';
 import { ensureCsrf, sessionKeys } from '../auth/session';
 import { errorText, useTenantAction, useWorkspace } from './hooks';
 import { PageTitle, Panel } from './ui';
 
+const CURRENCIES = ['PKR', 'AED', 'SAR', 'QAR', 'OMR', 'KWD', 'BHD', 'USD', 'EUR', 'GBP'];
+
 export function NewBusinessPage({ me }: { me: Me }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage;
+  const currencyName = new Intl.DisplayNames(language, { type: 'currency' });
   const navigate = useNavigate();
   const client = useQueryClient();
   const [name, setName] = useState('');
@@ -41,22 +45,38 @@ export function NewBusinessPage({ me }: { me: Me }) {
       void navigate(`/app/${membership.tenant_slug}`);
     },
   });
-  usePrivateSeo(t('workspace.newBusiness'));
+  const resend = useMutation({
+    mutationFn: async () => {
+      await ensureCsrf();
+      await unwrap(api.POST('/api/accounts/verify-email/resend/'));
+    },
+  });
   return (
-    <section className="flex min-h-[100svh] items-center justify-center px-4 py-24">
+    <AuthCard title={t('workspace.newBusiness')} subtitle={t('workspace.newBusinessBody')}>
       <form
-        className="card w-full max-w-lg space-y-5 p-8"
+        className="space-y-5"
         onSubmit={(event) => {
           event.preventDefault();
           create.mutate();
         }}
       >
-        <h1 className="text-3xl">{t('workspace.newBusiness')}</h1>
-        <p className="text-muted">{t('workspace.newBusinessBody')}</p>
-        {!me.email_verified && <Alert tone="error">{t('workspace.unverified')}</Alert>}
+        {!me.email_verified && (
+          <Alert tone="error">
+            {t('workspace.unverified')}{' '}
+            <button
+              type="button"
+              className="underline underline-offset-4"
+              disabled={resend.isPending || resend.isSuccess}
+              onClick={() => resend.mutate()}
+            >
+              {resend.isSuccess ? t('workspace.resent') : t('workspace.resend')}
+            </button>
+          </Alert>
+        )}
         <Field
           label={t('workspace.businessName')}
           hint={t('hints.businessName')}
+          placeholder={t('workspace.businessNamePlaceholder')}
           required
           maxLength={150}
           value={name}
@@ -68,8 +88,10 @@ export function NewBusinessPage({ me }: { me: Me }) {
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
         >
-          {['PKR', 'AED', 'SAR', 'QAR', 'OMR', 'KWD', 'BHD', 'USD', 'EUR', 'GBP'].map((code) => (
-            <option key={code}>{code}</option>
+          {CURRENCIES.map((code) => (
+            <option key={code} value={code}>
+              {code} - {currencyName.of(code)}
+            </option>
           ))}
         </Select>
         <Select
@@ -80,7 +102,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         >
           {Array.from({ length: 12 }, (_, index) => (
             <option key={index} value={index + 1}>
-              {new Intl.DateTimeFormat(undefined, { month: 'long' }).format(
+              {new Intl.DateTimeFormat(language, { month: 'long' }).format(
                 new Date(2026, index, 1),
               )}
             </option>
@@ -102,7 +124,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
           {t('workspace.create')}
         </Button>
       </form>
-    </section>
+    </AuthCard>
   );
 }
 

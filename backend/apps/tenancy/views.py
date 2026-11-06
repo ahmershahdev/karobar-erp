@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from apps.accounts.emails import app_link
 from apps.accounts.models import User
-from apps.platform.tasks import send_email
+from apps.platform.mail import send_message
 
 from . import services
 from .context import get_current_tenant
@@ -156,11 +156,13 @@ class InvitationListView(generics.ListCreateAPIView[Invitation]):
             serializer.validated_data.get("role"),
         )
         serializer.instance = invitation
-        send_email.delay(
+        send_message(
             invitation.email,
             f"You're invited to {tenant.name} on Karobar ERP",
-            f"{actor(self.request).email} invited you to join {tenant.name}.\n\n"
-            f"Accept within 7 days:\n\n{app_link('accept-invite', token=token)}",
+            f"Join {tenant.name}",
+            [f"{actor(self.request).email} invited you to join {tenant.name} on Karobar ERP."],
+            ("Accept the invitation", app_link("accept-invite", token=token)),
+            "This invitation works for 7 days.",
         )
 
 

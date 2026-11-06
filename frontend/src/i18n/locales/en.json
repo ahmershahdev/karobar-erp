@@ -8,7 +8,8 @@
     "skip": "Skip to content",
     "language": "Language",
     "breadcrumb": "Breadcrumb",
-    "menu": "Menu"
+    "menu": "Menu",
+    "openApp": "My business"
   },
   "hero": {
     "eyebrow": "Open-source ERP for shops and distributors",
@@ -370,7 +371,8 @@
       "2": "Okay. One more word would make it much stronger.",
       "3": "Good password.",
       "4": "Strong password. Nice."
-    }
+    },
+    "googleHint": "Joined with Google? Use Continue with Google, or set a password with Forgot your password."
   },
   "workspace": {
     "overview": "Overview",
@@ -487,7 +489,8 @@
         "title": "Open the counter",
         "body": "Scan, take the money, done"
       }
-    }
+    },
+    "businessNamePlaceholder": "For example, Hyderabad Traders"
   },
   "modulesShort": {
     "members": "Members",
@@ -1087,6 +1090,9 @@
     "saleDone": "Sale done",
     "nextCustomer": "Next customer",
     "sellingPrice": "Selling price",
-    "pickStore": "Choose your store to start."
+    "pickStore": "Choose your store to start.",
+    "noStore": "You have no store yet",
+    "noStoreBody": "Stock and cash belong to a store, so add one first. It only takes a moment.",
+    "addStore": "Add a store"
   }
 }
