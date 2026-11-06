@@ -17,7 +17,7 @@ export const SITE = {
   email: 'support@ahmershah.dev',
   repo: 'https://github.com/ahmershahdev/karobar-erp',
   locale: 'en_US',
-  themeColor: '#0b0b10',
+  themeColor: '#ffffff',
   ogImage: '/og-image.png',
 } as const;
 

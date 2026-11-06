@@ -32,7 +32,7 @@ export function ScrollTopButton() {
       }}
       aria-label={t('footer.top')}
       tabIndex={shown ? 0 : -1}
-      className={`group fixed end-5 bottom-5 z-[60] flex size-14 items-center justify-center rounded-full bg-black/70 backdrop-blur-md transition-[opacity,transform] duration-500 ease-[var(--ease-out-expo)] md:end-8 md:bottom-8 ${
+      className={`group fixed end-5 bottom-5 z-[60] flex size-12 items-center justify-center rounded-full bg-canvas transition-[opacity,transform] duration-500 ease-[var(--ease-out-expo)] md:end-8 md:bottom-8 ${
         shown ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-6 opacity-0'
       }`}
     >

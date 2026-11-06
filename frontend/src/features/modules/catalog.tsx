@@ -1,6 +1,5 @@
-import { useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { prefersReducedMotion } from '../../lib/motion';
 import type { ModuleKey } from './data';
 
 const LINE = {
@@ -90,39 +89,5 @@ export function ModuleGlyph({
     <svg viewBox="0 0 120 120" className={className} aria-hidden="true">
       {GLYPHS[module]}
     </svg>
-  );
-}
-
-/** Tilts toward the pointer and lights the spot under it. Still, for touch and reduced motion. */
-export function TiltCard({
-  children,
-  className = '',
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const move = (event: React.PointerEvent<HTMLDivElement>) => {
-    const element = ref.current;
-    if (!element || event.pointerType !== 'mouse' || prefersReducedMotion()) return;
-    const rect = element.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    element.style.setProperty('--x', `${x * 100}%`);
-    element.style.setProperty('--y', `${y * 100}%`);
-    element.style.transform = `perspective(900px) rotateX(${(0.5 - y) * 7}deg) rotateY(${(x - 0.5) * 9}deg)`;
-  };
-  const leave = () => {
-    if (ref.current) ref.current.style.transform = '';
-  };
-  return (
-    <div
-      ref={ref}
-      onPointerMove={move}
-      onPointerLeave={leave}
-      className={`tilt-card group relative transition-transform duration-700 ease-[var(--ease-out-expo)] ${className}`}
-    >
-      {children}
-    </div>
   );
 }

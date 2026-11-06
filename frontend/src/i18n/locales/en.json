@@ -19,18 +19,6 @@
     "accent": "in balance.",
     "scroll": "Scroll"
   },
-  "marquee": [
-    "Inventory",
-    "Point of sale",
-    "Purchasing",
-    "Double-entry books",
-    "GST and VAT",
-    "Warehouses",
-    "Batches and expiry",
-    "HR",
-    "Payroll",
-    "Audit log"
-  ],
   "promises": {
     "eyebrow": "Built around three rules",
     "title": "The forms are easy. These are not.",
@@ -453,9 +441,6 @@
     "payroll": "Payroll",
     "reports": "Reports"
   },
-  "cursor": {
-    "open": "Open"
-  },
   "manifesto": {
     "eyebrow": "Why it exists",
     "body": "Most small businesses run on paper registers and spreadsheets that slowly drift apart. Karobar keeps stock, sales and books in one ledger, so every number agrees with every other the moment anything happens."
@@ -518,11 +503,6 @@
     "nextYear": "Open the next fiscal year",
     "open": "Open",
     "closed": "Closed"
-  },
-  "preloader": {
-    "words": ["Stock", "Sales", "Books", "Payroll"],
-    "tag": "Your business, in the cloud",
-    "loading": "Getting your books ready"
   },
   "inv": {
     "products": "Products",

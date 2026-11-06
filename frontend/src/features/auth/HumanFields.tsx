@@ -12,7 +12,7 @@ export function Honeypot({
   onChange: (value: string) => void;
 }) {
   return (
-    <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+    <div aria-hidden="true" className="sr-only">
       <label>
         Website
         <input
@@ -45,15 +45,15 @@ export function Checkbox({
     void loadRecaptcha(v3Key).then((grecaptcha) => {
       grecaptcha.render(container, {
         sitekey: siteKey,
-        theme: 'dark',
+        theme: 'light',
         callback: onToken,
         'expired-callback': () => onToken(''),
       });
     });
   }, [siteKey, v3Key, onToken]);
   return (
-    <div className="space-y-3 rounded-2xl border border-ember/30 bg-ember/[0.05] p-4">
-      <p className="text-sm text-ink/85">{t('auth.robotCheck')}</p>
+    <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
+      <p className="text-sm text-ink">{t('auth.robotCheck')}</p>
       {/* Google's checkbox is a fixed 304 by 78 pixel iframe; the box keeps that space so the
           form doesn't jump when it loads, and scales it down on very narrow phones. */}
       <div className="h-[78px] origin-left max-[360px]:scale-90 rtl:origin-right" ref={box} />
@@ -67,7 +67,7 @@ export function Checkbox({
  */
 export function RecaptchaNotice() {
   const { t } = useTranslation();
-  const link = 'text-ink/70 underline underline-offset-2 hover:text-ember';
+  const link = 'text-muted underline underline-offset-2 hover:text-ink';
   return (
     <p className="text-center text-xs text-muted">
       {t('auth.recaptchaNotice.protected')}{' '}

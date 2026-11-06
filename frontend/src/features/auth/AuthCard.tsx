@@ -3,14 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
-import { Logo, Wordmark } from '../../components/Logo';
+import { Logo } from '../../components/Logo';
 import { Reveal } from '../../components/Reveal';
-import { useMediaQuery } from '../../lib/motion';
 import { usePrivateSeo } from '../../lib/seo';
-import { Backdrop } from '../scene/Backdrop';
 
-// Split screen on wide displays: the live particle globe behind the brand panel on one side, the
-// form on a quiet surface on the other. Phones get the form alone, with the brand line above it.
+// Split screen on wide displays: the promise on a quiet tinted panel, the form on white. Phones
+// get the form alone, with the logo above it.
 export function AuthCard({
   title,
   subtitle,
@@ -25,25 +23,21 @@ export function AuthCard({
   const { t } = useTranslation();
   usePrivateSeo(title);
   const benefits = t('auth.benefits', { returnObjects: true }) as string[];
-  // Mounted, not just hidden, only on wide screens: a hidden canvas would still animate.
-  const wide = useMediaQuery('(min-width: 1024px)');
 
   return (
-    <div className="relative grid min-h-[100svh] lg:grid-cols-[1.15fr_1fr]">
-      {wide && <Backdrop side="left" />}
-      <aside className="relative hidden flex-col justify-between p-12 lg:flex" data-morph="0">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Logo className="size-8" />
-          <Wordmark className="text-2xl" />
+    <div className="grid min-h-[100svh] lg:grid-cols-[1fr_1.1fr]">
+      <aside className="hidden flex-col justify-between border-e border-line bg-surface p-12 lg:flex">
+        <Link to="/" className="inline-block w-fit">
+          <Logo className="h-9 w-auto" />
         </Link>
         <div className="max-w-md space-y-8">
-          <p className="font-display text-5xl leading-none font-extrabold tracking-[-0.04em] xl:text-6xl">
-            {t('hero.title')} <em className="text-gradient">{t('hero.accent')}</em>
+          <p className="display-md font-display font-medium">
+            {t('hero.title')} <span className="text-flame">{t('hero.accent')}</span>
           </p>
           <ul className="space-y-3">
             {benefits.map((benefit) => (
-              <li key={benefit} className="flex items-center gap-3 text-ink/85">
-                <svg viewBox="0 0 16 16" className="size-4 shrink-0 text-ember" aria-hidden="true">
+              <li key={benefit} className="flex items-center gap-3 text-muted">
+                <svg viewBox="0 0 16 16" className="size-4 shrink-0 text-green" aria-hidden="true">
                   <path d="m3 8.5 3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.6" />
                 </svg>
                 {benefit}
@@ -54,11 +48,10 @@ export function AuthCard({
         <span className="label">{t('hero.eyebrow')}</span>
       </aside>
 
-      <section className="relative flex flex-col border-line bg-black/85 px-[var(--gutter)] py-8 backdrop-blur-xl lg:border-s">
+      <section className="flex flex-col bg-canvas px-[var(--gutter)] py-6 lg:py-8">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 lg:invisible">
-            <Logo className="size-7" />
-            <Wordmark className="text-xl" />
+          <Link to="/" className="inline-block lg:invisible">
+            <Logo className="h-8 w-auto" />
           </Link>
           <LanguageSwitcher />
         </div>
@@ -67,7 +60,6 @@ export function AuthCard({
           className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-12"
         >
           <div className="space-y-3">
-            <span className="label !text-ember lg:hidden">{t('auth.panelTitle')}</span>
             <h1 className="display-md">{title}</h1>
             {subtitle && <p className="text-muted">{subtitle}</p>}
           </div>

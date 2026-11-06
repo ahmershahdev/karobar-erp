@@ -4,7 +4,7 @@ import { Link, NavLink, Navigate, Outlet, useNavigate, useParams } from 'react-r
 
 import { Alert, Button } from '../../components/form';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
-import { Logo, Wordmark } from '../../components/Logo';
+import { Logo } from '../../components/Logo';
 import { api } from '../../lib/api/client';
 import { setActiveTenant } from '../../lib/api/client';
 import { can, type Me, type Membership } from '../../lib/api/types';
@@ -104,16 +104,15 @@ export function WorkspaceLayout({ me }: { me: Me }) {
 
   return (
     <div className="flex min-h-[100svh] flex-col md:flex-row">
-      <aside className="border-b border-line bg-surface/70 backdrop-blur md:sticky md:top-0 md:h-[100svh] md:w-72 md:border-e md:border-b-0">
+      <aside className="border-b border-line bg-surface md:sticky md:top-0 md:h-[100svh] md:w-72 md:border-e md:border-b-0">
         <div className="flex h-full flex-col gap-5 p-4 md:gap-6 md:p-5">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2.5">
-              <Logo className="size-7" />
-              <Wordmark className="text-xl" />
+            <Link to="/" className="inline-block">
+              <Logo className="h-8 w-auto" />
             </Link>
             <button
               type="button"
-              className="label rounded-full border border-line px-3 py-1.5 hover:border-ember hover:!text-ember md:hidden"
+              className="label rounded-full border border-line px-3 py-1.5 hover:border-ink hover:!text-ink md:hidden"
               onClick={() => {
                 void signOut().then(() => navigate('/app/sign-in'));
               }}
@@ -124,7 +123,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
           <label className="block space-y-2">
             <span className="label">{t('workspace.business')}</span>
             <select
-              className="w-full rounded-xl border border-line bg-black/40 px-3 py-2.5 outline-none focus:border-ember"
+              className="w-full rounded-xl border border-line bg-canvas px-3 py-2.5 outline-none focus:border-ink"
               value={membership.tenant_id}
               onChange={(event) => {
                 if (event.target.value === 'new') void navigate('/app/new-business');
@@ -161,8 +160,8 @@ export function WorkspaceLayout({ me }: { me: Me }) {
                       className={({ isActive }) =>
                         `rounded-xl px-3 py-2 text-sm whitespace-nowrap transition-colors ${
                           isActive
-                            ? 'bg-cream text-black'
-                            : 'text-muted hover:bg-white/5 hover:text-ink'
+                            ? 'bg-ink text-canvas'
+                            : 'text-muted hover:bg-raised hover:text-ink'
                         }`
                       }
                     >

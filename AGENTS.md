@@ -98,8 +98,7 @@ Public pages only; everything under `/app` is `noindex`. See [docs/seo.md](docs/
 
 See [docs/design.md](docs/design.md). Colours, gradients, radii and motion timings are tokens in
 `frontend/src/styles/tokens.css`; components never use raw hex values. All motion honours
-`prefers-reduced-motion`, WebGL is lazy-loaded and has a static fallback, and the app screens
-favour speed and clarity over effects.
+`prefers-reduced-motion`, and the app screens favour speed and clarity over effects.
 
 ## Comments
 

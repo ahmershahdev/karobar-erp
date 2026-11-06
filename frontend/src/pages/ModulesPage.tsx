@@ -4,7 +4,7 @@ import { useLocation } from 'react-router';
 
 import { PageHero } from '../components/PageHero';
 import { Reveal } from '../components/Reveal';
-import { ModuleGlyph, TiltCard } from '../features/modules/catalog';
+import { ModuleGlyph } from '../features/modules/catalog';
 import { MODULES, type ModuleCopy } from '../features/modules/data';
 import { StatusChip } from '../features/modules/ModuleGallery';
 import { prefersReducedMotion } from '../lib/motion';
@@ -63,7 +63,6 @@ export default function ModulesPage() {
           { label: t('nav.home'), to: '/' },
           { label: t('nav.modules'), to: '/modules' },
         ]}
-        index="01"
         eyebrow={t('modules.eyebrow')}
         title={t('modules.pageTitle')}
         accent={t('modules.pageAccent')}
@@ -72,12 +71,9 @@ export default function ModulesPage() {
 
       <nav
         aria-label={t('modules.jump')}
-        className="sticky top-[calc(var(--header-height)+0.5rem)] z-30 shell"
+        className="shell sticky top-[calc(var(--header-height)+0.5rem)] z-30"
       >
-        <Reveal
-          stagger
-          className="flex gap-1 overflow-x-auto rounded-full border border-line bg-black/70 p-1.5 backdrop-blur-xl [scrollbar-width:none]"
-        >
+        <div className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-canvas/85 p-1 backdrop-blur-xl [scrollbar-width:none]">
           {MODULES.map((meta, index) => {
             const current = active === meta.key;
             return (
@@ -86,79 +82,47 @@ export default function ModulesPage() {
                 type="button"
                 aria-current={current ? 'true' : undefined}
                 onClick={() => jump(meta.key)}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
-                  current ? 'bg-cream text-black' : 'text-ink/75 hover:text-ink'
+                className={`shrink-0 rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
+                  current ? 'bg-ink text-canvas' : 'text-muted hover:text-ink'
                 }`}
               >
-                <span className="size-1.5 rounded-full" style={{ background: meta.color }} />
                 {items[index]?.title}
               </button>
             );
           })}
-        </Reveal>
+        </div>
       </nav>
 
-      <div className="shell mt-16 space-y-6 md:mt-24 md:space-y-10">
+      <div className="shell mt-12 md:mt-20">
         {MODULES.map((meta, index) => {
           const copy = items[index];
           if (!copy) return null;
-          const flipped = index % 2 === 1;
           return (
-            <section key={meta.key} id={meta.key} data-morph="2" className="scroll-mt-28">
-              <Reveal>
-                <TiltCard className="rounded-[2rem]">
-                  <article className="relative grid overflow-hidden rounded-[2rem] border border-line bg-[linear-gradient(160deg,color-mix(in_srgb,_var(--color-raised)_96%,_transparent),color-mix(in_srgb,_var(--color-canvas)_94%,_transparent))] lg:grid-cols-2">
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-x-0 top-0 h-px"
-                      style={{ background: meta.gradient }}
-                    />
-                    <div
-                      className={`relative flex min-h-[18rem] items-center justify-center overflow-hidden border-line p-10 lg:min-h-[28rem] ${
-                        flipped ? 'lg:order-2 lg:border-s' : 'lg:border-e'
-                      } border-b lg:border-b-0`}
-                    >
-                      <div
-                        aria-hidden="true"
-                        className="absolute size-[28rem] rounded-full opacity-25 blur-3xl transition-opacity duration-700 group-hover:opacity-45"
-                        style={{ background: meta.gradient }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="outline-text absolute start-6 top-4 font-display text-[9rem] leading-none select-none"
-                      >
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <div className="relative" style={{ color: meta.color }}>
-                        <ModuleGlyph module={meta.key} className="size-40 md:size-52" />
-                      </div>
-                    </div>
-                    <div className="relative flex flex-col gap-6 p-8 md:p-12">
-                      <StatusChip status={meta.status} milestone={meta.milestone} />
-                      <h2 className="display-lg">{copy.title}</h2>
-                      <p className="max-w-lg text-lg text-ink/80">{copy.body}</p>
-                      <ul className="grid gap-3 sm:grid-cols-2">
-                        {copy.points.map((point) => (
-                          <li
-                            key={point}
-                            className="flex gap-3 rounded-2xl border border-line bg-black/30 p-4 text-sm"
-                          >
-                            <span
-                              aria-hidden="true"
-                              className="mt-1.5 size-1.5 shrink-0 rotate-45"
-                              style={{ background: meta.color }}
-                            />
-                            {point}
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-auto rounded-2xl border border-ember/25 bg-ember/[0.05] p-5">
-                        <p className="label !text-ember">{t('modules.inBooks')}</p>
-                        <p className="mt-2 text-sm text-ink/85">{copy.books}</p>
-                      </div>
-                    </div>
-                  </article>
-                </TiltCard>
+            <section
+              key={meta.key}
+              id={meta.key}
+              className="group scroll-mt-36 border-t border-line py-14 md:py-20"
+            >
+              <Reveal className="grid gap-10 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
+                <div className="space-y-8">
+                  <StatusChip status={meta.status} milestone={meta.milestone} />
+                  <ModuleGlyph module={meta.key} className="size-20 text-ink md:size-24" />
+                </div>
+                <div>
+                  <h2 className="display-lg">{copy.title}</h2>
+                  <p className="mt-5 max-w-xl text-lg text-muted">{copy.body}</p>
+                  <ul className="mt-10 grid gap-x-10 border-t border-line sm:grid-cols-2">
+                    {copy.points.map((point) => (
+                      <li key={point} className="border-b border-line py-4 text-sm">
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-8 rounded-xl bg-surface p-5">
+                    <p className="label">{t('modules.inBooks')}</p>
+                    <p className="mt-1.5 text-sm">{copy.books}</p>
+                  </div>
+                </div>
               </Reveal>
             </section>
           );

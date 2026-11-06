@@ -41,6 +41,6 @@ Private screens call `usePrivateSeo(title)`, which sets `noindex, nofollow`. ngi
 
 ## Performance that affects ranking
 
-- The hero paints a CSS gradient first; three.js loads lazily after it, so it never blocks LCP.
+- The hero is text and CSS with no image or WebGL in its way, so LCP is the headline itself.
 - Fonts are self-hosted; Urdu and Arabic fonts load only when those languages are picked.
 - Hashed assets are cached for a year; HTML is `no-cache`.

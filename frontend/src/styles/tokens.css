@@ -1,61 +1,39 @@
 /*
-  The whole palette lives here. Components use these names (bg-ember, text-cream, from-coral)
-  or the semantic ones below; a raw hex value anywhere else is a review comment.
+  The whole palette lives here. Components use these names (bg-canvas, text-ink, text-ember); a raw
+  hex value anywhere else is a review comment.
 
-  The palette comes from the logo: a midnight navy canvas (the wordmark's navy, deepened), the
-  royal blue of the cloud as `azure`, and the orange of the growth arrow and "ERP" as `ember`,
-  the one accent everything clickable uses. The other named colours are tuned to sit on navy.
+  White paper, the logo's navy as ink, and one accent. The logo's own orange is only about 2.3:1 on
+  white, so `ember` is a deeper tone of it that passes AA as text. Status colours are tuned the same
+  way: every one below is at least 4.5:1 on canvas and surface.
 */
 @theme {
-  --color-red: #ef5350;
-  --color-blue: #1d4ed8;
-  --color-green: #22a06b;
-  --color-yellow: #fbb03b;
-  --color-orange: #f7931e;
-  --color-purple: #7c5cdb;
-  --color-black: #030817;
   --color-white: #ffffff;
-  --color-grey: #8590a8;
-  --color-pink: #e879a6;
-  --color-brown: #8a5a32;
-  --color-navy: #0f1d45;
-  --color-sky: #5b9cff;
-  --color-maroon: #7a1f33;
-  --color-violet: #6d5df0;
-  --color-turquoise: #2dd4bf;
-  --color-cyan: #22b8e0;
-  --color-magenta: #d64fa4;
-  --color-cream: #f2f5fc;
-  --color-beige: #d9dfee;
-  --color-silver: #b4bdd2;
-  --color-ember: #f7931e;
-  --color-azure: #2563eb;
+  --color-navy: #0b1a3c;
+  --color-azure: #1d4ed8;
+  --color-ember: #b84a08;
+  --color-orange: #f7931e;
+  /* Headline size only: large text needs 3:1, and this stays close to the "ERP" in the logo. */
+  --color-flame: #e8660a;
+  --color-red: #c8281e;
+  --color-green: #0b7a4b;
+  --color-yellow: #96590a;
   /* Third-party brand marks on the sign-in buttons; their colours are set by each brand. */
   --color-brand-google-blue: #4285f4;
   --color-brand-google-green: #34a853;
   --color-brand-google-yellow: #fbbc05;
   --color-brand-google-red: #ea4335;
   --color-brand-facebook: #1877f2;
-  --color-olive: #7d8a3c;
-  --color-teal: #14958a;
-  --color-indigo: #2b3fae;
-  --color-lavender: #b3c0f2;
-  --color-peach: #ffc477;
-  --color-coral: #f26a1b;
-  --color-mint: #8fe0c4;
-  --color-charcoal: #08112b;
 
-  --color-canvas: var(--color-black);
-  --color-surface: var(--color-charcoal);
-  --color-raised: #0f1a3a;
-  --color-ink: var(--color-cream);
-  --color-muted: #94a0bc;
+  --color-canvas: var(--color-white);
+  --color-surface: #f7f8fa;
+  --color-raised: #eef0f4;
+  --color-ink: var(--color-navy);
+  --color-muted: #566076;
   --color-accent: var(--color-ember);
-  --color-line: rgb(214 224 255 / 0.1);
-  --color-line-strong: rgb(214 224 255 / 0.22);
+  --color-line: rgb(11 26 60 / 0.09);
+  --color-line-strong: rgb(11 26 60 / 0.2);
 
-  /* Montserrat's heavy weights echo the logo's wordmark. */
-  --font-display: 'Montserrat Variable', 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --font-arabic: 'Noto Kufi Arabic Variable', 'Geist Variable', sans-serif;
@@ -67,50 +45,8 @@
 }
 
 :root {
-  /* The arrow and "ERP" in the logo: amber into deep orange. */
-  --gradient-molten: linear-gradient(
-    100deg,
-    var(--color-yellow) 0%,
-    var(--color-ember) 45%,
-    var(--color-coral) 100%
-  );
-  /* The cloud: royal blue lifting to sky. */
-  --gradient-cloud: linear-gradient(
-    120deg,
-    var(--color-blue) 0%,
-    var(--color-azure) 45%,
-    var(--color-sky) 100%
-  );
-  --gradient-aurora: linear-gradient(
-    120deg,
-    var(--color-navy) 0%,
-    var(--color-indigo) 35%,
-    var(--color-azure) 70%,
-    var(--color-sky) 100%
-  );
-  --gradient-lagoon: linear-gradient(
-    120deg,
-    var(--color-teal) 0%,
-    var(--color-cyan) 50%,
-    var(--color-sky) 100%
-  );
-  --gradient-orchard: linear-gradient(
-    120deg,
-    var(--color-olive) 0%,
-    var(--color-green) 50%,
-    var(--color-mint) 100%
-  );
-  --gradient-dusk: linear-gradient(
-    120deg,
-    var(--color-maroon) 0%,
-    var(--color-purple) 55%,
-    var(--color-lavender) 100%
-  );
-  --gradient-sunrise: linear-gradient(120deg, var(--color-orange) 0%, var(--color-yellow) 100%);
-  --gradient-blossom: linear-gradient(120deg, var(--color-pink) 0%, var(--color-peach) 100%);
-  --gradient-earth: linear-gradient(120deg, var(--color-brown) 0%, var(--color-beige) 100%);
-
   --gutter: clamp(1rem, 4vw, 3rem);
-  --header-height: 5.5rem;
-  --radius-card: 1.5rem;
+  --header-height: 4.5rem;
+  --radius-card: 1rem;
+  --shadow-float: 0 1px 2px rgb(11 26 60 / 0.04), 0 32px 64px -24px rgb(11 26 60 / 0.16);
 }

@@ -105,7 +105,7 @@ function ProductPicker({
             <li key={product.id}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-start text-sm hover:bg-white/5"
+                className="w-full px-3 py-2 text-start text-sm hover:bg-raised"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(product)}
               >
@@ -263,7 +263,7 @@ export function ProductsPage() {
           <input
             aria-label={t('inv.search')}
             placeholder={t('inv.search')}
-            className="rounded-full border border-line bg-black/50 px-4 py-2 text-sm"
+            className="rounded-full border border-line bg-canvas px-4 py-2 text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value.slice(0, 80))}
           />
@@ -511,7 +511,7 @@ function StockEditor({ onDone }: { onDone: () => void }) {
                     <button
                       type="button"
                       aria-label={t('workspace.remove')}
-                      className="px-2 text-muted hover:text-coral disabled:opacity-30"
+                      className="px-2 text-muted hover:text-red disabled:opacity-30"
                       disabled={lines.length <= 1}
                       onClick={() => setLines(lines.filter((item) => item.key !== line.key))}
                     >
@@ -705,7 +705,7 @@ export function StockOnHandPage() {
         action={
           <select
             aria-label={t('inv.warehouse')}
-            className="rounded-full border border-line bg-black/50 px-4 py-2 text-sm"
+            className="rounded-full border border-line bg-canvas px-4 py-2 text-sm"
             value={warehouse}
             onChange={(e) => setWarehouse(e.target.value)}
           >
@@ -743,7 +743,7 @@ export function StockOnHandPage() {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-ember/40 text-ember">
+              <tr className="border-t border-line-strong font-medium">
                 <td className={TD} colSpan={4}>
                   {t('inv.totalValue')}
                 </td>
@@ -803,7 +803,7 @@ export function AlertsPage() {
               <span>
                 <span className="font-mono text-xs text-ember">{row.sku}</span> {row.name}
               </span>
-              <span className="font-mono text-sm text-coral">
+              <span className="font-mono text-sm text-red">
                 {formatQuantity(row.on_hand, i18n.resolvedLanguage)} /{' '}
                 {formatQuantity(row.reorder_level, i18n.resolvedLanguage)}
               </span>

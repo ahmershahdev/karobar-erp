@@ -44,7 +44,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
   return (
     <section className="flex min-h-[100svh] items-center justify-center px-4 py-24">
       <form
-        className="gradient-border w-full max-w-lg space-y-5 p-8"
+        className="card w-full max-w-lg space-y-5 p-8"
         onSubmit={(event) => {
           event.preventDefault();
           create.mutate();
@@ -229,7 +229,7 @@ export function MembersPage() {
                 <div className="flex items-center gap-2">
                   <select
                     aria-label={t('workspace.role')}
-                    className="rounded-lg border border-line bg-black/40 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-line bg-canvas px-2 py-1.5 text-sm"
                     value={row.role ?? ''}
                     disabled={!can(membership, 'members', 'update')}
                     onChange={(e) => {

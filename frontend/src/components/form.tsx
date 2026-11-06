@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { passwordChecks, passwordScore } from '../lib/password';
 
 const INPUT =
-  'w-full rounded-xl border border-line bg-black/50 px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/50 focus:border-ember focus:shadow-[0_0_0_4px_color-mix(in_srgb,_var(--color-ember)_12%,_transparent)] disabled:opacity-60';
+  'w-full rounded-xl border border-line bg-canvas px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 focus:border-ink focus:shadow-[0_0_0_4px_var(--color-raised)] disabled:opacity-60';
 
 export function Field({
   label,
@@ -58,7 +58,7 @@ export function PasswordField({
           aria-pressed={visible}
           aria-controls={id}
           onClick={() => setVisible(!visible)}
-          className="absolute inset-y-0 end-0 flex w-12 items-center justify-center text-muted transition-colors hover:text-ember"
+          className="absolute inset-y-0 end-0 flex w-12 items-center justify-center text-muted transition-colors hover:text-ink"
         >
           <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
             <path
@@ -94,7 +94,7 @@ function StrengthMeter({ value, score }: { value: string; score: number }) {
     { ok: checks.noRepeats, label: t('auth.passwordChecks.repeats') },
   ];
   return (
-    <div className="space-y-3 rounded-xl border border-line bg-black/30 p-3.5" aria-live="polite">
+    <div className="space-y-3 rounded-xl border border-line bg-canvas p-3.5" aria-live="polite">
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className={`font-semibold ${STRENGTH_TEXT[score]}`}>
           {t(`auth.strength.${score}`)}
@@ -157,9 +157,9 @@ export function Button({
   ...props
 }: { variant?: 'primary' | 'ghost' | 'danger' } & ComponentProps<'button'>) {
   const styles = {
-    primary: 'text-black [background:var(--gradient-molten)] hover:[background:var(--color-coral)]',
-    ghost: 'border border-line-strong text-ink hover:border-ember hover:text-ember',
-    danger: 'border border-coral/40 text-coral hover:bg-coral/10',
+    primary: 'bg-ink text-canvas hover:bg-azure',
+    ghost: 'border border-line-strong text-ink hover:border-ink',
+    danger: 'border border-red/40 text-red hover:bg-red/10',
   }[variant];
   return (
     <button
@@ -176,15 +176,14 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     <button
       type="submit"
       disabled={pending}
-      className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full py-4 font-medium text-black transition disabled:opacity-70"
-      style={{ background: 'var(--gradient-molten)' }}
+      className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-ink py-4 font-medium text-canvas transition disabled:opacity-70"
     >
-      <span className="absolute inset-0 origin-left scale-x-0 bg-coral transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
+      <span className="absolute inset-0 origin-left scale-x-0 bg-azure transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
       <span className="relative">{children}</span>
       {pending ? (
         <span
           aria-hidden="true"
-          className="relative size-4 animate-spin rounded-full border-2 border-black/30 border-t-black"
+          className="relative size-4 animate-spin rounded-full border-2 border-canvas/30 border-t-canvas"
         />
       ) : (
         <span
@@ -201,8 +200,8 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
 export function Alert({ tone, children }: { tone: 'error' | 'success'; children: ReactNode }) {
   const styles =
     tone === 'error'
-      ? 'border-coral/40 bg-coral/10 text-coral'
-      : 'border-mint/40 bg-mint/10 text-mint';
+      ? 'border-red/40 bg-red/10 text-red'
+      : 'border-green/40 bg-green/10 text-green';
   return (
     <p
       role={tone === 'error' ? 'alert' : 'status'}

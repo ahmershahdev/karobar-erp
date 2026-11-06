@@ -117,7 +117,7 @@ form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 Vite stamps `nonce="__CSP_NONCE__"` on every tag it writes (`html.cspNonce`). nginx replaces the
 placeholder with `$request_id`, 32 random hex characters per response, and sends the same value in
 the header. HTML is `no-cache`, so a nonce is never reused. `strict-dynamic` lets the nonced entry
-script load its lazy chunks (three.js, pages) without listing them.
+script load its lazy page chunks without listing them.
 
 Fonts are self-hosted through Fontsource. The only third-party origins are Google's reCAPTCHA
 ones, on the sign-in, sign-up and reset forms: the script is added by our nonced code, so

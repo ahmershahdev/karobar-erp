@@ -13,7 +13,7 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[var(--radius-card)] border border-line bg-surface/50 p-6">
+    <section className="rounded-[var(--radius-card)] border border-line bg-canvas p-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl">{title}</h2>
         {action}
@@ -51,11 +51,11 @@ function Guide({ name }: { name: string }) {
   const steps = t(`guides.${name}`, { returnObjects: true, defaultValue: [] }) as string[];
   if (!Array.isArray(steps) || steps.length === 0) return null;
   return (
-    <details open className="group/guide rounded-2xl border border-azure/30 bg-azure/[0.06]">
+    <details open className="group/guide rounded-2xl border border-line bg-surface">
       <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-3.5 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span
           aria-hidden="true"
-          className="grid size-6 shrink-0 place-items-center rounded-full bg-azure/20 text-xs text-sky"
+          className="grid size-6 shrink-0 place-items-center rounded-full bg-raised text-xs text-ink"
         >
           ?
         </span>
@@ -69,8 +69,8 @@ function Guide({ name }: { name: string }) {
       </summary>
       <ol className="space-y-3 px-5 pb-5">
         {steps.map((step, index) => (
-          <li key={step} className="flex gap-3 text-sm leading-relaxed text-ink/85">
-            <span className="grid size-6 shrink-0 place-items-center rounded-full border border-ember/50 font-mono text-xs text-ember">
+          <li key={step} className="flex gap-3 text-sm leading-relaxed text-muted">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full border border-line-strong text-xs text-ink">
               {index + 1}
             </span>
             <span className="pt-0.5">{step}</span>

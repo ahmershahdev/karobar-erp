@@ -1,9 +1,15 @@
 # Project status
 
-Last updated: 2026-11-03. Update at the end of every work session.
+Last updated: 2026-11-06. Update at the end of every work session.
 
 ## Where we are
 
+- New look, uncommitted on `feat/brand-theme`: a minimal white theme replaces the dark brand theme
+  of #22 across the site and app (see `docs/design.md`). The real logo is now used everywhere as
+  WebP, and the source PNG is gone from the repo root (still in git history). Removed: WebGL
+  particles and `three`, Montserrat, the custom cursor, grain, marquee, tilt cards, the pinned
+  module gallery and the curtain transition. Also fixed: the sign-up honeypot's negative offset
+  made RTL pages about 10,000px wide.
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
   The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
   on `main`.
