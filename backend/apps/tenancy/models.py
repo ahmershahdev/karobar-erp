@@ -4,8 +4,9 @@ from typing import Any, ClassVar
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
+from django.utils.text import slugify
 
 from .context import get_current_tenant
 from .managers import TenantScopedManager
@@ -14,6 +15,9 @@ from .managers import TenantScopedManager
 class Tenant(models.Model):
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=150)
+    # For readable app URLs only. The API still identifies a tenant by public_id, and the app
+    # resolves a slug against the signed-in user's own memberships, so knowing one grants nothing.
+    slug = models.SlugField(max_length=60, unique=True, editable=False)
     base_currency = models.CharField(max_length=3, default="PKR")
     locale = models.CharField(max_length=5, default="en")
     # July for Pakistan's July to June fiscal year; 1 for a calendar year.
@@ -24,6 +28,22 @@ class Tenant(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        if self.slug:
+            super().save(*args, **kwargs)
+            return
+        # Urdu and Arabic names slugify to nothing, so those businesses get a generic stem.
+        stem = slugify(self.name)[:50].strip("-") or "business"
+        fallback = f"{stem}-{self.public_id.hex[:6]}"
+        self.slug = fallback if Tenant.objects.filter(slug=stem).exists() else stem
+        try:
+            with transaction.atomic():
+                super().save(*args, **kwargs)
+        except IntegrityError:
+            # Two businesses with the same name created at the same moment.
+            self.slug = fallback
+            super().save(*args, **kwargs)
 
 
 class TenantOwnedModel(models.Model):

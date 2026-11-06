@@ -13,3 +13,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
 }
 
 MIDDLEWARE = [m for m in MIDDLEWARE if not m.startswith("whitenoise.")]
+
+# A developer's .env may hold real keys; tests that need reCAPTCHA set their own.
+RECAPTCHA_V3_SITE_KEY = RECAPTCHA_V3_SECRET_KEY = ""
+RECAPTCHA_V2_SITE_KEY = RECAPTCHA_V2_SECRET_KEY = ""
