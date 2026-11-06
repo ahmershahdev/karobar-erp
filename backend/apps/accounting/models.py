@@ -113,7 +113,7 @@ class JournalEntry(TenantOwnedModel):
         constraints = [
             # The number comes first on purpose. Led by tenant, this key ties with the
             # (tenant, status, date) index below and MySQL picks it, reading every entry.
-            models.UniqueConstraint(fields=["number", "tenant"], name="uniq_entry_number")
+            models.UniqueConstraint(fields=["number", "tenant"], name="uniq_entry_number_tenant")
         ]
         indexes = [
             models.Index(fields=["tenant", "status", "date"]),
