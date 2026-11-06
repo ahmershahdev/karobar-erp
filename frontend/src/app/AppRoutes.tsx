@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 
+import { useTranslation } from 'react-i18next';
+
 import { Alert } from '../components/form';
+import { OfflineScreen } from '../components/OfflineScreen';
 import {
   AcceptInvitePage,
   ForgotPasswordPage,
@@ -36,13 +39,15 @@ import {
 import type { Me } from '../lib/api/types';
 
 function RequireUser({ children }: { children: (me: Me) => ReactNode }) {
+  const { t } = useTranslation();
   const me = useMe();
   const location = useLocation();
+  if (me.fetchStatus === 'paused') return <OfflineScreen />;
   if (me.isPending) return <div className="min-h-[100svh]" />;
   if (me.isError) {
     return (
       <div className="p-8">
-        <Alert tone="error">The server could not be reached. Try again in a moment.</Alert>
+        <Alert tone="error">{t('signIn.unavailable')}</Alert>
       </div>
     );
   }
@@ -55,6 +60,7 @@ function RequireUser({ children }: { children: (me: Me) => ReactNode }) {
 
 function GuestOnly({ children }: { children: ReactNode }) {
   const me = useMe();
+  if (me.fetchStatus === 'paused') return <OfflineScreen />;
   if (me.isPending) return <div className="min-h-[100svh]" />;
   return me.data ? <Navigate to="/app" replace /> : children;
 }
@@ -87,7 +93,7 @@ export default function AppRoutes() {
         element={<RequireUser>{(me) => <NewBusinessPage me={me} />}</RequireUser>}
       />
       <Route
-        path="t/:tenantId"
+        path="t/:business"
         element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>}
       >
         <Route index element={<OverviewPage />} />

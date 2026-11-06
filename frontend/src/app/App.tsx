@@ -1,9 +1,12 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, Route, Routes } from 'react-router';
 
+import { ConnectionNotice } from '../components/ConnectionNotice';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
+import { LoadBoundary } from '../components/LoadBoundary';
+import { OfflineScreen } from '../components/OfflineScreen';
 import { PageTransition } from '../components/PageTransition';
 import { Preloader } from '../components/Preloader';
 import { ScrollTopButton } from '../components/ScrollTopButton';
@@ -29,6 +32,9 @@ function PublicLayout() {
 
 export function App() {
   const { t } = useTranslation();
+  // Opened with no connection: the service worker supplied this shell, but no page can load.
+  const [startedOffline] = useState(() => !navigator.onLine);
+  if (startedOffline) return <OfflineScreen />;
   return (
     <div className="relative isolate">
       <a
@@ -38,19 +44,22 @@ export function App() {
         {t('nav.skip')}
       </a>
       <Preloader />
+      <ConnectionNotice />
       <PageTransition>
         {(location) => (
-          <Suspense fallback={<div className="min-h-[100svh]" />}>
-            <Routes location={location}>
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/modules" element={<ModulesPage />} />
-                <Route path="/security" element={<SecurityPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-              <Route path="/app/*" element={<AppRoutes />} />
-            </Routes>
-          </Suspense>
+          <LoadBoundary>
+            <Suspense fallback={<div className="min-h-[100svh]" />}>
+              <Routes location={location}>
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/modules" element={<ModulesPage />} />
+                  <Route path="/security" element={<SecurityPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+                <Route path="/app/*" element={<AppRoutes />} />
+              </Routes>
+            </Suspense>
+          </LoadBoundary>
         )}
       </PageTransition>
     </div>

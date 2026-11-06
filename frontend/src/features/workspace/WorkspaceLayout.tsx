@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, Navigate, Outlet, useNavigate, useParams } from 'react-router';
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 
 import { Alert, Button } from '../../components/form';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -9,6 +9,7 @@ import { api } from '../../lib/api/client';
 import { setActiveTenant } from '../../lib/api/client';
 import { can, type Me, type Membership } from '../../lib/api/types';
 import { ensureCsrf, useMemberships, useSignOut } from '../auth/session';
+import { ScreenIcon } from './icons';
 
 export interface WorkspaceContext {
   me: Me;
@@ -48,7 +49,8 @@ export function WorkspaceLayout({ me }: { me: Me }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const signOut = useSignOut();
-  const { tenantId } = useParams();
+  const { business } = useParams();
+  const { pathname } = useLocation();
   const memberships = useMemberships();
 
   if (memberships.isPending) return <div className="min-h-[100svh]" />;
@@ -60,24 +62,39 @@ export function WorkspaceLayout({ me }: { me: Me }) {
     );
   }
   const list = memberships.data;
-  const membership = list.find((row) => row.tenant_id === tenantId);
+  const membership = list.find((row) => row.tenant_slug === business || row.tenant_id === business);
   if (!membership) {
     const first = list[0];
-    return <Navigate to={first ? `/app/t/${first.tenant_id}` : '/app/new-business'} replace />;
+    return <Navigate to={first ? `/app/t/${first.tenant_slug}` : '/app/new-business'} replace />;
+  }
+  // Links from before business URLs had names still work, and land on the readable address.
+  if (business === membership.tenant_id) {
+    return <Navigate to={pathname.replace(business, membership.tenant_slug)} replace />;
   }
   // Set before the children render so every query they start carries the right X-Tenant.
   setActiveTenant(membership.tenant_id);
 
-  const base = `/app/t/${membership.tenant_id}`;
+  const base = `/app/t/${membership.tenant_slug}`;
   const links = [
-    { to: base, label: t('workspace.overview'), show: true, end: true },
+    { to: base, label: t('workspace.overview'), icon: 'overview', show: true, end: true },
     {
       to: `${base}/members`,
+      icon: 'members',
       label: t('workspace.members'),
       show: can(membership, 'members', 'view'),
     },
-    { to: `${base}/roles`, label: t('workspace.roles'), show: can(membership, 'roles', 'view') },
-    { to: `${base}/audit`, label: t('workspace.audit'), show: can(membership, 'audit', 'view') },
+    {
+      to: `${base}/roles`,
+      label: t('workspace.roles'),
+      icon: 'roles',
+      show: can(membership, 'roles', 'view'),
+    },
+    {
+      to: `${base}/audit`,
+      label: t('workspace.audit'),
+      icon: 'audit',
+      show: can(membership, 'audit', 'view'),
+    },
     ...[
       { path: 'journal', label: t('acc.journal') },
       { path: 'chart', label: t('acc.chart') },
@@ -87,6 +104,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
     ].map((item) => ({
       to: `${base}/accounting/${item.path}`,
       label: item.label,
+      icon: item.path,
       show: can(membership, 'accounting', 'view'),
     })),
     ...[
@@ -98,6 +116,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
     ].map((item) => ({
       to: `${base}/inventory/${item.path}`,
       label: item.label,
+      icon: item.path,
       show: can(membership, 'inventory', 'view'),
     })),
   ];
@@ -124,14 +143,14 @@ export function WorkspaceLayout({ me }: { me: Me }) {
             <span className="label">{t('workspace.business')}</span>
             <select
               className="w-full rounded-xl border border-line bg-canvas px-3 py-2.5 outline-none focus:border-ink"
-              value={membership.tenant_id}
+              value={membership.tenant_slug}
               onChange={(event) => {
                 if (event.target.value === 'new') void navigate('/app/new-business');
                 else void navigate(`/app/t/${event.target.value}`);
               }}
             >
               {list.map((row) => (
-                <option key={row.tenant_id} value={row.tenant_id}>
+                <option key={row.tenant_id} value={row.tenant_slug}>
                   {row.tenant_name}
                 </option>
               ))}
@@ -158,13 +177,14 @@ export function WorkspaceLayout({ me }: { me: Me }) {
                       to={link.to}
                       end={link.end ?? false}
                       className={({ isActive }) =>
-                        `rounded-xl px-3 py-2 text-sm whitespace-nowrap transition-colors ${
+                        `flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-[0.9375rem] whitespace-nowrap transition-colors ${
                           isActive
                             ? 'bg-ink text-canvas'
                             : 'text-muted hover:bg-raised hover:text-ink'
                         }`
                       }
                     >
+                      <ScreenIcon name={link.icon} />
                       {link.label}
                     </NavLink>
                   </div>

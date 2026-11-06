@@ -6,8 +6,10 @@ import { prefersReducedMotion } from '../lib/motion';
 import { lockScroll, unlockScroll } from '../lib/scroll-lock';
 import { scrollToTop, useLenis } from '../lib/smooth-scroll';
 
-function bothInApp(a: Location, b: Location): boolean {
-  return a.pathname.startsWith('/app') && b.pathname.startsWith('/app');
+// The veil belongs to the public site. Going to or from sign-in, or anywhere in the app, someone
+// is trying to get something done, so the screen just changes.
+function touchesApp(a: Location, b: Location): boolean {
+  return a.pathname.startsWith('/app') || b.pathname.startsWith('/app');
 }
 
 interface Props {
@@ -15,9 +17,8 @@ interface Props {
 }
 
 /**
- * A white veil fades in over the page, the route swaps underneath it, and it fades away. The old
- * page stays rendered until it is covered, nothing scrolls meanwhile, and screens inside the app
- * switch instantly.
+ * Between public pages, a white veil fades in, the route swaps underneath it, and it fades away.
+ * The old page stays rendered until it is covered and nothing scrolls meanwhile.
  */
 export function PageTransition({ children }: Props) {
   const location = useLocation();
@@ -27,9 +28,8 @@ export function PageTransition({ children }: Props) {
 
   useEffect(() => {
     if (location.pathname === shown.pathname) return;
-    if (bothInApp(location, shown)) return;
     const element = veil.current;
-    if (!element || prefersReducedMotion()) {
+    if (!element || touchesApp(location, shown) || prefersReducedMotion()) {
       setShown(location);
       scrollToTop(lenis);
       return;
@@ -67,7 +67,7 @@ export function PageTransition({ children }: Props) {
   return (
     <>
       {children(
-        location.pathname === shown.pathname || bothInApp(location, shown) ? location : shown,
+        location.pathname === shown.pathname || touchesApp(location, shown) ? location : shown,
       )}
       <div
         ref={veil}

@@ -13,7 +13,7 @@ const SHIPPED = 3;
 const MILESTONES = 7;
 const LATEST = 'v0.3.0';
 
-function useLahoreTime(locale: string | undefined): string {
+function useLocalTime(locale: string | undefined): string {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 15_000);
@@ -66,7 +66,7 @@ function GiantWordmark() {
 
 export function Footer() {
   const { t, i18n } = useTranslation();
-  const time = useLahoreTime(i18n.resolvedLanguage);
+  const time = useLocalTime(i18n.resolvedLanguage);
 
   const columns = [
     {
@@ -122,7 +122,7 @@ export function Footer() {
           </Link>
           <p className="max-w-xs text-sm text-muted">{t('footer.tagline')}</p>
           <p className="label">
-            {t('footer.lahore')} &middot; <span className="tabular-nums">{time}</span>
+            {t('footer.hyderabad')} &middot; <span className="tabular-nums">{time}</span>
           </p>
         </div>
         {columns.map((column) => (

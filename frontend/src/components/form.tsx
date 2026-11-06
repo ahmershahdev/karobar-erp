@@ -24,6 +24,17 @@ export function Field({
 const STRENGTH_COLORS = ['bg-red', 'bg-red', 'bg-yellow', 'bg-green', 'bg-green'];
 const STRENGTH_TEXT = ['text-red', 'text-red', 'text-yellow', 'text-green', 'text-green'];
 
+// A torch instead of the usual eye: switching it on shines light on the hidden password.
+function Torch({ on }: { on: boolean }) {
+  return (
+    <svg viewBox="0 0 40 24" className="torch" data-on={on} aria-hidden="true">
+      <path className="torch-beam" d="M15 8 0 1v22l15-7z" />
+      <path className="torch-body" d="M15 6h3l3 3h15a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H21l-3 3h-3z" />
+      <rect className="torch-switch" x="25" y="10.5" width="6" height="3" rx="1.5" />
+    </svg>
+  );
+}
+
 export function PasswordField({
   label,
   showStrength = false,
@@ -52,24 +63,16 @@ export function PasswordField({
           onKeyDown={checkCaps}
           className={`${INPUT} pe-12`}
         />
+        <span aria-hidden="true" className="torch-glow" data-on={visible} />
         <button
           type="button"
           aria-label={visible ? t('auth.hide') : t('auth.show')}
           aria-pressed={visible}
           aria-controls={id}
           onClick={() => setVisible(!visible)}
-          className="absolute inset-y-0 end-0 flex w-12 items-center justify-center text-muted transition-colors hover:text-ink"
+          className="absolute inset-y-0 end-0 flex w-14 items-center justify-center text-muted transition-colors hover:text-ink"
         >
-          <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
-            <path
-              d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            {visible && <path d="M4 20 20 4" stroke="currentColor" strokeWidth="1.5" />}
-          </svg>
+          <Torch on={visible} />
         </button>
       </div>
       {caps && (
@@ -165,13 +168,36 @@ export function Button({
     <button
       type="button"
       {...props}
-      className={`rounded-full px-5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${styles} ${className}`}
+      className={`min-h-11 rounded-full px-5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${styles} ${className}`}
     />
   );
 }
 
-/** The main action of a form: full width, an arrow that slides, a spinner while it works. */
-export function SubmitButton({ pending, children }: { pending: boolean; children: ReactNode }) {
+// A small door that swings open on hover and stays open, glowing, while the request runs.
+function Door({ open }: { open: boolean }) {
+  return (
+    <span aria-hidden="true" className="door relative" data-open={open}>
+      <span className="door-light" />
+      <span className="door-panel">
+        <span className="door-knob" />
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The main action of a form: full width, with an arrow that slides and a spinner while it works.
+ * `door` swaps those for the door, for the buttons that take you in.
+ */
+export function SubmitButton({
+  pending,
+  door = false,
+  children,
+}: {
+  pending: boolean;
+  door?: boolean;
+  children: ReactNode;
+}) {
   return (
     <button
       type="submit"
@@ -180,7 +206,9 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
     >
       <span className="absolute inset-0 origin-left scale-x-0 bg-azure transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
       <span className="relative">{children}</span>
-      {pending ? (
+      {door ? (
+        <Door open={pending} />
+      ) : pending ? (
         <span
           aria-hidden="true"
           className="relative size-4 animate-spin rounded-full border-2 border-canvas/30 border-t-canvas"

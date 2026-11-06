@@ -4,6 +4,19 @@ White paper, navy ink, one orange accent. The site should feel like a well-kept 
 exact, and obvious to use. Premium comes from type, spacing and restraint, not effects. The public
 site and the app share the same tokens; the app is simply denser.
 
+## Made for everyone
+
+Many people who run a shop don't read comfortably and have never used business software. Design
+for them first.
+
+- Plain words before accounting words. The signed-in home asks "What do you want to do?" and offers
+  jobs like "Stock in or out", not screen names like "Stock entries".
+- A picture beside every screen name (`features/workspace/icons.tsx`), so people can navigate by
+  shape.
+- Anything you press is at least 44px tall.
+- The language switcher is always on screen, on phones too.
+- Say what happened and what to do next, in one short sentence. Never show an error code alone.
+
 ## Logo
 
 The artwork is in `frontend/src/assets/brand/`, as WebP cut from the master logo. Always use
@@ -41,7 +54,7 @@ in components. A new colour goes into `tokens.css` first, and needs a reason.
 The logo's orange is 2.3:1 on white, which fails as text, hence the three oranges. `ember` and the
 status colours are at least 4.5:1 on `canvas` and `surface`; `flame` is 3.3:1, which is only enough
 for large text, so it stays at headline size. There are no gradients, glows or glass panels, apart
-from the blur under the sticky header.
+from the blur under the sticky header and the torch's warm light.
 
 ## Type
 
@@ -79,13 +92,17 @@ scroll direction.
 
 - `Preloader`: the logo rises out of a mask, a hairline draws under it, and the white screen fades
   into the page. About a second, public pages only, with a 3 second failsafe.
-- `PageTransition`: a white veil fades in, the route swaps, it fades out. App screens switch
-  instantly.
+- `PageTransition`: a white veil fades in, the route swaps, it fades out. Only between public pages:
+  anything touching `/app`, sign-in included, changes instantly.
 - `ProductWindow`: the app's sidebar and a live journal entry under the hero; it settles from 94%
   to full size as it scrolls into place.
 - `SplitHeadline`, `Reveal`, `ScrollWords`: word reveals, staggered entrances, and a paragraph that
   darkens word by word as it crosses the screen.
 - `Magnetic`: main calls to action lean slightly toward the pointer.
+- Torch: the password show button is a torch. Switching it on draws a beam, flickers once, and warms
+  the field. `aria-pressed` and the Show and Hide labels stay, so it reads the same to a screen reader.
+- Door: the sign-in and sign-up buttons have a door that swings open in 3D on hover and glows while
+  the request runs.
 - `RollText`: nav and footer labels roll on hover.
 - `Footer`: a full-width "KarobarERP" sits barely visible and lights up orange around the pointer.
 - Module glyphs redraw themselves on hover.
@@ -95,6 +112,19 @@ scroll direction.
 - Lenis smooths scrolling; anime.js runs every timeline.
 
 `prefers-reduced-motion: reduce` turns all of this off: no preloader, Lenis, reveals or veil.
+
+## When things go wrong
+
+`features/mascot/Mascot.tsx` is a small shopkeeper drawn as layered SVG, with near limbs bright and far
+limbs dark. The layers shift against each other as the pointer moves, which reads as depth without
+loading a 3D engine; the offline screen has to work with no network. Moods: `walking`, `confused`,
+`looking`, `searching` and `happy`. Pressing it makes it hop and changes mood.
+
+- `NotFoundPage`: says what was asked for, why that can happen, and where to go.
+- `OfflineScreen`: shown when a page can't load. It checks the connection every few seconds, says
+  "Connection not found" and then "Connection restored", and carries on by itself.
+- `ConnectionNotice`: a small notice when the connection drops mid-session. It never covers the
+  screen, so nobody loses sight of a half-filled form.
 
 ## App screens
 

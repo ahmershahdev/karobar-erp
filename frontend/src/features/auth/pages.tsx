@@ -118,7 +118,7 @@ export function SignInPage() {
               : messageOf(mutation.error, t('signIn.unavailable'))}
           </Alert>
         )}
-        <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+        <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
         </SubmitButton>
         {human.notice}
@@ -210,7 +210,7 @@ export function SignUpPage() {
         {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
         )}
-        <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+        <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {t('auth.signUp')}
         </SubmitButton>
         {human.notice}
@@ -361,7 +361,7 @@ export function AcceptInvitePage() {
     },
     onSuccess: async (membership) => {
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
-      void navigate(`/app/t/${membership.tenant_id}`);
+      void navigate(`/app/t/${membership.tenant_slug}`);
     },
   });
 

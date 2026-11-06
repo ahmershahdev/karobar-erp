@@ -112,7 +112,7 @@ export function Header() {
       >
         <div className="shell flex h-[var(--header-height)] items-center justify-between gap-4">
           <Link to="/" className="shrink-0">
-            <Logo className="h-8 w-auto md:h-9" />
+            <Logo className="h-6 w-auto sm:h-8 md:h-9" />
           </Link>
 
           <nav className="hidden items-center md:flex">
@@ -132,8 +132,8 @@ export function Header() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher className="hidden lg:flex" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <LanguageSwitcher className="max-[359px]:hidden" />
             <Link to="/app" className="btn btn-primary hidden !py-2.5 !text-sm sm:inline-flex">
               {t('nav.signIn')}
             </Link>

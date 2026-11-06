@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { MODULES, can, type Me, type Role } from '../../lib/api/types';
+import { ScreenIcon } from './icons';
 import { usePrivateSeo } from '../../lib/seo';
 import { ensureCsrf, sessionKeys } from '../auth/session';
 import { errorText, useTenantAction, useWorkspace } from './hooks';
@@ -37,7 +38,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
     },
     onSuccess: async (membership) => {
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
-      void navigate(`/app/t/${membership.tenant_id}`);
+      void navigate(`/app/t/${membership.tenant_slug}`);
     },
   });
   usePrivateSeo(t('workspace.newBusiness'));
@@ -105,10 +106,22 @@ export function NewBusinessPage({ me }: { me: Me }) {
   );
 }
 
+// The everyday jobs, in the words a shopkeeper would use, so nobody has to know that "Stock
+// entries" or "Trial balance" is the screen they want.
+const TASKS = [
+  { key: 'addProduct', icon: 'products', path: 'inventory/products', module: 'inventory' },
+  { key: 'moveStock', icon: 'entries', path: 'inventory/entries', module: 'inventory' },
+  { key: 'seeStock', icon: 'on-hand', path: 'inventory/on-hand', module: 'inventory' },
+  { key: 'warnings', icon: 'alerts', path: 'inventory/alerts', module: 'inventory' },
+  { key: 'money', icon: 'journal', path: 'accounting/journal', module: 'accounting' },
+  { key: 'team', icon: 'members', path: 'members', module: 'members' },
+];
+
 export function OverviewPage() {
   const { t } = useTranslation();
   const { me, membership } = useWorkspace();
   const modules = Object.keys(MODULES).filter((module) => can(membership, module, 'view'));
+  const tasks = TASKS.filter((task) => can(membership, task.module, 'view'));
   return (
     <>
       <PageTitle
@@ -116,6 +129,32 @@ export function OverviewPage() {
         title={membership.tenant_name}
         subtitle={t('workspace.welcome', { name: me.full_name || me.email })}
       />
+      {tasks.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-2xl">{t('workspace.tasks.title')}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {tasks.map((task) => (
+              <Link
+                key={task.key}
+                to={`/app/t/${membership.tenant_slug}/${task.path}`}
+                className="group flex min-h-24 items-center gap-4 rounded-[var(--radius-card)] border border-line bg-canvas p-4 transition-colors hover:border-ink"
+              >
+                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-raised text-ink">
+                  <ScreenIcon name={task.icon} className="size-7" />
+                </span>
+                <span>
+                  <span className="block text-lg leading-snug font-medium">
+                    {t(`workspace.tasks.${task.key}.title`)}
+                  </span>
+                  <span className="block text-sm text-muted">
+                    {t(`workspace.tasks.${task.key}.body`)}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       <Panel title={t('workspace.yourAccess')}>
         <p className="mb-4 text-sm text-muted">
           {membership.is_owner ? t('workspace.owner') : (membership.role ?? t('workspace.noRole'))}
@@ -127,9 +166,6 @@ export function OverviewPage() {
             </span>
           ))}
         </div>
-      </Panel>
-      <Panel title={t('workspace.comingNext')}>
-        <p className="text-sm text-muted">{t('workspace.comingNextBody')}</p>
       </Panel>
     </>
   );

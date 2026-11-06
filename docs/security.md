@@ -28,8 +28,12 @@ Everything else is ranked below that.
   requests, so `LoginView` adds `csrf_protect` itself; sign-in CSRF is tested.
 - No access or refresh tokens in `localStorage` or `sessionStorage`; ESLint blocks
   `localStorage.setItem`.
-- Passwords: Argon2id first in `PASSWORD_HASHERS` (PBKDF2 kept only to verify and upgrade old
-  hashes), at least 12 characters, common and numeric-only passwords rejected.
+- Passwords: Argon2id first in `PASSWORD_HASHERS`, at least 12 characters, common and numeric-only
+  passwords rejected. If Argon2id can't compute a hash (memory pressure is the realistic case),
+  `apps/accounts/hashers.py` falls back to bcrypt, logs a warning, and the password is rehashed with
+  Argon2id at the next sign-in. PBKDF2 stays only to verify and upgrade old hashes. Passwords are
+  never hashed in the browser: the hash would become the password, and TLS already protects it on
+  the wire.
 - Sign-in answers the same message for an unknown email and a wrong password. Django runs the
   hasher for unknown users too, so timing doesn't reveal which emails exist.
 
@@ -110,14 +114,20 @@ The frontend is served by nginx with:
 
 ```
 default-src 'self'; script-src 'nonce-<random>' 'strict-dynamic'; style-src 'self' 'nonce-<random>';
-img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none';
+img-src 'self' data:; font-src 'self'; connect-src 'self' https://www.google.com/recaptcha/;
+worker-src 'self'; object-src 'none'; base-uri 'none';
 form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 ```
 
 Vite stamps `nonce="__CSP_NONCE__"` on every tag it writes (`html.cspNonce`). nginx replaces the
 placeholder with `$request_id`, 32 random hex characters per response, and sends the same value in
 the header. HTML is `no-cache`, so a nonce is never reused. `strict-dynamic` lets the nonced entry
-script load its lazy page chunks without listing them.
+script load its lazy page chunks without listing them. reCAPTCHA needs `connect-src` for its `clr` call;
+blocking that leaves tokens working but can lower people's scores, so real users meet the checkbox.
+
+The service worker stores only the app's own code, never `/api/` responses, so nothing about a
+business is left on a shared computer. Its stored page keeps the response headers it was fetched
+with, so the nonce in that page still matches its CSP when it runs offline.
 
 Fonts are self-hosted through Fontsource. The only third-party origins are Google's reCAPTCHA
 ones, on the sign-in, sign-up and reset forms: the script is added by our nonced code, so

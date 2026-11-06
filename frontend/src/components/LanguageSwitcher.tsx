@@ -20,7 +20,7 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
               lang={language.code}
               aria-pressed={active}
               onClick={() => void i18n.changeLanguage(language.code)}
-              className={`px-1 py-1 text-xs transition-colors duration-300 ${
+              className={`px-1.5 py-1.5 text-sm transition-colors duration-300 ${
                 active ? 'font-medium text-ink' : 'text-muted hover:text-ink'
               } `}
             >

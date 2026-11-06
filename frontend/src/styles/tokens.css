@@ -9,7 +9,9 @@
 @theme {
   --color-white: #ffffff;
   --color-navy: #0b1a3c;
+  --color-ink-deep: #060f26;
   --color-azure: #1d4ed8;
+  --color-azure-deep: #1a3fae;
   --color-ember: #b84a08;
   --color-orange: #f7931e;
   /* Headline size only: large text needs 3:1, and this stays close to the "ERP" in the logo. */
@@ -17,6 +19,9 @@
   --color-red: #c8281e;
   --color-green: #0b7a4b;
   --color-yellow: #96590a;
+  /* The mascot's skin, in a lit and a shaded tone. */
+  --color-skin: #e9b98f;
+  --color-skin-shade: #d29c71;
   /* Third-party brand marks on the sign-in buttons; their colours are set by each brand. */
   --color-brand-google-blue: #4285f4;
   --color-brand-google-green: #34a853;

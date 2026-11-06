@@ -361,3 +361,164 @@ html[lang='ar'] :is(h1, h2, h3, .display-lg, .display-md, .text-2xl, .text-3xl, 
 html[lang='ar'] .display-xl {
   line-height: 1.4;
 }
+
+/* The password eye is a torch. Switching it on draws the beam, flickers once like a real bulb, and
+   washes the field with warm light. The beam points at the text, so it flips in RTL. */
+.torch {
+  width: 2.25rem;
+  overflow: visible;
+}
+
+[dir='rtl'] .torch {
+  scale: -1 1;
+}
+
+.torch-body {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  transition:
+    fill 0.25s,
+    stroke 0.25s;
+}
+
+.torch-switch {
+  fill: currentColor;
+  transition:
+    translate 0.25s var(--ease-out-quart),
+    fill 0.25s;
+}
+
+.torch-beam {
+  fill: var(--color-orange);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  transform: scaleX(0.2);
+  transition:
+    opacity 0.2s,
+    transform 0.35s var(--ease-out-expo);
+}
+
+.torch[data-on='true'] .torch-body {
+  fill: var(--color-ink);
+  stroke: var(--color-ink);
+}
+
+.torch[data-on='true'] .torch-switch {
+  fill: var(--color-orange);
+  translate: -3px 0;
+}
+
+.torch[data-on='true'] .torch-beam {
+  opacity: 0.55;
+  transform: scaleX(1);
+  animation: torch-flicker 0.4s linear;
+}
+
+.torch-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--color-orange) 24%, transparent),
+    transparent 75%
+  );
+  transition: opacity 0.35s;
+}
+
+[dir='rtl'] .torch-glow {
+  scale: -1 1;
+}
+
+.torch-glow[data-on='true'] {
+  opacity: 1;
+}
+
+@keyframes torch-flicker {
+  0%,
+  30%,
+  60% {
+    opacity: 0.55;
+  }
+  15%,
+  45% {
+    opacity: 0.15;
+  }
+}
+
+/* The door on the sign-in and sign-up buttons. It swings on its hinge in 3D, showing warm light
+   behind it, and stays open and glowing while the request runs. */
+.door {
+  display: block;
+  width: 1.125rem;
+  height: 1.5rem;
+  border: 1.5px solid currentColor;
+  border-bottom-width: 0;
+  border-radius: 3px 3px 0 0;
+  perspective: 70px;
+}
+
+.door-light {
+  position: absolute;
+  inset: 0;
+  background: var(--color-orange);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.door-panel {
+  position: absolute;
+  inset: 0;
+  background: var(--color-canvas);
+  transform-origin: left center;
+  transition: transform 0.7s var(--ease-out-expo);
+}
+
+[dir='rtl'] .door-panel {
+  transform-origin: right center;
+}
+
+.door-knob {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 2px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-ink);
+}
+
+.group:hover .door-panel,
+.group:focus-visible .door-panel,
+.door[data-open='true'] .door-panel {
+  transform: rotateY(-74deg);
+}
+
+[dir='rtl'] .group:hover .door-panel,
+[dir='rtl'] .group:focus-visible .door-panel,
+[dir='rtl'] .door[data-open='true'] .door-panel {
+  transform: rotateY(74deg);
+}
+
+.group:hover .door-light,
+.group:focus-visible .door-light {
+  opacity: 1;
+}
+
+.door[data-open='true'] .door-light {
+  animation: door-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes door-glow {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}

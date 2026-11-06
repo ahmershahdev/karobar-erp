@@ -5,8 +5,14 @@ import { passwordChecks, passwordScore } from './password';
 it('scores passwords by length and variety', () => {
   expect(passwordScore('short')).toBe(0);
   expect(passwordScore('aaaaaaaaaaaa')).toBe(1);
-  expect(passwordScore('ledger lantern cardamom')).toBe(3);
+  expect(passwordScore('karobar12345')).toBe(2);
+  expect(passwordScore('Karobar12345')).toBe(3);
+  expect(passwordScore('ledger lantern cardamom')).toBe(4);
   expect(passwordScore('Ledger lantern 42 cardamom!')).toBe(4);
+});
+
+it('lets a strong 12 character password fill the bar', () => {
+  expect(passwordScore('Karobar2026!')).toBe(4);
 });
 
 it('does not reward repeated characters or patterns', () => {
