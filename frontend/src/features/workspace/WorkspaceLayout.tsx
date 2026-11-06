@@ -134,10 +134,11 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       { path: 'trial-balance', label: t('acc.trialBalance') },
       { path: 'ledger', label: t('acc.ledger') },
       { path: 'periods', label: t('acc.periods') },
+      { path: 'tax-rates', label: t('tax.title'), icon: 'bills' },
     ].map((item) => ({
       to: `${base}/accounting/${item.path}`,
       label: item.label,
-      icon: item.path,
+      icon: item.icon ?? item.path,
       show: can(membership, 'accounting', 'view'),
     })),
     ...[

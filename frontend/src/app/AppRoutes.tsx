@@ -20,6 +20,7 @@ import {
   PeriodsPage,
   TrialBalancePage,
 } from '../features/accounting/pages';
+import { TaxRatesPage } from '../features/accounting/TaxRates';
 import { useMe } from '../features/auth/session';
 import {
   BalanceSheetPage,
@@ -153,6 +154,7 @@ export default function AppRoutes() {
         <Route path="accounting/trial-balance" element={<TrialBalancePage />} />
         <Route path="accounting/ledger" element={<LedgerPage />} />
         <Route path="accounting/periods" element={<PeriodsPage />} />
+        <Route path="accounting/tax-rates" element={<TaxRatesPage />} />
         <Route path="inventory/products" element={<ProductsPage />} />
         <Route path="inventory/entries" element={<StockEntriesPage />} />
         <Route path="inventory/on-hand" element={<StockOnHandPage />} />

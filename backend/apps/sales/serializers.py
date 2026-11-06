@@ -3,7 +3,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from apps.accounting.models import Account
+from apps.accounting.models import Account, TaxRate
 from apps.inventory.models import Product, Unit, Warehouse
 from apps.inventory.serializers import scoped
 from apps.purchasing.serializers import capped
@@ -72,6 +72,8 @@ class _DocumentSerializer(serializers.ModelSerializer[Any]):
 
 
 class SalesOrderLineSerializer(_ProductLine):
+    tax_rate = scoped(TaxRate, allow_null=True, required=False)
+
     class Meta:
         model = SalesOrderLine
         fields = (
@@ -83,6 +85,7 @@ class SalesOrderLineSerializer(_ProductLine):
             "unit_code",
             "quantity",
             "unit_price",
+            "tax_rate",
             "tax_amount",
             "invoiced_quantity",
         )
@@ -120,6 +123,7 @@ class SalesOrderSerializer(_DocumentSerializer):
 
 class InvoiceLineSerializer(_ProductLine):
     order_line = scoped(SalesOrderLine, allow_null=True, required=False)
+    tax_rate = scoped(TaxRate, allow_null=True, required=False)
 
     class Meta:
         model = InvoiceLine
@@ -134,6 +138,7 @@ class InvoiceLineSerializer(_ProductLine):
             "quantity",
             "unit_price",
             "amount",
+            "tax_rate",
             "tax_amount",
             "batch_number",
             "returned_quantity",

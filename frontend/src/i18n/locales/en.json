@@ -1032,5 +1032,19 @@
     "inputTax": "Tax paid",
     "taxToPay": "Tax to pay",
     "taxToClaim": "Tax to claim back"
+  },
+  "tax": {
+    "title": "Tax rates",
+    "body": "Your sales tax rates, when each applies, and where it comes from. Karobar works out the tax on every line.",
+    "new": "New tax rate",
+    "add": "Add tax rate",
+    "percent": "Rate (%)",
+    "from": "Applies from",
+    "to": "Applies until",
+    "noEnd": "Still applies",
+    "source": "Where this rate comes from",
+    "sourceHint": "The notice or law that sets it, so you can always show why this rate was used.",
+    "none": "No tax rates yet. Add one to have tax worked out for you.",
+    "typeIt": "I will type the tax"
   }
 }

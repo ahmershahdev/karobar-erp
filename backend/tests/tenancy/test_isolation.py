@@ -14,7 +14,7 @@ from django.urls import URLPattern, URLResolver, get_resolver
 from django.utils import timezone
 
 from apps.accounting import services as accounting
-from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry
+from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
 from apps.inventory import services as inventory
 from apps.inventory.models import (
     Batch,
@@ -392,6 +392,17 @@ def _report(path: str) -> Callable[[Member], tuple[str, int]]:
 
 for _path in ("dashboard", "profit-loss", "balance-sheet", "cash-flow", "sales-tax"):
     tenant_endpoint(f"api/reports/{_path}/")(_report(_path))
+
+
+def _tax_rate(member: Member) -> int:
+    _books(member)
+    rate: TaxRate = TaxRate.objects.create(
+        name="Private", rate=Decimal(18), valid_from=timezone.localdate(), source="Invented"
+    )
+    return rate.pk
+
+
+_register("accounting/tax-rates", _tax_rate)
 _register("sales/customers", lambda m: _customer(m).pk)
 _register("sales/orders", lambda m: _sales_order(m).pk)
 _register("sales/invoices", lambda m: _invoice(m).pk)

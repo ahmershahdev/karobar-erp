@@ -132,7 +132,12 @@ ORDER = Kind(
     ("customer", "date", "valid_until", "warehouse", "memo"),
     "lines",
     lambda d: services.OrderLineInput(
-        d["product"], d["unit"], d["quantity"], d["unit_price"], d.get("tax_amount", ZERO)
+        d["product"],
+        d["unit"],
+        d["quantity"],
+        d["unit_price"],
+        d.get("tax_amount", ZERO),
+        d.get("tax_rate"),
     ),
     services.confirm_order,
 )
@@ -151,6 +156,7 @@ INVOICE = Kind(
         d.get("tax_amount", ZERO),
         d.get("order_line"),
         d.get("batch_number", ""),
+        d.get("tax_rate"),
     ),
     services.post_invoice,
 )
