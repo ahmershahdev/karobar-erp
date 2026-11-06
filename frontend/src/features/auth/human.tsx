@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { Alert } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { loadRecaptcha } from '../../lib/recaptcha';
@@ -35,19 +37,29 @@ export interface HumanProof {
  * ticked. Call `requireCheckbox()` when the server answers captcha_v2_required.
  */
 export function useHumanCheck(action: string) {
+  const { t } = useTranslation();
   const config = useAuthConfig();
   const v3 = config.data?.recaptcha_v3_site_key ?? '';
   const v2 = config.data?.recaptcha_v2_site_key ?? '';
   const [honeypot, setHoneypot] = useState('');
   const [checkbox, setCheckbox] = useState(false);
   const [v2Token, setV2Token] = useState('');
+  // Google accepts a v2 token once. After sending one the box has to be ticked again, and Google's
+  // widget can't be reset from a ticked state here, so a new key mounts a fresh one.
+  const [widget, setWidget] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const onFailed = useCallback(() => setFailed(true), []);
 
   useEffect(() => {
     if (v3 || v2) void loadRecaptcha(v3).catch(() => undefined);
   }, [v3, v2]);
 
   const proof = useCallback(async (): Promise<HumanProof> => {
-    if (checkbox && v2Token) return { website: honeypot, captcha_v2: v2Token };
+    if (checkbox && v2Token) {
+      setV2Token('');
+      setWidget((value) => value + 1);
+      return { website: honeypot, captcha_v2: v2Token };
+    }
     if (!v3) return { website: honeypot };
     try {
       const grecaptcha = await loadRecaptcha(v3);
@@ -60,15 +72,25 @@ export function useHumanCheck(action: string) {
 
   const requireCheckbox = useCallback(() => {
     setV2Token('');
-    setCheckbox(Boolean(v2));
-  }, [v2]);
+    setFailed(false);
+    setWidget((value) => value + 1);
+    setCheckbox(true);
+  }, []);
+
+  // Asked for the box but it can't appear: its key is missing or Google can't be reached. Say so
+  // and leave the button working, or the form would sit there disabled with no explanation.
+  const noBox = checkbox && (failed || !v2);
 
   return {
     proof,
     requireCheckbox,
     honeypot: <Honeypot value={honeypot} onChange={setHoneypot} />,
-    checkbox: checkbox ? <Checkbox siteKey={v2} v3Key={v3} onToken={setV2Token} /> : null,
+    checkbox: noBox ? (
+      <Alert tone="error">{t('signIn.unavailable')}</Alert>
+    ) : checkbox ? (
+      <Checkbox key={widget} siteKey={v2} v3Key={v3} onToken={setV2Token} onFailed={onFailed} />
+    ) : null,
     notice: v3 || v2 ? <RecaptchaNotice /> : null,
-    waitingForCheckbox: checkbox && !v2Token,
+    waitingForCheckbox: checkbox && !noBox && !v2Token,
   };
 }

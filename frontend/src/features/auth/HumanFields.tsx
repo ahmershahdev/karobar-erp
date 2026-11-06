@@ -32,25 +32,37 @@ export function Checkbox({
   siteKey,
   v3Key,
   onToken,
+  onFailed,
 }: {
   siteKey: string;
   v3Key: string;
   onToken: (token: string) => void;
+  onFailed: () => void;
 }) {
   const { t } = useTranslation();
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const container = box.current;
-    if (!container || container.childElementCount) return;
-    void loadRecaptcha(v3Key).then((grecaptcha) => {
+    if (!container) return;
+    // StrictMode runs this twice before the script arrives; only the live run may render.
+    let active = true;
+    const render = async () => {
+      const grecaptcha = await loadRecaptcha(v3Key);
+      if (!active || container.childElementCount) return;
       grecaptcha.render(container, {
         sitekey: siteKey,
         theme: 'light',
         callback: onToken,
         'expired-callback': () => onToken(''),
       });
+    };
+    render().catch(() => {
+      if (active) onFailed();
     });
-  }, [siteKey, v3Key, onToken]);
+    return () => {
+      active = false;
+    };
+  }, [siteKey, v3Key, onToken, onFailed]);
   return (
     <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
       <p className="text-sm text-ink">{t('auth.robotCheck')}</p>

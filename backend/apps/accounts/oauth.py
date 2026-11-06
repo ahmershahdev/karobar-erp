@@ -17,6 +17,7 @@ import hashlib
 import hmac
 import secrets
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 from urllib.parse import urlencode
 
@@ -229,21 +230,40 @@ def _user_for(provider: str, profile: Profile) -> User:
             raise OAuthError("email_in_use")
         if not existing.is_active:
             raise OAuthError("account_disabled")
-        user = existing
-        if user.email_verified_at is None:
-            user.email_verified_at = now
-            user.save(update_fields=["email_verified_at"])
-    else:
-        try:
-            with transaction.atomic():
-                user = User.objects.create_user(
-                    profile.email,
-                    None,
-                    full_name=profile.name,
-                    # Google vouches for the address; Facebook's must still be confirmed by us.
-                    email_verified_at=now if profile.email_verified else None,
-                )
-        except IntegrityError as exc:
+    # One savepoint for the account and its link: whoever loses a race leaves nothing behind.
+    try:
+        with transaction.atomic():
+            user = _claim(existing, now) if existing else _create(profile, now)
+            SocialAccount.objects.create(
+                user=user, provider=provider, uid=profile.uid, last_login_at=now
+            )
+    except IntegrityError as exc:
+        # A double click on the consent screen: the other callback linked this identity first.
+        winner = SocialAccount.objects.filter(provider=provider, uid=profile.uid).first()
+        if winner is None:
             raise OAuthError("email_in_use") from exc
-    SocialAccount.objects.create(user=user, provider=provider, uid=profile.uid, last_login_at=now)
+        return winner.user
     return user
+
+
+def _claim(user: User, now: datetime) -> User:
+    if user.email_verified_at is None:
+        # Nobody ever proved they own this address, so whatever opens this account may be a
+        # stranger's who signed up with it first. The provider has now proved who does: drop the
+        # password, which also ends any session it opened, and any provider already linked. A real
+        # owner can set a new password by reset.
+        user.social_accounts.all().delete()
+        user.set_unusable_password()
+        user.email_verified_at = now
+        user.save(update_fields=["password", "email_verified_at"])
+    return user
+
+
+def _create(profile: Profile, now: datetime) -> User:
+    return User.objects.create_user(
+        profile.email,
+        None,
+        full_name=profile.name,
+        # Google vouches for the address; Facebook's must still be confirmed by us.
+        email_verified_at=now if profile.email_verified else None,
+    )
