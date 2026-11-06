@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from django.core import mail
 from django.utils import timezone
-from kombu.exceptions import OperationalError
+from kombu.exceptions import OperationalError  # type: ignore[import-untyped]
 from rest_framework.test import APIClient
 
 from apps.accounts import emails
