@@ -103,7 +103,8 @@ export function Home() {
   const warnings = home.data ? WARNINGS.filter((item) => home.data.attention[item.key] > 0) : [];
   const data = report.data;
   const reports = `${base}/reports/dashboard`;
-  const hasSales = data?.sales_by_day.some((day) => Number(day.amount) > 0);
+  // The flag, not the amounts: returns can bring a month to zero, and that still needs the chart.
+  const hasSales = setup ? setup.sale : data?.sales_by_day.some((day) => day.amount !== '0.00');
   const failed = (home.isError && !home.data) || (report.isError && !data);
 
   return (
