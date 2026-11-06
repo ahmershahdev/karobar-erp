@@ -997,10 +997,8 @@ function BillRow({ bill }: { bill: Bill }) {
   const [prices, setPrices] = useState<Record<number, { price: string; tax: string }>>({});
   const priced = (line: Bill['lines'][number]) =>
     prices[line.id] ?? { price: line.unit_price, tax: line.tax_amount ?? '0' };
-  const setPrice = (
-    line: Bill['lines'][number],
-    patch: Partial<{ price: string; tax: string }>,
-  ) => setPrices({ ...prices, [line.id]: { ...priced(line), ...patch } });
+  const setPrice = (line: Bill['lines'][number], patch: Partial<{ price: string; tax: string }>) =>
+    setPrices({ ...prices, [line.id]: { ...priced(line), ...patch } });
   const saveAndPost = () =>
     action.mutate(async () => {
       const body = {
