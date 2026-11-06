@@ -8,7 +8,7 @@ from kombu.exceptions import OperationalError  # type: ignore[import-untyped, un
 from rest_framework.test import APIClient
 
 from apps.accounts import emails
-from apps.accounts.models import User
+from apps.accounts.models import SocialAccount, User
 from apps.accounts.tokens import make_email_token
 from tests.factories import TEST_PASSWORD, create_user
 
@@ -117,6 +117,36 @@ def test_password_reset_round_trip_signs_out_other_sessions(user: User) -> None:
     assert user.email_verified_at is not None
     assert other_session.get("/api/accounts/me/").status_code == 403
     assert post("/api/accounts/password-reset/confirm/", confirm) == 400, "links work once"
+
+
+def reset_password(user: User) -> None:
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
+    confirm = {**link_params(str(mail.outbox[-1].body)), "password": NEW_PASSWORD}
+    assert post("/api/accounts/password-reset/confirm/", confirm) == 204
+
+
+def test_a_reset_removes_a_provider_link_nobody_had_proved(user: User) -> None:
+    user.email_verified_at = None
+    user.set_unusable_password()
+    user.save(update_fields=["email_verified_at", "password"])
+    SocialAccount.objects.create(user=user, provider="facebook", uid="fb-stranger")
+
+    reset_password(user)
+
+    assert not SocialAccount.objects.filter(uid="fb-stranger").exists()
+    user.refresh_from_db()
+    assert user.email_verified_at is not None
+
+
+def test_a_reset_keeps_the_link_of_a_verified_account(user: User) -> None:
+    user.email_verified_at = timezone.now()
+    user.set_unusable_password()
+    user.save(update_fields=["email_verified_at", "password"])
+    SocialAccount.objects.create(user=user, provider="google", uid="g-owner")
+
+    reset_password(user)
+
+    assert SocialAccount.objects.filter(uid="g-owner").exists()
 
 
 def test_password_reset_says_nothing_when_the_queue_is_down(

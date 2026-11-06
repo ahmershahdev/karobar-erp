@@ -168,11 +168,16 @@ class PasswordResetConfirmView(AnonymousFormView):
         if user is None:
             raise ValidationError({"token": [INVALID_LINK]})
         password = check_password_strength(data.validated_data["password"], user)
-        # A new password changes the session hash, which signs out every other session.
-        user.set_password(password)
-        # Opening the emailed link proves the address, so it also counts as verification.
-        user.email_verified_at = user.email_verified_at or timezone.now()
-        user.save(update_fields=["password", "email_verified_at"])
+        with transaction.atomic():
+            # Nobody had proved this address, so a linked provider may be a stranger who claimed
+            # it. The owner has now proved it: drop the link, as oauth._claim does.
+            if user.email_verified_at is None:
+                user.social_accounts.all().delete()
+            # A new password changes the session hash, which signs out every other session.
+            user.set_password(password)
+            # Opening the emailed link proves the address, so it also counts as verification.
+            user.email_verified_at = user.email_verified_at or timezone.now()
+            user.save(update_fields=["password", "email_verified_at"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
