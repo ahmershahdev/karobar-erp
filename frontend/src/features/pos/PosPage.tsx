@@ -429,7 +429,9 @@ export function PosPage() {
   // Another store's open till must never be picked up by accident.
   const stores = warehouses.data ?? [];
   const known = stores.some((item) => String(item.id) === picked);
-  const store = stores.length === 1 ? String(stores[0]?.id) : known ? picked : '';
+  // A store named in the address is never swapped for another: sales would land in the wrong one.
+  const onlyStore = stores.length === 1 ? String(stores[0]?.id) : '';
+  const store = picked ? (known ? picked : '') : onlyStore;
   const till = (tills.data as Till[] | undefined)?.find((item) => String(item.warehouse) === store);
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
 
@@ -447,7 +449,7 @@ export function PosPage() {
           </p>
         </Panel>
       )}
-      {stores.length > 1 && (
+      {(stores.length > 1 || (stores.length === 1 && !store)) && (
         <div className="mb-6 sm:max-w-sm">
           <Select
             label={t('inv.warehouse')}
