@@ -143,6 +143,17 @@ def test_a_product_with_no_price_cannot_be_sold(till: Till) -> None:
         services.sell(till.user, till.session, [till.line()], "card")
 
 
+def test_a_product_withdrawn_while_in_the_cart_cannot_be_sold(till: Till) -> None:
+    line = till.line()
+    before = stock(till)
+    Product.objects.filter(pk=till.soap.pk).update(is_active=False)
+    with pytest.raises(services.ProductInactiveError):
+        services.sell(till.user, till.session, [line], "card")
+    assert stock(till) == before
+    assert not Invoice.objects.exists()
+    assert not PosSale.objects.exists()
+
+
 def test_an_empty_cart_is_refused(till: Till) -> None:
     with pytest.raises(services.EmptyCartError):
         services.sell(till.user, till.session, [], "card")

@@ -51,6 +51,10 @@ class NoPriceError(PosError):
     message = "One of these products has no selling price yet."
 
 
+class ProductInactiveError(PosError):
+    message = "One of these products is no longer on sale. Take it off the sale."
+
+
 class NotEnoughCashError(PosError):
     message = "The cash given is less than the total."
 
@@ -158,6 +162,10 @@ def _sell(
 ) -> PosSale:
     """Stock, the invoice, the money and the till record commit together or not at all."""
     till = _open_session(session)
+    # Read from the database here, because a product can be withdrawn while it sits in a cart.
+    chosen = [line.product.pk for line in lines]
+    if Product.objects.filter(pk__in=chosen, is_active=False).exists():
+        raise ProductInactiveError
     if not lines:
         raise EmptyCartError
     today = timezone.localdate()
