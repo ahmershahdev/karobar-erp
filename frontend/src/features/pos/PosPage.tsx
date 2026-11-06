@@ -432,7 +432,8 @@ export function PosPage() {
   const known = stores.some((item) => String(item.id) === picked);
   // A store named in the address is never swapped for another: sales would land in the wrong one.
   // Only from a fresh list: a stale one showing a single store would lock in the wrong one.
-  const onlyStore = stores.length === 1 && !warehouses.isFetching ? String(stores[0]?.id) : '';
+  const fresh = !warehouses.isFetching && !warehouses.isError;
+  const onlyStore = stores.length === 1 && fresh ? String(stores[0]?.id) : '';
   const store = picked ? (known ? picked : '') : onlyStore;
   // Written down too, or adding a second store would clear the choice and close an open sale.
   useEffect(() => {
@@ -476,7 +477,7 @@ export function PosPage() {
       )}
       {tills.isPending ||
       warehouses.isPending ||
-      (!picked && warehouses.isFetching) ? null : warehouses.isError && stores.length === 0 ? (
+      (!picked && warehouses.isFetching) ? null : warehouses.isError && !store ? (
         <ActionError error={warehouses.error} />
       ) : stores.length === 0 ? (
         <Panel title={t('pos.noStore')}>
