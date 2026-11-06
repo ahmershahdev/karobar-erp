@@ -96,6 +96,8 @@ export function Home() {
     queryKey: [membership.tenant_id, 'report', 'dashboard'],
     queryFn: () => unwrap(api.GET('/api/reports/dashboard/')),
     enabled: allowed,
+    // After a sale the figures must agree with the checklist, so don't reuse a recent copy.
+    refetchOnMount: 'always',
   });
   if (!allowed) return null;
 
