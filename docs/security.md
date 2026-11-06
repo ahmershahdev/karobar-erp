@@ -50,8 +50,9 @@ Sign-in, sign-up and password reset carry two checks (`apps/accounts/humans.py`)
   token or a failed check answers `400` with `code: captcha_v2_required`, and the form then
   shows the v2 checkbox, whose token is verified with the v2 secret.
 - If Google can't be reached the form fails closed with `503 captcha_unavailable`.
-- The floating v3 badge is hidden; instead each protected form carries the notice Google asks
-  for in that case ("Protected by reCAPTCHA", with links to Google's privacy policy and terms).
+- The v3 badge is rendered inline, under the submit button of the form it protects, using
+  explicit rendering and the widget id. The automatic badge can only float over a screen corner.
+  The written notice is used only if a business has v2 keys and no v3 keys.
 - Empty keys turn reCAPTCHA off for local development and tests; `config.settings.prod`
   refuses to start without both key pairs.
 
