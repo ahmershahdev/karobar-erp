@@ -33,6 +33,40 @@ Everything else is ranked below that.
 - Sign-in answers the same message for an unknown email and a wrong password. Django runs the
   hasher for unknown users too, so timing doesn't reveal which emails exist.
 
+### Bot checks on public forms
+
+Sign-in, sign-up and password reset carry two checks (`apps/accounts/humans.py`):
+
+- A honeypot field (`website`) that is positioned off screen, `aria-hidden` and out of the tab
+  order. When it is filled in, sign-up and reset answer exactly as for a real request and do
+  nothing, and sign-in answers with the usual wrong-password message, so a bot learns nothing.
+- Google reCAPTCHA v3, verified server side at `siteverify` with the secret key. The token's
+  `action` must match the form (`login`, `signup`, `password_reset`), so a token can't be
+  replayed on another form. A score under `RECAPTCHA_V3_MIN_SCORE` (default 0.5), a missing
+  token or a failed check answers `400` with `code: captcha_v2_required`, and the form then
+  shows the v2 checkbox, whose token is verified with the v2 secret.
+- If Google can't be reached the form fails closed with `503 captcha_unavailable`.
+- Empty keys turn reCAPTCHA off for local development and tests; `config.settings.prod`
+  refuses to start without both key pairs.
+
+### Sign in with Google and Facebook
+
+`apps/accounts/oauth.py` runs the OAuth 2.0 authorization code flow itself, on the standard
+library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON objects only).
+
+- `state` is 32 random bytes kept in the session and compared in constant time; Google also
+  gets PKCE (S256). The code is exchanged server to server with the client secret, and the
+  provider's tokens are never stored or sent to the browser. Facebook Graph calls carry
+  `appsecret_proof`.
+- A provider identity is stored as (provider, provider user id) in `SocialAccount`, so a later
+  change of email at the provider can't move the identity to another user.
+- An identity is linked to an existing account by email only when Google says the email is
+  verified. Facebook doesn't promise that, so a Facebook sign-in for an email that already has
+  an account is refused (`email_in_use`) instead of linked: otherwise anyone who added a
+  victim's address to a Facebook account could take over the Karobar account.
+- `next` is only followed when it is a path under `/app` with no `//` or backslash.
+- Disabled users can't sign in through a provider.
+
 ## Rate limiting and denial of service
 
 | Layer | Limit |
@@ -83,8 +117,12 @@ placeholder with `$request_id`, 32 random hex characters per response, and sends
 the header. HTML is `no-cache`, so a nonce is never reused. `strict-dynamic` lets the nonced entry
 script load its lazy chunks (three.js, pages) without listing them.
 
-Fonts are self-hosted through Fontsource; there are no third-party origins. Adding one (analytics,
-a CDN, a map) needs a line in this file and in `deploy/nginx/snippets/html.conf`.
+Fonts are self-hosted through Fontsource. The only third-party origins are Google's reCAPTCHA
+ones, on the sign-in, sign-up and reset forms: the script is added by our nonced code, so
+`strict-dynamic` admits it without a host list, and its iframes are allowed by
+`frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/`. Adding
+another origin (analytics, a CDN, a map) needs a line in this file and in
+`deploy/nginx/snippets/html.conf`.
 
 The Django side (admin, API errors) sends its own CSP through `django-csp`, also nonce based.
 
@@ -141,6 +179,10 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 
 - Secrets come only from environment variables (`backend/.env`, `deploy/.env`), which are git
   ignored. `.env.example` files list the names with empty or obviously fake values.
+- Third-party secrets: `RESEND_API_KEY` (email, sent over Resend's SMTP relay so no SDK is
+  needed), the two `RECAPTCHA_*_SECRET_KEY`s, `GOOGLE_OAUTH_CLIENT_SECRET` and
+  `FACEBOOK_APP_SECRET`. Site keys and client ids are public and reach the browser through
+  `GET /api/accounts/config/`; secrets never leave the server.
 - The admin lives at `DJANGO_ADMIN_URL`, not `/admin/`.
 - Containers run as non-root users, with read-only root filesystems and `no-new-privileges` in
   production.

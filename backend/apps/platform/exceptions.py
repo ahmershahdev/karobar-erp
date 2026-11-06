@@ -29,4 +29,9 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response | Non
         )
     if isinstance(response.data, dict):
         response.data["request_id"] = request_id_var.get()
+        # A stable code next to the message lets the app react (show the reCAPTCHA checkbox)
+        # without matching on English text.
+        detail = getattr(exc, "detail", None)
+        if isinstance(detail, exceptions.ErrorDetail):
+            response.data["code"] = detail.code
     return response

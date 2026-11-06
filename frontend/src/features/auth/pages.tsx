@@ -7,11 +7,23 @@ import { Alert, Button, Field, PasswordField, SubmitButton } from '../../compone
 import { api } from '../../lib/api/client';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { AuthCard } from './AuthCard';
+import { needsCheckbox, useHumanCheck } from './human';
+import { OAuthButtons } from './OAuthButtons';
 import { ensureCsrf, sessionKeys, useMe } from './session';
 
 function messageOf(error: unknown, fallback: string): string {
   return error instanceof ApiError && error.status < 500 ? error.message : fallback;
 }
+
+const OAUTH_ERRORS = new Set([
+  'oauth_failed',
+  'oauth_state',
+  'oauth_cancelled',
+  'provider_unavailable',
+  'email_missing',
+  'email_in_use',
+  'account_disabled',
+]);
 
 function submitting(handler: () => void) {
   return (event: SyntheticEvent<HTMLFormElement>) => {
@@ -29,10 +41,16 @@ export function SignInPage() {
   const [params] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const human = useHumanCheck('login');
+  const oauthError = params.get('error');
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      return unwrap(api.POST('/api/accounts/login/', { body: { email, password } }));
+      const proof = await human.proof();
+      return unwrap(api.POST('/api/accounts/login/', { body: { email, password, ...proof } }));
+    },
+    onError: (error) => {
+      if (needsCheckbox(error)) human.requireCheckbox();
     },
     onSuccess: async (me) => {
       client.setQueryData(sessionKeys.me, me);
@@ -55,7 +73,16 @@ export function SignInPage() {
         </>
       }
     >
-      <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+      {oauthError && OAUTH_ERRORS.has(oauthError) && (
+        <div className="mb-5">
+          <Alert tone="error">{t(`auth.oauthErrors.${oauthError}`)}</Alert>
+        </div>
+      )}
+      <div className="mb-5">
+        <OAuthButtons next={params.get('next')} />
+      </div>
+      <form className="relative space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+        {human.honeypot}
         <Field
           label={t('signIn.email')}
           type="email"
@@ -83,14 +110,15 @@ export function SignInPage() {
             </Link>
           </div>
         </div>
-        {mutation.isError && (
+        {human.checkbox}
+        {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">
             {mutation.error instanceof ApiError && mutation.error.status === 403
               ? t('signIn.failed')
-              : t('signIn.unavailable')}
+              : messageOf(mutation.error, t('signIn.unavailable'))}
           </Alert>
         )}
-        <SubmitButton pending={mutation.isPending}>
+        <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
         </SubmitButton>
       </form>
@@ -102,10 +130,15 @@ export function SignUpPage() {
   const { t } = useTranslation();
   const [params] = useSearchParams();
   const [form, setForm] = useState({ full_name: '', email: '', password: '' });
+  const human = useHumanCheck('signup');
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await unwrap(api.POST('/api/accounts/signup/', { body: form }));
+      const proof = await human.proof();
+      await unwrap(api.POST('/api/accounts/signup/', { body: { ...form, ...proof } }));
+    },
+    onError: (error) => {
+      if (needsCheckbox(error)) human.requireCheckbox();
     },
   });
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => {
@@ -136,7 +169,11 @@ export function SignUpPage() {
         </>
       }
     >
-      <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+      <div className="mb-5">
+        <OAuthButtons next={params.get('next')} />
+      </div>
+      <form className="relative space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+        {human.honeypot}
         <Field
           label={t('auth.fullName')}
           maxLength={150}
@@ -168,10 +205,13 @@ export function SignUpPage() {
           onChange={set('password')}
         />
         <p className="text-xs text-muted">{t('auth.passwordHint')}</p>
-        {mutation.isError && (
+        {human.checkbox}
+        {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
         )}
-        <SubmitButton pending={mutation.isPending}>{t('auth.signUp')}</SubmitButton>
+        <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+          {t('auth.signUp')}
+        </SubmitButton>
       </form>
     </AuthCard>
   );
@@ -211,10 +251,15 @@ export function VerifyEmailPage() {
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
+  const human = useHumanCheck('password_reset');
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await unwrap(api.POST('/api/accounts/password-reset/', { body: { email } }));
+      const proof = await human.proof();
+      await unwrap(api.POST('/api/accounts/password-reset/', { body: { email, ...proof } }));
+    },
+    onError: (error) => {
+      if (needsCheckbox(error)) human.requireCheckbox();
     },
   });
   return (
@@ -222,7 +267,8 @@ export function ForgotPasswordPage() {
       {mutation.isSuccess ? (
         <Alert tone="success">{t('auth.resetSent')}</Alert>
       ) : (
-        <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+        <form className="relative space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+          {human.honeypot}
           <Field
             label={t('signIn.email')}
             type="email"
@@ -234,10 +280,13 @@ export function ForgotPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          {mutation.isError && (
+          {human.checkbox}
+          {mutation.isError && !needsCheckbox(mutation.error) && (
             <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
           )}
-          <SubmitButton pending={mutation.isPending}>{t('auth.sendLink')}</SubmitButton>
+          <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+            {t('auth.sendLink')}
+          </SubmitButton>
         </form>
       )}
       <Link className={`${LINK} mt-6 inline-block text-sm`} to="/app/sign-in">

@@ -28,6 +28,12 @@
   --color-beige: #ddd0b8;
   --color-silver: #b9b5ad;
   --color-gold: #d8b26a;
+  /* Third-party brand marks on the sign-in buttons; their colours are set by each brand. */
+  --color-brand-google-blue: #4285f4;
+  --color-brand-google-green: #34a853;
+  --color-brand-google-yellow: #fbbc05;
+  --color-brand-google-red: #ea4335;
+  --color-brand-facebook: #1877f2;
   --color-olive: #7d7f3c;
   --color-teal: #1f8f84;
   --color-indigo: #3d3f9e;

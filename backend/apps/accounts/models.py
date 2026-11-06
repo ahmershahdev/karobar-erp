@@ -42,3 +42,21 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self) -> str:
         return self.email
+
+
+class SocialAccount(models.Model):
+    """A Google or Facebook identity linked to a user, keyed by the provider's own user id."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="social_accounts")
+    provider = models.CharField(max_length=20)
+    uid = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["provider", "uid"], name="uniq_social_account")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.provider}:{self.uid}"

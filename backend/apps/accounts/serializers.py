@@ -4,6 +4,7 @@ from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
+from .humans import HumanFields
 from .models import User
 
 
@@ -15,7 +16,7 @@ def check_password_strength(password: str, user: User | None) -> str:
     return password
 
 
-class LoginSerializer(serializers.Serializer[None]):
+class LoginSerializer(HumanFields):
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(max_length=128, trim_whitespace=False)
 
@@ -33,7 +34,7 @@ class MeSerializer(serializers.ModelSerializer[User]):
         return user.email_verified_at is not None
 
 
-class SignUpSerializer(serializers.Serializer[None]):
+class SignUpSerializer(HumanFields):
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(max_length=128, trim_whitespace=False)
     full_name = serializers.CharField(max_length=150, allow_blank=True, required=False)
@@ -49,7 +50,7 @@ class TokenSerializer(serializers.Serializer[None]):
     token = serializers.CharField(max_length=512)
 
 
-class EmailSerializer(serializers.Serializer[None]):
+class EmailSerializer(HumanFields):
     email = serializers.EmailField(max_length=254)
 
 
@@ -57,3 +58,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer[None]):
     uid = serializers.CharField(max_length=64)
     token = serializers.CharField(max_length=128)
     password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+
+class AuthConfigSerializer(serializers.Serializer[None]):
+    recaptcha_v3_site_key = serializers.CharField(allow_blank=True)
+    recaptcha_v2_site_key = serializers.CharField(allow_blank=True)
+    oauth_providers = serializers.ListField(child=serializers.CharField())

@@ -117,6 +117,10 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | Costing method fixed per business | Moving average or FIFO is chosen when the business is created; switching later would revalue every past issue |
 | Transfers carry cost, not value | A transfer posts no journal entry; the destination receives exactly the cost (and, under FIFO, the layers) that left the source |
 | Counts post the difference | An adjustment line holds the counted quantity; posting books only what was found or lost |
+| Email through Resend's SMTP relay | `RESEND_API_KEY` becomes the SMTP password; Django's own backend sends, so there is no SDK to pin, and any other SMTP provider still works through `EMAIL_*` |
+| reCAPTCHA v3 first, v2 only when needed | Most people never see a challenge; a low score or a failed check asks for the checkbox. The honeypot costs nothing and catches the simplest bots before Google is called |
+| OAuth without a library | Two providers and one flow (authorization code, PKCE where supported) fit in one module that the maintainer can read end to end; the session stays the only credential |
+| Facebook never links by email | Facebook doesn't say whether the email was verified, so linking by it would let a stranger take over an account |
 | Books set up through a `tenant_created` signal | Tenancy doesn't import accounting; later modules hook in the same way |
 
 ## Open questions
