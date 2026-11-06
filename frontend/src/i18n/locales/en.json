@@ -659,22 +659,22 @@
       ]
     },
     "steps": {
-      "store": {
-        "title": "Add a store",
-        "body": "Your stock and cash belong to a store."
-      },
-      "product": {
-        "title": "Add a product",
-        "body": "Add something you sell."
-      },
-      "price": {
-        "title": "Set a selling price",
-        "body": "Type a price next to a product."
-      },
-      "sale": {
-        "title": "Make your first sale",
-        "body": "Open the counter and sell something."
-      }
+      "eyebrow": "How it works",
+      "title": "Running in an afternoon.",
+      "items": [
+        {
+          "title": "Create your business",
+          "body": "Pick your currency, fiscal year and costing method. The chart of accounts and first fiscal year are set up for you."
+        },
+        {
+          "title": "Add stock",
+          "body": "Add products with their packs and barcodes, then post opening stock. It lands in the books at cost."
+        },
+        {
+          "title": "Sell and see the books",
+          "body": "Every document posts its own journal entry, so the trial balance is right the moment the sale is."
+        }
+      ]
     },
     "stats": {
       "eyebrow": "Proof, not promises",
@@ -766,21 +766,7 @@
           "a": "Posted entries never change. You post a reversal, which keeps a complete and honest audit trail."
         }
       ]
-    },
-    "setupTitle": "Get your shop ready",
-    "setupProgress": "{{done}} of {{total}} done",
-    "doThis": "Do this now",
-    "attention": "Needs your attention",
-    "today": "Your business today",
-    "noSales": "No sales yet. Your first sale will show here.",
-    "warnings": {
-      "low_stock": "Products running low: {{count}}",
-      "overdue": "Overdue bills: {{count}}",
-      "open_tills": "Tills still open: {{count}}"
-    },
-    "automation": "Automatic help",
-    "dailySummary": "Daily summary email",
-    "dailySummaryBody": "Each morning, get yesterday's sales and what needs attention. A quiet day sends nothing."
+    }
   },
   "guides": {
     "title": "How to use this page",
@@ -1128,5 +1114,39 @@
     "verify": "Check this chat has not been changed",
     "verified": "All {{count}} messages are intact.",
     "tampered": "Warning: this chat has been changed since it was written."
+  },
+  "business": {
+    "steps": {
+      "store": {
+        "title": "Add a store",
+        "body": "Your stock and cash belong to a store."
+      },
+      "product": {
+        "title": "Add a product",
+        "body": "Add something you sell."
+      },
+      "price": {
+        "title": "Set a selling price",
+        "body": "Type a price next to a product."
+      },
+      "sale": {
+        "title": "Make your first sale",
+        "body": "Open the counter and sell something."
+      }
+    },
+    "setupTitle": "Get your shop ready",
+    "setupProgress": "{{done}} of {{total}} done",
+    "doThis": "Do this now",
+    "attention": "Needs your attention",
+    "today": "Your business today",
+    "noSales": "No sales yet. Your first sale will show here.",
+    "warnings": {
+      "low_stock": "Products running low: {{count}}",
+      "overdue": "Overdue bills: {{count}}",
+      "open_tills": "Tills still open: {{count}}"
+    },
+    "automation": "Automatic help",
+    "dailySummary": "Daily summary email",
+    "dailySummaryBody": "Each morning, get yesterday's sales and what needs attention. A quiet day sends nothing."
   }
 }

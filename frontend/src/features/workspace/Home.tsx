@@ -86,7 +86,7 @@ function Automation() {
     queryFn: () => unwrap(api.GET('/api/automation/')),
   });
   return (
-    <Panel title={t('home.automation')}>
+    <Panel title={t('business.automation')}>
       <label className="flex cursor-pointer items-start gap-3">
         <input
           type="checkbox"
@@ -99,8 +99,8 @@ function Automation() {
           }}
         />
         <span>
-          <span className="block font-medium">{t('home.dailySummary')}</span>
-          <span className="block text-sm text-muted">{t('home.dailySummaryBody')}</span>
+          <span className="block font-medium">{t('business.dailySummary')}</span>
+          <span className="block text-sm text-muted">{t('business.dailySummaryBody')}</span>
         </span>
       </label>
     </Panel>
@@ -137,9 +137,9 @@ export function Home() {
   return (
     <div className="space-y-6">
       {setup && next && (
-        <Panel title={t('home.setupTitle')}>
+        <Panel title={t('business.setupTitle')}>
           <p className="mb-3 text-sm text-muted">
-            {t('home.setupProgress', { done, total: STEPS.length })}
+            {t('business.setupProgress', { done, total: STEPS.length })}
           </p>
           <div className="mb-5 h-2 rounded-full bg-raised">
             <div
@@ -164,17 +164,17 @@ export function Home() {
                     <span
                       className={`block ${finished ? 'text-muted line-through' : 'font-medium'}`}
                     >
-                      {t(`home.steps.${step.key}.title`)}
+                      {t(`business.steps.${step.key}.title`)}
                     </span>
                     {!finished && (
                       <span className="block text-sm text-muted">
-                        {t(`home.steps.${step.key}.body`)}
+                        {t(`business.steps.${step.key}.body`)}
                       </span>
                     )}
                   </span>
                   {step === next && (
                     <Link to={`${base}/${step.path}`} className="btn btn-primary !py-2.5 !text-sm">
-                      {t('home.doThis')}
+                      {t('business.doThis')}
                     </Link>
                   )}
                 </li>
@@ -185,7 +185,7 @@ export function Home() {
       )}
 
       {warnings.length > 0 && (
-        <Panel title={t('home.attention')}>
+        <Panel title={t('business.attention')}>
           <ul className="divide-y divide-line">
             {home.data &&
               warnings.map((item) => (
@@ -195,7 +195,7 @@ export function Home() {
                     className="flex min-h-12 items-center justify-between gap-4 py-2 hover:text-ember"
                   >
                     <span>
-                      {t(`home.warnings.${item.key}`, { count: home.data.attention[item.key] })}
+                      {t(`business.warnings.${item.key}`, { count: home.data.attention[item.key] })}
                     </span>
                     <span aria-hidden="true" className="rtl:rotate-180">
                       &rarr;
@@ -208,7 +208,7 @@ export function Home() {
       )}
 
       <section className="space-y-4">
-        <h2 className="text-2xl">{t('home.today')}</h2>
+        <h2 className="text-2xl">{t('business.today')}</h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <Stat label={t('rep.salesToday')} value={data?.sales_today} to={reports} />
           <Stat label={t('rep.salesMonth')} value={data?.sales_month} to={reports} />
@@ -246,7 +246,7 @@ export function Home() {
             <SalesChart days={data.sales_by_day} />
           </Suspense>
         ) : (
-          <p className="py-10 text-center text-muted">{t('home.noSales')}</p>
+          <p className="py-10 text-center text-muted">{t('business.noSales')}</p>
         )}
       </Panel>
     </div>
