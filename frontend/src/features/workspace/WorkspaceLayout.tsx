@@ -5,6 +5,7 @@ import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } 
 import { Alert, Button } from '../../components/form';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { Logo } from '../../components/Logo';
+import { Chat } from '../assistant/Chat';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { setActiveTenant } from '../../lib/api/client';
@@ -266,6 +267,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
         </div>
         {!me.email_verified && <VerifyBanner />}
         <Outlet context={{ me, membership } satisfies WorkspaceContext} />
+        <Chat membership={membership} />
       </main>
     </div>
   );

@@ -29,12 +29,12 @@ class _NoRedirects(urllib.request.HTTPRedirectHandler):
 OPENER = urllib.request.build_opener(_NoRedirects)
 
 
-def _send(request: urllib.request.Request) -> dict[str, Any]:
+def _send(request: urllib.request.Request, timeout: int = TIMEOUT_SECONDS) -> dict[str, Any]:
     if urllib.parse.urlsplit(request.full_url).scheme != "https":
         raise OutboundError("only https is allowed")
     try:
         # The scheme is checked above, so file: and other handlers can't be reached.
-        with OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
+        with OPENER.open(request, timeout=timeout) as response:
             body = response.read(MAX_BYTES + 1)
     except urllib.error.HTTPError as exc:
         if 300 <= exc.code < 400:
@@ -65,6 +65,24 @@ def post_form(url: str, fields: dict[str, str]) -> dict[str, Any]:
         },
     )
     return _send(request)
+
+
+def post_json(
+    url: str, payload: dict[str, Any], bearer: str, timeout: int = TIMEOUT_SECONDS
+) -> dict[str, Any]:
+    request = urllib.request.Request(  # noqa: S310
+        url,
+        data=json.dumps(payload).encode(),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {bearer}",
+            # Groq's edge refuses the default Python client name.
+            "User-Agent": "karobar-erp",
+        },
+    )
+    return _send(request, timeout)
 
 
 def get_json(url: str, bearer: str | None = None) -> dict[str, Any]:
