@@ -198,7 +198,11 @@ class Bill(Document):
                 name="bill_paid_within_total",
             ),
         ]
-        indexes = [models.Index(fields=["tenant", "supplier", "status"])]
+        indexes = [
+            models.Index(fields=["tenant", "supplier", "status"]),
+            models.Index(fields=["tenant", "status", "date"]),
+            models.Index(fields=["tenant", "-date", "-id"]),
+        ]
 
 
 class BillLine(TenantOwnedModel):

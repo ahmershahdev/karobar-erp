@@ -49,9 +49,11 @@ Last updated: 2026-11-06. Update at the end of every work session.
 
 ## Next session
 
-1. M5: indexes and query checks for reports on 1 million document lines, then tag `v0.5.0`.
+1. Tag `v0.5.0`: M5 is done.
 2. M6: HR and payroll.
 
 ## Open questions
+
+- Reports that read all history stay slow at 1 million lines, on MySQL with its default 128 MB buffer pool: balance sheet and all-time trial balance about 4.7s, cash flow about 7s, dashboard about 4.4s. Each joins every line to its entry. A larger buffer pool should help, which was not measured; the real fix is keeping running balances per account or copying the date onto the line.
 
 - First tax and payroll rules to ship (Pakistan first, then the Gulf), with official sources.

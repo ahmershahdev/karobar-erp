@@ -6,11 +6,22 @@ from django.db.models import Q, Sum
 
 from apps.core.balances import AccountType, balance, split
 from apps.core.money import quantize_money
+from apps.tenancy.context import get_current_tenant
 
 from .models import Account, JournalEntry, JournalLine
 
 ZERO = Decimal("0.00")
+
+
 POSTED = Q(entry__status=JournalEntry.Status.POSTED)
+
+
+def posted() -> Q:
+    """Posted lines for reports on a few accounts. Naming the entry's tenant lets MySQL range over
+    the entry's (tenant, status, date) index, which took a cash balance over a million lines from
+    3.8s to 1.3s. Reports grouped over every account use POSTED: with this filter MySQL drives
+    them from the lines instead, which measured five times slower."""
+    return POSTED & Q(entry__tenant=get_current_tenant())
 
 
 @dataclass(frozen=True)
@@ -89,7 +100,7 @@ class Ledger:
 def general_ledger(account: Account, start: date | None, end: date | None) -> Ledger:
     """Every posted line of one account, with the running balance on its normal side."""
     kind = AccountType(account.type)
-    lines = JournalLine.objects.filter(POSTED, account=account)
+    lines = JournalLine.objects.filter(posted(), account=account)
     opening = ZERO
     if start is not None:
         before = lines.filter(entry__date__lt=start).aggregate(d=Sum("debit"), c=Sum("credit"))

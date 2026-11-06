@@ -111,9 +111,14 @@ class JournalEntry(TenantOwnedModel):
     class Meta(TenantOwnedModel.Meta):
         ordering = ["-date", "-id"]
         constraints = [
-            models.UniqueConstraint(fields=["tenant", "number"], name="uniq_entry_number")
+            # The number comes first on purpose. Led by tenant, this key ties with the
+            # (tenant, status, date) index below and MySQL picks it, reading every entry.
+            models.UniqueConstraint(fields=["number", "tenant"], name="uniq_entry_number")
         ]
-        indexes = [models.Index(fields=["tenant", "status", "date"])]
+        indexes = [
+            models.Index(fields=["tenant", "status", "date"]),
+            models.Index(fields=["tenant", "-date", "-id"]),
+        ]
 
     def __str__(self) -> str:
         return self.number or f"Draft {self.pk}"

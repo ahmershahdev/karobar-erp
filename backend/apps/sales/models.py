@@ -119,7 +119,11 @@ class Invoice(Document):
                 name="invoice_settled_within_total",
             ),
         ]
-        indexes = [models.Index(fields=["tenant", "customer", "status"])]
+        indexes = [
+            models.Index(fields=["tenant", "customer", "status"]),
+            models.Index(fields=["tenant", "status", "date"]),
+            models.Index(fields=["tenant", "-date", "-id"]),
+        ]
 
 
 class InvoiceLine(TenantOwnedModel):
@@ -211,6 +215,7 @@ class CreditNote(Document):
     )
 
     class Meta(Document.Meta):
+        indexes = [models.Index(fields=["tenant", "status", "date"])]
         constraints = [
             models.UniqueConstraint(fields=["tenant", "number"], name="uniq_credit_note_number"),
         ]
