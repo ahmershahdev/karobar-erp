@@ -21,10 +21,10 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
                 </span>
               ) : (
                 <>
-                  <Link to={crumb.to} className="transition-colors hover:!text-gold">
+                  <Link to={crumb.to} className="transition-colors hover:text-ink">
                     {crumb.label}
                   </Link>
-                  <span aria-hidden="true" className="text-gold/60">
+                  <span aria-hidden="true" className="text-line-strong">
                     /
                   </span>
                 </>

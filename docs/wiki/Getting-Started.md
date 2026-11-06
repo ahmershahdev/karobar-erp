@@ -10,7 +10,7 @@ cd karobar-erp
 npm run dev
 ```
 
-Open <http://localhost:5173/app/sign-up>, create an account, and copy the confirmation link from
+Open <http://localhost:5173/signup>, create an account, and copy the confirmation link from
 the worker's log (emails are printed there in development). Then create your first business and
 invite people from Members.
 

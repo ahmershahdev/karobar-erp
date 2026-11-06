@@ -122,6 +122,14 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | Bills clear GRNI at the receipt's booked value | The bill takes the same value off GRNI that the receipt put on, in running-total slices (`core.documents.share`) so partial bills never strand a paisa; any price difference goes to purchase price variance, not back into stock that may already be sold |
 | Unallocated supplier payments are advances | The whole payment debits payables; allocations only mark which bills it settles, so an overpayment shows as a debit balance on the supplier |
 | Draft documents check their links when saved | A draft can't point at a draft order or an unposted receipt, so deleting one draft never fails on another's reference |
+| Email through Resend's SMTP relay | `RESEND_API_KEY` becomes the SMTP password; Django's own backend sends, so there is no SDK to pin, and any other SMTP provider still works through `EMAIL_*` |
+| reCAPTCHA v3 first, v2 only when needed | Most people never see a challenge; a low score or a failed check asks for the checkbox. The honeypot costs nothing and catches the simplest bots before Google is called |
+| OAuth without a library | Two providers and one flow (authorization code, PKCE where supported) fit in one module that the maintainer can read end to end; the session stays the only credential |
+| Facebook never links by email | Facebook doesn't say whether the email was verified, so linking by it would let a stranger take over an account |
+| Business slugs are for addresses only | `/app/al-madina-traders` reads better than a UUID, but the API still takes `public_id` in `X-Tenant`. The app resolves a slug against the user's own memberships, so knowing one gives nothing away, and a slug never changes when a business is renamed, so links keep working. |
+| Sign-in screens live at the root | `/login` and `/signup` are what people expect and can type. `/app` holds only the workspace. Old addresses redirect with their query string, because emails already sent still use them, and those words are reserved so no business can take them as a slug. New screens go in `AUTH_PATHS` in `lib/paths.ts` and in the nginx list: unknown addresses are real 404s. |
+| Brotli without an nginx module | The official nginx image has no Brotli. The build writes `.br` and `.gz` files and nginx picks one with a `map`. Dynamic gzip must stay off for those locations: it can't see `add_header` and would compress the `.br` file again. |
+| A service worker for offline, not offline data | It keeps the app's code so an offline visit gets a helpful screen rather than the browser's error. Business data is not cached: a shop's books must never look current when they aren't. |
 | Books set up through a `tenant_created` signal | Tenancy doesn't import accounting; later modules hook in the same way |
 
 ## Open questions

@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 
 import { App } from './app/App';
+import { isProduction } from './lib/env';
 import { SmoothScroll } from './lib/SmoothScroll';
 
 const queryClient = new QueryClient({
@@ -15,6 +16,10 @@ const queryClient = new QueryClient({
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
+
+if (isProduction && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'));
+}
 
 createRoot(root).render(
   <StrictMode>

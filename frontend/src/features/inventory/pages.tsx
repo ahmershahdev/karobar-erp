@@ -64,7 +64,7 @@ export function ProductsPage() {
 
   return (
     <>
-      <PageTitle title={t('inv.products')} subtitle={t('inv.productsBody')} />
+      <PageTitle guide="products" title={t('inv.products')} subtitle={t('inv.productsBody')} />
       {can(membership, 'inventory', 'create') && (
         <Panel title={t('inv.newProduct')}>
           {units.data?.length === 0 && <Alert tone="error">{t('inv.needUnits')}</Alert>}
@@ -135,7 +135,7 @@ export function ProductsPage() {
             <label className="flex items-center gap-3 self-end pb-3 text-sm">
               <input
                 type="checkbox"
-                className="size-4 accent-[var(--color-gold)]"
+                className="size-4 accent-[var(--color-ember)]"
                 checked={form.batches}
                 onChange={(e) => setForm({ ...form, batches: e.target.checked })}
               />
@@ -160,7 +160,7 @@ export function ProductsPage() {
           <input
             aria-label={t('inv.search')}
             placeholder={t('inv.search')}
-            className="rounded-full border border-line bg-black/50 px-4 py-2 text-sm"
+            className="rounded-full border border-line bg-canvas px-4 py-2 text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value.slice(0, 80))}
           />
@@ -179,7 +179,7 @@ export function ProductsPage() {
             <tbody>
               {products.data?.results.map((product: Product) => (
                 <tr key={product.id} className="border-t border-line">
-                  <td className={`${TD} font-mono text-gold`}>{product.sku}</td>
+                  <td className={`${TD} font-mono text-ember`}>{product.sku}</td>
                   <td className={TD}>
                     {product.name}
                     {product.track_batches && (
@@ -408,7 +408,7 @@ function StockEditor({ onDone }: { onDone: () => void }) {
                     <button
                       type="button"
                       aria-label={t('workspace.remove')}
-                      className="px-2 text-muted hover:text-coral disabled:opacity-30"
+                      className="px-2 text-muted hover:text-red disabled:opacity-30"
                       disabled={lines.length <= 1}
                       onClick={() => setLines(lines.filter((item) => item.key !== line.key))}
                     >
@@ -473,7 +473,7 @@ function EntryRow({ entry }: { entry: StockEntry }) {
                 {entry.lines.map((line) => (
                   <tr key={line.id} className="border-t border-line">
                     <td className={TD}>
-                      <span className="font-mono text-xs text-gold">{line.sku}</span>{' '}
+                      <span className="font-mono text-xs text-ember">{line.sku}</span>{' '}
                       {line.product_name}
                       {line.batch_number && <span className="label ms-2">{line.batch_number}</span>}
                     </td>
@@ -548,7 +548,7 @@ export function StockEntriesPage() {
   const entries = useList('stock-entries', () => unwrap(api.GET('/api/inventory/stock-entries/')));
   return (
     <>
-      <PageTitle title={t('inv.entries')} subtitle={t('inv.entriesBody')} />
+      <PageTitle guide="entries" title={t('inv.entries')} subtitle={t('inv.entriesBody')} />
       {creating ? (
         <StockEditor onDone={() => setCreating(false)} />
       ) : (
@@ -596,13 +596,13 @@ export function StockOnHandPage() {
   const rows = levels.data?.pages.flatMap((page) => page.results) ?? [];
   return (
     <>
-      <PageTitle title={t('inv.onHandTitle')} subtitle={t('inv.onHandBody')} />
+      <PageTitle guide="onHand" title={t('inv.onHandTitle')} subtitle={t('inv.onHandBody')} />
       <Panel
         title={t('inv.levels')}
         action={
           <select
             aria-label={t('inv.warehouse')}
-            className="rounded-full border border-line bg-black/50 px-4 py-2 text-sm"
+            className="rounded-full border border-line bg-canvas px-4 py-2 text-sm"
             value={warehouse}
             onChange={(e) => setWarehouse(e.target.value)}
           >
@@ -629,7 +629,7 @@ export function StockOnHandPage() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
-                  <td className={`${TD} font-mono text-gold`}>{row.sku}</td>
+                  <td className={`${TD} font-mono text-ember`}>{row.sku}</td>
                   <td className={TD}>{row.product_name}</td>
                   <td className={TD}>{row.warehouse_code}</td>
                   <td className={NUM}>
@@ -640,7 +640,7 @@ export function StockOnHandPage() {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-gold/40 text-gold">
+              <tr className="border-t border-line-strong font-medium">
                 <td className={TD} colSpan={4}>
                   {t('inv.totalValue')}
                 </td>
@@ -691,16 +691,16 @@ export function AlertsPage() {
   const expiring = (alerts.data?.expiring ?? []) as unknown as ExpiringRow[];
   return (
     <>
-      <PageTitle title={t('inv.alerts')} subtitle={t('inv.alertsBody')} />
+      <PageTitle guide="alerts" title={t('inv.alerts')} subtitle={t('inv.alertsBody')} />
       <Panel title={t('inv.lowStock')}>
         <ul>
           {low.length === 0 && <li className="py-3 text-sm text-muted">{t('workspace.none')}</li>}
           {low.map((row) => (
             <li key={row.product} className="flex justify-between gap-4 border-t border-line py-3">
               <span>
-                <span className="font-mono text-xs text-gold">{row.sku}</span> {row.name}
+                <span className="font-mono text-xs text-ember">{row.sku}</span> {row.name}
               </span>
-              <span className="font-mono text-sm text-coral">
+              <span className="font-mono text-sm text-red">
                 {formatQuantity(row.on_hand, i18n.resolvedLanguage)} /{' '}
                 {formatQuantity(row.reorder_level, i18n.resolvedLanguage)}
               </span>
@@ -744,14 +744,14 @@ export function InventorySetupPage() {
   const allowed = can(membership, 'inventory', 'create');
   return (
     <>
-      <PageTitle title={t('inv.setup')} subtitle={t('inv.setupBody')} />
+      <PageTitle guide="setup" title={t('inv.setup')} subtitle={t('inv.setupBody')} />
       {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title={t('inv.units')}>
           <ul className="mb-5">
             {units.data?.map((item) => (
               <li key={item.id} className="flex gap-4 border-t border-line py-2.5">
-                <span className="w-16 font-mono text-gold">{item.code}</span> {item.name}
+                <span className="w-16 font-mono text-ember">{item.code}</span> {item.name}
               </li>
             ))}
           </ul>
@@ -788,7 +788,7 @@ export function InventorySetupPage() {
           <ul className="mb-5">
             {warehouses.data?.map((item) => (
               <li key={item.id} className="flex gap-4 border-t border-line py-2.5">
-                <span className="w-16 font-mono text-gold">{item.code}</span> {item.name}
+                <span className="w-16 font-mono text-ember">{item.code}</span> {item.name}
               </li>
             ))}
           </ul>

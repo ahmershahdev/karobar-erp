@@ -5,13 +5,26 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 
 import { Alert, Button, Field, PasswordField, SubmitButton } from '../../components/form';
 import { api } from '../../lib/api/client';
+import { safeNext } from '../../lib/paths';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { AuthCard } from './AuthCard';
+import { needsCheckbox, useHumanCheck } from './human';
+import { OAuthButtons } from './OAuthButtons';
 import { ensureCsrf, sessionKeys, useMe } from './session';
 
 function messageOf(error: unknown, fallback: string): string {
   return error instanceof ApiError && error.status < 500 ? error.message : fallback;
 }
+
+const OAUTH_ERRORS = new Set([
+  'oauth_failed',
+  'oauth_state',
+  'oauth_cancelled',
+  'provider_unavailable',
+  'email_missing',
+  'email_in_use',
+  'account_disabled',
+]);
 
 function submitting(handler: () => void) {
   return (event: SyntheticEvent<HTMLFormElement>) => {
@@ -20,7 +33,7 @@ function submitting(handler: () => void) {
   };
 }
 
-const LINK = 'text-gold underline-offset-4 hover:underline';
+const LINK = 'text-ember underline-offset-4 hover:underline';
 
 export function SignInPage() {
   const { t } = useTranslation();
@@ -29,16 +42,22 @@ export function SignInPage() {
   const [params] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const human = useHumanCheck('login');
+  const oauthError = params.get('error');
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      return unwrap(api.POST('/api/accounts/login/', { body: { email, password } }));
+      const proof = await human.proof();
+      return unwrap(api.POST('/api/accounts/login/', { body: { email, password, ...proof } }));
+    },
+    onError: (error) => {
+      if (needsCheckbox(error)) human.requireCheckbox();
     },
     onSuccess: async (me) => {
       client.setQueryData(sessionKeys.me, me);
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
       const next = params.get('next');
-      void navigate(next?.startsWith('/app') ? next : '/app');
+      void navigate(safeNext(next) ?? '/app');
     },
   });
 
@@ -49,13 +68,22 @@ export function SignInPage() {
       footer={
         <>
           {t('auth.noAccount')}{' '}
-          <Link className={LINK} to={`/app/sign-up${params.size ? `?${params.toString()}` : ''}`}>
+          <Link className={LINK} to={`/signup${params.size ? `?${params.toString()}` : ''}`}>
             {t('auth.signUp')}
           </Link>
         </>
       }
     >
-      <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+      {oauthError && OAUTH_ERRORS.has(oauthError) && (
+        <div className="mb-5">
+          <Alert tone="error">{t(`auth.oauthErrors.${oauthError}`)}</Alert>
+        </div>
+      )}
+      <div className="mb-5">
+        <OAuthButtons next={params.get('next')} />
+      </div>
+      <form className="relative space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+        {human.honeypot}
         <Field
           label={t('signIn.email')}
           type="email"
@@ -78,21 +106,23 @@ export function SignInPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
           <div className="text-end">
-            <Link className={`${LINK} text-sm`} to="/app/forgot-password">
+            <Link className={`${LINK} text-sm`} to="/forgot-password">
               {t('auth.forgot')}
             </Link>
           </div>
         </div>
-        {mutation.isError && (
+        {human.checkbox}
+        {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">
             {mutation.error instanceof ApiError && mutation.error.status === 403
               ? t('signIn.failed')
-              : t('signIn.unavailable')}
+              : messageOf(mutation.error, t('signIn.unavailable'))}
           </Alert>
         )}
-        <SubmitButton pending={mutation.isPending}>
+        <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
         </SubmitButton>
+        {human.notice}
       </form>
     </AuthCard>
   );
@@ -102,10 +132,15 @@ export function SignUpPage() {
   const { t } = useTranslation();
   const [params] = useSearchParams();
   const [form, setForm] = useState({ full_name: '', email: '', password: '' });
+  const human = useHumanCheck('signup');
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await unwrap(api.POST('/api/accounts/signup/', { body: form }));
+      const proof = await human.proof();
+      await unwrap(api.POST('/api/accounts/signup/', { body: { ...form, ...proof } }));
+    },
+    onError: (error) => {
+      if (needsCheckbox(error)) human.requireCheckbox();
     },
   });
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => {
@@ -116,7 +151,7 @@ export function SignUpPage() {
     return (
       <AuthCard title={t('auth.checkEmail')}>
         <p className="text-muted">{t('auth.checkEmailBody', { email: form.email })}</p>
-        <Link className={LINK} to={`/app/sign-in${params.size ? `?${params.toString()}` : ''}`}>
+        <Link className={LINK} to={`/login${params.size ? `?${params.toString()}` : ''}`}>
           {t('signIn.title')}
         </Link>
       </AuthCard>
@@ -130,13 +165,17 @@ export function SignUpPage() {
       footer={
         <>
           {t('auth.haveAccount')}{' '}
-          <Link className={LINK} to="/app/sign-in">
+          <Link className={LINK} to="/login">
             {t('signIn.title')}
           </Link>
         </>
       }
     >
-      <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+      <div className="mb-5">
+        <OAuthButtons next={params.get('next')} />
+      </div>
+      <form className="relative space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+        {human.honeypot}
         <Field
           label={t('auth.fullName')}
           maxLength={150}
@@ -168,10 +207,14 @@ export function SignUpPage() {
           onChange={set('password')}
         />
         <p className="text-xs text-muted">{t('auth.passwordHint')}</p>
-        {mutation.isError && (
+        {human.checkbox}
+        {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
         )}
-        <SubmitButton pending={mutation.isPending}>{t('auth.signUp')}</SubmitButton>
+        <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
+          {t('auth.signUp')}
+        </SubmitButton>
+        {human.notice}
       </form>
     </AuthCard>
   );
@@ -211,10 +254,15 @@ export function VerifyEmailPage() {
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
+  const human = useHumanCheck('password_reset');
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await unwrap(api.POST('/api/accounts/password-reset/', { body: { email } }));
+      const proof = await human.proof();
+      await unwrap(api.POST('/api/accounts/password-reset/', { body: { email, ...proof } }));
+    },
+    onError: (error) => {
+      if (needsCheckbox(error)) human.requireCheckbox();
     },
   });
   return (
@@ -222,7 +270,8 @@ export function ForgotPasswordPage() {
       {mutation.isSuccess ? (
         <Alert tone="success">{t('auth.resetSent')}</Alert>
       ) : (
-        <form className="space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+        <form className="relative space-y-5" onSubmit={submitting(() => mutation.mutate())}>
+          {human.honeypot}
           <Field
             label={t('signIn.email')}
             type="email"
@@ -234,13 +283,17 @@ export function ForgotPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          {mutation.isError && (
+          {human.checkbox}
+          {mutation.isError && !needsCheckbox(mutation.error) && (
             <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
           )}
-          <SubmitButton pending={mutation.isPending}>{t('auth.sendLink')}</SubmitButton>
+          <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+            {t('auth.sendLink')}
+          </SubmitButton>
+          {human.notice}
         </form>
       )}
-      <Link className={`${LINK} mt-6 inline-block text-sm`} to="/app/sign-in">
+      <Link className={`${LINK} mt-6 inline-block text-sm`} to="/login">
         &larr; {t('signIn.title')}
       </Link>
     </AuthCard>
@@ -266,7 +319,7 @@ export function ResetPasswordPage() {
       {mutation.isSuccess ? (
         <>
           <Alert tone="success">{t('auth.passwordChanged')}</Alert>
-          <Link className={LINK} to="/app/sign-in">
+          <Link className={LINK} to="/login">
             {t('signIn.title')}
           </Link>
         </>
@@ -309,14 +362,14 @@ export function AcceptInvitePage() {
     },
     onSuccess: async (membership) => {
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
-      void navigate(`/app/t/${membership.tenant_id}`);
+      void navigate(`/app/${membership.tenant_slug}`);
     },
   });
 
   if (me.isPending) return null;
   if (!me.data) {
-    const next = encodeURIComponent(`/app/accept-invite?token=${token}`);
-    return <Navigate to={`/app/sign-in?next=${next}`} replace />;
+    const next = encodeURIComponent(`/accept-invite?token=${token}`);
+    return <Navigate to={`/login?next=${next}`} replace />;
   }
   return (
     <AuthCard title={t('auth.inviteTitle')}>

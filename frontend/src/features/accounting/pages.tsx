@@ -126,7 +126,7 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
                 <td className="py-2 pe-2">
                   <select
                     aria-label={t('ledger.account')}
-                    className="w-full rounded-lg border border-line bg-black/50 px-2 py-2"
+                    className="w-full rounded-lg border border-line bg-canvas px-2 py-2"
                     value={line.account}
                     onChange={(e) => update(line.key, { account: e.target.value })}
                   >
@@ -142,7 +142,7 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
                   <input
                     aria-label={t('acc.description')}
                     maxLength={255}
-                    className="w-full rounded-lg border border-line bg-black/50 px-2 py-2"
+                    className="w-full rounded-lg border border-line bg-canvas px-2 py-2"
                     value={line.description}
                     onChange={(e) => update(line.key, { description: e.target.value })}
                   />
@@ -153,8 +153,8 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
                       aria-label={t(`ledger.${side}`)}
                       inputMode="decimal"
                       placeholder="0.00"
-                      className={`w-full rounded-lg border bg-black/50 px-2 py-2 text-end font-mono ${
-                        Number.isNaN(toMinor(line[side])) ? 'border-coral' : 'border-line'
+                      className={`w-full rounded-lg border bg-canvas px-2 py-2 text-end font-mono ${
+                        Number.isNaN(toMinor(line[side])) ? 'border-red' : 'border-line'
                       }`}
                       value={line[side]}
                       onChange={(e) =>
@@ -172,7 +172,7 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
                   <button
                     type="button"
                     aria-label={t('workspace.remove')}
-                    className="px-2 text-muted hover:text-coral disabled:opacity-30"
+                    className="px-2 text-muted hover:text-red disabled:opacity-30"
                     disabled={lines.length <= 2}
                     onClick={() => setLines(lines.filter((item) => item.key !== line.key))}
                   >
@@ -195,7 +195,7 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
                 </Button>
               </td>
               <td className={`${TD} text-end`}>
-                <span className={`label ${balanced ? '!text-mint' : '!text-coral'}`}>
+                <span className={`label ${balanced ? '!text-green' : '!text-red'}`}>
                   {balanced
                     ? t('ledger.balanced')
                     : t('acc.difference', {
@@ -371,7 +371,7 @@ export function JournalPage() {
   });
   return (
     <>
-      <PageTitle title={t('acc.journal')} subtitle={t('acc.journalBody')} />
+      <PageTitle guide="journal" title={t('acc.journal')} subtitle={t('acc.journalBody')} />
       {editing !== null ? (
         <EntryEditor
           key={editing === 'new' ? 'new' : editing.id}
@@ -392,7 +392,7 @@ export function JournalPage() {
                 key={value || 'all'}
                 type="button"
                 aria-pressed={status === value}
-                className={`rounded-full px-3 py-1 text-xs ${status === value ? 'bg-cream text-black' : 'text-muted hover:text-ink'}`}
+                className={`rounded-full px-3 py-1 text-xs ${status === value ? 'bg-ink text-canvas' : 'text-muted hover:text-ink'}`}
                 onClick={() => setStatus(value)}
               >
                 {t(`acc.filter.${value || 'all'}`)}
@@ -435,7 +435,7 @@ export function ChartPage() {
   };
   return (
     <>
-      <PageTitle title={t('acc.chart')} subtitle={t('acc.chartBody')} />
+      <PageTitle guide="chart" title={t('acc.chart')} subtitle={t('acc.chartBody')} />
       {can(membership, 'accounting', 'create') && (
         <Panel title={t('acc.newAccount')}>
           <form
@@ -509,7 +509,7 @@ export function ChartPage() {
               className={`flex items-baseline gap-4 border-t border-line py-3 ${account.is_group ? 'font-medium' : 'text-ink/85'}`}
               style={{ paddingInlineStart: `${depth(account) * 1.25}rem` }}
             >
-              <span className="w-14 shrink-0 font-mono text-sm text-gold">{account.code}</span>
+              <span className="w-14 shrink-0 font-mono text-sm text-ember">{account.code}</span>
               <span className={account.is_group ? 'font-display text-xl' : ''}>{account.name}</span>
               <span className="label ms-auto hidden sm:inline">
                 {t(`acc.types.${account.type}`)}
@@ -545,7 +545,11 @@ export function TrialBalancePage() {
   const balanced = report.data && report.data.total_debit === report.data.total_credit;
   return (
     <>
-      <PageTitle title={t('acc.trialBalance')} subtitle={t('acc.trialBalanceBody')} />
+      <PageTitle
+        guide="trialBalance"
+        title={t('acc.trialBalance')}
+        subtitle={t('acc.trialBalanceBody')}
+      />
       <Panel
         title={t('acc.period')}
         action={
@@ -596,7 +600,7 @@ export function TrialBalancePage() {
             <tbody>
               {report.data?.rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
-                  <td className={`${TD} font-mono text-gold`}>{row.code}</td>
+                  <td className={`${TD} font-mono text-ember`}>{row.code}</td>
                   <td className={TD}>{row.name}</td>
                   <td className={NUM}>
                     {toMinor(row.debit) ? formatMoney(row.debit, i18n.resolvedLanguage) : ''}
@@ -609,10 +613,10 @@ export function TrialBalancePage() {
             </tbody>
             {report.data && (
               <tfoot>
-                <tr className="border-t border-gold/40 text-gold">
+                <tr className="border-t border-line-strong font-medium">
                   <td className={TD} colSpan={2}>
                     {t('ledger.total')}{' '}
-                    <span className={`label ms-2 ${balanced ? '!text-mint' : '!text-coral'}`}>
+                    <span className={`label ms-2 ${balanced ? '!text-green' : '!text-red'}`}>
                       {balanced ? t('ledger.balanced') : t('acc.outOfBalance')}
                     </span>
                   </td>
@@ -656,7 +660,7 @@ export function LedgerPage() {
   const download = useDownload();
   return (
     <>
-      <PageTitle title={t('acc.ledger')} subtitle={t('acc.ledgerBody')} />
+      <PageTitle guide="ledger" title={t('acc.ledger')} subtitle={t('acc.ledgerBody')} />
       <Panel
         title={t('ledger.account')}
         action={
@@ -745,7 +749,7 @@ export function LedgerPage() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t border-gold/40 text-gold">
+                <tr className="border-t border-line-strong font-medium">
                   <td className={TD} colSpan={5}>
                     {t('acc.closing')}
                   </td>
@@ -787,7 +791,7 @@ export function PeriodsPage() {
   };
   return (
     <>
-      <PageTitle title={t('acc.periods')} subtitle={t('acc.periodsBody')} />
+      <PageTitle guide="periods" title={t('acc.periods')} subtitle={t('acc.periodsBody')} />
       {action.isError && (
         <Alert tone="error">{errorText(action.error, t('signIn.unavailable'))}</Alert>
       )}
@@ -813,7 +817,7 @@ export function PeriodsPage() {
                 <button
                   type="button"
                   disabled={!can(membership, 'accounting', 'update') || action.isPending}
-                  className={`label rounded-full border px-3 py-1 ${period.closed ? 'border-coral/50 !text-coral' : 'border-mint/40 !text-mint'}`}
+                  className={`label rounded-full border px-3 py-1 ${period.closed ? 'border-red/50 !text-red' : 'border-green/40 !text-green'}`}
                   onClick={() =>
                     action.mutate(() =>
                       unwrap(

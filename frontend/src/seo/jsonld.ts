@@ -23,7 +23,7 @@ export function structuredData(siteUrl: string, route: PublicRoute): JsonLd {
       '@id': org['@id'],
       name: SITE.name,
       url: absoluteUrl(siteUrl, '/'),
-      logo: absoluteUrl(siteUrl, '/favicon.svg'),
+      logo: absoluteUrl(siteUrl, '/icon-512.png'),
       email: SITE.email,
       founder: { '@type': 'Person', name: SITE.author, url: SITE.authorUrl },
       sameAs: [SITE.repo],

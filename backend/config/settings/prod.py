@@ -1,5 +1,14 @@
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *  # noqa: F403
-from .base import env
+from .base import (
+    EMAIL_BACKEND,
+    RECAPTCHA_V2_SECRET_KEY,
+    RECAPTCHA_V2_SITE_KEY,
+    RECAPTCHA_V3_SECRET_KEY,
+    RECAPTCHA_V3_SITE_KEY,
+    env,
+)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
@@ -17,10 +26,16 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = env("EMAIL_HOST")
-EMAIL_PORT = env.int("EMAIL_PORT", default=587)
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = True
+# Production never prints mail to a log or runs forms without a bot check.
+if EMAIL_BACKEND.endswith("console.EmailBackend"):
+    raise ImproperlyConfigured("Set RESEND_API_KEY, or EMAIL_BACKEND and the EMAIL_* settings.")
+if not all(
+    (
+        RECAPTCHA_V3_SITE_KEY,
+        RECAPTCHA_V3_SECRET_KEY,
+        RECAPTCHA_V2_SITE_KEY,
+        RECAPTCHA_V2_SECRET_KEY,
+    )
+):
+    raise ImproperlyConfigured("Set the RECAPTCHA_V3_* and RECAPTCHA_V2_* keys.")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")

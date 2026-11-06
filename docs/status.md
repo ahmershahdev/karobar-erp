@@ -1,9 +1,20 @@
 # Project status
 
-Last updated: 2026-11-03. Update at the end of every work session.
+Last updated: 2026-11-06. Update at the end of every work session.
 
 ## Where we are
 
+- On `feat/brand-theme` (PR #22): a minimal white theme replaces the dark brand theme, using the real
+  logo as WebP. Written for people who don't read comfortably: plain-language home screen with
+  task tiles, pictures beside screen names, larger controls. New 404 and offline screens with an
+  animated mascot, connection lost and restored notices, torch password toggle, door on the
+  sign-in and sign-up buttons. Page transition only between public pages. Removed WebGL, `three`,
+  Montserrat and the custom cursor. Footer clock now says Hyderabad (Sindh, Asia/Karachi).
+- Also on #22: bcrypt fallback for Argon2id, business slugs in app URLs (`/app/al-madina-traders`,
+  migration `tenancy.0006`), Brotli and gzip at build time, a service worker, real 404 statuses,
+  and `connect-src` for reCAPTCHA. Checked live through the real nginx config against Django, MySQL,
+  Redis and Google: CSRF, honeypot, forged tokens, a real v3 token, nonce rotation, and offline.
+- Not tested: the v2 checkbox being ticked by a person, and Google and Facebook sign-in end to end.
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
   The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
   on `main`.
@@ -34,6 +45,14 @@ Last updated: 2026-11-03. Update at the end of every work session.
   - 179 backend tests, including two cashiers selling the last unit at once and three
     first-ever receipts racing to create a stock level.
 - `npm run dev` now also runs Celery beat for scheduled jobs.
+
+- Open and stacked: #20 (M4 purchasing, on #19), #21 (Resend, reCAPTCHA v3 and v2, honeypot,
+  Google and Facebook sign-in, on #19), #22 (brand theme from the logo: navy, azure and ember,
+  Montserrat, new mark, preloader, curtain page transition, cursor, footer, on #21).
+- Google sign-in is configured in the Google Cloud project "Karobar ERP"
+  (`storied-catwalk-513610-u1`, in testing mode with the owner's Gmail as test user); a duplicate
+  empty "Karobar ERP" project was created by mistake and can be deleted. Facebook is waiting for
+  the owner to sign in at developers.facebook.com.
 
 ## Next session
 

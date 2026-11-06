@@ -1,0 +1,369 @@
+/* --look-x and --look-y run from -1 to 1 and follow the pointer. Each layer shifts by a different
+   amount, near parts more and far parts the opposite way, which is what makes the flat drawing
+   read as solid. */
+.mascot {
+  --look-x: 0;
+  --look-y: 0;
+  display: block;
+  width: 100%;
+  max-width: min(16rem, 34svh);
+  margin-inline: auto;
+  cursor: pointer;
+  border-radius: var(--radius-card);
+  perspective: 700px;
+}
+
+.mascot-figure {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  transform: rotateY(calc(var(--look-x) * 16deg)) rotateX(calc(var(--look-y) * -8deg));
+  transition: transform 0.4s var(--ease-out-quart);
+}
+
+.mascot-still,
+.mascot-hop {
+  display: block;
+}
+
+.mascot-hop {
+  animation: m-hop 0.6s var(--ease-out-quart);
+}
+
+.m-shadow {
+  fill: var(--color-ink);
+  opacity: 0.1;
+}
+
+.m-skin {
+  fill: var(--color-skin);
+}
+
+.m-skin-shade {
+  fill: var(--color-skin-shade);
+}
+
+.m-shirt,
+.m-sleeve {
+  fill: var(--color-azure);
+}
+
+.m-shirt-side,
+.m-sleeve-far {
+  fill: var(--color-azure-deep);
+}
+
+.m-collar,
+.m-eye {
+  fill: var(--color-white);
+}
+
+.m-pocket {
+  fill: none;
+  stroke: var(--color-white);
+  stroke-opacity: 0.45;
+  stroke-width: 2;
+}
+
+.m-trouser {
+  fill: var(--color-ink);
+}
+
+.m-trouser-far {
+  fill: var(--color-ink-deep);
+}
+
+.m-shoe {
+  fill: var(--color-orange);
+}
+
+.m-shoe-far {
+  fill: var(--color-ember);
+}
+
+.m-cap {
+  fill: var(--color-orange);
+}
+
+.m-brim {
+  fill: var(--color-ember);
+}
+
+.m-pupil {
+  fill: var(--color-ink);
+}
+
+.m-brow,
+.m-mouth {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.m-phone-body {
+  fill: var(--color-ink);
+}
+
+.m-phone-glass {
+  fill: var(--color-raised);
+}
+
+.m-limb,
+.m-head,
+.m-torso {
+  transform-box: fill-box;
+}
+
+.m-limb {
+  transform-origin: 50% 8%;
+}
+
+.m-head {
+  transform-origin: 50% 100%;
+  translate: calc(var(--look-x) * 5px) calc(var(--look-y) * 3px);
+  transition: translate 0.3s var(--ease-out-quart);
+}
+
+.m-face {
+  translate: calc(var(--look-x) * 4px) calc(var(--look-y) * 2px);
+  transition: translate 0.3s var(--ease-out-quart);
+}
+
+.m-pupils {
+  translate: calc(var(--look-x) * 3.5px) calc(var(--look-y) * 3.5px);
+}
+
+.m-arm-near,
+.m-leg-near {
+  translate: calc(var(--look-x) * 2px) 0;
+}
+
+.m-arm-far,
+.m-leg-far {
+  translate: calc(var(--look-x) * -3px) 0;
+}
+
+.m-phone,
+.m-think,
+.m-signal,
+.m-joy {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.m-think text {
+  fill: var(--color-ember);
+  font-family: var(--font-sans);
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.m-signal {
+  fill: none;
+  stroke: var(--color-azure);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.m-joy {
+  fill: var(--color-orange);
+}
+
+/* Walking: the whole figure strolls across the stage, turning at each end. */
+.mascot[data-mood='walking'] {
+  animation: m-stroll 6s linear infinite;
+}
+
+.mascot[data-mood='walking'] .m-body {
+  animation: m-bob 0.5s ease-in-out infinite;
+}
+
+.mascot[data-mood='walking'] .m-leg-near,
+.mascot[data-mood='walking'] .m-arm-far {
+  animation: m-swing 1s ease-in-out infinite;
+}
+
+.mascot[data-mood='walking'] .m-leg-far,
+.mascot[data-mood='walking'] .m-arm-near {
+  animation: m-swing 1s ease-in-out infinite reverse;
+}
+
+/* Confused: scratches its head and tilts it from side to side. */
+.mascot[data-mood='confused'] .m-think {
+  opacity: 1;
+  animation: m-float 2s ease-in-out infinite;
+}
+
+.mascot[data-mood='confused'] .m-head {
+  animation: m-tilt 2.4s ease-in-out infinite;
+}
+
+.mascot[data-mood='confused'] .m-arm-far {
+  rotate: -158deg;
+  animation: m-scratch 0.5s ease-in-out infinite alternate;
+}
+
+.mascot[data-mood='confused'] .m-brow-far {
+  translate: 0 -4px;
+}
+
+/* Looking: one hand shading its eyes, turning its head to scan the distance. */
+.mascot[data-mood='looking'] .m-head {
+  animation: m-scan 3s ease-in-out infinite;
+}
+
+.mascot[data-mood='looking'] .m-arm-far {
+  rotate: -146deg;
+}
+
+/* Searching: phone held high, hunting for signal, and the bars pulse without connecting. */
+.mascot[data-mood='searching'] .m-phone {
+  opacity: 1;
+}
+
+.mascot[data-mood='searching'] .m-arm-far {
+  rotate: -172deg;
+  animation: m-reach 1.6s ease-in-out infinite;
+}
+
+.mascot[data-mood='searching'] .m-signal {
+  opacity: 1;
+}
+
+.mascot[data-mood='searching'] .m-signal path {
+  animation: m-pulse 1.8s ease-in-out infinite;
+}
+
+.mascot[data-mood='searching'] .m-signal path:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.mascot[data-mood='searching'] .m-signal path:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.mascot[data-mood='searching'] .m-head {
+  animation: m-scan 3.6s ease-in-out infinite;
+}
+
+/* Happy: both arms up, jumping. */
+.mascot[data-mood='happy'] .m-body {
+  animation: m-jump 0.7s var(--ease-out-quart) infinite alternate;
+}
+
+.mascot[data-mood='happy'] .m-arm-far {
+  rotate: -165deg;
+}
+
+.mascot[data-mood='happy'] .m-arm-near {
+  rotate: 165deg;
+}
+
+.mascot[data-mood='happy'] .m-joy {
+  opacity: 1;
+  animation: m-float 1.4s ease-in-out infinite;
+}
+
+@keyframes m-stroll {
+  0% {
+    transform: translateX(-34%) scaleX(1);
+  }
+  49.9% {
+    transform: translateX(34%) scaleX(1);
+  }
+  50% {
+    transform: translateX(34%) scaleX(-1);
+  }
+  99.9% {
+    transform: translateX(-34%) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-34%) scaleX(1);
+  }
+}
+
+@keyframes m-bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes m-swing {
+  0%,
+  100% {
+    rotate: -22deg;
+  }
+  50% {
+    rotate: 22deg;
+  }
+}
+
+@keyframes m-tilt {
+  0%,
+  100% {
+    rotate: -7deg;
+  }
+  50% {
+    rotate: 7deg;
+  }
+}
+
+@keyframes m-scan {
+  0%,
+  100% {
+    rotate: -6deg;
+    translate: -6px 0;
+  }
+  50% {
+    rotate: 6deg;
+    translate: 6px 0;
+  }
+}
+
+@keyframes m-scratch {
+  to {
+    rotate: -148deg;
+  }
+}
+
+@keyframes m-reach {
+  50% {
+    rotate: -160deg;
+  }
+}
+
+@keyframes m-float {
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes m-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes m-jump {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-22px);
+  }
+}
+
+@keyframes m-hop {
+  40% {
+    transform: translateY(-30px) rotate(-3deg);
+  }
+  70% {
+    transform: translateY(0) scale(1.04, 0.96);
+  }
+}

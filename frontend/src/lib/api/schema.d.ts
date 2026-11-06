@@ -164,6 +164,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/config/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public keys the sign-in screens need. Site keys are public by design; secrets stay here. */
+        get: operations["accounts_config_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/csrf/": {
         parameters: {
             query?: never;
@@ -220,6 +237,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["accounts_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/oauth/{provider}/callback/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounts_oauth_callback_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/oauth/{provider}/start/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accounts_oauth_start_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1065,6 +1114,11 @@ export interface components {
             /** Format: date-time */
             readonly at: string;
         };
+        AuthConfig: {
+            recaptcha_v3_site_key: string;
+            recaptcha_v2_site_key: string;
+            oauth_providers: string[];
+        };
         Batch: {
             readonly id: number;
             readonly product: number;
@@ -1122,7 +1176,11 @@ export interface components {
             /** Format: date */
             date?: string;
         };
+        /** @description Fields every protected form accepts; mixed into the form serializers. */
         Email: {
+            website?: string;
+            captcha_v3?: string;
+            captcha_v2?: string;
             /** Format: email */
             email: string;
         };
@@ -1243,7 +1301,11 @@ export interface components {
          * @enum {string}
          */
         LocaleEnum: "en" | "ur" | "ar";
+        /** @description Fields every protected form accepts; mixed into the form serializers. */
         Login: {
+            website?: string;
+            captcha_v3?: string;
+            captcha_v2?: string;
             /** Format: email */
             email: string;
             password: string;
@@ -1271,6 +1333,7 @@ export interface components {
             /** Format: uuid */
             readonly tenant_id: string;
             readonly tenant_name: string;
+            readonly tenant_slug: string;
             readonly role: string | null;
             readonly is_owner: boolean;
             readonly permissions: {
@@ -1613,7 +1676,11 @@ export interface components {
             name: string;
             permissions: unknown;
         };
+        /** @description Fields every protected form accepts; mixed into the form serializers. */
         SignUp: {
+            website?: string;
+            captcha_v3?: string;
+            captcha_v2?: string;
             /** Format: email */
             email: string;
             password: string;
@@ -2203,6 +2270,25 @@ export interface operations {
             };
         };
     };
+    accounts_config_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthConfig"];
+                };
+            };
+        };
+    };
     accounts_csrf_retrieve: {
         parameters: {
             query?: never;
@@ -2278,6 +2364,46 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Me"];
                 };
+            };
+        };
+    };
+    accounts_oauth_callback_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accounts_oauth_start_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

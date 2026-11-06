@@ -49,7 +49,7 @@ export function LedgerDemo() {
     <div ref={tableRef} className="card overflow-hidden">
       <div className="flex items-center justify-between border-b border-line px-5 py-4 md:px-7">
         <span className="label">JV-000142</span>
-        <span className={`label transition-colors duration-700 ${balanced ? '!text-mint' : ''}`}>
+        <span className={`label transition-colors duration-700 ${balanced ? '!text-green' : ''}`}>
           {balanced ? t('ledger.balanced') : t('ledger.posting')}
         </span>
       </div>
@@ -75,7 +75,7 @@ export function LedgerDemo() {
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t border-gold/40 text-base text-gold md:text-lg">
+          <tr className="border-t border-line-strong text-base font-medium md:text-lg">
             <td className="px-5 py-4 font-sans md:px-7">{t('ledger.total')}</td>
             <td className="px-3 py-4 text-end">{cell(TOTAL)}</td>
             <td className="px-5 py-4 text-end md:px-7">{cell(TOTAL)}</td>

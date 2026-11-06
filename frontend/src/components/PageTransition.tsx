@@ -3,10 +3,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, type Location } from 'react-router';
 
 import { prefersReducedMotion } from '../lib/motion';
+import { isAppPath } from '../lib/paths';
+import { lockScroll, unlockScroll } from '../lib/scroll-lock';
 import { scrollToTop, useLenis } from '../lib/smooth-scroll';
 
-function bothInApp(a: Location, b: Location): boolean {
-  return a.pathname.startsWith('/app') && b.pathname.startsWith('/app');
+// The veil belongs to the public site. Going to or from sign-in, or anywhere in the app, someone
+// is trying to get something done, so the screen just changes.
+function touchesApp(a: Location, b: Location): boolean {
+  return isAppPath(a.pathname) || isAppPath(b.pathname);
 }
 
 interface Props {
@@ -14,64 +18,63 @@ interface Props {
 }
 
 /**
- * Covers the page with an ink panel carrying the wordmark, swaps the route underneath, then
- * lifts the panel. The old page stays rendered until it is fully covered, so nothing pops.
- * Screens inside the app switch instantly; the curtain is for the public site.
+ * Between public pages, a white veil fades in, the route swaps underneath it, and it fades away.
+ * The old page stays rendered until it is covered and nothing scrolls meanwhile.
  */
 export function PageTransition({ children }: Props) {
   const location = useLocation();
   const [shown, setShown] = useState(location);
-  const curtain = useRef<HTMLDivElement>(null);
+  const veil = useRef<HTMLDivElement>(null);
   const lenis = useLenis();
 
   useEffect(() => {
     if (location.pathname === shown.pathname) return;
-    if (bothInApp(location, shown)) return;
-    const element = curtain.current;
-    if (!element || prefersReducedMotion()) {
+    const element = veil.current;
+    if (!element || touchesApp(location, shown) || prefersReducedMotion()) {
       setShown(location);
       scrollToTop(lenis);
       return;
     }
+    lockScroll('transition');
     let cancelled = false;
+    // Swapping the route re-runs this effect; once the reveal has started it owns the lock and
+    // releases it when the veil has gone.
+    let revealing = false;
     const cover = animate(element, {
-      clipPath: ['inset(100% 0 0 0)', 'inset(0% 0 0 0)'],
-      duration: 650,
-      ease: 'inOutExpo',
+      opacity: [0, 1],
+      duration: 240,
+      ease: 'outQuad',
       onComplete: () => {
         if (cancelled) return;
+        revealing = true;
         setShown(location);
         scrollToTop(lenis);
         animate(element, {
-          clipPath: ['inset(0 0 0% 0)', 'inset(0 0 100% 0)'],
-          duration: 750,
-          delay: 120,
-          ease: 'inOutExpo',
+          opacity: [1, 0],
+          duration: 360,
+          delay: 60,
+          ease: 'inOutQuad',
+          onComplete: () => unlockScroll('transition'),
         });
       },
     });
     return () => {
       cancelled = true;
       cover.pause();
+      if (!revealing) unlockScroll('transition');
     };
   }, [location, shown, lenis]);
 
   return (
     <>
       {children(
-        location.pathname === shown.pathname || bothInApp(location, shown) ? location : shown,
+        location.pathname === shown.pathname || touchesApp(location, shown) ? location : shown,
       )}
       <div
-        ref={curtain}
+        ref={veil}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[85] flex items-center justify-center bg-black [clip-path:inset(100%_0_0_0)]"
-      >
-        <span className="text-gradient font-display text-[18vw] leading-none">Karobar</span>
-        <div
-          className="absolute inset-x-0 bottom-0 h-px"
-          style={{ background: 'var(--gradient-molten)' }}
-        />
-      </div>
+        className="pointer-events-none fixed inset-0 z-[85] bg-canvas opacity-0"
+      />
     </>
   );
 }

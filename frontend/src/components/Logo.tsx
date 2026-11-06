@@ -1,20 +1,21 @@
-// Two ledger columns that meet in the middle: debits on one side, credits on the other.
-export function Logo({ className = 'size-8' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="logo-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--color-gold)" />
-          <stop offset="1" stopColor="var(--color-coral)" />
-        </linearGradient>
-        <linearGradient id="logo-b" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0" stopColor="var(--color-indigo)" />
-          <stop offset="1" stopColor="var(--color-turquoise)" />
-        </linearGradient>
-      </defs>
-      <rect x="3" y="4" width="11" height="24" rx="3" fill="url(#logo-a)" />
-      <rect x="18" y="4" width="11" height="24" rx="3" fill="url(#logo-b)" />
-      <rect x="9" y="14.5" width="14" height="3" rx="1.5" fill="var(--color-cream)" />
-    </svg>
-  );
+import full from '../assets/brand/logo.webp';
+import horizontal from '../assets/brand/logo-horizontal.webp';
+import mark from '../assets/brand/logo-mark.webp';
+
+// The artwork comes from the brand logo. `full` is the stacked logo; at bar height its wordmark
+// can't be read, so headers use `horizontal`, cut from the same art with the cloud moved beside it.
+const ART = {
+  full: { src: full, width: 640, height: 326 },
+  horizontal: { src: horizontal, width: 607, height: 104 },
+  mark: { src: mark, width: 214, height: 128 },
+};
+
+export function Logo({
+  variant = 'horizontal',
+  className = 'h-8 w-auto',
+}: {
+  variant?: keyof typeof ART;
+  className?: string;
+}) {
+  return <img {...ART[variant]} alt="Karobar ERP" draggable={false} className={className} />;
 }

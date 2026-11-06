@@ -35,7 +35,7 @@ def send_stock_alerts() -> int:
                 f"({row.warehouse.code}): {row.quantity}, expires {row.batch.expiry_date}"
                 for row in soon
             ]
-        link = f"{settings.SITE_URL.rstrip('/')}/app/t/{tenant.public_id}/inventory/alerts"
+        link = f"{settings.SITE_URL.rstrip('/')}/app/{tenant.slug}/inventory/alerts"
         lines += ["", link]
         for email in owners:
             send_email.delay(email, f"Stock alerts: {tenant.name}", "\n".join(lines))

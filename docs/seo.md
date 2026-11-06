@@ -1,6 +1,6 @@
 # SEO
 
-Public pages are the marketing site at `https://karobarerp.ahmershah.dev`. Everything under `/app`
+Public pages are the marketing site at `https://karobarerp.ahmershah.dev`. The sign-in screens and everything under `/app`
 is the product and is `noindex`.
 
 ## One source of truth
@@ -41,6 +41,10 @@ Private screens call `usePrivateSeo(title)`, which sets `noindex, nofollow`. ngi
 
 ## Performance that affects ranking
 
-- The hero paints a CSS gradient first; three.js loads lazily after it, so it never blocks LCP.
+- The hero is text and CSS with no image or WebGL in its way, so LCP is the headline itself.
+- JS and CSS are compressed at build time, Brotli and gzip, and served as they are; the main bundle
+  goes from 405 KB to 107 KB.
+- Unknown addresses answer with a real 404 status and the app's page, and `/modules/` redirects to
+  `/modules`, so each page has one address.
 - Fonts are self-hosted; Urdu and Arabic fonts load only when those languages are picked.
 - Hashed assets are cached for a year; HTML is `no-cache`.

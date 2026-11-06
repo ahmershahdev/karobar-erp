@@ -1,5 +1,7 @@
 // Shared by the app and vite.config.ts, so it must stay free of browser and React imports.
 
+import { AUTH_PATHS } from '../lib/paths';
+
 export interface PublicRoute {
   path: string;
   name: string;
@@ -17,7 +19,7 @@ export const SITE = {
   email: 'support@ahmershah.dev',
   repo: 'https://github.com/ahmershahdev/karobar-erp',
   locale: 'en_US',
-  themeColor: '#0b0b10',
+  themeColor: '#ffffff',
   ogImage: '/og-image.png',
 } as const;
 
@@ -82,7 +84,7 @@ export const HOME_FAQ: readonly { q: string; a: string }[] = [
   },
 ];
 
-export const NOINDEX_PREFIXES = ['/app'] as const;
+export const NOINDEX_PREFIXES = ['/app', ...AUTH_PATHS] as const;
 
 export function absoluteUrl(siteUrl: string, path: string): string {
   return new URL(path, siteUrl.endsWith('/') ? siteUrl : `${siteUrl}/`).toString();

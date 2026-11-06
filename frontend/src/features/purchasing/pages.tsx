@@ -83,7 +83,7 @@ function RemoveLine({ disabled, onClick }: { disabled?: boolean; onClick: () => 
     <button
       type="button"
       aria-label={t('workspace.remove')}
-      className="px-2 text-muted hover:text-coral disabled:opacity-30"
+      className="px-2 text-muted hover:text-red disabled:opacity-30"
       disabled={disabled}
       onClick={onClick}
     >

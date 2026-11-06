@@ -82,7 +82,7 @@ export function ProductPicker({
             <li key={product.id}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-start text-sm hover:bg-white/5"
+                className="w-full px-3 py-2 text-start text-sm hover:bg-raised"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(product)}
               >
