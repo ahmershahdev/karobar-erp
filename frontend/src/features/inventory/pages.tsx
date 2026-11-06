@@ -17,12 +17,15 @@ import { formatQuantity, useList, useUnits, useWarehouses } from './shared';
 type Kind = 'receipt' | 'issue' | 'transfer' | 'adjustment';
 
 // Saved when the box is left, so filling in a whole catalogue of prices is just typing and Tab.
+// The typed text lives here only during an edit; otherwise the box shows the server's price, so
+// a price changed elsewhere can never be written back over by stale text.
 function PriceCell({ product }: { product: Product }) {
   const { t } = useTranslation();
   const { membership } = useWorkspace();
   const save = useTenantAction(['products']);
   const stored = product.sale_price ?? '';
-  const [value, setValue] = useState(stored ? String(Number(stored)) : '');
+  const [draft, setDraft] = useState<string | null>(null);
+  const value = draft ?? (stored ? String(Number(stored)) : '');
   if (!can(membership, 'inventory', 'update')) {
     return <>{stored ? Number(stored) : t('pos.noPrice')}</>;
   }
@@ -34,20 +37,28 @@ function PriceCell({ product }: { product: Product }) {
         placeholder={t('pos.noPrice')}
         className={`${CELL_INPUT} w-28 text-end font-mono ${value ? '' : 'border-red/40'}`}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') e.currentTarget.blur();
         }}
         onBlur={() => {
-          if (value === '' ? stored === '' : Number(value) === Number(stored)) return;
-          const body = { sale_price: value || null } as never;
-          save.mutate(() =>
-            unwrap(
-              api.PATCH('/api/inventory/products/{id}/', {
-                params: { path: { id: product.id } },
-                body,
-              }),
-            ),
+          if (draft === null) return;
+          if (draft === '' ? stored === '' : Number(draft) === Number(stored)) {
+            setDraft(null);
+            return;
+          }
+          const sent = draft;
+          const body = { sale_price: sent || null } as never;
+          save.mutate(
+            () =>
+              unwrap(
+                api.PATCH('/api/inventory/products/{id}/', {
+                  params: { path: { id: product.id } },
+                  body,
+                }),
+              ),
+            // A newer edit started during the save stays in the box.
+            { onSuccess: () => setDraft((current) => (current === sent ? null : current)) },
           );
         }}
       />
