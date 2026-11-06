@@ -71,7 +71,7 @@ class _DocumentSerializer(serializers.ModelSerializer[Any]):
         return capped(value)
 
 
-class OrderLineSerializer(_ProductLine):
+class SalesOrderLineSerializer(_ProductLine):
     class Meta:
         model = SalesOrderLine
         fields = (
@@ -97,7 +97,7 @@ class OrderLineSerializer(_ProductLine):
 class SalesOrderSerializer(_DocumentSerializer):
     customer = scoped(Customer)
     warehouse = scoped(Warehouse)
-    lines = OrderLineSerializer(many=True)
+    lines = SalesOrderLineSerializer(many=True)
 
     class Meta:
         model = SalesOrder
@@ -187,7 +187,7 @@ class InvoiceSerializer(_DocumentSerializer):
         }
 
 
-class AllocationSerializer(serializers.ModelSerializer[ReceiptAllocation]):
+class ReceiptAllocationSerializer(serializers.ModelSerializer[ReceiptAllocation]):
     invoice = scoped(Invoice)
     invoice_number = serializers.CharField(
         source="invoice.number", read_only=True, allow_null=True
@@ -203,7 +203,7 @@ class AllocationSerializer(serializers.ModelSerializer[ReceiptAllocation]):
 class CustomerReceiptSerializer(_DocumentSerializer):
     customer = scoped(Customer)
     received_into = scoped(Account)
-    allocations = AllocationSerializer(many=True, required=False)
+    allocations = ReceiptAllocationSerializer(many=True, required=False)
     journal_number = serializers.CharField(
         source="journal_entry.number", read_only=True, default=None, allow_null=True
     )

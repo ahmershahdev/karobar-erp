@@ -3736,7 +3736,7 @@ components:
         allocations:
           type: array
           items:
-            $ref: '#/components/schemas/Allocation'
+            $ref: '#/components/schemas/ReceiptAllocation'
         journal_number:
           type: string
           readOnly: true
@@ -5128,6 +5128,27 @@ components:
       - supplier_name
       - total
       - warehouse
+    ReceiptAllocation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        invoice:
+          type: integer
+        invoice_number:
+          type: string
+          readOnly: true
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - id
+      - invoice
+      - invoice_number
     ReceiptLine:
       type: object
       properties:
@@ -5253,7 +5274,7 @@ components:
         lines:
           type: array
           items:
-            $ref: '#/components/schemas/OrderLine'
+            $ref: '#/components/schemas/SalesOrderLine'
         created_by:
           type: string
           format: email
@@ -5276,6 +5297,52 @@ components:
       - status
       - total
       - warehouse
+    SalesOrderLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+        sku:
+          type: string
+          readOnly: true
+        product_name:
+          type: string
+          readOnly: true
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        tax_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        invoiced_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
+      required:
+      - id
+      - invoiced_quantity
+      - product
+      - product_name
+      - quantity
+      - sku
+      - unit
+      - unit_code
+      - unit_price
     Session:
       type: object
       properties:

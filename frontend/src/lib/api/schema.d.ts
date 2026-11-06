@@ -1549,7 +1549,7 @@ export interface components {
             amount: string;
             received_into: number;
             reference?: string;
-            allocations?: components["schemas"]["Allocation"][];
+            allocations?: components["schemas"]["ReceiptAllocation"][];
             readonly journal_number: string | null;
             /** Format: email */
             readonly created_by: string;
@@ -2160,6 +2160,13 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        ReceiptAllocation: {
+            readonly id: number;
+            invoice: number;
+            readonly invoice_number: string | null;
+            /** Format: decimal */
+            amount: string;
+        };
         ReceiptLine: {
             readonly id: number;
             order_line?: number | null;
@@ -2205,11 +2212,27 @@ export interface components {
             warehouse: number;
             /** Format: decimal */
             readonly total: string;
-            lines: components["schemas"]["OrderLine"][];
+            lines: components["schemas"]["SalesOrderLine"][];
             /** Format: email */
             readonly created_by: string;
             /** Format: date-time */
             readonly posted_at: string | null;
+        };
+        SalesOrderLine: {
+            readonly id: number;
+            product: number;
+            readonly sku: string;
+            readonly product_name: string;
+            unit: number;
+            readonly unit_code: string;
+            /** Format: decimal */
+            quantity: string;
+            /** Format: decimal */
+            unit_price: string;
+            /** Format: decimal */
+            tax_amount?: string;
+            /** Format: decimal */
+            readonly invoiced_quantity: string;
         };
         Session: {
             user: components["schemas"]["Me"] | null;
