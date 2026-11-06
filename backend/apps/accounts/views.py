@@ -145,7 +145,7 @@ class PasswordResetView(AnonymousFormView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         email = data.validated_data["email"].lower()
         user = User.objects.filter(email=email, is_active=True).first()
-        if user is not None and user.has_usable_password():
+        if user is not None:
             emails.send_password_reset(user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

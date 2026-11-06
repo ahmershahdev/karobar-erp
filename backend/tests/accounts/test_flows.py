@@ -89,6 +89,18 @@ def test_resend_verification_only_for_unverified(user: User) -> None:
     assert len(mail.outbox) == 1
 
 
+def test_an_account_from_google_can_set_a_password_by_reset(user: User) -> None:
+    user.set_unusable_password()
+    user.save(update_fields=["password"])
+
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
+    confirm = {**link_params(str(mail.outbox[0].body)), "password": NEW_PASSWORD}
+    assert post("/api/accounts/password-reset/confirm/", confirm) == 204
+
+    user.refresh_from_db()
+    assert user.check_password(NEW_PASSWORD)
+
+
 def test_password_reset_round_trip_signs_out_other_sessions(user: User) -> None:
     other_session = APIClient()
     other_session.force_login(user)
