@@ -209,11 +209,11 @@ A customer can open one posted bill without an account through `/api/public/bill
 
 ## Business chat
 
-The chat () sends the question, recent messages and the figures the person's role may see to Groq, an outside service. People are told this in the chat. A key in  switches it on; without one it stays off.
+The chat (`apps/assistant`) sends the question, recent messages and the figures the person's role may see to Groq, an outside service. People are told this in the chat. A key in `GROQ_API_KEY` switches it on; without one it stays off.
 
 - **It can only talk.** No code path from a reply reaches a record, so a clever message or a product name written as an instruction can't change anything. Replies are shown as plain text.
-- **What it knows follows the role.**  includes sales and profit only with the reports permission and low stock only with inventory. Each person sees only their own chat, even within a business.
-- **Every message is signed.** Each row carries an HMAC-SHA256 over the business, the person, the words, the time and the signature before it (). Editing, removing, inserting or moving a message breaks the chain, and the chat's check button finds it.
+- **What it knows follows the role.** `facts()` includes sales and profit only with the reports permission, and low stock only with inventory. Each person sees only their own chat, even within a business.
+- **Every message is signed.** Each row carries an HMAC-SHA256 over the business, the person, the words, the time and the signature before it (`apps/core/chain.py`). Editing, removing, inserting or moving a message breaks the chain, and the check button in the chat finds it.
 - **What the signature does not prove.** It shows the log has not changed since the server wrote it, and which signed-in account sent each message. It can't show who was at the keyboard, and it is not a legal electronic signature. The server holds the key, so someone with the key and the database could rewrite a whole chain.
 
-Keep  set and stable in production. It defaults to , so rotating that without it makes old chats fail the check.
+Keep `CHAT_SIGNING_KEY` set and stable in production. It falls back to `SECRET_KEY`, so rotating that without setting this makes old chats fail the check.
