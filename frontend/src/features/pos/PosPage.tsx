@@ -476,7 +476,7 @@ export function PosPage() {
       )}
       {tills.isPending ||
       warehouses.isPending ||
-      (!picked && warehouses.isFetching) ? null : warehouses.isError && !warehouses.data ? (
+      (!picked && warehouses.isFetching) ? null : warehouses.isError && stores.length === 0 ? (
         <ActionError error={warehouses.error} />
       ) : stores.length === 0 ? (
         <Panel title={t('pos.noStore')}>
