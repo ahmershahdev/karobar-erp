@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
+import { allPages } from '../../lib/api/pages';
 import {
   can,
   type Account,
@@ -31,7 +32,15 @@ function useSuppliers() {
   const { membership } = useWorkspace();
   return useQuery({
     queryKey: [membership.tenant_id, 'suppliers'],
-    queryFn: () => unwrap(api.GET('/api/purchasing/suppliers/', { params: { query: {} } })),
+    queryFn: async () => ({
+      results: await allPages((cursor) =>
+        unwrap(
+          api.GET('/api/purchasing/suppliers/', {
+            params: { query: { page_size: 200, cursor } as never },
+          }),
+        ),
+      ),
+    }),
   });
 }
 
@@ -1145,12 +1154,22 @@ function PaymentEditor({ onDone }: { onDone: () => void }) {
   const open = useQuery({
     queryKey: [membership.tenant_id, 'bills', 'open', supplier],
     enabled: Boolean(supplier),
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/purchasing/bills/', {
-          params: { query: { status: 'posted', supplier: Number(supplier) } as never },
-        }),
+    queryFn: async () => ({
+      results: await allPages((cursor) =>
+        unwrap(
+          api.GET('/api/purchasing/bills/', {
+            params: {
+              query: {
+                status: 'posted',
+                supplier: Number(supplier),
+                page_size: 200,
+                cursor,
+              } as never,
+            },
+          }),
+        ),
       ),
+    }),
   });
   const owing = (open.data?.results ?? []).filter(
     (bill) => Number(bill.amount_paid) < Number(bill.total),
