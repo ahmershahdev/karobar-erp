@@ -30,7 +30,8 @@ Celery, never inside a web request.
 | `sales` | customers, quotations, orders, invoices, receipts, returns, credit notes |
 | `pos` | registers, sessions, counter sales |
 | `hr`, `payroll` | employees, attendance, leave, salary structures, payroll runs, payslips |
-| `reports` | trial balance, P&L, balance sheet, tax and stock reports |
+| `reports` | trial balance, P&L, balance sheet, tax and stock reports, the business home figures, the daily summary |
+| `assistant` | the per-person business chat through Groq, with signed messages |
 | `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
 | `accounting` (built) | accounts, fiscal years and periods, number series, journal entries and lines, trial balance and ledger reports |
 | `inventory` (built) | units, categories, products and packs, warehouses, batches, stock levels, FIFO layers, stock entries and moves, alerts |
