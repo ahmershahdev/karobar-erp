@@ -51,7 +51,15 @@ export function useHumanCheck(action: string) {
   const onFailed = useCallback(() => setFailed(true), []);
 
   useEffect(() => {
-    if (v3 || v2) void loadRecaptcha(v3).catch(() => undefined);
+    if (!v3 && !v2) return;
+    void loadRecaptcha(v3).catch(() => undefined);
+    // Google's script stays in the page after this form closes, so its badge is switched on here
+    // and off again on the way out, or it would follow people into the app.
+    const root = document.documentElement;
+    root.dataset.recaptcha = 'on';
+    return () => {
+      delete root.dataset.recaptcha;
+    };
   }, [v3, v2]);
 
   const proof = useCallback(async (): Promise<HumanProof> => {

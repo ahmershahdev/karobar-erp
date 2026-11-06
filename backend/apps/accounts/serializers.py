@@ -34,6 +34,10 @@ class MeSerializer(serializers.ModelSerializer[User]):
         return user.email_verified_at is not None
 
 
+class SessionSerializer(serializers.Serializer[None]):
+    user = MeSerializer(allow_null=True)
+
+
 class SignUpSerializer(HumanFields):
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(max_length=128, trim_whitespace=False)

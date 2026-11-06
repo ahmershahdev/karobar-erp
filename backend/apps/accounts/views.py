@@ -24,6 +24,7 @@ from .serializers import (
     LoginSerializer,
     MeSerializer,
     PasswordResetConfirmSerializer,
+    SessionSerializer,
     SignUpSerializer,
     TokenSerializer,
     check_password_strength,
@@ -181,6 +182,22 @@ class MeView(APIView):
     @extend_schema(responses=MeSerializer)
     def get(self, request: Request) -> Response:
         return Response(MeSerializer(cast(User, request.user)).data)
+
+
+class SessionView(APIView):
+    """Who is signed in, if anyone.
+
+    The app asks this on every sign-in screen, where nobody being signed in is the normal case,
+    so that is a 200 with a null user. /me/ answering 403 there filled the console with errors.
+    """
+
+    permission_classes = [AllowAny]
+    throttle_scope = "session"
+
+    @extend_schema(responses=SessionSerializer)
+    def get(self, request: Request) -> Response:
+        user = request.user if request.user.is_authenticated else None
+        return Response({"user": MeSerializer(user).data if user else None})
 
 
 class AuthConfigView(APIView):

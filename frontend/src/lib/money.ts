@@ -17,6 +17,7 @@ export function fromMinor(minor: number): string {
   return `${sign}${Math.floor(absolute / 100)}.${String(absolute % 100).padStart(2, '0')}`;
 }
 
+/** A string is an API amount in rupees. A number is a UI sum in paisa, as from toMinor. */
 export function formatMoney(value: string | number, locale: string | undefined): string {
   const minor = typeof value === 'number' ? value : toMinor(value);
   return new Intl.NumberFormat(locale, {

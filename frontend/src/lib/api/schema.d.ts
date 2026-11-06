@@ -309,6 +309,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/session/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Who is signed in, if anyone.
+         *
+         *     The app asks this on every sign-in screen, where nobody being signed in is the normal case,
+         *     so that is a 200 with a null user. /me/ answering 403 there filled the console with errors.
+         */
+        get: operations["accounts_session_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/signup/": {
         parameters: {
             query?: never;
@@ -2189,6 +2211,9 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        Session: {
+            user: components["schemas"]["Me"] | null;
+        };
         /** @description Fields every protected form accepts; mixed into the form serializers. */
         SignUp: {
             website?: string;
@@ -2961,6 +2986,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    accounts_session_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
             };
         };
     };

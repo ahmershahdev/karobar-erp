@@ -563,6 +563,26 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/accounts/session/:
+    get:
+      operationId: accounts_session_retrieve
+      description: |-
+        Who is signed in, if anyone.
+
+        The app asks this on every sign-in screen, where nobody being signed in is the normal case,
+        so that is a 200 with a null user. /me/ answering 403 there filled the console with errors.
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
   /api/accounts/signup/:
     post:
       operationId: accounts_signup_create
@@ -5256,6 +5276,15 @@ components:
       - status
       - total
       - warehouse
+    Session:
+      type: object
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/Me'
+          nullable: true
+      required:
+      - user
     SignUp:
       type: object
       description: Fields every protected form accepts; mixed into the form serializers.

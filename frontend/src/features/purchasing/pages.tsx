@@ -17,7 +17,7 @@ import {
   type SupplierPayment,
 } from '../../lib/api/types';
 import { today } from '../../lib/dates';
-import { formatMoney } from '../../lib/money';
+import { formatMoney, toMinor } from '../../lib/money';
 import { ProductPicker } from '../inventory/ProductPicker';
 import { formatQuantity, useWarehouses } from '../inventory/shared';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
@@ -44,7 +44,7 @@ function useSuppliers() {
   });
 }
 
-function useAccounts() {
+export function useAccounts() {
   const { membership } = useWorkspace();
   return useQuery({
     queryKey: [membership.tenant_id, 'accounts'],
@@ -52,7 +52,7 @@ function useAccounts() {
   });
 }
 
-function postable(accounts: Account[] | undefined, type: string): Account[] {
+export function postable(accounts: Account[] | undefined, type: string): Account[] {
   return (accounts ?? []).filter(
     (account) => account.type === type && !account.is_group && account.is_active !== false,
   );
@@ -80,7 +80,7 @@ function SupplierSelect({ value, onChange }: { value: string; onChange: (id: str
   );
 }
 
-function ActionError({ error }: { error: unknown }) {
+export function ActionError({ error }: { error: unknown }) {
   const { t } = useTranslation();
   if (!error) return null;
   return <Alert tone="error">{errorText(error, t('signIn.unavailable'))}</Alert>;
@@ -122,7 +122,7 @@ function NumberCell({
 }
 
 // A row in a document list: summary line, then the detail and actions when opened.
-function DocumentRow({
+export function DocumentRow({
   number,
   date,
   party,
@@ -160,7 +160,7 @@ function DocumentRow({
   );
 }
 
-function DocumentList<T extends { id: number }>({
+export function DocumentList<T extends { id: number }>({
   title,
   rows,
   render,
@@ -296,26 +296,29 @@ export function SuppliersPage() {
 
 // Purchase orders and receipts without an order share one line editor.
 
-interface ItemLine {
+export interface ItemLine {
   key: number;
   product: string;
   unit: string;
   quantity: string;
   price: string;
+  tax?: string;
 }
 
-function itemLine(key: number): ItemLine {
+export function itemLine(key: number): ItemLine {
   return { key, product: '', unit: '', quantity: '', price: '' };
 }
 
-function ItemsEditor({
+export function ItemsEditor({
   lines,
   onChange,
   priceLabel,
+  taxLabel,
 }: {
   lines: ItemLine[];
   onChange: (lines: ItemLine[]) => void;
   priceLabel: string;
+  taxLabel?: string;
 }) {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<Map<string, Product>>(new Map());
@@ -331,6 +334,7 @@ function ItemsEditor({
               <th className={TH}>{t('inv.unit')}</th>
               <th className={TH}>{t('inv.quantity')}</th>
               <th className={TH}>{priceLabel}</th>
+              {taxLabel && <th className={TH}>{taxLabel}</th>}
               <th />
             </tr>
           </thead>
@@ -377,6 +381,15 @@ function ItemsEditor({
                       onChange={(price) => update(line.key, { price })}
                     />
                   </td>
+                  {taxLabel && (
+                    <td className="w-28 py-2 pe-2">
+                      <NumberCell
+                        label={taxLabel}
+                        value={line.tax ?? ''}
+                        onChange={(tax) => update(line.key, { tax })}
+                      />
+                    </td>
+                  )}
                   <td className="py-2">
                     <RemoveLine
                       disabled={lines.length <= 1}
@@ -399,7 +412,7 @@ function ItemsEditor({
   );
 }
 
-function filled(lines: ItemLine[]) {
+export function filled(lines: ItemLine[]) {
   return lines.filter((line) => line.product && line.quantity);
 }
 
@@ -498,7 +511,7 @@ function ItemsDocumentEditor({
   );
 }
 
-function LinesTable({ rows }: { rows: ReactNode[][] }) {
+export function LinesTable({ rows }: { rows: ReactNode[][] }) {
   return (
     <div className="overflow-x-auto" data-lenis-prevent>
       <table className={TABLE}>
@@ -518,7 +531,7 @@ function LinesTable({ rows }: { rows: ReactNode[][] }) {
   );
 }
 
-function Actions({ children }: { children: ReactNode }) {
+export function Actions({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap gap-3">{children}</div>;
 }
 
@@ -608,7 +621,7 @@ function OrderRow({ order }: { order: PurchaseOrder }) {
   );
 }
 
-function useDocuments<T>(key: string, load: () => Promise<T>) {
+export function useDocuments<T>(key: string, load: () => Promise<T>) {
   const { membership } = useWorkspace();
   return useQuery({ queryKey: [membership.tenant_id, key], queryFn: load });
 }
@@ -1174,10 +1187,8 @@ function PaymentEditor({ onDone }: { onDone: () => void }) {
   const owing = (open.data?.results ?? []).filter(
     (bill) => Number(bill.amount_paid) < Number(bill.total),
   );
-  const allocated = Object.values(allocations).reduce(
-    (sum, value) => sum + (Number(value) || 0),
-    0,
-  );
+  // Sums in paisa: formatMoney reads a number as paisa, not rupees.
+  const allocated = Object.values(allocations).reduce((sum, value) => sum + toMinor(value), 0);
   const money = (value: string | number) => formatMoney(value, i18n.resolvedLanguage);
 
   return (
@@ -1244,7 +1255,7 @@ function PaymentEditor({ onDone }: { onDone: () => void }) {
                 </tr>
               )}
               {owing.map((bill) => {
-                const due = Number(bill.total) - Number(bill.amount_paid);
+                const due = toMinor(bill.total) - toMinor(bill.amount_paid);
                 return (
                   <tr key={bill.id} className="border-t border-line">
                     <td className={`${TD} font-mono text-sm`}>{bill.number}</td>
@@ -1265,7 +1276,7 @@ function PaymentEditor({ onDone }: { onDone: () => void }) {
           <p className="mt-2 text-xs text-muted">
             {t('pur.allocated', {
               allocated: money(allocated),
-              amount: money(Number(amount) || 0),
+              amount: money(toMinor(amount) || 0),
             })}
           </p>
         </div>

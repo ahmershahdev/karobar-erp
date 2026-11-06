@@ -39,7 +39,8 @@ function VerifyBanner() {
   );
 }
 
-function groupOf(path: string): 'workspace' | 'accounting' | 'inventory' | 'purchasing' {
+function groupOf(path: string): 'workspace' | 'sales' | 'accounting' | 'inventory' | 'purchasing' {
+  if (path.includes('/sales/')) return 'sales';
   if (path.includes('/accounting/')) return 'accounting';
   if (path.includes('/inventory/')) return 'inventory';
   if (path.includes('/purchasing/')) return 'purchasing';
@@ -96,6 +97,18 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       icon: 'audit',
       show: can(membership, 'audit', 'view'),
     },
+    ...[
+      { path: 'invoices', label: t('sal.invoices'), icon: 'bills' },
+      { path: 'receipts', label: t('sal.receipts'), icon: 'payments' },
+      { path: 'customers', label: t('sal.customers'), icon: 'members' },
+      { path: 'orders', label: t('sal.orders'), icon: 'orders' },
+      { path: 'returns', label: t('sal.returns'), icon: 'entries' },
+    ].map((item) => ({
+      to: `${base}/sales/${item.path}`,
+      label: item.label,
+      icon: item.icon,
+      show: can(membership, 'sales', 'view'),
+    })),
     ...[
       { path: 'journal', label: t('acc.journal') },
       { path: 'chart', label: t('acc.chart') },

@@ -433,7 +433,8 @@
     "groups": {
       "accounting": "Accounting",
       "inventory": "Inventory",
-      "purchasing": "Purchasing"
+      "purchasing": "Purchasing",
+      "sales": "Sales"
     },
     "tasks": {
       "title": "What do you want to do?",
@@ -464,6 +465,14 @@
       "buy": {
         "title": "Buy from suppliers",
         "body": "Order goods and pay your suppliers"
+      },
+      "sell": {
+        "title": "Make a sale",
+        "body": "Write a bill for a customer"
+      },
+      "takeMoney": {
+        "title": "Money received",
+        "body": "A customer paid you"
       }
     }
   },
@@ -898,7 +907,43 @@
       "closed": "Closed",
       "posted": "Posted",
       "open": "Unpaid",
-      "paid": "Paid"
+      "paid": "Paid",
+      "quoted": "Quoted"
     }
+  },
+  "sal": {
+    "customers": "Customers",
+    "customersBody": "Who you sell to, how much they may owe, and what they owe now.",
+    "newCustomer": "New customer",
+    "addCustomer": "Add customer",
+    "customer": "Customer",
+    "creditLimit": "Credit limit",
+    "creditLimitHint": "The most they may owe. Empty means no limit. Zero means cash only.",
+    "noLimit": "No limit",
+    "balance": "They owe",
+    "price": "Selling price",
+    "orders": "Quotes and orders",
+    "ordersBody": "Give a customer a price, then confirm it when they say yes.",
+    "newOrder": "New quote or order",
+    "quote": "Send as quote",
+    "makeInvoice": "Make invoice",
+    "invoiceStarted": "A draft invoice is waiting under Sales bills.",
+    "invoices": "Sales bills",
+    "invoicesBody": "Every sale. Posting a bill takes the goods out of stock and adds it to your accounts.",
+    "newInvoice": "Make a sale",
+    "postInvoice": "Post bill",
+    "leftToPay": "Still to pay",
+    "startReturn": "Customer returned goods",
+    "receipts": "Money received",
+    "receiptsBody": "Cash or bank payments from customers.",
+    "newReceipt": "Record money received",
+    "receivedInto": "Money went into",
+    "whichInvoices": "Which bills is this for?",
+    "advance": "{{amount}} stays with the customer as an advance.",
+    "postReceipt": "Post receipt",
+    "returns": "Returns",
+    "returnsBody": "Goods that came back. Posting puts them in stock and takes the amount off what the customer owes.",
+    "returnsHint": "To start a return, open the sale under Sales bills and press \"Customer returned goods\".",
+    "postReturn": "Post return"
   }
 }

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../lib/api/client';
-import { ApiError, unwrap } from '../../lib/api/errors';
+import { unwrap } from '../../lib/api/errors';
 import type { Me, Membership } from '../../lib/api/types';
 
 export const sessionKeys = {
@@ -16,15 +16,7 @@ export async function ensureCsrf(): Promise<void> {
 export function useMe() {
   return useQuery({
     queryKey: sessionKeys.me,
-    queryFn: async (): Promise<Me | null> => {
-      try {
-        return await unwrap(api.GET('/api/accounts/me/'));
-      } catch (error) {
-        if (error instanceof ApiError && (error.status === 401 || error.status === 403))
-          return null;
-        throw error;
-      }
-    },
+    queryFn: async (): Promise<Me | null> => (await unwrap(api.GET('/api/accounts/session/'))).user,
     staleTime: 60_000,
   });
 }

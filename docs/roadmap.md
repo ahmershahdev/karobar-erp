@@ -46,9 +46,9 @@ in CI, and seed data.
 ## M4. Purchasing and sales (target 2027-01-31)
 
 - [x] Suppliers, purchase orders, goods received, supplier bills, supplier payments
-- [ ] Customers, quotations, sales orders, invoices, receipts, returns and credit notes
-- [ ] Customer credit limits checked on order and invoice
-- [ ] Each document posts its stock moves and journal entry in one transaction
+- [x] Customers, quotations, sales orders, invoices, receipts, returns and credit notes
+- [x] Customer credit limits checked on order and invoice
+- [x] Each document posts its stock moves and journal entry in one transaction
 - [ ] PDF invoices and receipts (WeasyPrint) in English, Urdu and Arabic
 - [ ] Customer and supplier statements, receivables and payables ageing
 

@@ -3,7 +3,7 @@ from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 
 from apps.accounts.models import User
-from tests.factories import TEST_PASSWORD
+from tests.factories import TEST_PASSWORD, create_user
 
 pytestmark = pytest.mark.django_db
 
@@ -81,3 +81,14 @@ def test_auth_endpoints_are_throttled() -> None:
     finally:
         ScopedRateThrottle.THROTTLE_RATES = original
     assert codes[-1] == 429
+
+
+@pytest.mark.django_db
+def test_session_says_nobody_without_an_error_and_names_a_signed_in_user() -> None:
+    client = APIClient()
+    answer = client.get("/api/accounts/session/")
+    assert answer.status_code == 200
+    assert answer.json() == {"user": None}
+    user = create_user(email="owner@example.test")
+    client.force_authenticate(user)
+    assert client.get("/api/accounts/session/").json()["user"]["email"] == "owner@example.test"

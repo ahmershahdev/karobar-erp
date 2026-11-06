@@ -43,6 +43,7 @@ PUBLIC = {
     "api/accounts/password-reset/",
     "api/accounts/password-reset/confirm/",
     "api/accounts/config/",
+    "api/accounts/session/",
     "api/accounts/oauth/<str:provider>/start/",
     "api/accounts/oauth/<str:provider>/callback/",
 }
