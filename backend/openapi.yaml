@@ -563,6 +563,26 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/accounts/session/:
+    get:
+      operationId: accounts_session_retrieve
+      description: |-
+        Who is signed in, if anyone.
+
+        The app asks this on every sign-in screen, where nobody being signed in is the normal case,
+        so that is a 200 with a null user. /me/ answering 403 there filled the console with errors.
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
   /api/accounts/signup/:
     post:
       operationId: accounts_signup_create
@@ -2401,6 +2421,784 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/sales/credit-notes/:
+    get:
+      operationId: sales_credit_notes_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCreditNoteList'
+          description: ''
+    post:
+      operationId: sales_credit_notes_create
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditNote'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditNote'
+          description: ''
+  /api/sales/credit-notes/{id}/:
+    get:
+      operationId: sales_credit_notes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditNote'
+          description: ''
+    put:
+      operationId: sales_credit_notes_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditNote'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditNote'
+          description: ''
+    delete:
+      operationId: sales_credit_notes_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sales/credit-notes/{id}/post/:
+    post:
+      operationId: sales_credit_notes_post_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditNote'
+          description: ''
+  /api/sales/customers/:
+    get:
+      operationId: sales_customers_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomerList'
+          description: ''
+    post:
+      operationId: sales_customers_create
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+  /api/sales/customers/{id}/:
+    get:
+      operationId: sales_customers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+    patch:
+      operationId: sales_customers_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomer'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+    delete:
+      operationId: sales_customers_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sales/invoices/:
+    get:
+      operationId: sales_invoices_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInvoiceList'
+          description: ''
+    post:
+      operationId: sales_invoices_create
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+          description: ''
+  /api/sales/invoices/{id}/:
+    get:
+      operationId: sales_invoices_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+          description: ''
+    put:
+      operationId: sales_invoices_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+          description: ''
+    delete:
+      operationId: sales_invoices_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sales/invoices/{id}/credit/:
+    post:
+      operationId: sales_invoices_credit_create
+      description: Start a credit note for everything on the invoice not yet returned.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Date'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditNote'
+          description: ''
+  /api/sales/invoices/{id}/post/:
+    post:
+      operationId: sales_invoices_post_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+          description: ''
+  /api/sales/orders/:
+    get:
+      operationId: sales_orders_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSalesOrderList'
+          description: ''
+    post:
+      operationId: sales_orders_create
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesOrder'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrder'
+          description: ''
+  /api/sales/orders/{id}/:
+    get:
+      operationId: sales_orders_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrder'
+          description: ''
+    put:
+      operationId: sales_orders_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesOrder'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrder'
+          description: ''
+    delete:
+      operationId: sales_orders_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sales/orders/{id}/close/:
+    post:
+      operationId: sales_orders_close_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrder'
+          description: ''
+  /api/sales/orders/{id}/confirm/:
+    post:
+      operationId: sales_orders_confirm_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrder'
+          description: ''
+  /api/sales/orders/{id}/invoice/:
+    post:
+      operationId: sales_orders_invoice_create
+      description: Start an invoice for everything still outstanding on the order.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Date'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+          description: ''
+  /api/sales/orders/{id}/quote/:
+    post:
+      operationId: sales_orders_quote_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrder'
+          description: ''
+  /api/sales/receipts/:
+    get:
+      operationId: sales_receipts_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomerReceiptList'
+          description: ''
+    post:
+      operationId: sales_receipts_create
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerReceipt'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerReceipt'
+          description: ''
+  /api/sales/receipts/{id}/:
+    get:
+      operationId: sales_receipts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerReceipt'
+          description: ''
+    put:
+      operationId: sales_receipts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerReceipt'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerReceipt'
+          description: ''
+    delete:
+      operationId: sales_receipts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sales/receipts/{id}/post/:
+    post:
+      operationId: sales_receipts_post_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerReceipt'
+          description: ''
   /api/tenants/:
     get:
       operationId: tenants_list
@@ -2735,6 +3533,235 @@ components:
       required:
       - id
       - name
+    CreditLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        invoice_line:
+          type: integer
+        product_name:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - amount
+      - id
+      - invoice_line
+      - product_name
+      - quantity
+      - tax_amount
+    CreditNote:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+        customer:
+          type: integer
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        invoice:
+          type: integer
+        invoice_number:
+          type: string
+          readOnly: true
+          nullable: true
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        applied:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditLine'
+        journal_number:
+          type: string
+          readOnly: true
+          nullable: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - applied
+      - created_by
+      - customer
+      - customer_name
+      - date
+      - id
+      - invoice
+      - invoice_number
+      - journal_number
+      - lines
+      - net
+      - number
+      - posted_at
+      - status
+      - tax
+      - total
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 150
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        address:
+          type: string
+          maxLength: 300
+        tax_number:
+          type: string
+          maxLength: 40
+        payment_terms_days:
+          type: integer
+          maximum: 365
+          minimum: 0
+        credit_limit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        is_active:
+          type: boolean
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+      required:
+      - balance
+      - code
+      - id
+      - name
+    CustomerReceipt:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+        customer:
+          type: integer
+        customer_name:
+          type: string
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        received_into:
+          type: integer
+        reference:
+          type: string
+          maxLength: 60
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptAllocation'
+        journal_number:
+          type: string
+          readOnly: true
+          nullable: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - amount
+      - created_by
+      - customer
+      - customer_name
+      - date
+      - id
+      - journal_number
+      - number
+      - posted_at
+      - received_into
+      - status
     Date:
       type: object
       properties:
@@ -2911,6 +3938,156 @@ components:
       - id
       - role_name
       - status
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+        customer:
+          type: integer
+        customer_name:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          nullable: true
+        warehouse:
+          type: integer
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        amount_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        amount_credited:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLine'
+        journal_number:
+          type: string
+          readOnly: true
+          nullable: true
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - amount_credited
+      - amount_paid
+      - created_by
+      - customer
+      - customer_name
+      - date
+      - id
+      - journal_number
+      - lines
+      - net
+      - number
+      - posted_at
+      - status
+      - tax
+      - total
+      - warehouse
+    InvoiceLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order_line:
+          type: integer
+          nullable: true
+        product:
+          type: integer
+        sku:
+          type: string
+          readOnly: true
+        product_name:
+          type: string
+          readOnly: true
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        batch_number:
+          type: string
+          maxLength: 40
+        returned_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
+      required:
+      - amount
+      - id
+      - product
+      - product_name
+      - quantity
+      - returned_quantity
+      - sku
+      - unit
+      - unit_code
+      - unit_price
     JournalEntry:
       type: object
       properties:
@@ -3295,6 +4472,63 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Bill'
+    PaginatedCreditNoteList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditNote'
+    PaginatedCustomerList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+    PaginatedCustomerReceiptList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerReceipt'
     PaginatedGoodsReceiptList:
       type: object
       required:
@@ -3333,6 +4567,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Invitation'
+    PaginatedInvoiceList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
     PaginatedJournalEntryList:
       type: object
       required:
@@ -3409,6 +4662,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PurchaseOrder'
+    PaginatedSalesOrderList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesOrder'
     PaginatedStockEntryList:
       type: object
       required:
@@ -3554,6 +4826,51 @@ components:
         name:
           type: string
           maxLength: 80
+    PatchedCustomer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 150
+        phone:
+          type: string
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        address:
+          type: string
+          maxLength: 300
+        tax_number:
+          type: string
+          maxLength: 40
+        payment_terms_days:
+          type: integer
+          maximum: 365
+          minimum: 0
+        credit_limit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        is_active:
+          type: boolean
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
     PatchedMember:
       type: object
       properties:
@@ -3811,6 +5128,27 @@ components:
       - supplier_name
       - total
       - warehouse
+    ReceiptAllocation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        invoice:
+          type: integer
+        invoice_number:
+          type: string
+          readOnly: true
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - id
+      - invoice
+      - invoice_number
     ReceiptLine:
       type: object
       properties:
@@ -3894,6 +5232,126 @@ components:
       - id
       - name
       - permissions
+    SalesOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        status:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        memo:
+          type: string
+          maxLength: 255
+        customer:
+          type: integer
+        customer_name:
+          type: string
+          readOnly: true
+        quote_number:
+          type: string
+          readOnly: true
+          nullable: true
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+        warehouse:
+          type: integer
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesOrderLine'
+        created_by:
+          type: string
+          format: email
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_by
+      - customer
+      - customer_name
+      - date
+      - id
+      - lines
+      - number
+      - posted_at
+      - quote_number
+      - status
+      - total
+      - warehouse
+    SalesOrderLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+        sku:
+          type: string
+          readOnly: true
+        product_name:
+          type: string
+          readOnly: true
+        unit:
+          type: integer
+        unit_code:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        tax_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        invoiced_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          readOnly: true
+      required:
+      - id
+      - invoiced_quantity
+      - product
+      - product_name
+      - quantity
+      - sku
+      - unit
+      - unit_code
+      - unit_price
+    Session:
+      type: object
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/Me'
+          nullable: true
+      required:
+      - user
     SignUp:
       type: object
       description: Fields every protected form accepts; mixed into the form serializers.

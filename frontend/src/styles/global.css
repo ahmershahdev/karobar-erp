@@ -240,8 +240,8 @@ html.lenis body {
   }
 }
 
-/* The v3 badge is replaced by the notice under each protected form (allowed by Google's FAQ). */
-.grecaptcha-badge {
+/* Google's badge shows on the forms it protects, and nowhere else. */
+html:not([data-recaptcha='on']) .grecaptcha-badge {
   visibility: hidden;
 }
 

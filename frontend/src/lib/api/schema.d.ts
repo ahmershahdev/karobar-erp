@@ -309,6 +309,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/session/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Who is signed in, if anyone.
+         *
+         *     The app asks this on every sign-in screen, where nobody being signed in is the normal case,
+         *     so that is a 200 with a null user. /me/ answering 403 there filled the console with errors.
+         */
+        get: operations["accounts_session_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/signup/": {
         parameters: {
             query?: never;
@@ -1047,6 +1069,296 @@ export interface paths {
         patch: operations["roles_partial_update"];
         trace?: never;
     };
+    "/api/sales/credit-notes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_credit_notes_list"];
+        put?: never;
+        post: operations["sales_credit_notes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/credit-notes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_credit_notes_retrieve"];
+        put: operations["sales_credit_notes_update"];
+        post?: never;
+        delete: operations["sales_credit_notes_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/credit-notes/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sales_credit_notes_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/customers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_customers_list"];
+        put?: never;
+        post: operations["sales_customers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/customers/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_customers_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["sales_customers_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["sales_customers_partial_update"];
+        trace?: never;
+    };
+    "/api/sales/invoices/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_invoices_list"];
+        put?: never;
+        post: operations["sales_invoices_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/invoices/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_invoices_retrieve"];
+        put: operations["sales_invoices_update"];
+        post?: never;
+        delete: operations["sales_invoices_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/invoices/{id}/credit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Start a credit note for everything on the invoice not yet returned. */
+        post: operations["sales_invoices_credit_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/invoices/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sales_invoices_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/orders/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_orders_list"];
+        put?: never;
+        post: operations["sales_orders_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/orders/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_orders_retrieve"];
+        put: operations["sales_orders_update"];
+        post?: never;
+        delete: operations["sales_orders_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/orders/{id}/close/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sales_orders_close_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/orders/{id}/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sales_orders_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/orders/{id}/invoice/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Start an invoice for everything still outstanding on the order. */
+        post: operations["sales_orders_invoice_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/orders/{id}/quote/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sales_orders_quote_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/receipts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_receipts_list"];
+        put?: never;
+        post: operations["sales_receipts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/receipts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_receipts_retrieve"];
+        put: operations["sales_receipts_update"];
+        post?: never;
+        delete: operations["sales_receipts_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/receipts/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sales_receipts_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tenants/": {
         parameters: {
             query?: never;
@@ -1172,6 +1484,78 @@ export interface components {
             readonly id: number;
             name: string;
         };
+        CreditLine: {
+            readonly id: number;
+            invoice_line: number;
+            readonly product_name: string;
+            /** Format: decimal */
+            quantity: string;
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: decimal */
+            readonly tax_amount: string;
+        };
+        CreditNote: {
+            readonly id: number;
+            readonly number: string | null;
+            readonly status: string;
+            /** Format: date */
+            date: string;
+            memo?: string;
+            readonly customer: number;
+            readonly customer_name: string;
+            invoice: number;
+            readonly invoice_number: string | null;
+            /** Format: decimal */
+            readonly net: string;
+            /** Format: decimal */
+            readonly tax: string;
+            /** Format: decimal */
+            readonly total: string;
+            /** Format: decimal */
+            readonly applied: string;
+            lines: components["schemas"]["CreditLine"][];
+            readonly journal_number: string | null;
+            /** Format: email */
+            readonly created_by: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
+        Customer: {
+            readonly id: number;
+            code: string;
+            name: string;
+            phone?: string;
+            email?: string;
+            address?: string;
+            tax_number?: string;
+            payment_terms_days?: number;
+            /** Format: decimal */
+            credit_limit?: string | null;
+            is_active?: boolean;
+            /** Format: decimal */
+            readonly balance: string | null;
+        };
+        CustomerReceipt: {
+            readonly id: number;
+            readonly number: string | null;
+            readonly status: string;
+            /** Format: date */
+            date: string;
+            memo?: string;
+            customer: number;
+            readonly customer_name: string;
+            /** Format: decimal */
+            amount: string;
+            received_into: number;
+            reference?: string;
+            allocations?: components["schemas"]["ReceiptAllocation"][];
+            readonly journal_number: string | null;
+            /** Format: email */
+            readonly created_by: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
         Date: {
             /** Format: date */
             date?: string;
@@ -1234,6 +1618,56 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly expires_at: string;
+        };
+        Invoice: {
+            readonly id: number;
+            readonly number: string | null;
+            readonly status: string;
+            /** Format: date */
+            date: string;
+            memo?: string;
+            customer: number;
+            readonly customer_name: string;
+            order?: number | null;
+            warehouse: number;
+            /** Format: date */
+            due_date?: string | null;
+            /** Format: decimal */
+            readonly net: string;
+            /** Format: decimal */
+            readonly tax: string;
+            /** Format: decimal */
+            readonly total: string;
+            /** Format: decimal */
+            readonly amount_paid: string;
+            /** Format: decimal */
+            readonly amount_credited: string;
+            lines: components["schemas"]["InvoiceLine"][];
+            readonly journal_number: string | null;
+            /** Format: email */
+            readonly created_by: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
+        InvoiceLine: {
+            readonly id: number;
+            order_line?: number | null;
+            product: number;
+            readonly sku: string;
+            readonly product_name: string;
+            unit: number;
+            readonly unit_code: string;
+            /** Format: decimal */
+            quantity: string;
+            /** Format: decimal */
+            unit_price: string;
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: decimal */
+            tax_amount?: string;
+            batch_number?: string;
+            /** Format: decimal */
+            readonly returned_quantity: string;
         };
         JournalEntry: {
             readonly id: number;
@@ -1387,6 +1821,45 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Bill"][];
         };
+        PaginatedCreditNoteList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["CreditNote"][];
+        };
+        PaginatedCustomerList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Customer"][];
+        };
+        PaginatedCustomerReceiptList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["CustomerReceipt"][];
+        };
         PaginatedGoodsReceiptList: {
             /**
              * Format: uri
@@ -1412,6 +1885,19 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Invitation"][];
+        };
+        PaginatedInvoiceList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Invoice"][];
         };
         PaginatedJournalEntryList: {
             /**
@@ -1464,6 +1950,19 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["PurchaseOrder"][];
+        };
+        PaginatedSalesOrderList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["SalesOrder"][];
         };
         PaginatedStockEntryList: {
             /**
@@ -1548,6 +2047,21 @@ export interface components {
         PatchedCategory: {
             readonly id?: number;
             name?: string;
+        };
+        PatchedCustomer: {
+            readonly id?: number;
+            code?: string;
+            name?: string;
+            phone?: string;
+            email?: string;
+            address?: string;
+            tax_number?: string;
+            payment_terms_days?: number;
+            /** Format: decimal */
+            credit_limit?: string | null;
+            is_active?: boolean;
+            /** Format: decimal */
+            readonly balance?: string | null;
         };
         PatchedMember: {
             readonly id?: number;
@@ -1646,6 +2160,13 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        ReceiptAllocation: {
+            readonly id: number;
+            invoice: number;
+            readonly invoice_number: string | null;
+            /** Format: decimal */
+            amount: string;
+        };
         ReceiptLine: {
             readonly id: number;
             order_line?: number | null;
@@ -1675,6 +2196,46 @@ export interface components {
             readonly id: number;
             name: string;
             permissions: unknown;
+        };
+        SalesOrder: {
+            readonly id: number;
+            readonly number: string | null;
+            readonly status: string;
+            /** Format: date */
+            date: string;
+            memo?: string;
+            customer: number;
+            readonly customer_name: string;
+            readonly quote_number: string | null;
+            /** Format: date */
+            valid_until?: string | null;
+            warehouse: number;
+            /** Format: decimal */
+            readonly total: string;
+            lines: components["schemas"]["SalesOrderLine"][];
+            /** Format: email */
+            readonly created_by: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
+        SalesOrderLine: {
+            readonly id: number;
+            product: number;
+            readonly sku: string;
+            readonly product_name: string;
+            unit: number;
+            readonly unit_code: string;
+            /** Format: decimal */
+            quantity: string;
+            /** Format: decimal */
+            unit_price: string;
+            /** Format: decimal */
+            tax_amount?: string;
+            /** Format: decimal */
+            readonly invoiced_quantity: string;
+        };
+        Session: {
+            user: components["schemas"]["Me"] | null;
         };
         /** @description Fields every protected form accepts; mixed into the form serializers. */
         SignUp: {
@@ -2448,6 +3009,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    accounts_session_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
             };
         };
     };
@@ -4344,6 +4924,770 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    sales_credit_notes_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                customer?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCreditNoteList"];
+                };
+            };
+        };
+    };
+    sales_credit_notes_create: {
+        parameters: {
+            query?: {
+                customer?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditNote"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditNote"];
+                };
+            };
+        };
+    };
+    sales_credit_notes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditNote"];
+                };
+            };
+        };
+    };
+    sales_credit_notes_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditNote"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditNote"];
+                };
+            };
+        };
+    };
+    sales_credit_notes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sales_credit_notes_post_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditNote"];
+                };
+            };
+        };
+    };
+    sales_customers_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCustomerList"];
+                };
+            };
+        };
+    };
+    sales_customers_create: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Customer"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Customer"];
+                };
+            };
+        };
+    };
+    sales_customers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Customer"];
+                };
+            };
+        };
+    };
+    sales_customers_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sales_customers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCustomer"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Customer"];
+                };
+            };
+        };
+    };
+    sales_invoices_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                customer?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedInvoiceList"];
+                };
+            };
+        };
+    };
+    sales_invoices_create: {
+        parameters: {
+            query?: {
+                customer?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Invoice"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invoice"];
+                };
+            };
+        };
+    };
+    sales_invoices_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invoice"];
+                };
+            };
+        };
+    };
+    sales_invoices_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Invoice"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invoice"];
+                };
+            };
+        };
+    };
+    sales_invoices_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sales_invoices_credit_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Date"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditNote"];
+                };
+            };
+        };
+    };
+    sales_invoices_post_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invoice"];
+                };
+            };
+        };
+    };
+    sales_orders_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                customer?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSalesOrderList"];
+                };
+            };
+        };
+    };
+    sales_orders_create: {
+        parameters: {
+            query?: {
+                customer?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalesOrder"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesOrder"];
+                };
+            };
+        };
+    };
+    sales_orders_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesOrder"];
+                };
+            };
+        };
+    };
+    sales_orders_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalesOrder"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesOrder"];
+                };
+            };
+        };
+    };
+    sales_orders_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sales_orders_close_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesOrder"];
+                };
+            };
+        };
+    };
+    sales_orders_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesOrder"];
+                };
+            };
+        };
+    };
+    sales_orders_invoice_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Date"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invoice"];
+                };
+            };
+        };
+    };
+    sales_orders_quote_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesOrder"];
+                };
+            };
+        };
+    };
+    sales_receipts_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                customer?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCustomerReceiptList"];
+                };
+            };
+        };
+    };
+    sales_receipts_create: {
+        parameters: {
+            query?: {
+                customer?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReceipt"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
+    sales_receipts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
+    sales_receipts_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReceipt"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
+    sales_receipts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sales_receipts_post_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReceipt"];
                 };
             };
         };

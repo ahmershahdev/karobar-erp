@@ -101,6 +101,20 @@ def payment(amount: Decimal, out_of: str = "cash") -> list[Line]:
     return _lines(("payables", amount, ZERO), (out_of, ZERO, amount))
 
 
+def credit_note(net: Decimal, tax: Decimal = ZERO) -> list[Line]:
+    """Goods come back: the sale is undone, through returns so it still shows in the books.
+
+    Dr sales returns (net); Dr output tax (tax); Cr receivables (net + tax). The stock coming
+    back is a stock receipt with its own entry, against cost of goods sold.
+    """
+    _non_negative(net=net, tax=tax)
+    return _lines(
+        ("sales_returns", net, ZERO),
+        ("tax_output", tax, ZERO),
+        ("receivables", ZERO, net + tax),
+    )
+
+
 def stock_in(value: Decimal, contra: str) -> list[Line]:
     """Stock arrives without a supplier bill (opening stock, a count that found more).
 

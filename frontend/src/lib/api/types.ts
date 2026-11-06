@@ -27,6 +27,11 @@ export type PurchaseOrder = Schemas['PurchaseOrder'];
 export type GoodsReceipt = Schemas['GoodsReceipt'];
 export type Bill = Schemas['Bill'];
 export type SupplierPayment = Schemas['SupplierPayment'];
+export type Customer = Schemas['Customer'];
+export type SalesOrder = Schemas['SalesOrder'];
+export type Invoice = Schemas['Invoice'];
+export type CustomerReceipt = Schemas['CustomerReceipt'];
+export type CreditNote = Schemas['CreditNote'];
 
 export const MODULES: Record<string, readonly string[]> = {
   members: ['view', 'create', 'update', 'delete'],

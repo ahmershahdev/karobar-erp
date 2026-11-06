@@ -109,6 +109,8 @@ export function NewBusinessPage({ me }: { me: Me }) {
 // The everyday jobs, in the words a shopkeeper would use, so nobody has to know that "Stock
 // entries" or "Trial balance" is the screen they want.
 const TASKS = [
+  { key: 'sell', icon: 'bills', path: 'sales/invoices', module: 'sales' },
+  { key: 'takeMoney', icon: 'payments', path: 'sales/receipts', module: 'sales' },
   { key: 'addProduct', icon: 'products', path: 'inventory/products', module: 'inventory' },
   { key: 'moveStock', icon: 'entries', path: 'inventory/entries', module: 'inventory' },
   { key: 'seeStock', icon: 'on-hand', path: 'inventory/on-hand', module: 'inventory' },

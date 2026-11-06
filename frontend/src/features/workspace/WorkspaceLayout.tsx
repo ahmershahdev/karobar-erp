@@ -39,11 +39,14 @@ function VerifyBanner() {
   );
 }
 
-function groupOf(path: string): 'workspace' | 'accounting' | 'inventory' | 'purchasing' {
-  if (path.includes('/accounting/')) return 'accounting';
-  if (path.includes('/inventory/')) return 'inventory';
-  if (path.includes('/purchasing/')) return 'purchasing';
-  return 'workspace';
+type Group = 'workspace' | 'sales' | 'accounting' | 'inventory' | 'purchasing';
+
+// The part after /app/<business>/, so a business whose slug is  doesn't look like a group.
+function groupOf(path: string): Group {
+  const area = path.split('/')[3];
+  return area === 'sales' || area === 'accounting' || area === 'inventory' || area === 'purchasing'
+    ? area
+    : 'workspace';
 }
 
 export function WorkspaceLayout({ me }: { me: Me }) {
@@ -96,6 +99,18 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       icon: 'audit',
       show: can(membership, 'audit', 'view'),
     },
+    ...[
+      { path: 'invoices', label: t('sal.invoices'), icon: 'bills' },
+      { path: 'receipts', label: t('sal.receipts'), icon: 'payments' },
+      { path: 'customers', label: t('sal.customers'), icon: 'members' },
+      { path: 'orders', label: t('sal.orders'), icon: 'orders' },
+      { path: 'returns', label: t('sal.returns'), icon: 'entries' },
+    ].map((item) => ({
+      to: `${base}/sales/${item.path}`,
+      label: item.label,
+      icon: item.icon,
+      show: can(membership, 'sales', 'view'),
+    })),
     ...[
       { path: 'journal', label: t('acc.journal') },
       { path: 'chart', label: t('acc.chart') },

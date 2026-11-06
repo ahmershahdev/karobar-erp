@@ -22,6 +22,13 @@ import {
 } from '../features/accounting/pages';
 import { useMe } from '../features/auth/session';
 import {
+  CustomersPage,
+  InvoicesPage,
+  OrdersPage as SalesOrdersPage,
+  ReceiptsPage as MoneyReceivedPage,
+  ReturnsPage,
+} from '../features/sales/pages';
+import {
   AlertsPage,
   InventorySetupPage,
   ProductsPage,
@@ -142,6 +149,11 @@ export default function AppRoutes() {
         <Route path="inventory/on-hand" element={<StockOnHandPage />} />
         <Route path="inventory/alerts" element={<AlertsPage />} />
         <Route path="inventory/setup" element={<InventorySetupPage />} />
+        <Route path="sales/invoices" element={<InvoicesPage />} />
+        <Route path="sales/receipts" element={<MoneyReceivedPage />} />
+        <Route path="sales/customers" element={<CustomersPage />} />
+        <Route path="sales/orders" element={<SalesOrdersPage />} />
+        <Route path="sales/returns" element={<ReturnsPage />} />
         <Route path="purchasing/suppliers" element={<SuppliersPage />} />
         <Route path="purchasing/orders" element={<OrdersPage />} />
         <Route path="purchasing/receipts" element={<ReceiptsPage />} />
