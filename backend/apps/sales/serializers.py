@@ -6,7 +6,7 @@ from rest_framework import serializers
 from apps.accounting.models import Account, TaxRate
 from apps.inventory.models import Product, Unit, Warehouse
 from apps.inventory.serializers import scoped
-from apps.purchasing.serializers import capped
+from apps.purchasing.serializers import AgeingRowSerializer, capped
 
 from .models import (
     CreditNote,
@@ -274,3 +274,12 @@ class CreditNoteSerializer(_DocumentSerializer):
         )
         read_only_fields = (*DOCUMENT_READ_ONLY, "customer", "net", "tax", "total", "applied")
         extra_kwargs = OPTIONAL_MEMO
+
+
+class ReceivableRowSerializer(AgeingRowSerializer):
+    whatsapp = serializers.CharField()
+
+
+class BillShareSerializer(serializers.Serializer[Any]):
+    link = serializers.CharField()
+    whatsapp = serializers.CharField()

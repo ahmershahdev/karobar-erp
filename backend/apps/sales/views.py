@@ -8,7 +8,8 @@ from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import APIException, NotFound, ValidationError
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,14 +20,14 @@ from apps.accounting.services import AccountingError
 from apps.accounts.models import User
 from apps.inventory.services import InventoryError
 from apps.purchasing.serializers import (
-    AgeingRowSerializer,
     DateSerializer,
     StatementQuerySerializer,
     StatementSerializer,
 )
+from apps.tenancy.context import tenant_context
 from apps.tenancy.permissions import HasModulePermission
 
-from . import documents, reports, services
+from . import documents, links, reports, services
 from .models import (
     CreditNote,
     CreditNoteLine,
@@ -39,10 +40,12 @@ from .models import (
     SalesOrderLine,
 )
 from .serializers import (
+    BillShareSerializer,
     CreditNoteSerializer,
     CustomerReceiptSerializer,
     CustomerSerializer,
     InvoiceSerializer,
+    ReceivableRowSerializer,
     SalesOrderSerializer,
 )
 
@@ -333,10 +336,13 @@ class CustomerStatementView(SalesView, generics.GenericAPIView[Customer]):
 class ReceivablesAgeingView(SalesView, generics.GenericAPIView[Customer]):
     pagination_class = None
 
-    @extend_schema(responses=AgeingRowSerializer(many=True))
+    @extend_schema(responses=ReceivableRowSerializer(many=True))
     def get(self, request: Request) -> Response:
         rows = reports.ageing(timezone.localdate())
-        return Response(AgeingRowSerializer(rows, many=True).data)
+        customers = Customer.objects.in_bulk([row["id"] for row in rows])
+        for row in rows:
+            row["whatsapp"] = links.reminder_message(customers[row["id"]], row["total"])
+        return Response(ReceivableRowSerializer(rows, many=True).data)
 
 
 class PrintingUnavailable(APIException):
@@ -373,6 +379,49 @@ class InvoicePdfView(SalesView, generics.GenericAPIView[Invoice]):
     @extend_schema(parameters=[LANGUAGE], responses=PDF)
     def get(self, request: Request, pk: int) -> HttpResponse:
         return pdf_response(request, documents.invoice_html, self.get_object())
+
+
+class InvoiceShareView(SalesView, generics.GenericAPIView[Invoice]):
+    def get_queryset(self) -> QuerySet[Invoice]:
+        return Invoice.objects.select_related("customer")
+
+    @extend_schema(responses=BillShareSerializer)
+    def get(self, request: Request, pk: int) -> Response:
+        invoice = self.get_object()
+        if invoice.status != Invoice.Status.POSTED:
+            raise ValidationError({"detail": "Only posted bills can be shared."})
+        data = {"link": links.bill_url(invoice), "whatsapp": links.bill_message(invoice)}
+        return Response(BillShareSerializer(data).data)
+
+
+class PublicBillView(APIView):
+    """One bill for whoever holds its signed link. A bad, old or draft link all look the same."""
+
+    authentication_classes: list[Any] = []
+    permission_classes = [AllowAny]
+    throttle_scope = "anon"
+
+    @extend_schema(parameters=[LANGUAGE], responses=PDF)
+    def get(self, request: Request, token: str) -> HttpResponse:
+        found = links.read_bill_token(token)
+        if found is None:
+            raise NotFound
+        tenant, pk = found
+        with tenant_context(tenant):
+            invoice = (
+                Invoice.objects.select_related("customer")
+                .filter(pk=pk, status=Invoice.Status.POSTED)
+                .first()
+            )
+            if invoice is None:
+                raise NotFound
+            response = pdf_response(request, documents.invoice_html, invoice)
+        # The link is the key to the bill, so it must not reach caches, search engines or
+        # other sites through the Referer header.
+        response["Cache-Control"] = "private, no-store"
+        response["X-Robots-Tag"] = "noindex"
+        response["Referrer-Policy"] = "no-referrer"
+        return response
 
 
 class ReceiptPdfView(SalesView, generics.GenericAPIView[CustomerReceipt]):

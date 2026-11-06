@@ -777,7 +777,10 @@
       "low_stock": "Products running low: {{count}}",
       "overdue": "Overdue bills: {{count}}",
       "open_tills": "Tills still open: {{count}}"
-    }
+    },
+    "automation": "Automatic help",
+    "dailySummary": "Daily summary email",
+    "dailySummaryBody": "Each morning, get yesterday's sales and what needs attention. A quiet day sends nothing."
   },
   "guides": {
     "title": "How to use this page",
@@ -1105,5 +1108,11 @@
     "noStore": "You have no store yet",
     "noStoreBody": "Stock and cash belong to a store, so add one first. It only takes a moment.",
     "addStore": "Add a store"
+  },
+  "share": {
+    "whatsapp": "Send on WhatsApp",
+    "copy": "Copy bill link",
+    "copied": "Link copied",
+    "remind": "Remind on WhatsApp"
   }
 }

@@ -2,7 +2,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from .models import AuditEvent, Invitation, Membership, Role
+from .models import AuditEvent, Invitation, Membership, Role, Tenant
 from .modules import clean_permissions, permission_problems
 
 
@@ -103,3 +103,10 @@ class AuditEventSerializer(serializers.ModelSerializer[AuditEvent]):
         model = AuditEvent
         fields = ("id", "action", "model", "object_id", "changes", "user", "at")
         read_only_fields = fields
+
+
+class AutomationSerializer(serializers.ModelSerializer[Tenant]):
+    class Meta:
+        model = Tenant
+        fields = ("daily_summary",)
+        extra_kwargs = {"daily_summary": {"required": True}}

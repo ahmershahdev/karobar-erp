@@ -4,6 +4,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 
 from apps.platform.views import HealthView
+from apps.sales.views import PublicBillView
 
 urlpatterns = [
     path("api/health/", HealthView.as_view(), name="health"),
@@ -13,6 +14,7 @@ urlpatterns = [
     path("api/inventory/", include("apps.inventory.urls")),
     path("api/purchasing/", include("apps.purchasing.urls")),
     path("api/sales/", include("apps.sales.urls")),
+    path("api/public/bills/<str:token>/", PublicBillView.as_view(), name="public-bill"),
     path("api/reports/", include("apps.reports.urls")),
     path("api/pos/", include("apps.pos.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

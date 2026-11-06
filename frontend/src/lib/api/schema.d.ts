@@ -443,6 +443,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/automation/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["automation_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["automation_partial_update"];
+        trace?: never;
+    };
     "/api/health/": {
         parameters: {
             query?: never;
@@ -915,6 +931,23 @@ export interface paths {
             cookie?: never;
         };
         get: operations["pos_warehouses_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/bills/{token}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One bill for whoever holds its signed link. A bad, old or draft link all look the same. */
+        get: operations["public_bills_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1550,6 +1583,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sales/invoices/{id}/share/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_invoices_share_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sales/orders/": {
         parameters: {
             query?: never;
@@ -1818,6 +1867,9 @@ export interface components {
             recaptcha_v2_site_key: string;
             oauth_providers: string[];
         };
+        Automation: {
+            daily_summary: boolean;
+        };
         BalanceSheet: {
             assets: components["schemas"]["ReportSection"];
             liabilities: components["schemas"]["ReportSection"];
@@ -1876,6 +1928,10 @@ export interface components {
             readonly amount: string;
             /** Format: decimal */
             tax_amount?: string;
+        };
+        BillShare: {
+            link: string;
+            whatsapp: string;
         };
         CartLine: {
             product: number;
@@ -2527,6 +2583,9 @@ export interface components {
             is_active?: boolean;
             readonly role?: string | null;
         };
+        PatchedAutomation: {
+            daily_summary?: boolean;
+        };
         PatchedCategory: {
             readonly id?: number;
             name?: string;
@@ -2703,6 +2762,25 @@ export interface components {
             readonly value: string;
             /** Format: decimal */
             readonly billed_quantity: string;
+        };
+        ReceivableRow: {
+            id: number;
+            name: string;
+            /** Format: decimal */
+            current: string;
+            /** Format: decimal */
+            days_1_30: string;
+            /** Format: decimal */
+            days_31_60: string;
+            /** Format: decimal */
+            days_61_90: string;
+            /** Format: decimal */
+            over_90: string;
+            /** Format: decimal */
+            advance: string;
+            /** Format: decimal */
+            total: string;
+            whatsapp: string;
         };
         ReportLine: {
             code: string;
@@ -3860,6 +3938,48 @@ export interface operations {
             };
         };
     };
+    automation_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Automation"];
+                };
+            };
+        };
+    };
+    automation_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAutomation"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Automation"];
+                };
+            };
+        };
+    };
     health_retrieve: {
         parameters: {
             query?: never;
@@ -4971,6 +5091,29 @@ export interface operations {
             };
         };
     };
+    public_bills_retrieve: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     purchasing_ageing_list: {
         parameters: {
             query?: never;
@@ -6030,7 +6173,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AgeingRow"][];
+                    "application/json": components["schemas"]["ReceivableRow"][];
                 };
             };
         };
@@ -6497,6 +6640,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Invoice"];
+                };
+            };
+        };
+    };
+    sales_invoices_share_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillShare"];
                 };
             };
         };

@@ -8,7 +8,7 @@ import { unwrap } from '../../lib/api/errors';
 import { can } from '../../lib/api/types';
 import { formatMoney, toMinor } from '../../lib/money';
 import { useReducedMotion } from '../../lib/motion';
-import { useWorkspace } from './hooks';
+import { useTenantAction, useWorkspace } from './hooks';
 import { Panel } from './ui';
 
 const SalesChart = lazy(() => import('../reports/SalesChart'));
@@ -76,6 +76,36 @@ const WARNINGS = [
   { key: 'overdue', path: 'sales/owed-to-me' },
   { key: 'open_tills', path: 'counter' },
 ] as const;
+
+function Automation() {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const save = useTenantAction(['automation']);
+  const settings = useQuery({
+    queryKey: [membership.tenant_id, 'automation'],
+    queryFn: () => unwrap(api.GET('/api/automation/')),
+  });
+  return (
+    <Panel title={t('home.automation')}>
+      <label className="flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 size-5 accent-[var(--color-flame)]"
+          disabled={!settings.data || save.isPending}
+          checked={settings.data?.daily_summary ?? false}
+          onChange={(event) => {
+            const body = { daily_summary: event.target.checked };
+            save.mutate(() => unwrap(api.PATCH('/api/automation/', { body })));
+          }}
+        />
+        <span>
+          <span className="block font-medium">{t('home.dailySummary')}</span>
+          <span className="block text-sm text-muted">{t('home.dailySummaryBody')}</span>
+        </span>
+      </label>
+    </Panel>
+  );
+}
 
 /** The numbers, next steps and warnings on the business home page. Needs the reports permission:
  * they include profit, which a cashier shouldn't see, so others get the task tiles alone. */
@@ -205,6 +235,8 @@ export function Home() {
           />
         </div>
       </section>
+
+      {membership.is_owner && <Automation />}
 
       <Panel title={t('rep.last30')}>
         {!data ? (
