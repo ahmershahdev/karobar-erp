@@ -39,12 +39,14 @@ function VerifyBanner() {
   );
 }
 
-function groupOf(path: string): 'workspace' | 'sales' | 'accounting' | 'inventory' | 'purchasing' {
-  if (path.includes('/sales/')) return 'sales';
-  if (path.includes('/accounting/')) return 'accounting';
-  if (path.includes('/inventory/')) return 'inventory';
-  if (path.includes('/purchasing/')) return 'purchasing';
-  return 'workspace';
+type Group = 'workspace' | 'sales' | 'accounting' | 'inventory' | 'purchasing';
+
+// The part after /app/<business>/, so a business whose slug is  doesn't look like a group.
+function groupOf(path: string): Group {
+  const area = path.split('/')[3];
+  return area === 'sales' || area === 'accounting' || area === 'inventory' || area === 'purchasing'
+    ? area
+    : 'workspace';
 }
 
 export function WorkspaceLayout({ me }: { me: Me }) {
