@@ -17,5 +17,5 @@ def test_set_up_books_backfills_once(owner: Member) -> None:
     assert "for 1 business" in out.getvalue()
     assert "for 0 business" in out.getvalue()
     with tenant_context(owner.tenant):
-        assert Account.objects.count() == 36
+        assert Account.objects.count() == 38
         assert FiscalYear.objects.count() == 1

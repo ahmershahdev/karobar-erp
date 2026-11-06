@@ -22,6 +22,11 @@ export type Warehouse = Schemas['Warehouse'];
 export type Category = Schemas['Category'];
 export type StockEntry = Schemas['StockEntry'];
 export type StockLevel = Schemas['StockLevel'];
+export type Supplier = Schemas['Supplier'];
+export type PurchaseOrder = Schemas['PurchaseOrder'];
+export type GoodsReceipt = Schemas['GoodsReceipt'];
+export type Bill = Schemas['Bill'];
+export type SupplierPayment = Schemas['SupplierPayment'];
 
 export const MODULES: Record<string, readonly string[]> = {
   members: ['view', 'create', 'update', 'delete'],

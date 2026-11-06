@@ -59,6 +59,36 @@ def purchase(net: Decimal, tax: Decimal = ZERO) -> list[Line]:
     )
 
 
+def supplier_bill(
+    received: Decimal,
+    billed_goods: Decimal,
+    expenses: Sequence[tuple[str, Decimal]] = (),
+    tax: Decimal = ZERO,
+) -> list[Line]:
+    """A supplier's bill for goods already received and, optionally, services or expenses.
+
+    The goods receipt booked stock at the order price against goods received not invoiced
+    (GRNI). The bill clears GRNI at that same `received` value; whatever the supplier charged
+    above or below it goes to purchase price variance. Stock already issued may have left at the
+    old cost, so the variance goes to the books rather than back into stock value.
+
+    Dr GRNI (received); Dr or Cr purchase variance (billed_goods - received);
+    Dr each expense account; Dr input tax; Cr payables (everything billed plus tax).
+    """
+    _non_negative(received=received, billed_goods=billed_goods, tax=tax)
+    for account, amount in expenses:
+        _non_negative(**{account: amount})
+    variance = quantize_money(billed_goods) - quantize_money(received)
+    total = billed_goods + sum((amount for _, amount in expenses), ZERO) + tax
+    return _lines(
+        ("grni", received, ZERO),
+        ("purchase_variance", max(variance, ZERO), max(-variance, ZERO)),
+        *((account, amount, ZERO) for account, amount in expenses),
+        ("tax_input", tax, ZERO),
+        ("payables", ZERO, total),
+    )
+
+
 def receipt(amount: Decimal, into: str = "cash") -> list[Line]:
     """A customer pays: Dr cash or bank; Cr receivables."""
     _non_negative(amount=amount)

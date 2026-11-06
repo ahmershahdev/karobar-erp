@@ -45,7 +45,7 @@ in CI, and seed data.
 
 ## M4. Purchasing and sales (target 2027-01-31)
 
-- [ ] Suppliers, purchase orders, goods received, supplier bills, supplier payments
+- [x] Suppliers, purchase orders, goods received, supplier bills, supplier payments
 - [ ] Customers, quotations, sales orders, invoices, receipts, returns and credit notes
 - [ ] Customer credit limits checked on order and invoice
 - [ ] Each document posts its stock moves and journal entry in one transaction

@@ -113,6 +113,7 @@ const TASKS = [
   { key: 'moveStock', icon: 'entries', path: 'inventory/entries', module: 'inventory' },
   { key: 'seeStock', icon: 'on-hand', path: 'inventory/on-hand', module: 'inventory' },
   { key: 'warnings', icon: 'alerts', path: 'inventory/alerts', module: 'inventory' },
+  { key: 'buy', icon: 'suppliers', path: 'purchasing/orders', module: 'purchasing' },
   { key: 'money', icon: 'journal', path: 'accounting/journal', module: 'accounting' },
   { key: 'team', icon: 'members', path: 'members', module: 'members' },
 ];
