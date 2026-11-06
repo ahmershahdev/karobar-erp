@@ -48,7 +48,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
   const resend = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await api.POST('/api/accounts/verify-email/resend/');
+      await unwrap(api.POST('/api/accounts/verify-email/resend/'));
     },
   });
   return (

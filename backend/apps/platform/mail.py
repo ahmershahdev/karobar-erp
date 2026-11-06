@@ -30,4 +30,5 @@ def send_message(
         },
     )
     text = "\n\n".join(part for part in [*paragraphs, url, note] if part)
-    send_email.delay(to, subject, text, html)
+    # A business name can hold a line break, and Django refuses to send such a header.
+    send_email.delay(to, " ".join(subject.split()), text, html)

@@ -218,6 +218,11 @@ def test_emails_carry_our_design_and_a_plain_text_copy(user: User) -> None:
     assert url.group().replace("&", "&amp;") in html
 
 
+def test_a_line_break_in_a_name_cannot_stop_an_email() -> None:
+    send_message("a@example.test", "Stock alerts: Shop\r\nBcc: x@example.test", "Hi", ["Hello"])
+    assert mail.outbox[0].subject == "Stock alerts: Shop Bcc: x@example.test"
+
+
 def test_a_name_typed_by_a_user_cannot_put_html_in_an_email() -> None:
     send_message("a@example.test", "Hi", "<b>Shop</b>", ["<script>x</script>"])
     html = str(cast(EmailMultiAlternatives, mail.outbox[0]).alternatives[0][0])

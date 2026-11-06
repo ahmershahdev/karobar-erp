@@ -384,7 +384,6 @@ select:focus {
 
   option:hover,
   option:focus-visible {
-    outline: none;
     background: var(--color-surface);
   }
 

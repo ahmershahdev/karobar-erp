@@ -466,7 +466,9 @@ export function PosPage() {
           </Select>
         </div>
       )}
-      {tills.isPending || warehouses.isPending ? null : stores.length === 0 ? (
+      {tills.isPending || warehouses.isPending ? null : warehouses.isError ? (
+        <ActionError error={warehouses.error} />
+      ) : stores.length === 0 ? (
         <Panel title={t('pos.noStore')}>
           <p className="mb-4 text-muted">{t('pos.noStoreBody')}</p>
           <Link to={`/app/${membership.tenant_slug}/inventory/setup`} className="btn btn-primary">
