@@ -16,6 +16,10 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+export function getLenis(): Lenis | null {
+  return current;
+}
+
 export function useLenis(): Lenis | null {
   return useSyncExternalStore(
     subscribe,

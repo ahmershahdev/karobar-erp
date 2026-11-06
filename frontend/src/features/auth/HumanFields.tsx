@@ -12,7 +12,7 @@ export function Honeypot({
   onChange: (value: string) => void;
 }) {
   return (
-    <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+    <div aria-hidden="true" className="sr-only">
       <label>
         Website
         <input
@@ -51,7 +51,7 @@ export function Checkbox({
       if (!active || container.childElementCount) return;
       grecaptcha.render(container, {
         sitekey: siteKey,
-        theme: 'dark',
+        theme: 'light',
         callback: onToken,
         'expired-callback': () => onToken(''),
       });
@@ -64,9 +64,38 @@ export function Checkbox({
     };
   }, [siteKey, v3Key, onToken, onFailed]);
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-muted">{t('auth.robotCheck')}</p>
-      <div ref={box} />
+    <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
+      <p className="text-sm text-ink">{t('auth.robotCheck')}</p>
+      {/* Google's checkbox is a fixed 304 by 78 pixel iframe; the box keeps that space so the
+          form doesn't jump when it loads, and scales it down on very narrow phones. */}
+      <div className="h-[78px] origin-left max-[360px]:scale-90 rtl:origin-right" ref={box} />
     </div>
+  );
+}
+
+/**
+ * Google allows hiding the floating reCAPTCHA badge as long as the form says it is protected and
+ * links to Google's privacy policy and terms; the badge otherwise sits over the page corner.
+ */
+export function RecaptchaNotice() {
+  const { t } = useTranslation();
+  const link = 'text-muted underline underline-offset-2 hover:text-ink';
+  return (
+    <p className="text-center text-xs text-muted">
+      {t('auth.recaptchaNotice.protected')}{' '}
+      <a
+        className={link}
+        href="https://policies.google.com/privacy"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t('auth.recaptchaNotice.privacy')}
+      </a>{' '}
+      {t('auth.recaptchaNotice.and')}{' '}
+      <a className={link} href="https://policies.google.com/terms" target="_blank" rel="noreferrer">
+        {t('auth.recaptchaNotice.terms')}
+      </a>{' '}
+      {t('auth.recaptchaNotice.apply')}
+    </p>
   );
 }

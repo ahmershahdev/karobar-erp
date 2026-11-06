@@ -23,7 +23,7 @@ Owner: Syed Ahmer Shah, <https://ahmershah.dev>, support@ahmershah.dev. Goes liv
 
 Python 3.12, Django 5.2, Django REST Framework, drf-spectacular, Celery, MySQL 8.4 (utf8mb4,
 InnoDB; never SQLite, even in tests), Redis, WeasyPrint. React, TypeScript (strict), Vite,
-Tailwind CSS, TanStack Query and Table, Recharts, i18next. pytest, factory_boy, Vitest. Ruff, mypy
+Tailwind CSS, TanStack Query and Table, Recharts, i18next, anime.js. pytest, factory_boy, Vitest. Ruff, mypy
 (strict), ESLint, Prettier. Docker Compose for dev and prod.
 
 ## Layout
@@ -39,6 +39,7 @@ backend/apps/{accounting,inventory,purchasing,sales,pos,hr,payroll,reports}/
 backend/tests/        mirrors apps/
 frontend/             React app: src/{app,pages,features,components,lib,i18n,styles}
 deploy/               nginx and production compose
+frontend/build/       build plugin: SEO files, service worker, compression
 docs/                 roadmap, architecture, status
 ```
 
@@ -63,6 +64,9 @@ docs/                 roadmap, architecture, status
 - No new dependency without a reason in the PR. Pin exact versions.
 - The maintainer reviews `apps/core` and must be able to explain every line of it.
 - No emojis in code, UI text or docs.
+- Write for someone who doesn't read comfortably: plain words first, a picture beside every screen
+  name, one short sentence on what happened and what to do next. See `docs/design.md`.
+- New UI text goes into all three locale files in the same PR; a test compares their keys.
 - No hardcoded hosts, URLs or keys: the API base, the public site URL and every secret come from
   environment variables (`VITE_*` for the frontend, read in one module each side).
 
@@ -75,11 +79,15 @@ Details and the reasoning are in [docs/security.md](docs/security.md). The short
   The JSON-LD component is the one exception and escapes `<`.
 - Session cookies (HttpOnly, Secure, SameSite=Lax) and Django CSRF for the SPA. No tokens in
   `localStorage`.
-- Passwords hashed with Argon2id; minimum length 12; common and all-numeric passwords rejected.
+- Passwords hashed with Argon2id, bcrypt as the runtime fallback, never in the browser; minimum
+  length 12; common and all-numeric passwords rejected.
 - Content Security Policy with a per-request nonce and `strict-dynamic`; no `unsafe-inline` for
   scripts. New third-party origins need a line in `docs/security.md`.
+- A new top-level app screen goes in `AUTH_PATHS` and in nginx, or it answers 404 in production.
 - Every endpoint has a throttle scope. Sign-in, sign-up and password reset have strict ones.
 - Request body, page size and upload sizes are capped; slow work goes to Celery.
+- The service worker stores code only. `/api/` responses are never cached.
+- Never hide anything with a large negative offset; in RTL it widens the page. Use `sr-only`.
 - Anything read-then-written under concurrency (stock, numbering, balances) runs inside
   `transaction.atomic()` with `select_for_update()`, in a fixed lock order (by primary key).
 - Errors never leak stack traces, SQL or another tenant's identifiers.
@@ -92,14 +100,15 @@ Public pages only; everything under `/app` is `noindex`. See [docs/seo.md](docs/
   Open Graph and Twitter tags, and JSON-LD (including a `BreadcrumbList`). A test enforces the
   lengths.
 - `robots.txt`, `sitemap.xml`, `llms.txt` and `llms-full.txt` are generated at build time from
-  the route list and `VITE_SITE_URL`; never edit copies by hand.
+  the route list and `VITE_SITE_URL`; never edit copies by hand. The same build writes `sw.js` and
+  the `.br` and `.gz` files.
 
 ## Design rules
 
-See [docs/design.md](docs/design.md). Colours, gradients, radii and motion timings are tokens in
-`frontend/src/styles/tokens.css`; components never use raw hex values. All motion honours
-`prefers-reduced-motion`, WebGL is lazy-loaded and has a static fallback, and the app screens
-favour speed and clarity over effects.
+See [docs/design.md](docs/design.md). White, minimal, easy to use. Colours, radii and motion timings
+are tokens in `frontend/src/styles/tokens.css`; components never use raw hex values. Text colours
+keep AA contrast. Logos go through `components/Logo.tsx`. All motion honours
+`prefers-reduced-motion`, and the app screens favour speed and clarity over effects.
 
 ## Comments
 

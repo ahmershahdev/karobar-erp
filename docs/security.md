@@ -28,8 +28,12 @@ Everything else is ranked below that.
   requests, so `LoginView` adds `csrf_protect` itself; sign-in CSRF is tested.
 - No access or refresh tokens in `localStorage` or `sessionStorage`; ESLint blocks
   `localStorage.setItem`.
-- Passwords: Argon2id first in `PASSWORD_HASHERS` (PBKDF2 kept only to verify and upgrade old
-  hashes), at least 12 characters, common and numeric-only passwords rejected.
+- Passwords: Argon2id first in `PASSWORD_HASHERS`, at least 12 characters, common and numeric-only
+  passwords rejected. If Argon2id can't compute a hash (memory pressure is the realistic case),
+  `apps/accounts/hashers.py` falls back to bcrypt, logs a warning, and the password is rehashed with
+  Argon2id at the next sign-in. PBKDF2 stays only to verify and upgrade old hashes. Passwords are
+  never hashed in the browser: the hash would become the password, and TLS already protects it on
+  the wire.
 - Sign-in answers the same message for an unknown email and a wrong password. Django runs the
   hasher for unknown users too, so timing doesn't reveal which emails exist.
 
@@ -46,6 +50,8 @@ Sign-in, sign-up and password reset carry two checks (`apps/accounts/humans.py`)
   token or a failed check answers `400` with `code: captcha_v2_required`, and the form then
   shows the v2 checkbox, whose token is verified with the v2 secret.
 - If Google can't be reached the form fails closed with `503 captcha_unavailable`.
+- The floating v3 badge is hidden; instead each protected form carries the notice Google asks
+  for in that case ("Protected by reCAPTCHA", with links to Google's privacy policy and terms).
 - Empty keys turn reCAPTCHA off for local development and tests; `config.settings.prod`
   refuses to start without both key pairs.
 
@@ -64,7 +70,8 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
   verified. Facebook doesn't promise that, so a Facebook sign-in for an email that already has
   an account is refused (`email_in_use`) instead of linked: otherwise anyone who added a
   victim's address to a Facebook account could take over the Karobar account.
-- `next` is only followed when it is a path under `/app` with no `//` or backslash.
+- `next` is only followed when it is a path under `/app` or `/accept-invite` with no `//` or
+  backslash.
 - Disabled users can't sign in through a provider.
 
 ## Rate limiting and denial of service
@@ -108,14 +115,20 @@ The frontend is served by nginx with:
 
 ```
 default-src 'self'; script-src 'nonce-<random>' 'strict-dynamic'; style-src 'self' 'nonce-<random>';
-img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none';
+img-src 'self' data:; font-src 'self'; connect-src 'self' https://www.google.com/recaptcha/;
+worker-src 'self'; object-src 'none'; base-uri 'none';
 form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 ```
 
 Vite stamps `nonce="__CSP_NONCE__"` on every tag it writes (`html.cspNonce`). nginx replaces the
 placeholder with `$request_id`, 32 random hex characters per response, and sends the same value in
 the header. HTML is `no-cache`, so a nonce is never reused. `strict-dynamic` lets the nonced entry
-script load its lazy chunks (three.js, pages) without listing them.
+script load its lazy page chunks without listing them. reCAPTCHA needs `connect-src` for its `clr` call;
+blocking that leaves tokens working but can lower people's scores, so real users meet the checkbox.
+
+The service worker stores only the app's own code, never `/api/` responses, so nothing about a
+business is left on a shared computer. Its stored page keeps the response headers it was fetched
+with, so the nonce in that page still matches its CSP when it runs offline.
 
 Fonts are self-hosted through Fontsource. The only third-party origins are Google's reCAPTCHA
 ones, on the sign-in, sign-up and reset forms: the script is added by our nonced code, so
@@ -132,7 +145,7 @@ HSTS with preload (one year), `X-Content-Type-Options: nosniff`, `X-Frame-Option
 `Referrer-Policy: strict-origin-when-cross-origin`, `Cross-Origin-Opener-Policy: same-origin`,
 `Cross-Origin-Resource-Policy: same-origin` on the API, a `Permissions-Policy` that turns off
 camera, microphone, location, payment and USB, and `Cache-Control: no-store` on every API
-response. `/app` also gets `X-Robots-Tag: noindex`.
+response. `/app` and the sign-in screens also get `X-Robots-Tag: noindex`.
 
 ## Concurrency and race conditions
 

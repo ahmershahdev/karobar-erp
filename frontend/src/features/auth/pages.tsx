@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 
 import { Alert, Button, Field, PasswordField, SubmitButton } from '../../components/form';
 import { api } from '../../lib/api/client';
+import { safeNext } from '../../lib/paths';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { AuthCard } from './AuthCard';
 import { needsCheckbox, useHumanCheck } from './human';
@@ -32,7 +33,7 @@ function submitting(handler: () => void) {
   };
 }
 
-const LINK = 'text-gold underline-offset-4 hover:underline';
+const LINK = 'text-ember underline-offset-4 hover:underline';
 
 export function SignInPage() {
   const { t } = useTranslation();
@@ -56,7 +57,7 @@ export function SignInPage() {
       client.setQueryData(sessionKeys.me, me);
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
       const next = params.get('next');
-      void navigate(next?.startsWith('/app') ? next : '/app');
+      void navigate(safeNext(next) ?? '/app');
     },
   });
 
@@ -67,7 +68,7 @@ export function SignInPage() {
       footer={
         <>
           {t('auth.noAccount')}{' '}
-          <Link className={LINK} to={`/app/sign-up${params.size ? `?${params.toString()}` : ''}`}>
+          <Link className={LINK} to={`/signup${params.size ? `?${params.toString()}` : ''}`}>
             {t('auth.signUp')}
           </Link>
         </>
@@ -105,7 +106,7 @@ export function SignInPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
           <div className="text-end">
-            <Link className={`${LINK} text-sm`} to="/app/forgot-password">
+            <Link className={`${LINK} text-sm`} to="/forgot-password">
               {t('auth.forgot')}
             </Link>
           </div>
@@ -118,9 +119,10 @@ export function SignInPage() {
               : messageOf(mutation.error, t('signIn.unavailable'))}
           </Alert>
         )}
-        <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+        <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {mutation.isPending ? t('signIn.working') : t('signIn.submit')}
         </SubmitButton>
+        {human.notice}
       </form>
     </AuthCard>
   );
@@ -149,7 +151,7 @@ export function SignUpPage() {
     return (
       <AuthCard title={t('auth.checkEmail')}>
         <p className="text-muted">{t('auth.checkEmailBody', { email: form.email })}</p>
-        <Link className={LINK} to={`/app/sign-in${params.size ? `?${params.toString()}` : ''}`}>
+        <Link className={LINK} to={`/login${params.size ? `?${params.toString()}` : ''}`}>
           {t('signIn.title')}
         </Link>
       </AuthCard>
@@ -163,7 +165,7 @@ export function SignUpPage() {
       footer={
         <>
           {t('auth.haveAccount')}{' '}
-          <Link className={LINK} to="/app/sign-in">
+          <Link className={LINK} to="/login">
             {t('signIn.title')}
           </Link>
         </>
@@ -209,9 +211,10 @@ export function SignUpPage() {
         {mutation.isError && !needsCheckbox(mutation.error) && (
           <Alert tone="error">{messageOf(mutation.error, t('signIn.unavailable'))}</Alert>
         )}
-        <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
+        <SubmitButton door pending={mutation.isPending || human.waitingForCheckbox}>
           {t('auth.signUp')}
         </SubmitButton>
+        {human.notice}
       </form>
     </AuthCard>
   );
@@ -287,9 +290,10 @@ export function ForgotPasswordPage() {
           <SubmitButton pending={mutation.isPending || human.waitingForCheckbox}>
             {t('auth.sendLink')}
           </SubmitButton>
+          {human.notice}
         </form>
       )}
-      <Link className={`${LINK} mt-6 inline-block text-sm`} to="/app/sign-in">
+      <Link className={`${LINK} mt-6 inline-block text-sm`} to="/login">
         &larr; {t('signIn.title')}
       </Link>
     </AuthCard>
@@ -315,7 +319,7 @@ export function ResetPasswordPage() {
       {mutation.isSuccess ? (
         <>
           <Alert tone="success">{t('auth.passwordChanged')}</Alert>
-          <Link className={LINK} to="/app/sign-in">
+          <Link className={LINK} to="/login">
             {t('signIn.title')}
           </Link>
         </>
@@ -358,14 +362,14 @@ export function AcceptInvitePage() {
     },
     onSuccess: async (membership) => {
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
-      void navigate(`/app/t/${membership.tenant_id}`);
+      void navigate(`/app/${membership.tenant_slug}`);
     },
   });
 
   if (me.isPending) return null;
   if (!me.data) {
-    const next = encodeURIComponent(`/app/accept-invite?token=${token}`);
-    return <Navigate to={`/app/sign-in?next=${next}`} replace />;
+    const next = encodeURIComponent(`/accept-invite?token=${token}`);
+    return <Navigate to={`/login?next=${next}`} replace />;
   }
   return (
     <AuthCard title={t('auth.inviteTitle')}>

@@ -1,58 +1,44 @@
 /*
-  The whole palette lives here. Components use these names (bg-gold, text-cream, from-coral)
-  or the semantic ones below; a raw hex value anywhere else is a review comment.
+  The whole palette lives here. Components use these names (bg-canvas, text-ink, text-ember); a raw
+  hex value anywhere else is a review comment.
 
-  The 30 named colours are tuned to sit on warm ink: slightly desaturated, never neon, so the
-  gold accents and the WebGL light read as the brightest things on the page.
+  White paper, the logo's navy as ink, and one accent. The logo's own orange is only about 2.3:1 on
+  white, so `ember` is a deeper tone of it that passes AA as text. Status colours are tuned the same
+  way: every one below is at least 4.5:1 on canvas and surface.
 */
 @theme {
-  --color-red: #d9534f;
-  --color-blue: #4b6bd6;
-  --color-green: #3e9b6b;
-  --color-yellow: #e8c547;
-  --color-orange: #e8793a;
-  --color-purple: #8a5cc2;
-  --color-black: #0a0908;
-  --color-white: #fffdf8;
-  --color-grey: #8a857d;
-  --color-pink: #e0749a;
-  --color-brown: #7a5238;
-  --color-navy: #141c33;
-  --color-sky: #8cc4ec;
-  --color-maroon: #6b1f2a;
-  --color-violet: #7462c9;
-  --color-turquoise: #4fd1c1;
-  --color-cyan: #2fa8c8;
-  --color-magenta: #c94b98;
-  --color-cream: #f1e9da;
-  --color-beige: #ddd0b8;
-  --color-silver: #b9b5ad;
-  --color-gold: #d8b26a;
+  --color-white: #ffffff;
+  --color-navy: #0b1a3c;
+  --color-ink-deep: #060f26;
+  --color-azure: #1d4ed8;
+  --color-azure-deep: #1a3fae;
+  --color-ember: #b84a08;
+  --color-orange: #f7931e;
+  /* Headline size only: large text needs 3:1, and this stays close to the "ERP" in the logo. */
+  --color-flame: #e8660a;
+  --color-red: #c8281e;
+  --color-green: #0b7a4b;
+  --color-yellow: #96590a;
+  /* The mascot's skin, in a lit and a shaded tone. */
+  --color-skin: #e9b98f;
+  --color-skin-shade: #d29c71;
   /* Third-party brand marks on the sign-in buttons; their colours are set by each brand. */
   --color-brand-google-blue: #4285f4;
   --color-brand-google-green: #34a853;
   --color-brand-google-yellow: #fbbc05;
   --color-brand-google-red: #ea4335;
   --color-brand-facebook: #1877f2;
-  --color-olive: #7d7f3c;
-  --color-teal: #1f8f84;
-  --color-indigo: #3d3f9e;
-  --color-lavender: #b9aee8;
-  --color-peach: #f2b48c;
-  --color-coral: #ee7b66;
-  --color-mint: #9fdcc3;
-  --color-charcoal: #161412;
 
-  --color-canvas: var(--color-black);
-  --color-surface: var(--color-charcoal);
-  --color-raised: #1f1c19;
-  --color-ink: var(--color-cream);
-  --color-muted: #9b958b;
-  --color-accent: var(--color-gold);
-  --color-line: rgb(241 233 218 / 0.1);
-  --color-line-strong: rgb(241 233 218 / 0.22);
+  --color-canvas: var(--color-white);
+  --color-surface: #f7f8fa;
+  --color-raised: #eef0f4;
+  --color-ink: var(--color-navy);
+  --color-muted: #566076;
+  --color-accent: var(--color-ember);
+  --color-line: rgb(11 26 60 / 0.09);
+  --color-line-strong: rgb(11 26 60 / 0.2);
 
-  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-display: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --font-arabic: 'Noto Kufi Arabic Variable', 'Geist Variable', sans-serif;
@@ -64,42 +50,8 @@
 }
 
 :root {
-  --gradient-molten: linear-gradient(
-    100deg,
-    var(--color-gold) 0%,
-    var(--color-peach) 45%,
-    var(--color-coral) 100%
-  );
-  --gradient-aurora: linear-gradient(
-    120deg,
-    var(--color-navy) 0%,
-    var(--color-indigo) 35%,
-    var(--color-violet) 65%,
-    var(--color-magenta) 100%
-  );
-  --gradient-lagoon: linear-gradient(
-    120deg,
-    var(--color-teal) 0%,
-    var(--color-cyan) 50%,
-    var(--color-sky) 100%
-  );
-  --gradient-orchard: linear-gradient(
-    120deg,
-    var(--color-olive) 0%,
-    var(--color-green) 50%,
-    var(--color-mint) 100%
-  );
-  --gradient-dusk: linear-gradient(
-    120deg,
-    var(--color-maroon) 0%,
-    var(--color-purple) 55%,
-    var(--color-lavender) 100%
-  );
-  --gradient-sunrise: linear-gradient(120deg, var(--color-orange) 0%, var(--color-yellow) 100%);
-  --gradient-blossom: linear-gradient(120deg, var(--color-pink) 0%, var(--color-peach) 100%);
-  --gradient-earth: linear-gradient(120deg, var(--color-brown) 0%, var(--color-beige) 100%);
-
   --gutter: clamp(1rem, 4vw, 3rem);
-  --header-height: 5.5rem;
-  --radius-card: 1.5rem;
+  --header-height: 4.5rem;
+  --radius-card: 1rem;
+  --shadow-float: 0 1px 2px rgb(11 26 60 / 0.04), 0 32px 64px -24px rgb(11 26 60 / 0.16);
 }

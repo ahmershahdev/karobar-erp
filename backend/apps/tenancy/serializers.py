@@ -18,12 +18,13 @@ class TenantRoleField(serializers.PrimaryKeyRelatedField[Role]):
 class MembershipSerializer(serializers.ModelSerializer[Membership]):
     tenant_id = serializers.UUIDField(source="tenant.public_id", read_only=True)
     tenant_name = serializers.CharField(source="tenant.name", read_only=True)
+    tenant_slug = serializers.SlugField(source="tenant.slug", read_only=True)
     role = serializers.CharField(source="role.name", read_only=True, default=None, allow_null=True)
     permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = Membership
-        fields = ("tenant_id", "tenant_name", "role", "is_owner", "permissions")
+        fields = ("tenant_id", "tenant_name", "tenant_slug", "role", "is_owner", "permissions")
         read_only_fields = fields
 
     def get_permissions(self, membership: Membership) -> dict[str, list[str]]:

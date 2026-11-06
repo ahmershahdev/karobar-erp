@@ -109,7 +109,7 @@ def test_fifo_many_small_receipts_keep_their_rounding(fifo_shop: Shop) -> None:
 def test_alerts_skip_deactivated_owners_and_link_to_the_business(shop: Shop) -> None:
     post(shop, "receipt", [line(shop, "1", "10")])
     assert send_stock_alerts() == 1
-    assert f"/app/t/{shop.member.tenant.public_id}/inventory/alerts" in str(mail.outbox[-1].body)
+    assert f"/app/{shop.member.tenant.slug}/inventory/alerts" in str(mail.outbox[-1].body)
     shop.member.user.is_active = False
     shop.member.user.save()
     assert send_stock_alerts() == 0

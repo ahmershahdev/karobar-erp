@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { MODULES, can, type Me, type Role } from '../../lib/api/types';
+import { ScreenIcon } from './icons';
 import { usePrivateSeo } from '../../lib/seo';
 import { ensureCsrf, sessionKeys } from '../auth/session';
 import { errorText, useTenantAction, useWorkspace } from './hooks';
@@ -37,14 +38,14 @@ export function NewBusinessPage({ me }: { me: Me }) {
     },
     onSuccess: async (membership) => {
       await client.invalidateQueries({ queryKey: sessionKeys.tenants });
-      void navigate(`/app/t/${membership.tenant_id}`);
+      void navigate(`/app/${membership.tenant_slug}`);
     },
   });
   usePrivateSeo(t('workspace.newBusiness'));
   return (
     <section className="flex min-h-[100svh] items-center justify-center px-4 py-24">
       <form
-        className="gradient-border w-full max-w-lg space-y-5 p-8"
+        className="card w-full max-w-lg space-y-5 p-8"
         onSubmit={(event) => {
           event.preventDefault();
           create.mutate();
@@ -55,6 +56,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         {!me.email_verified && <Alert tone="error">{t('workspace.unverified')}</Alert>}
         <Field
           label={t('workspace.businessName')}
+          hint={t('hints.businessName')}
           required
           maxLength={150}
           value={name}
@@ -62,6 +64,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         />
         <Select
           label={t('workspace.currency')}
+          hint={t('hints.currency')}
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
         >
@@ -71,6 +74,7 @@ export function NewBusinessPage({ me }: { me: Me }) {
         </Select>
         <Select
           label={t('workspace.fiscalStart')}
+          hint={t('hints.fiscalStart')}
           value={startMonth}
           onChange={(e) => setStartMonth(Number(e.target.value))}
         >
@@ -102,16 +106,55 @@ export function NewBusinessPage({ me }: { me: Me }) {
   );
 }
 
+// The everyday jobs, in the words a shopkeeper would use, so nobody has to know that "Stock
+// entries" or "Trial balance" is the screen they want.
+const TASKS = [
+  { key: 'addProduct', icon: 'products', path: 'inventory/products', module: 'inventory' },
+  { key: 'moveStock', icon: 'entries', path: 'inventory/entries', module: 'inventory' },
+  { key: 'seeStock', icon: 'on-hand', path: 'inventory/on-hand', module: 'inventory' },
+  { key: 'warnings', icon: 'alerts', path: 'inventory/alerts', module: 'inventory' },
+  { key: 'money', icon: 'journal', path: 'accounting/journal', module: 'accounting' },
+  { key: 'team', icon: 'members', path: 'members', module: 'members' },
+];
+
 export function OverviewPage() {
   const { t } = useTranslation();
   const { me, membership } = useWorkspace();
   const modules = Object.keys(MODULES).filter((module) => can(membership, module, 'view'));
+  const tasks = TASKS.filter((task) => can(membership, task.module, 'view'));
   return (
     <>
       <PageTitle
+        guide="overview"
         title={membership.tenant_name}
         subtitle={t('workspace.welcome', { name: me.full_name || me.email })}
       />
+      {tasks.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-2xl">{t('workspace.tasks.title')}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {tasks.map((task) => (
+              <Link
+                key={task.key}
+                to={`/app/${membership.tenant_slug}/${task.path}`}
+                className="group flex min-h-24 items-center gap-4 rounded-[var(--radius-card)] border border-line bg-canvas p-4 transition-colors hover:border-ink"
+              >
+                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-raised text-ink">
+                  <ScreenIcon name={task.icon} className="size-7" />
+                </span>
+                <span>
+                  <span className="block text-lg leading-snug font-medium">
+                    {t(`workspace.tasks.${task.key}.title`)}
+                  </span>
+                  <span className="block text-sm text-muted">
+                    {t(`workspace.tasks.${task.key}.body`)}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       <Panel title={t('workspace.yourAccess')}>
         <p className="mb-4 text-sm text-muted">
           {membership.is_owner ? t('workspace.owner') : (membership.role ?? t('workspace.noRole'))}
@@ -123,9 +166,6 @@ export function OverviewPage() {
             </span>
           ))}
         </div>
-      </Panel>
-      <Panel title={t('workspace.comingNext')}>
-        <p className="text-sm text-muted">{t('workspace.comingNextBody')}</p>
       </Panel>
     </>
   );
@@ -183,7 +223,7 @@ export function MembersPage() {
 
   return (
     <>
-      <PageTitle title={t('workspace.members')} />
+      <PageTitle guide="members" title={t('workspace.members')} />
       {mutation.isError && (
         <Alert tone="error">{errorText(mutation.error, t('signIn.unavailable'))}</Alert>
       )}
@@ -220,12 +260,12 @@ export function MembersPage() {
                 <div className="text-xs text-muted">{row.email}</div>
               </div>
               {row.is_owner ? (
-                <span className="text-xs text-gold">{t('workspace.owner')}</span>
+                <span className="text-xs text-ember">{t('workspace.owner')}</span>
               ) : (
                 <div className="flex items-center gap-2">
                   <select
                     aria-label={t('workspace.role')}
-                    className="rounded-lg border border-line bg-black/40 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-line bg-canvas px-2 py-1.5 text-sm"
                     value={row.role ?? ''}
                     disabled={!can(membership, 'members', 'update')}
                     onChange={(e) => {
@@ -340,7 +380,7 @@ export function RolesPage() {
 
   return (
     <>
-      <PageTitle title={t('workspace.roles')} subtitle={t('workspace.rolesBody')} />
+      <PageTitle guide="roles" title={t('workspace.roles')} subtitle={t('workspace.rolesBody')} />
       {error && <Alert tone="error">{errorText(error, t('signIn.unavailable'))}</Alert>}
       <Panel title={t('workspace.roles')}>
         <ul className="divide-y divide-line">
@@ -415,7 +455,7 @@ export function RolesPage() {
                             <input
                               type="checkbox"
                               aria-label={`${module} ${a}`}
-                              className="size-4 accent-[var(--color-gold)]"
+                              className="size-4 accent-[var(--color-ember)]"
                               checked={(grants[module] ?? []).includes(a)}
                               onChange={() => toggle(module, a)}
                             />
@@ -464,7 +504,7 @@ export function AuditPage() {
   });
   return (
     <>
-      <PageTitle title={t('workspace.audit')} subtitle={t('workspace.auditBody')} />
+      <PageTitle guide="audit" title={t('workspace.audit')} subtitle={t('workspace.auditBody')} />
       <Panel title={t('workspace.recent')}>
         <div className="overflow-x-auto" data-lenis-prevent>
           <table className="w-full text-sm">

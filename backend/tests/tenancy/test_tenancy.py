@@ -78,3 +78,23 @@ def test_module_permissions_follow_the_role(in_tenant: Callable[[Tenant], None])
     no_header = APIClient()
     no_header.force_login(viewer.user)
     assert no_header.get("/api/audit/").status_code == 403
+
+
+@pytest.mark.django_db
+def test_tenant_slugs_are_readable_and_unique() -> None:
+    first = Tenant.objects.create(name="Al-Madina Traders & Sons")
+    second = Tenant.objects.create(name="Al-Madina Traders & Sons")
+    urdu = Tenant.objects.create(name="مدینہ ٹریڈرز")
+    assert first.slug == "al-madina-traders-sons"
+    assert second.slug == f"al-madina-traders-sons-{second.public_id.hex[:6]}"
+    assert urdu.slug.startswith("business")
+    first.name = "Renamed"
+    first.save()
+    first.refresh_from_db()
+    assert first.slug == "al-madina-traders-sons"
+
+
+@pytest.mark.django_db
+def test_a_business_cannot_take_a_reserved_address() -> None:
+    tenant = Tenant.objects.create(name="Sign In")
+    assert tenant.slug == f"sign-in-{tenant.public_id.hex[:6]}"

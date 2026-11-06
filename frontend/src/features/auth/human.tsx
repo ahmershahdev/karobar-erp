@@ -6,7 +6,7 @@ import { Alert } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { loadRecaptcha } from '../../lib/recaptcha';
-import { Checkbox, Honeypot } from './HumanFields';
+import { Checkbox, Honeypot, RecaptchaNotice } from './HumanFields';
 
 export function useAuthConfig() {
   return useQuery({
@@ -90,6 +90,7 @@ export function useHumanCheck(action: string) {
     ) : checkbox ? (
       <Checkbox key={widget} siteKey={v2} v3Key={v3} onToken={setV2Token} onFailed={onFailed} />
     ) : null,
+    notice: v3 || v2 ? <RecaptchaNotice /> : null,
     waitingForCheckbox: checkbox && !noBox && !v2Token,
   };
 }

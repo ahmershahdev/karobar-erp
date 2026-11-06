@@ -988,6 +988,7 @@ export interface components {
             /** Format: uuid */
             readonly tenant_id: string;
             readonly tenant_name: string;
+            readonly tenant_slug: string;
             readonly role: string | null;
             readonly is_owner: boolean;
             readonly permissions: {

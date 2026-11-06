@@ -8,13 +8,18 @@ each with its own warehouses, customers, books and staff. Every sale, purchase a
 its own double-entry journal entry, so the trial balance, profit and loss and balance sheet are
 always up to date. The app speaks English, Urdu and Arabic, right to left where needed.
 
-> Status: M1, platform skeleton. Sign-in, tenancy, the audit log and the public site work; the
-> business modules are next. See [docs/roadmap.md](docs/roadmap.md) for the milestones and
-> [docs/status.md](docs/status.md) for where the work is.
+It is built for people who are not accountants, and who may not read comfortably: plain words, a
+picture beside every screen, big buttons, and step-by-step help on each page.
+
+> Status: pre-release, `v0.3.0`. Sign-in, businesses and roles, double-entry accounting and inventory
+> work today; purchasing and sales are next. See [docs/roadmap.md](docs/roadmap.md) for the milestones
+> and [docs/status.md](docs/status.md) for where the work is.
 >
 > Website: [karobarerp.ahmershah.dev](https://karobarerp.ahmershah.dev)
 
-## What it will do
+## What it does
+
+Inventory and accounting are live; the rest is on the [roadmap](docs/roadmap.md).
 
 - **Inventory.** Products with variants and units, several warehouses, stock moves, batches with
   expiry dates, barcodes, low-stock alerts, and stock valued by FIFO or moving average.
@@ -34,7 +39,7 @@ always up to date. The app speaks English, Urdu and Arabic, right to left where 
 |---|---|
 | API and jobs | Python 3.12, Django 5.2, Django REST Framework, drf-spectacular, Celery |
 | Data | MySQL 8.4 (InnoDB, row locks for stock), Redis (queue and cache) |
-| Web | React, TypeScript (strict), Vite, Tailwind CSS, TanStack Query and Table, Recharts, i18next |
+| Web | React, TypeScript (strict), Vite, Tailwind CSS, TanStack Query and Table, Recharts, i18next, anime.js |
 | Documents | WeasyPrint for PDF invoices, payslips and reports |
 | Quality | pytest, factory_boy, Vitest, Ruff, mypy, ESLint, Prettier, GitHub Actions, CodeQL |
 | Run | Docker Compose |
@@ -44,6 +49,18 @@ always up to date. The app speaks English, Urdu and Arabic, right to left where 
 The hard parts of an ERP are not the forms: they are books that always balance, stock that stays
 right when two cashiers sell the last item at the same moment, and one business never seeing
 another's data. Karobar ERP is built around those three rules, with tests for each.
+
+## Security and speed
+
+- Passwords hashed with Argon2id, with bcrypt as a fallback.
+- Session cookies with CSRF protection, a nonce-based Content Security Policy, and rate limits on
+  every endpoint.
+- Public forms guarded by reCAPTCHA v3, a v2 checkbox when v3 is unsure, and a honeypot field.
+- Redis for cache, sessions and throttles; Brotli and gzip compressed at build time; WebP images.
+- A service worker keeps the app's code, never business data, so losing the connection shows a
+  helpful screen and recovers by itself.
+
+Details are in [docs/security.md](docs/security.md).
 
 ## Run it locally
 

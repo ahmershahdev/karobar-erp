@@ -27,8 +27,6 @@ export default defineConfig(({ command, mode }) => {
     build: {
       target: 'es2022',
       sourcemap: false,
-      // three.js is one lazy chunk loaded after first paint; splitting it further buys nothing.
-      chunkSizeWarningLimit: 600,
     },
     test: {
       environment: 'jsdom',

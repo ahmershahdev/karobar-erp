@@ -1,10 +1,10 @@
 import { useId, useState, type ComponentProps, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { passwordScore } from '../lib/password';
+import { passwordChecks, passwordScore } from '../lib/password';
 
 const INPUT =
-  'w-full rounded-xl border border-line bg-black/50 px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/50 focus:border-gold focus:shadow-[0_0_0_4px_rgb(216_178_106/0.12)] disabled:opacity-60';
+  'w-full rounded-xl border border-line bg-canvas px-4 py-3.5 text-base outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 focus:border-ink focus:shadow-[0_0_0_4px_var(--color-raised)] disabled:opacity-60';
 
 export function Field({
   label,
@@ -15,12 +15,25 @@ export function Field({
     <label className="block space-y-2">
       <span className="label">{label}</span>
       <input {...props} className={INPUT} />
-      {hint}
+      {hint && <Hint>{hint}</Hint>}
     </label>
   );
 }
 
-const STRENGTH_COLORS = ['bg-coral', 'bg-coral', 'bg-yellow', 'bg-mint', 'bg-mint'];
+// Red to amber to green, so the four steps read as a scale and not four shades of the accent.
+const STRENGTH_COLORS = ['bg-red', 'bg-red', 'bg-yellow', 'bg-green', 'bg-green'];
+const STRENGTH_TEXT = ['text-red', 'text-red', 'text-yellow', 'text-green', 'text-green'];
+
+// A torch instead of the usual eye: switching it on shines light on the hidden password.
+function Torch({ on }: { on: boolean }) {
+  return (
+    <svg viewBox="0 0 40 24" className="torch" data-on={on} aria-hidden="true">
+      <path className="torch-beam" d="M15 8 0 1v22l15-7z" />
+      <path className="torch-body" d="M15 6h3l3 3h15a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H21l-3 3h-3z" />
+      <rect className="torch-switch" x="25" y="10.5" width="6" height="3" rx="1.5" />
+    </svg>
+  );
+}
 
 export function PasswordField({
   label,
@@ -50,24 +63,16 @@ export function PasswordField({
           onKeyDown={checkCaps}
           className={`${INPUT} pe-12`}
         />
+        <span aria-hidden="true" className="torch-glow" data-on={visible} />
         <button
           type="button"
           aria-label={visible ? t('auth.hide') : t('auth.show')}
           aria-pressed={visible}
           aria-controls={id}
           onClick={() => setVisible(!visible)}
-          className="absolute inset-y-0 end-0 flex w-12 items-center justify-center text-muted transition-colors hover:text-gold"
+          className="absolute inset-y-0 end-0 flex w-14 items-center justify-center text-muted transition-colors hover:text-ink"
         >
-          <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
-            <path
-              d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            {visible && <path d="M4 20 20 4" stroke="currentColor" strokeWidth="1.5" />}
-          </svg>
+          <Torch on={visible} />
         </button>
       </div>
       {caps && (
@@ -75,38 +80,78 @@ export function PasswordField({
           <span aria-hidden="true">&#8679;</span> {t('auth.caps')}
         </p>
       )}
-      {showStrength && value && (
-        <div className="space-y-1.5" aria-live="polite">
-          <div className="flex gap-1" aria-hidden="true">
-            {[1, 2, 3, 4].map((step) => (
-              <span
-                key={step}
-                className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                  score >= step ? STRENGTH_COLORS[score] : 'bg-line-strong'
-                }`}
-              />
-            ))}
-          </div>
-          <p className="text-xs text-muted">{t(`auth.strength.${score}`)}</p>
-        </div>
-      )}
+      {showStrength && value && <StrengthMeter value={value} score={score} />}
+    </div>
+  );
+}
+
+// The meter fills as you type, even before the 12-character minimum, so it never sits blank
+// and looks broken. Under it, three plain checks tick green as they are met.
+function StrengthMeter({ value, score }: { value: string; score: number }) {
+  const { t } = useTranslation();
+  const checks = passwordChecks(value);
+  const fill = score === 0 ? Math.min(checks.length / 12, 1) * 25 : score * 25;
+  const items = [
+    { ok: checks.longEnough, label: t('auth.passwordChecks.length', { count: checks.length }) },
+    { ok: checks.varied, label: t('auth.passwordChecks.variety') },
+    { ok: checks.noRepeats, label: t('auth.passwordChecks.repeats') },
+  ];
+  return (
+    <div className="space-y-3 rounded-xl border border-line bg-canvas p-3.5" aria-live="polite">
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className={`font-semibold ${STRENGTH_TEXT[score]}`}>
+          {t(`auth.strength.${score}`)}
+        </span>
+        <span className="text-muted">{t(`auth.strengthTips.${score}`)}</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-line-strong" aria-hidden="true">
+        <div
+          className={`h-full rounded-full transition-[width,background-color] duration-500 ease-[var(--ease-out-expo)] ${STRENGTH_COLORS[score]}`}
+          style={{ width: `${fill}%` }}
+        />
+      </div>
+      <ul className="space-y-1.5 text-xs">
+        {items.map((item) => (
+          <li
+            key={item.label}
+            className={`flex items-center gap-2 transition-colors ${item.ok ? 'text-green' : 'text-muted'}`}
+          >
+            <span
+              aria-hidden="true"
+              className={`grid size-4 shrink-0 place-items-center rounded-full border text-[0.6rem] ${
+                item.ok ? 'border-green bg-green/15' : 'border-line-strong'
+              }`}
+            >
+              {item.ok ? '\u2713' : ''}
+            </span>
+            {item.label}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 export function Select({
   label,
+  hint,
   children,
   ...props
-}: { label: string; children: ReactNode } & ComponentProps<'select'>) {
+}: { label: string; hint?: ReactNode; children: ReactNode } & ComponentProps<'select'>) {
   return (
     <label className="block space-y-2">
       <span className="label">{label}</span>
       <select {...props} className={INPUT}>
         {children}
       </select>
+      {hint && <Hint>{hint}</Hint>}
     </label>
   );
+}
+
+/** One plain sentence under a field saying what to put in it, for people new to business software. */
+export function Hint({ children }: { children: ReactNode }) {
+  return <span className="block text-xs leading-relaxed text-muted">{children}</span>;
 }
 
 export function Button({
@@ -115,35 +160,58 @@ export function Button({
   ...props
 }: { variant?: 'primary' | 'ghost' | 'danger' } & ComponentProps<'button'>) {
   const styles = {
-    primary: 'text-black [background:var(--gradient-molten)] hover:brightness-110',
-    ghost: 'border border-line-strong text-ink hover:border-gold hover:text-gold',
-    danger: 'border border-coral/40 text-coral hover:bg-coral/10',
+    primary: 'bg-ink text-canvas hover:bg-azure',
+    ghost: 'border border-line-strong text-ink hover:border-ink',
+    danger: 'border border-red/40 text-red hover:bg-red/10',
   }[variant];
   return (
     <button
       type="button"
       {...props}
-      className={`rounded-full px-5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${styles} ${className}`}
+      className={`min-h-11 rounded-full px-5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${styles} ${className}`}
     />
   );
 }
 
-/** The main action of a form: full width, an arrow that slides, a spinner while it works. */
-export function SubmitButton({ pending, children }: { pending: boolean; children: ReactNode }) {
+// A small door that swings open on hover and stays open, glowing, while the request runs.
+function Door({ open }: { open: boolean }) {
+  return (
+    <span aria-hidden="true" className="door relative" data-open={open}>
+      <span className="door-light" />
+      <span className="door-panel">
+        <span className="door-knob" />
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The main action of a form: full width, with an arrow that slides and a spinner while it works.
+ * `door` swaps those for the door, for the buttons that take you in.
+ */
+export function SubmitButton({
+  pending,
+  door = false,
+  children,
+}: {
+  pending: boolean;
+  door?: boolean;
+  children: ReactNode;
+}) {
   return (
     <button
       type="submit"
       disabled={pending}
-      data-cursor-stick
-      className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full py-4 font-medium text-black transition disabled:opacity-70"
-      style={{ background: 'var(--gradient-molten)' }}
+      className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-ink py-4 font-medium text-canvas transition disabled:opacity-70"
     >
-      <span className="absolute inset-0 origin-left scale-x-0 bg-cream/40 transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
+      <span className="absolute inset-0 origin-left scale-x-0 bg-azure transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-100 rtl:origin-right" />
       <span className="relative">{children}</span>
-      {pending ? (
+      {door ? (
+        <Door open={pending} />
+      ) : pending ? (
         <span
           aria-hidden="true"
-          className="relative size-4 animate-spin rounded-full border-2 border-black/30 border-t-black"
+          className="relative size-4 animate-spin rounded-full border-2 border-canvas/30 border-t-canvas"
         />
       ) : (
         <span
@@ -160,8 +228,8 @@ export function SubmitButton({ pending, children }: { pending: boolean; children
 export function Alert({ tone, children }: { tone: 'error' | 'success'; children: ReactNode }) {
   const styles =
     tone === 'error'
-      ? 'border-coral/40 bg-coral/10 text-coral'
-      : 'border-mint/40 bg-mint/10 text-mint';
+      ? 'border-red/40 bg-red/10 text-red'
+      : 'border-green/40 bg-green/10 text-green';
   return (
     <p
       role={tone === 'error' ? 'alert' : 'status'}

@@ -10,3 +10,5 @@ export const env = {
   // Empty means same origin, which is how production runs: nginx serves the app and proxies /api.
   apiBaseUrl: (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '',
 } as const;
+
+export const isProduction = import.meta.env.PROD;

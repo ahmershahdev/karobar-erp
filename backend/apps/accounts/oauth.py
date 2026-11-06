@@ -114,7 +114,12 @@ def get_provider(name: str) -> Provider:
 
 def safe_next(value: str | None) -> str:
     """Only paths inside the app; anything else could send people to another site."""
-    if value and value.startswith("/app") and "//" not in value and "\\" not in value:
+    if (
+        value
+        and value.startswith(("/app", "/accept-invite"))
+        and "//" not in value
+        and "\\" not in value
+    ):
         return value[:300]
     return "/app"
 

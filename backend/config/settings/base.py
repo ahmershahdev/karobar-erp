@@ -100,7 +100,8 @@ CACHES = {
 
 AUTH_USER_MODEL = "accounts.User"
 PASSWORD_HASHERS = [
-    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "apps.accounts.hashers.Argon2WithBcryptFallback",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
 ]
 AUTH_PASSWORD_VALIDATORS = [

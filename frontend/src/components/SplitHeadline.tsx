@@ -10,7 +10,7 @@ interface Props {
   delay?: number;
 }
 
-function words(text: string, italic: boolean) {
+function words(text: string, accented: boolean) {
   return text.split(' ').map((word, index) => (
     <span
       key={`${word}-${index}`}
@@ -19,7 +19,7 @@ function words(text: string, italic: boolean) {
     >
       <span
         data-word
-        className={`inline-block will-change-transform ${italic ? 'text-gradient pe-[0.06em] italic' : ''}`}
+        className={`inline-block will-change-transform ${accented ? 'text-flame' : ''}`}
       >
         {word}
       </span>
@@ -37,8 +37,7 @@ export function SplitHeadline({ text, accent, className, delay = 200 }: Props) {
     if (!targets?.length || prefersReducedMotion()) return;
     const animation = animate(targets, {
       translateY: ['105%', '0%'],
-      rotate: ['4deg', '0deg'],
-      duration: 1500,
+      duration: 1100,
       delay: stagger(60, { start: delay }),
       ease: 'outExpo',
     });

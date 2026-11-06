@@ -2201,6 +2201,10 @@ components:
         tenant_name:
           type: string
           readOnly: true
+        tenant_slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
         role:
           type: string
           readOnly: true
@@ -2221,6 +2225,7 @@ components:
       - role
       - tenant_id
       - tenant_name
+      - tenant_slug
     Pack:
       type: object
       properties:

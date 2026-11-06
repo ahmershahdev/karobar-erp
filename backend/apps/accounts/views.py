@@ -201,7 +201,7 @@ class AuthConfigView(APIView):
 
 
 def _back_to_sign_in(code: str) -> HttpResponseRedirect:
-    return HttpResponseRedirect(f"{settings.SITE_URL.rstrip('/')}/app/sign-in?error={code}")
+    return HttpResponseRedirect(f"{settings.SITE_URL.rstrip('/')}/login?error={code}")
 
 
 class OAuthStartView(APIView):

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -13,7 +13,7 @@ const SHIPPED = 3;
 const MILESTONES = 7;
 const LATEST = 'v0.3.0';
 
-function useLahoreTime(locale: string | undefined): string {
+function useLocalTime(locale: string | undefined): string {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 15_000);
@@ -27,21 +27,46 @@ function useLahoreTime(locale: string | undefined): string {
 }
 
 function FooterLink({ to, href, children }: { to?: string; href?: string; children: string }) {
-  const className = 'group inline-flex text-ink/75 transition-colors hover:text-ink';
+  const className = 'footer-link group inline-flex text-muted transition-colors hover:text-ink';
   return to ? (
     <Link to={to} className={className}>
-      <RollText>{children}</RollText>
+      <RollText tone="inherit">{children}</RollText>
     </Link>
   ) : (
     <a href={href} rel="noopener" className={className}>
-      <RollText>{children}</RollText>
+      <RollText tone="inherit">{children}</RollText>
     </a>
+  );
+}
+
+// The wordmark set across the full width at the foot of every page, barely there until the
+// pointer lights it in the logo's orange.
+function GiantWordmark() {
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      dir="ltr"
+      className="footer-giant relative overflow-hidden px-[var(--gutter)] pt-6"
+      onPointerMove={(event) => {
+        const element = ref.current;
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        element.style.setProperty('--gx', `${event.clientX - rect.left}px`);
+        element.style.setProperty('--gy', `${event.clientY - rect.top}px`);
+      }}
+    >
+      <p className="text-center font-display text-[16vw] leading-[0.95] font-semibold tracking-[-0.06em] whitespace-nowrap">
+        KarobarERP
+      </p>
+    </div>
   );
 }
 
 export function Footer() {
   const { t, i18n } = useTranslation();
-  const time = useLahoreTime(i18n.resolvedLanguage);
+  const time = useLocalTime(i18n.resolvedLanguage);
 
   const columns = [
     {
@@ -50,7 +75,7 @@ export function Footer() {
         { label: t('nav.home'), to: '/' },
         { label: t('nav.modules'), to: '/modules' },
         { label: t('nav.security'), to: '/security' },
-        { label: t('nav.signIn'), to: '/app' },
+        { label: t('nav.signIn'), to: '/login' },
       ],
     },
     {
@@ -72,57 +97,37 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative mt-24 overflow-hidden border-t border-line bg-black md:mt-40">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(45% 55% at 90% 0%, rgb(216 178 106 / 0.12), transparent 70%), radial-gradient(35% 45% at 0% 100%, rgb(116 98 201 / 0.08), transparent 70%)',
-        }}
-      />
-
-      <Reveal className="shell relative grid items-center gap-12 py-20 md:grid-cols-[1fr_auto] md:py-28">
-        <div className="space-y-6">
-          <span className="label !text-gold">[{t('footer.next')}]</span>
-          <h2 className="display-lg max-w-[13ch]">
-            {t('footer.ctaTitle')} <em className="text-gradient">{t('footer.ctaAccent')}</em>
+    <footer className="relative mt-24 overflow-hidden border-t border-line bg-canvas md:mt-32">
+      <Reveal className="shell flex flex-col items-start justify-between gap-10 py-20 md:flex-row md:items-end md:py-28">
+        <div className="space-y-5">
+          <h2 className="display-lg max-w-[15ch]">
+            {t('footer.ctaTitle')} <span className="text-flame">{t('footer.ctaAccent')}</span>
           </h2>
-          <p className="max-w-md text-muted">{t('footer.ctaBody')}</p>
+          <p className="max-w-md text-lg text-muted">{t('footer.ctaBody')}</p>
         </div>
-        <Magnetic strength={0.4}>
-          <Link
-            to="/app/sign-up"
-            data-cursor={t('cursor.open')}
-            className="group relative flex size-40 items-center justify-center overflow-hidden rounded-full text-center font-medium text-black md:size-48"
-            style={{ background: 'var(--gradient-molten)' }}
-          >
-            <span className="absolute inset-0 origin-bottom scale-y-0 rounded-full bg-cream transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-y-100" />
-            <span className="relative max-w-[8ch] leading-tight">{t('footer.ctaButton')}</span>
+        <Magnetic strength={0.25}>
+          <Link to="/signup" className="btn btn-primary !px-7 !py-4">
+            {t('footer.ctaButton')}
+            <span aria-hidden="true" className="btn-arrow">
+              &rarr;
+            </span>
           </Link>
         </Magnetic>
       </Reveal>
 
-      <div className="shell relative grid gap-12 border-t border-line py-16 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.2fr]">
+      <div className="shell grid gap-12 border-t border-line py-16 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.1fr]">
         <div className="space-y-5">
-          <Link to="/" className="flex items-center gap-2.5">
-            <Logo className="size-8" />
-            <span className="font-display text-3xl">Karobar</span>
+          <Link to="/" className="inline-block">
+            <Logo className="h-9 w-auto" />
           </Link>
           <p className="max-w-xs text-sm text-muted">{t('footer.tagline')}</p>
-          <div className="flex items-center gap-3">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-mint opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-mint" />
-            </span>
-            <span className="label">
-              {t('footer.lahore')} &middot; <span className="tabular-nums">{time}</span>
-            </span>
-          </div>
+          <p className="label">
+            {t('footer.hyderabad')} &middot; <span className="tabular-nums">{time}</span>
+          </p>
         </div>
         {columns.map((column) => (
           <div key={column.title} className="space-y-4">
-            <p className="label">{column.title}</p>
+            <p className="label !text-ink">{column.title}</p>
             <ul className="space-y-2.5 text-sm">
               {column.links.map((link) => (
                 <li key={link.label}>
@@ -135,49 +140,28 @@ export function Footer() {
           </div>
         ))}
         <div className="space-y-4">
-          <p className="label">{t('footer.status')}</p>
-          <div className="space-y-3 rounded-2xl border border-line bg-white/[0.02] p-5">
-            <p className="text-sm">{t('footer.shipped', { count: SHIPPED })}</p>
-            <div className="flex gap-1" aria-hidden="true">
-              {Array.from({ length: MILESTONES }, (_, index) => (
-                <span
-                  key={index}
-                  className={`h-1 flex-1 rounded-full ${index < SHIPPED ? 'bg-gold' : 'bg-line-strong'}`}
-                />
-              ))}
-            </div>
-            <p className="label">
-              {t('footer.latest')} &middot;{' '}
-              <a
-                href={`${SITE.repo}/releases`}
-                rel="noopener"
-                className="!text-gold hover:underline"
-              >
-                {LATEST}
-              </a>
-            </p>
-          </div>
-          <a
-            href={SITE.repo}
-            rel="noopener"
-            data-cursor-stick
-            className="inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm transition-colors hover:border-gold hover:text-gold"
-          >
-            <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true">
-              <path
-                d="M8 1.5 9.9 5.4l4.3.6-3.1 3 .7 4.3L8 11.3l-3.8 2 .7-4.3-3.1-3 4.3-.6Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinejoin="round"
+          <p className="label !text-ink">{t('footer.status')}</p>
+          <p className="text-sm text-muted">{t('footer.shipped', { count: SHIPPED })}</p>
+          <div className="flex gap-1" aria-hidden="true">
+            {Array.from({ length: MILESTONES }, (_, index) => (
+              <span
+                key={index}
+                className={`h-0.5 flex-1 rounded-full ${index < SHIPPED ? 'bg-ember' : 'bg-line-strong'}`}
               />
-            </svg>
-            {t('footer.github')}
-          </a>
+            ))}
+          </div>
+          <p className="label">
+            {t('footer.latest')} &middot;{' '}
+            <a href={`${SITE.repo}/releases`} rel="noopener" className="text-ink hover:underline">
+              {LATEST}
+            </a>
+          </p>
         </div>
       </div>
 
-      <div className="shell relative flex flex-wrap items-center justify-between gap-6 border-t border-line py-6">
+      <GiantWordmark />
+
+      <div className="shell flex flex-wrap items-center justify-between gap-6 border-t border-line py-6">
         <span className="label">
           &copy; {new Date().getFullYear()} {SITE.author} &middot; {t('footer.rights')}
         </span>
