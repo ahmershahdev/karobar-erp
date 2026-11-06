@@ -11,8 +11,8 @@ from typing import Any
 
 from django.db.models import Q, Sum
 
-from apps.accounting.models import Account, JournalEntry, JournalLine
-from apps.accounting.reports import trial_balance
+from apps.accounting.models import Account, JournalLine
+from apps.accounting.reports import posted, trial_balance
 from apps.core.financials import (
     AccountBalance,
     BalanceSheet,
@@ -25,6 +25,7 @@ from apps.core.money import quantize_money
 from apps.inventory.models import StockLevel
 from apps.purchasing.models import Bill
 from apps.sales.models import CreditNote, CreditNoteLine, Invoice, InvoiceLine
+from apps.tenancy.context import get_current_tenant
 
 ZERO = Decimal("0.00")
 POSTED = "posted"
@@ -53,7 +54,7 @@ def position(on: date) -> BalanceSheet:
 
 def _role_net(role: str, start: date | None, end: date) -> Decimal:
     """Debits minus credits on the accounts playing `role`, in the window."""
-    window = Q(entry__status=JournalEntry.Status.POSTED, entry__date__lte=end, account__role=role)
+    window = posted() & Q(entry__date__lte=end, account__role=role)
     if start is not None:
         window &= Q(entry__date__gte=start)
     totals = JournalLine.objects.filter(window).aggregate(
@@ -78,10 +79,10 @@ def cash_flow(start: date, end: date) -> CashFlow:
     from cash to bank is in and out of the same total, so it nets to nothing under `other`.
     """
     cash = Q(account__role__in=CASH_ROLES) | Q(account__parent__role__in=CASH_ROLES)
-    posted = Q(entry__status=JournalEntry.Status.POSTED)
+    done = posted()
 
     def net(window: Q) -> Decimal:
-        totals = JournalLine.objects.filter(cash & posted & window).aggregate(
+        totals = JournalLine.objects.filter(cash & done & window).aggregate(
             debits=Sum("debit"), credits=Sum("credit")
         )
         return quantize_money((totals["debits"] or ZERO) - (totals["credits"] or ZERO))
@@ -134,6 +135,7 @@ def _net_by_day(first: date, last: date) -> dict[date, Decimal]:
 
 
 def dashboard(on: date) -> dict[str, Any]:
+    tenant = get_current_tenant()
     month = on.replace(day=1)
     window = {"status": POSTED, "date__gte": month, "date__lte": on}
     sold = Invoice.objects.filter(**window)
@@ -141,7 +143,7 @@ def dashboard(on: date) -> dict[str, Any]:
     sales = _total(sold, "net") - _total(returned, "net")
     returned_cost = _total(
         CreditNoteLine.objects.filter(
-            note__status=POSTED, note__date__gte=month, note__date__lte=on
+            note__tenant=tenant, note__status=POSTED, note__date__gte=month, note__date__lte=on
         ),
         "cost",
     )
@@ -152,14 +154,17 @@ def dashboard(on: date) -> dict[str, Any]:
     by_day = _net_by_day(first_day, on)
     sold_lines = (
         InvoiceLine.objects.filter(
-            invoice__status=POSTED, invoice__date__gte=month, invoice__date__lte=on
+            invoice__tenant=tenant,
+            invoice__status=POSTED,
+            invoice__date__gte=month,
+            invoice__date__lte=on,
         )
         .values_list("product__name")
         .annotate(amount=Sum("amount"))
     )
     returned_lines = (
         CreditNoteLine.objects.filter(
-            note__status=POSTED, note__date__gte=month, note__date__lte=on
+            note__tenant=tenant, note__status=POSTED, note__date__gte=month, note__date__lte=on
         )
         .values_list("invoice_line__product__name")
         .annotate(amount=Sum("amount"))

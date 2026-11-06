@@ -59,7 +59,7 @@ in CI, and seed data.
 - [x] Sales tax (GST/VAT) report for a period
 - [x] Profit and loss, balance sheet and cash flow for any period
 - [x] Dashboard: sales, margins, stock value and top products (Recharts)
-- [ ] Indexes and query checks for reports on 1 million document lines
+- [x] Indexes and query checks for reports on 1 million document lines
 
 ## M6. HR and payroll (target 2027-04-11)
 
