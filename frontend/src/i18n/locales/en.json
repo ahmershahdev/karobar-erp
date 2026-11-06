@@ -434,7 +434,8 @@
       "accounting": "Accounting",
       "inventory": "Inventory",
       "purchasing": "Purchasing",
-      "sales": "Sales"
+      "sales": "Sales",
+      "reports": "Reports"
     },
     "tasks": {
       "title": "What do you want to do?",
@@ -477,6 +478,10 @@
       "whoOwes": {
         "title": "Who owes me?",
         "body": "See who has not paid, and for how long"
+      },
+      "howBusiness": {
+        "title": "How is my business?",
+        "body": "Sales, profit and stock at a glance"
       }
     }
   },
@@ -980,5 +985,52 @@
       "payment": "Payment"
     },
     "loading": "Loading..."
+  },
+  "rep": {
+    "dashboard": "How is my business?",
+    "dashboardBody": "Your sales, profit and stock at a glance.",
+    "salesToday": "Sales today",
+    "salesMonth": "Sales this month",
+    "profitMonth": "Profit on goods this month",
+    "margin": "{{percent}}% of sales",
+    "stockValue": "Stock is worth",
+    "owedToMe": "Customers owe me",
+    "iOwe": "I owe suppliers",
+    "last30": "Sales in the last 30 days",
+    "asTable": "Show as a table",
+    "topProducts": "Best sellers this month",
+    "noSalesYet": "No sales yet this month.",
+    "profitLoss": "Profit and loss",
+    "profitLossBody": "Did you make money in this period? Sales, less what the goods cost, less your running costs.",
+    "income": "Sales and income",
+    "costOfSales": "What the goods cost",
+    "grossProfit": "Profit on goods",
+    "expenses": "Running costs",
+    "netProfit": "Your profit",
+    "totalOf": "Total {{name}}",
+    "balanceSheet": "Balance sheet",
+    "balanceSheetBody": "What the business owns and what it owes, on one day.",
+    "assets": "What you own",
+    "liabilities": "What you owe",
+    "equity": "Money put in",
+    "profitToDate": "Profit so far",
+    "totalAssets": "Total you own",
+    "totalOwedAndOwned": "Total you owe, put in and earned",
+    "notBalanced": "These two totals should match. Please contact support.",
+    "cashFlow": "Cash flow",
+    "cashFlowBody": "Where the money in cash and bank came from and where it went.",
+    "cashAtStart": "Money at the start",
+    "fromCustomers": "From customers",
+    "toSuppliers": "To suppliers",
+    "otherMoney": "Everything else",
+    "cashAtEnd": "Money at the end",
+    "salesTax": "Sales tax",
+    "salesTaxBody": "Tax you collected on sales, less tax you paid on purchases.",
+    "taxableSales": "Sales before tax",
+    "outputTax": "Tax collected",
+    "taxablePurchases": "Purchases before tax",
+    "inputTax": "Tax paid",
+    "taxToPay": "Tax to pay",
+    "taxToClaim": "Tax to claim back"
   }
 }

@@ -82,11 +82,14 @@ function llmsFull(siteUrl: string): string {
 }
 
 // Stored for offline use: the code and images every page needs, and the Latin fonts. Urdu and
-// Arabic fonts are large, so they are stored by the service worker once someone uses them.
+// Arabic fonts and the dashboard's chart library are large, so the service worker stores those
+// only once someone uses them.
 const PRECACHED = /\.(js|css|webp)$|geist(-mono)?-latin-wght.*\.woff2$/;
 
 async function writeServiceWorker(outDir: string): Promise<void> {
-  const files = (await readdir(join(outDir, 'assets'))).filter((name) => PRECACHED.test(name));
+  const files = (await readdir(join(outDir, 'assets'))).filter(
+    (name) => PRECACHED.test(name) && !name.startsWith('Dashboard-'),
+  );
   const version = createHash('sha256').update(files.sort().join()).digest('hex').slice(0, 12);
   const template = await readFile(join(process.cwd(), 'build', 'sw-template.js'), 'utf8');
   await writeFile(

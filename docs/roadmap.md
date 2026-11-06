@@ -56,9 +56,9 @@ in CI, and seed data.
 
 - [ ] POS screen: barcode scan, cart, cash and card payments, receipt print, end-of-day close
 - [ ] Tax rates as data per tenant with validity dates; tax on every document line
-- [ ] Sales tax (GST/VAT) report for a period
-- [ ] Profit and loss, balance sheet and cash flow for any period
-- [ ] Dashboard: sales, margins, stock value and top products (Recharts)
+- [x] Sales tax (GST/VAT) report for a period
+- [x] Profit and loss, balance sheet and cash flow for any period
+- [x] Dashboard: sales, margins, stock value and top products (Recharts)
 - [ ] Indexes and query checks for reports on 1 million document lines
 
 ## M6. HR and payroll (target 2027-04-11)

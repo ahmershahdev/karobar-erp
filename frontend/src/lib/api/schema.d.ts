@@ -1069,6 +1069,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/balance-sheet/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_balance_sheet_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/cash-flow/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_cash_flow_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/dashboard/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_dashboard_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/profit-loss/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_profit_loss_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/sales-tax/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_sales_tax_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles/": {
         parameters: {
             query?: never;
@@ -1545,6 +1625,16 @@ export interface components {
             recaptcha_v2_site_key: string;
             oauth_providers: string[];
         };
+        BalanceSheet: {
+            assets: components["schemas"]["ReportSection"];
+            liabilities: components["schemas"]["ReportSection"];
+            equity: components["schemas"]["ReportSection"];
+            /** Format: decimal */
+            profit_to_date: string;
+            /** Format: decimal */
+            total_liabilities_and_equity: string;
+            balanced: boolean;
+        };
         Batch: {
             readonly id: number;
             readonly product: number;
@@ -1593,6 +1683,18 @@ export interface components {
             readonly amount: string;
             /** Format: decimal */
             tax_amount?: string;
+        };
+        CashFlow: {
+            /** Format: decimal */
+            opening: string;
+            /** Format: decimal */
+            from_customers: string;
+            /** Format: decimal */
+            to_suppliers: string;
+            /** Format: decimal */
+            other: string;
+            /** Format: decimal */
+            closing: string;
         };
         Category: {
             readonly id: number;
@@ -1670,9 +1772,33 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        Dashboard: {
+            /** Format: decimal */
+            sales_today: string;
+            /** Format: decimal */
+            sales_month: string;
+            /** Format: decimal */
+            gross_profit_month: string;
+            /** Format: decimal */
+            margin_percent: string | null;
+            /** Format: decimal */
+            stock_value: string;
+            /** Format: decimal */
+            receivable: string;
+            /** Format: decimal */
+            payable: string;
+            sales_by_day: components["schemas"]["DayAmount"][];
+            top_products: components["schemas"]["ProductAmount"][];
+        };
         Date: {
             /** Format: date */
             date?: string;
+        };
+        DayAmount: {
+            /** Format: date */
+            date: string;
+            /** Format: decimal */
+            amount: string;
         };
         /** @description Fields every protected form accepts; mixed into the form serializers. */
         Email: {
@@ -2254,6 +2380,20 @@ export interface components {
             /** Format: decimal */
             readonly on_hand: string;
         };
+        ProductAmount: {
+            name: string;
+            /** Format: decimal */
+            amount: string;
+        };
+        ProfitLoss: {
+            income: components["schemas"]["ReportSection"];
+            cost_of_sales: components["schemas"]["ReportSection"];
+            /** Format: decimal */
+            gross_profit: string;
+            expenses: components["schemas"]["ReportSection"];
+            /** Format: decimal */
+            net_profit: string;
+        };
         PurchaseOrder: {
             readonly id: number;
             readonly number: string | null;
@@ -2301,6 +2441,17 @@ export interface components {
             /** Format: decimal */
             readonly billed_quantity: string;
         };
+        ReportLine: {
+            code: string;
+            name: string;
+            /** Format: decimal */
+            amount: string;
+        };
+        ReportSection: {
+            lines: components["schemas"]["ReportLine"][];
+            /** Format: decimal */
+            total: string;
+        };
         Reverse: {
             /** Format: date */
             date: string;
@@ -2347,6 +2498,18 @@ export interface components {
             tax_amount?: string;
             /** Format: decimal */
             readonly invoiced_quantity: string;
+        };
+        SalesTax: {
+            /** Format: decimal */
+            taxable_sales: string;
+            /** Format: decimal */
+            output_tax: string;
+            /** Format: decimal */
+            taxable_purchases: string;
+            /** Format: decimal */
+            input_tax: string;
+            /** Format: decimal */
+            payable: string;
         };
         Session: {
             user: components["schemas"]["Me"] | null;
@@ -4967,6 +5130,113 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Statement"];
+                };
+            };
+        };
+    };
+    reports_balance_sheet_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceSheet"];
+                };
+            };
+        };
+    };
+    reports_cash_flow_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashFlow"];
+                };
+            };
+        };
+    };
+    reports_dashboard_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+        };
+    };
+    reports_profit_loss_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfitLoss"];
+                };
+            };
+        };
+    };
+    reports_sales_tax_retrieve: {
+        parameters: {
+            query?: {
+                end?: string;
+                start?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesTax"];
                 };
             };
         };
