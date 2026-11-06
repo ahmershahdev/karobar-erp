@@ -67,8 +67,29 @@ def suppliers() -> QuerySet[Supplier]:
         .annotate(total=Sum(F("total") - F("amount_paid")))
         .values("total")
     )
+    # Money paid beyond the bills it was allocated to stays with the supplier as an advance,
+    # and comes off what we owe them, so a balance can go below zero.
+    paid = (
+        SupplierPayment.objects.filter(
+            supplier=OuterRef("pk"), status=SupplierPayment.Status.POSTED
+        )
+        .values("supplier")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
+    allocated = (
+        PaymentAllocation.objects.filter(
+            payment__supplier=OuterRef("pk"), payment__status=SupplierPayment.Status.POSTED
+        )
+        .values("payment__supplier")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
+    money: DecimalField[Decimal, Decimal] = DecimalField()
     query: QuerySet[Supplier] = Supplier.objects.annotate(
-        balance=Coalesce(Subquery(owed), Decimal(0), output_field=DecimalField())
+        balance=Coalesce(Subquery(owed), Decimal(0), output_field=money)
+        - Coalesce(Subquery(paid), Decimal(0), output_field=money)
+        + Coalesce(Subquery(allocated), Decimal(0), output_field=money)
     )
     return query
 

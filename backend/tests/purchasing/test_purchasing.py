@@ -3,6 +3,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
+from typing import Any, cast
 
 import pytest
 from django.db import connection
@@ -21,6 +22,7 @@ from apps.purchasing.models import (
     Supplier,
     SupplierPayment,
 )
+from apps.purchasing.views import suppliers
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import AuditEvent
 from tests.conftest import make_member
@@ -149,6 +151,7 @@ def test_order_to_payment_keeps_every_book_straight(buyer: Buyer) -> None:
     assert Bill.objects.get(pk=posted.pk).amount_paid == D("1180.00")
     # The extra 320 is an advance: payables swing to a debit balance.
     assert balance("2110") == D("320.00")
+    assert cast(Any, suppliers().get(pk=buyer.supplier.pk)).balance == D("-320.00")
     assert balance("1120") == D("-1500.00")
     assert services.outstanding_bills(buyer.supplier).count() == 0
     actions = set(AuditEvent.objects.values_list("action", flat=True))

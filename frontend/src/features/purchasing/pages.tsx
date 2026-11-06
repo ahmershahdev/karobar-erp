@@ -517,6 +517,7 @@ function OrderRow({ order }: { order: PurchaseOrder }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
   const action = useTenantAction(KEYS);
+  const [receiptStarted, setReceiptStarted] = useState(false);
   const id = { params: { path: { id: order.id } } };
   const qty = (value: string) => formatQuantity(value, i18n.resolvedLanguage);
   return (
@@ -553,14 +554,16 @@ function OrderRow({ order }: { order: PurchaseOrder }) {
           <Button
             disabled={action.isPending}
             onClick={() =>
-              action.mutate(() =>
-                unwrap(
+              action.mutate(async () => {
+                const receipt = await unwrap(
                   api.POST('/api/purchasing/orders/{id}/receive/', {
                     ...id,
                     body: { date: today() } as never,
                   }),
-                ),
-              )
+                );
+                setReceiptStarted(true);
+                return receipt;
+              })
             }
           >
             {t('pur.receive')}
@@ -589,7 +592,7 @@ function OrderRow({ order }: { order: PurchaseOrder }) {
           </Button>
         )}
       </Actions>
-      {action.isSuccess && order.status === 'confirmed' && (
+      {receiptStarted && order.status === 'confirmed' && (
         <p className="text-sm text-muted">{t('pur.receiptStarted')}</p>
       )}
     </DocumentRow>
@@ -664,19 +667,17 @@ function ReceiptRow({ receipt }: { receipt: GoodsReceipt }) {
   const action = useTenantAction(KEYS);
   const id = { params: { path: { id: receipt.id } } };
   const draft = receipt.status === 'draft';
-  const [edits, setEdits] = useState<Record<number, ReceiptDraftLine>>(() =>
-    Object.fromEntries(
-      receipt.lines.map((line) => [
-        line.id,
-        { quantity: line.quantity, batch: line.batch_number ?? '', expiry: line.expiry_date ?? '' },
-      ]),
-    ),
-  );
-  const edit = (line: number, patch: Partial<ReceiptDraftLine>) =>
-    setEdits({
-      ...edits,
-      [line]: { quantity: '', batch: '', expiry: '', ...edits[line], ...patch },
-    });
+  // Saving a draft replaces its lines, so their ids change. Whatever has no edit under its current
+  // id shows what the server holds, or a retry after a failed post would send empty lines.
+  const [edits, setEdits] = useState<Record<number, ReceiptDraftLine>>({});
+  const current = (line: GoodsReceipt['lines'][number]): ReceiptDraftLine =>
+    edits[line.id] ?? {
+      quantity: line.quantity,
+      batch: line.batch_number ?? '',
+      expiry: line.expiry_date ?? '',
+    };
+  const edit = (line: GoodsReceipt['lines'][number], patch: Partial<ReceiptDraftLine>) =>
+    setEdits({ ...edits, [line.id]: { ...current(line), ...patch } });
   const saveAndPost = () =>
     action.mutate(async () => {
       const body = {
@@ -686,15 +687,15 @@ function ReceiptRow({ receipt }: { receipt: GoodsReceipt }) {
         warehouse: receipt.warehouse,
         memo: receipt.memo,
         lines: receipt.lines
-          .filter((line) => Number(edits[line.id]?.quantity) > 0)
+          .filter((line) => Number(current(line).quantity) > 0)
           .map((line) => ({
             order_line: line.order_line ?? null,
             product: line.product,
             unit: line.unit,
-            quantity: edits[line.id]?.quantity,
+            quantity: current(line).quantity,
             unit_cost: line.unit_cost,
-            batch_number: edits[line.id]?.batch ?? '',
-            expiry_date: edits[line.id]?.expiry || null,
+            batch_number: current(line).batch,
+            expiry_date: current(line).expiry || null,
           })),
       } as never;
       await unwrap(api.PUT('/api/purchasing/receipts/{id}/', { ...id, body }));
@@ -723,8 +724,8 @@ function ReceiptRow({ receipt }: { receipt: GoodsReceipt }) {
               <div className="w-24">
                 <NumberCell
                   label={t('inv.quantity')}
-                  value={edits[line.id]?.quantity ?? ''}
-                  onChange={(quantity) => edit(line.id, { quantity })}
+                  value={current(line).quantity}
+                  onChange={(quantity) => edit(line, { quantity })}
                 />
               </div>
               <input
@@ -732,15 +733,15 @@ function ReceiptRow({ receipt }: { receipt: GoodsReceipt }) {
                 placeholder={t('inv.batch')}
                 maxLength={40}
                 className={`${CELL_INPUT} w-28`}
-                value={edits[line.id]?.batch ?? ''}
-                onChange={(e) => edit(line.id, { batch: e.target.value })}
+                value={current(line).batch}
+                onChange={(e) => edit(line, { batch: e.target.value })}
               />
               <input
                 aria-label={t('inv.expiry')}
                 type="date"
                 className={`${CELL_INPUT} w-36`}
-                value={edits[line.id]?.expiry ?? ''}
-                onChange={(e) => edit(line.id, { expiry: e.target.value })}
+                value={current(line).expiry}
+                onChange={(e) => edit(line, { expiry: e.target.value })}
               />
             </div>
           ) : (
@@ -992,13 +993,14 @@ function BillRow({ bill }: { bill: Bill }) {
   const draft = bill.status === 'draft';
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
   const [reference, setReference] = useState(bill.supplier_reference ?? '');
-  const [prices, setPrices] = useState<Record<number, { price: string; tax: string }>>(() =>
-    Object.fromEntries(
-      bill.lines.map((line) => [line.id, { price: line.unit_price, tax: line.tax_amount ?? '0' }]),
-    ),
-  );
-  const setPrice = (lineId: number, patch: Partial<{ price: string; tax: string }>) =>
-    setPrices({ ...prices, [lineId]: { price: '', tax: '', ...prices[lineId], ...patch } });
+  // Keyed like the receipt edits above, and for the same reason.
+  const [prices, setPrices] = useState<Record<number, { price: string; tax: string }>>({});
+  const priced = (line: Bill['lines'][number]) =>
+    prices[line.id] ?? { price: line.unit_price, tax: line.tax_amount ?? '0' };
+  const setPrice = (
+    line: Bill['lines'][number],
+    patch: Partial<{ price: string; tax: string }>,
+  ) => setPrices({ ...prices, [line.id]: { ...priced(line), ...patch } });
   const saveAndPost = () =>
     action.mutate(async () => {
       const body = {
@@ -1012,8 +1014,8 @@ function BillRow({ bill }: { bill: Bill }) {
           account: line.account ?? null,
           description: line.description,
           quantity: line.quantity,
-          unit_price: prices[line.id]?.price ?? line.unit_price,
-          tax_amount: prices[line.id]?.tax || '0',
+          unit_price: priced(line).price,
+          tax_amount: priced(line).tax || '0',
         })),
       } as never;
       await unwrap(api.PUT('/api/purchasing/bills/{id}/', { ...id, body }));
@@ -1059,8 +1061,8 @@ function BillRow({ bill }: { bill: Bill }) {
             <div className="ms-auto w-28">
               <NumberCell
                 label={t('pur.unitPrice')}
-                value={prices[line.id]?.price ?? ''}
-                onChange={(price) => setPrice(line.id, { price })}
+                value={priced(line).price}
+                onChange={(price) => setPrice(line, { price })}
               />
             </div>
           ) : (
@@ -1070,8 +1072,8 @@ function BillRow({ bill }: { bill: Bill }) {
             <div className="ms-auto w-24">
               <NumberCell
                 label={t('pur.tax')}
-                value={prices[line.id]?.tax ?? ''}
-                onChange={(tax) => setPrice(line.id, { tax })}
+                value={priced(line).tax}
+                onChange={(tax) => setPrice(line, { tax })}
               />
             </div>
           ) : (
