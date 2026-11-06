@@ -27,6 +27,8 @@ from apps.inventory.models import (
 )
 from apps.purchasing import services as purchasing
 from apps.purchasing.models import Bill, GoodsReceipt, PurchaseOrder, Supplier, SupplierPayment
+from apps.sales import services as sales
+from apps.sales.models import CreditNote, Customer, CustomerReceipt, Invoice, SalesOrder
 from apps.tenancy import audit, services
 from apps.tenancy.models import AuditEvent, Membership, Role, Tenant
 from tests.conftest import Member
@@ -310,6 +312,56 @@ def _payment(member: Member) -> int:
     return payment.pk
 
 
+def _customer(member: Member) -> Customer:
+    _shop(member)
+    customer: Customer = Customer.objects.get_or_create(code="C-P", defaults={"name": "Private"})[
+        0
+    ]
+    return customer
+
+
+def _sales_order(member: Member, confirm: bool = False) -> SalesOrder:
+    shop = _shop(member)
+    order = sales.save_order(
+        member.user,
+        {
+            "customer": _customer(member),
+            "warehouse": shop["warehouse"],
+            "date": timezone.localdate(),
+        },
+        [sales.OrderLineInput(shop["product"], shop["unit"], Decimal(1), Decimal(5))],
+    )
+    return sales.confirm_order(member.user, order) if confirm else order
+
+
+def _invoice(member: Member, post: bool = False) -> Invoice:
+    _stock_level(member)
+    invoice = sales.invoice_order(member.user, _sales_order(member, True), timezone.localdate())
+    return sales.post_invoice(member.user, invoice) if post else invoice
+
+
+def _sales_receipt(member: Member) -> CustomerReceipt:
+    return sales.save_receipt(
+        member.user,
+        {
+            "customer": _customer(member),
+            "date": timezone.localdate(),
+            "amount": Decimal(5),
+            "received_into": Account.objects.get(role="bank"),
+        },
+        [],
+    )
+
+
+def _credit_note(member: Member) -> CreditNote:
+    return sales.credit_invoice(member.user, _invoice(member, True), timezone.localdate())
+
+
+_register("sales/customers", lambda m: _customer(m).pk)
+_register("sales/orders", lambda m: _sales_order(m).pk)
+_register("sales/invoices", lambda m: _invoice(m).pk)
+_register("sales/receipts", lambda m: _sales_receipt(m).pk)
+_register("sales/credit-notes", lambda m: _credit_note(m).pk)
 _register("purchasing/suppliers", lambda m: _supplier(m).pk)
 _register("purchasing/orders", lambda m: _order(m).pk)
 _register("purchasing/receipts", _receipt)
@@ -326,6 +378,26 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     ),
     "api/accounting/entries/<int:pk>/reverse/": lambda m: (
         f"/api/accounting/entries/{_posted(m)}/reverse/"
+    ),
+    "api/sales/orders/<int:pk>/quote/": lambda m: f"/api/sales/orders/{_sales_order(m).pk}/quote/",
+    "api/sales/orders/<int:pk>/confirm/": lambda m: (
+        f"/api/sales/orders/{_sales_order(m).pk}/confirm/"
+    ),
+    "api/sales/orders/<int:pk>/close/": lambda m: (
+        f"/api/sales/orders/{_sales_order(m, True).pk}/close/"
+    ),
+    "api/sales/orders/<int:pk>/invoice/": lambda m: (
+        f"/api/sales/orders/{_sales_order(m, True).pk}/invoice/"
+    ),
+    "api/sales/invoices/<int:pk>/post/": lambda m: f"/api/sales/invoices/{_invoice(m).pk}/post/",
+    "api/sales/invoices/<int:pk>/credit/": lambda m: (
+        f"/api/sales/invoices/{_invoice(m, True).pk}/credit/"
+    ),
+    "api/sales/receipts/<int:pk>/post/": lambda m: (
+        f"/api/sales/receipts/{_sales_receipt(m).pk}/post/"
+    ),
+    "api/sales/credit-notes/<int:pk>/post/": lambda m: (
+        f"/api/sales/credit-notes/{_credit_note(m).pk}/post/"
     ),
     "api/purchasing/orders/<int:pk>/confirm/": lambda m: (
         f"/api/purchasing/orders/{_order(m).pk}/confirm/"
