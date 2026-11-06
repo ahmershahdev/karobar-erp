@@ -18,6 +18,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from apps.platform.locking import lock_rows
+
 from . import emails, humans, oauth
 from .models import User
 from .serializers import (
@@ -169,6 +171,12 @@ class PasswordResetConfirmView(AnonymousFormView):
             raise ValidationError({"token": [INVALID_LINK]})
         password = check_password_strength(data.validated_data["password"], user)
         with transaction.atomic():
+            # Reading again under the lock makes the second of two racing uses of a link fail:
+            # the token hashes the password, so the first use has already spent it.
+            lock_rows(User.objects.filter(pk=user.pk))
+            user = read_reset_token(data.validated_data["uid"], data.validated_data["token"])
+            if user is None:
+                raise ValidationError({"token": [INVALID_LINK]})
             # Nobody had proved this address, so a linked provider may be a stranger who claimed
             # it. The owner has now proved it: drop the link, as oauth._claim does.
             if user.email_verified_at is None:

@@ -26,6 +26,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.platform.http import OutboundError, get_json, post_form
+from apps.platform.locking import lock_rows
 
 from .models import SocialAccount, User
 
@@ -247,6 +248,8 @@ def _user_for(provider: str, profile: Profile) -> User:
 
 
 def _claim(user: User, now: datetime) -> User:
+    # Locked and read again, so a reset finishing at this moment can't lose its new password.
+    user = lock_rows(User.objects.filter(pk=user.pk))[0]
     if user.email_verified_at is None:
         # Nobody ever proved they own this address, so whatever opens this account may be a
         # stranger's who signed up with it first. The provider has now proved who does: drop the
