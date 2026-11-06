@@ -8,6 +8,7 @@ import { unwrap } from '../../lib/api/errors';
 import { can } from '../../lib/api/types';
 import { formatMoney, toMinor } from '../../lib/money';
 import { useReducedMotion } from '../../lib/motion';
+import { ReportState } from '../sales/ledgers';
 import { useWorkspace } from './hooks';
 import { Panel } from './ui';
 
@@ -103,9 +104,11 @@ export function Home() {
   const data = report.data;
   const reports = `${base}/reports/dashboard`;
   const hasSales = data?.sales_by_day.some((day) => Number(day.amount) > 0);
+  const failed = (home.isError && !home.data) || (report.isError && !data);
 
   return (
     <div className="space-y-6">
+      <ReportState pending={false} failed={failed} />
       {setup && next && (
         <Panel title={t('home.setupTitle')}>
           <p className="mb-3 text-sm text-muted">
@@ -177,46 +180,50 @@ export function Home() {
         </Panel>
       )}
 
-      <section className="space-y-4">
-        <h2 className="text-2xl">{t('home.today')}</h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <Stat label={t('rep.salesToday')} value={data?.sales_today} to={reports} />
-          <Stat label={t('rep.salesMonth')} value={data?.sales_month} to={reports} />
-          <Stat
-            label={t('rep.profitMonth')}
-            value={data?.gross_profit_month}
-            to={reports}
-            note={
-              data && data.margin_percent !== null
-                ? t('rep.margin', { percent: data.margin_percent })
-                : undefined
-            }
-          />
-          <Stat
-            label={t('rep.owedToMe')}
-            value={data?.receivable}
-            to={`${base}/sales/owed-to-me`}
-          />
-          <Stat label={t('rep.iOwe')} value={data?.payable} to={reports} />
-          <Stat
-            label={t('rep.stockValue')}
-            value={data?.stock_value}
-            to={`${base}/inventory/on-hand`}
-          />
-        </div>
-      </section>
+      {!(report.isError && !data) && (
+        <section className="space-y-4">
+          <h2 className="text-2xl">{t('home.today')}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <Stat label={t('rep.salesToday')} value={data?.sales_today} to={reports} />
+            <Stat label={t('rep.salesMonth')} value={data?.sales_month} to={reports} />
+            <Stat
+              label={t('rep.profitMonth')}
+              value={data?.gross_profit_month}
+              to={reports}
+              note={
+                data && data.margin_percent !== null
+                  ? t('rep.margin', { percent: data.margin_percent })
+                  : undefined
+              }
+            />
+            <Stat
+              label={t('rep.owedToMe')}
+              value={data?.receivable}
+              to={`${base}/sales/owed-to-me`}
+            />
+            <Stat label={t('rep.iOwe')} value={data?.payable} to={reports} />
+            <Stat
+              label={t('rep.stockValue')}
+              value={data?.stock_value}
+              to={`${base}/inventory/on-hand`}
+            />
+          </div>
+        </section>
+      )}
 
-      <Panel title={t('rep.last30')}>
-        {!data ? (
-          <div className="h-64 animate-pulse rounded-xl bg-surface motion-reduce:animate-none" />
-        ) : hasSales ? (
-          <Suspense fallback={<div className="h-64" />}>
-            <SalesChart days={data.sales_by_day} />
-          </Suspense>
-        ) : (
-          <p className="py-10 text-center text-muted">{t('home.noSales')}</p>
-        )}
-      </Panel>
+      {!(report.isError && !data) && (
+        <Panel title={t('rep.last30')}>
+          {!data ? (
+            <div className="h-64 animate-pulse rounded-xl bg-surface motion-reduce:animate-none" />
+          ) : hasSales ? (
+            <Suspense fallback={<div className="h-64" />}>
+              <SalesChart days={data.sales_by_day} />
+            </Suspense>
+          ) : (
+            <p className="py-10 text-center text-muted">{t('home.noSales')}</p>
+          )}
+        </Panel>
+      )}
     </div>
   );
 }
