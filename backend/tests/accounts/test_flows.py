@@ -4,8 +4,10 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from django.core import mail
 from django.utils import timezone
+from kombu.exceptions import OperationalError
 from rest_framework.test import APIClient
 
+from apps.accounts import emails
 from apps.accounts.models import User
 from apps.accounts.tokens import make_email_token
 from tests.factories import TEST_PASSWORD, create_user
@@ -115,6 +117,16 @@ def test_password_reset_round_trip_signs_out_other_sessions(user: User) -> None:
     assert user.email_verified_at is not None
     assert other_session.get("/api/accounts/me/").status_code == 403
     assert post("/api/accounts/password-reset/confirm/", confirm) == 400, "links work once"
+
+
+def test_password_reset_says_nothing_when_the_queue_is_down(
+    user: User, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(_: User) -> None:
+        raise OperationalError("broker down")
+
+    monkeypatch.setattr(emails, "send_password_reset", fail)
+    assert post("/api/accounts/password-reset/", {"email": user.email}) == 204
 
 
 def test_password_reset_for_unknown_email_says_nothing() -> None:

@@ -1,3 +1,4 @@
+import logging
 from typing import cast
 
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
+from kombu.exceptions import OperationalError
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
@@ -30,6 +32,8 @@ from .serializers import (
     check_password_strength,
 )
 from .tokens import read_email_token, read_reset_token
+
+logger = logging.getLogger(__name__)
 
 INVALID_LINK = "This link is invalid or has expired."
 
@@ -146,7 +150,12 @@ class PasswordResetView(AnonymousFormView):
         email = data.validated_data["email"].lower()
         user = User.objects.filter(email=email, is_active=True).first()
         if user is not None:
-            emails.send_password_reset(user)
+            # A failed send must look like an unknown address, or this form would tell a stranger
+            # which emails have accounts whenever the queue is down.
+            try:
+                emails.send_password_reset(user)
+            except OperationalError:
+                logger.exception("Could not queue a password reset email")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
