@@ -75,7 +75,9 @@ export function useHumanCheck(action: string) {
     proof,
     requireCheckbox,
     honeypot: <Honeypot value={honeypot} onChange={setHoneypot} />,
-    checkbox: checkbox ? <Checkbox key={widget} siteKey={v2} v3Key={v3} onToken={setV2Token} /> : null,
+    checkbox: checkbox ? (
+      <Checkbox key={widget} siteKey={v2} v3Key={v3} onToken={setV2Token} />
+    ) : null,
     waitingForCheckbox: checkbox && !v2Token,
   };
 }
