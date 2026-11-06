@@ -9,9 +9,9 @@ import { Magnetic } from './Magnetic';
 import { Reveal } from './Reveal';
 import { RollText } from './RollText';
 
-const SHIPPED = 3;
+const SHIPPED = 4;
 const MILESTONES = 7;
-const LATEST = 'v0.3.0';
+const LATEST = 'v0.4.0';
 
 function useLocalTime(locale: string | undefined): string {
   const [now, setNow] = useState(() => new Date());

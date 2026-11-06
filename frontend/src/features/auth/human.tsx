@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Alert } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { loadRecaptcha } from '../../lib/recaptcha';
-import { Checkbox, Honeypot, RecaptchaNotice } from './HumanFields';
+import { Checkbox, Honeypot, RecaptchaBadge, RecaptchaNotice } from './HumanFields';
 
 export function useAuthConfig() {
   return useQuery({
@@ -50,16 +50,13 @@ export function useHumanCheck(action: string) {
   const [failed, setFailed] = useState(false);
   const onFailed = useCallback(() => setFailed(true), []);
 
+  const badge = useRef<number | null>(null);
+  const onBadge = useCallback((id: number) => {
+    badge.current = id;
+  }, []);
+
   useEffect(() => {
-    if (!v3 && !v2) return;
-    void loadRecaptcha(v3).catch(() => undefined);
-    // Google's script stays in the page after this form closes, so its badge is switched on here
-    // and off again on the way out, or it would follow people into the app.
-    const root = document.documentElement;
-    root.dataset.recaptcha = 'on';
-    return () => {
-      delete root.dataset.recaptcha;
-    };
+    if (v3 || v2) void loadRecaptcha().catch(() => undefined);
   }, [v3, v2]);
 
   const proof = useCallback(async (): Promise<HumanProof> => {
@@ -68,10 +65,10 @@ export function useHumanCheck(action: string) {
       setWidget((value) => value + 1);
       return { website: honeypot, captcha_v2: v2Token };
     }
-    if (!v3) return { website: honeypot };
+    if (!v3 || badge.current === null) return { website: honeypot };
     try {
-      const grecaptcha = await loadRecaptcha(v3);
-      return { website: honeypot, captcha_v3: await grecaptcha.execute(v3, { action }) };
+      const grecaptcha = await loadRecaptcha();
+      return { website: honeypot, captcha_v3: await grecaptcha.execute(badge.current, { action }) };
     } catch {
       // If Google can't be reached the server decides; without a token it asks for the box.
       return { website: honeypot };
@@ -96,9 +93,13 @@ export function useHumanCheck(action: string) {
     checkbox: noBox ? (
       <Alert tone="error">{t('signIn.unavailable')}</Alert>
     ) : checkbox ? (
-      <Checkbox key={widget} siteKey={v2} v3Key={v3} onToken={setV2Token} onFailed={onFailed} />
+      <Checkbox key={widget} siteKey={v2} onToken={setV2Token} onFailed={onFailed} />
     ) : null,
-    notice: v3 || v2 ? <RecaptchaNotice /> : null,
+    notice: v3 ? (
+      <RecaptchaBadge siteKey={v3} onWidget={onBadge} />
+    ) : v2 ? (
+      <RecaptchaNotice />
+    ) : null,
     waitingForCheckbox: checkbox && !noBox && !v2Token,
   };
 }

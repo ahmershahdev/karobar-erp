@@ -240,9 +240,13 @@ html.lenis body {
   }
 }
 
-/* Google's badge shows on the forms it protects, and nowhere else. */
-html:not([data-recaptcha='on']) .grecaptcha-badge {
-  visibility: hidden;
+/* Google's inline badge sits in the form it protects. Its own styles give it a heavy shadow that
+   looks out of place on white, so it gets the same hairline as everything else. */
+.grecaptcha-badge {
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: none !important;
 }
 
 /* While the loading screen or a page transition covers the page, nothing scrolls and no scrollbar
