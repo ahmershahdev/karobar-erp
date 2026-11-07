@@ -3599,6 +3599,142 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReceivableRow'
           description: ''
+  /api/sales/bill-settings/:
+    get:
+      operationId: sales_bill_settings_retrieve
+      description: Business-wide, like the daily summary, so it sits with the people
+        who run the business.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+    patch:
+      operationId: sales_bill_settings_partial_update
+      description: Business-wide, like the daily summary, so it sits with the people
+        who run the business.
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBillSettings'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+  /api/sales/bill-settings/logo/:
+    get:
+      operationId: sales_bill_settings_logo_retrieve
+      description: The logo or the signature picture, named by `kind` in the URL configuration.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+          description: ''
+    put:
+      operationId: sales_bill_settings_logo_update
+      description: The logo or the signature picture, named by `kind` in the URL configuration.
+      tags:
+      - sales
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BillImage'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+    delete:
+      operationId: sales_bill_settings_logo_destroy
+      description: The logo or the signature picture, named by `kind` in the URL configuration.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+  /api/sales/bill-settings/signature/:
+    get:
+      operationId: sales_bill_settings_signature_retrieve
+      description: The logo or the signature picture, named by `kind` in the URL configuration.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+          description: ''
+    put:
+      operationId: sales_bill_settings_signature_update
+      description: The logo or the signature picture, named by `kind` in the URL configuration.
+      tags:
+      - sales
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BillImage'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+    delete:
+      operationId: sales_bill_settings_signature_destroy
+      description: The logo or the signature picture, named by `kind` in the URL configuration.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
   /api/sales/credit-notes/:
     get:
       operationId: sales_credit_notes_list
@@ -4865,6 +5001,14 @@ components:
       - supplier_name
       - tax
       - total
+    BillImage:
+      type: object
+      properties:
+        image:
+          type: string
+          format: uri
+      required:
+      - image
     BillLine:
       type: object
       properties:
@@ -4907,6 +5051,74 @@ components:
       - id
       - quantity
       - unit_price
+    BillSettings:
+      type: object
+      properties:
+        address:
+          type: string
+          maxLength: 300
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        tax_label:
+          type: string
+          maxLength: 20
+        tax_number:
+          type: string
+          maxLength: 40
+        title:
+          type: string
+          maxLength: 40
+        thanks:
+          type: string
+          maxLength: 200
+        payment_terms:
+          type: string
+          maxLength: 300
+        bank_details:
+          type: string
+          maxLength: 500
+        return_policy:
+          type: string
+          maxLength: 500
+        accent:
+          type: string
+          maxLength: 7
+          minLength: 7
+        show_tax:
+          type: boolean
+        show_discount:
+          type: boolean
+        show_sku:
+          type: boolean
+        counter_paper:
+          $ref: '#/components/schemas/CounterPaperEnum'
+        template:
+          $ref: '#/components/schemas/TemplateEnum'
+        signature_text:
+          type: string
+          maxLength: 60
+        logo:
+          type: string
+          nullable: true
+          readOnly: true
+        signature:
+          type: string
+          nullable: true
+          readOnly: true
+        invoice_prefix:
+          type: string
+          maxLength: 10
+      required:
+      - logo
+      - signature
     BillShare:
       type: object
       properties:
@@ -5214,6 +5426,14 @@ components:
         * `permanent` - Permanent
         * `fixed_term` - Fixed Term
         * `probation` - Probation
+    CounterPaperEnum:
+      enum:
+      - a4
+      - receipt
+      type: string
+      description: |-
+        * `a4` - A4
+        * `receipt` - Receipt
     CreditLine:
       type: object
       properties:
@@ -6844,6 +7064,71 @@ components:
       properties:
         daily_summary:
           type: boolean
+    PatchedBillSettings:
+      type: object
+      properties:
+        address:
+          type: string
+          maxLength: 300
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        tax_label:
+          type: string
+          maxLength: 20
+        tax_number:
+          type: string
+          maxLength: 40
+        title:
+          type: string
+          maxLength: 40
+        thanks:
+          type: string
+          maxLength: 200
+        payment_terms:
+          type: string
+          maxLength: 300
+        bank_details:
+          type: string
+          maxLength: 500
+        return_policy:
+          type: string
+          maxLength: 500
+        accent:
+          type: string
+          maxLength: 7
+          minLength: 7
+        show_tax:
+          type: boolean
+        show_discount:
+          type: boolean
+        show_sku:
+          type: boolean
+        counter_paper:
+          $ref: '#/components/schemas/CounterPaperEnum'
+        template:
+          $ref: '#/components/schemas/TemplateEnum'
+        signature_text:
+          type: string
+          maxLength: 60
+        logo:
+          type: string
+          nullable: true
+          readOnly: true
+        signature:
+          type: string
+          nullable: true
+          readOnly: true
+        invoice_prefix:
+          type: string
+          maxLength: 10
     PatchedCategory:
       type: object
       properties:
@@ -8318,6 +8603,22 @@ components:
       - rate
       - source
       - valid_from
+    TemplateEnum:
+      enum:
+      - classic
+      - modern
+      - minimal
+      - bold
+      - compact
+      - elegant
+      type: string
+      description: |-
+        * `classic` - Classic
+        * `modern` - Modern
+        * `minimal` - Minimal
+        * `bold` - Bold
+        * `compact` - Compact
+        * `elegant` - Elegant
     TenantCreate:
       type: object
       properties:

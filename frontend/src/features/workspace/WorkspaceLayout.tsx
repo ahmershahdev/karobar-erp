@@ -101,6 +101,12 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       show: can(membership, 'members', 'view'),
     },
     {
+      to: `${base}/bill-design`,
+      label: t('bill.title'),
+      icon: 'bills',
+      show: can(membership, 'members', 'view'),
+    },
+    {
       to: `${base}/roles`,
       label: t('workspace.roles'),
       icon: 'roles',

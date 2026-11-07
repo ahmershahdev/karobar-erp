@@ -6,9 +6,11 @@ from typing import Any, cast
 from django.db.models import Prefetch, Q, QuerySet
 from django.http import HttpResponse
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
 from rest_framework.exceptions import APIException, NotFound, ValidationError
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -27,7 +29,7 @@ from apps.purchasing.serializers import (
 from apps.tenancy.context import tenant_context
 from apps.tenancy.permissions import HasModulePermission
 
-from . import documents, links, reports, services
+from . import billing, documents, links, reports, services
 from .models import (
     CreditNote,
     CreditNoteLine,
@@ -40,6 +42,8 @@ from .models import (
     SalesOrderLine,
 )
 from .serializers import (
+    BillImageSerializer,
+    BillSettingsSerializer,
     BillShareSerializer,
     CreditNoteSerializer,
     CustomerReceiptSerializer,
@@ -436,3 +440,75 @@ class ReceiptPdfView(SalesView, generics.GenericAPIView[CustomerReceipt]):
     @extend_schema(parameters=[LANGUAGE], responses=PDF)
     def get(self, request: Request, pk: int) -> HttpResponse:
         return pdf_response(request, documents.receipt_html, self.get_object())
+
+
+def _billing(call: Any, *args: Any) -> Any:
+    try:
+        return call(*args)
+    except billing.BillingError as exc:
+        raise ValidationError({"detail": type(exc).message}) from exc
+
+
+class BillSettingsView(APIView):
+    """Business-wide, like the daily summary, so it sits with the people who run the business."""
+
+    permission_classes = [HasModulePermission]
+    module = "members"
+    throttle_scope = "tenancy"
+
+    @extend_schema(responses=BillSettingsSerializer)
+    def get(self, request: Request) -> Response:
+        return Response(BillSettingsSerializer(billing.current()).data)
+
+    @extend_schema(request=BillSettingsSerializer, responses=BillSettingsSerializer)
+    def patch(self, request: Request) -> Response:
+        body = BillSettingsSerializer(billing.current(), data=request.data, partial=True)
+        body.is_valid(raise_exception=True)
+        saved = _billing(billing.save, actor(request), body.validated_data)
+        return Response(BillSettingsSerializer(saved).data)
+
+
+class BillImageView(APIView):
+    """The logo or the signature picture, named by `kind` in the URL configuration."""
+
+    permission_classes = [HasModulePermission]
+    module = "members"
+    throttle_scope = "tenancy"
+    parser_classes = [MultiPartParser]
+    kind = "logo"
+
+    def initial(self, request: Request, *args: Any, **kwargs: Any) -> None:
+        # Taking a picture off changes the bill like putting one up, so both need update
+        # rights; delete rights alone don't remove it.
+        self.required_action = "update" if request.method == "DELETE" else None
+        super().initial(request, *args, **kwargs)
+
+    @extend_schema(responses={(200, "image/png"): OpenApiTypes.BINARY})
+    def get(self, request: Request) -> HttpResponse:
+        picture = getattr(billing.current(), self.kind)
+        if not picture:
+            raise NotFound
+        response = HttpResponse(bytes(picture), content_type="image/png")
+        response["Cache-Control"] = "private, no-store"
+        return response
+
+    @extend_schema(
+        request={"multipart/form-data": BillImageSerializer}, responses=BillSettingsSerializer
+    )
+    def put(self, request: Request) -> Response:
+        # Django's upload limits don't count file data, so the size is checked here before
+        # anything is read. nginx stops anything over 2 MB earlier still.
+        if int(request.META.get("CONTENT_LENGTH") or 0) > billing.MAX_REQUEST_BYTES:
+            raise ValidationError({"detail": billing.BadImageError.message})
+        body = BillImageSerializer(data=request.data)
+        body.is_valid(raise_exception=True)
+        upload = body.validated_data["image"]
+        # One byte past the limit is enough to know it is too big, without reading the rest.
+        data = upload.read(billing.MAX_IMAGE_BYTES + 1)
+        saved = _billing(billing.set_image, actor(request), self.kind, data)
+        return Response(BillSettingsSerializer(saved).data)
+
+    @extend_schema(request=None, responses={200: BillSettingsSerializer})
+    def delete(self, request: Request) -> Response:
+        saved = billing.set_image(actor(request), self.kind, None)
+        return Response(BillSettingsSerializer(saved).data)

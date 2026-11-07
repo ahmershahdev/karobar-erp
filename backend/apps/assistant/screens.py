@@ -41,6 +41,7 @@ SCREEN_KEYS = (
     "hr.employees",
     "hr.departments",
     "hr.structures",
+    "bill.title",
 )
 
 SCREENS: dict[str, tuple[str, ...]] = {
@@ -82,6 +83,7 @@ SCREENS: dict[str, tuple[str, ...]] = {
         "Employees",
         "Departments",
         "Salary structures",
+        "Bill design",
     ),
     "ur": (
         "جائزہ",
@@ -121,6 +123,7 @@ SCREENS: dict[str, tuple[str, ...]] = {
         "ملازمین",
         "شعبے",
         "تنخواہ کے ڈھانچے",
+        "بل کا ڈیزائن",
     ),
     "ar": (
         "نظرة عامة",
@@ -160,5 +163,6 @@ SCREENS: dict[str, tuple[str, ...]] = {
         "الموظفون",
         "الأقسام",
         "هياكل الرواتب",
+        "تصميم الفاتورة",
     ),
 }

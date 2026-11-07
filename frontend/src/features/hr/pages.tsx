@@ -182,7 +182,7 @@ function toRows(structure: Structure | null): PartRow[] {
     name: part.name,
     kind: part.kind,
     how: part.percent != null ? 'percent' : 'amount',
-    value: (part.percent ?? part.amount ?? ''),
+    value: part.percent ?? part.amount ?? '',
     taxable: part.taxable ?? true,
   }));
 }

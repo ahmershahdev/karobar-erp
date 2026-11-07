@@ -1,0 +1,20 @@
+{% load bill_text %}
+    <div class="end">
+    {% if bill.thanks or bill.payment_terms or bill.bank_details or bill.return_policy %}
+      <div class="foot">
+        {% if bill.thanks %}<p class="thanks"><span class="user" dir="{{ bill.thanks|textdir }}">{{ bill.thanks }}</span></p>{% endif %}
+        <div class="notes">
+        {% if bill.payment_terms and not roll %}<p><strong>{{ labels.payment_terms }}</strong><br /><span class="user" dir="{{ bill.payment_terms|textdir }}">{{ bill.payment_terms|linebreaksbr }}</span></p>{% endif %}
+        {% if bill.bank_details and not roll %}<p><strong>{{ labels.bank_details }}</strong><br /><span class="user" dir="{{ bill.bank_details|textdir }}">{{ bill.bank_details|linebreaksbr }}</span></p>{% endif %}
+        {% if bill.return_policy %}<p><strong>{{ labels.return_policy }}</strong><br /><span class="user" dir="{{ bill.return_policy|textdir }}">{{ bill.return_policy|linebreaksbr }}</span></p>{% endif %}
+        </div>
+      </div>
+    {% endif %}
+    {% if signature or bill.signature_text %}
+      <div class="sign">
+        {% if signature %}<img src="{{ signature }}" alt="" />{% else %}<div class="sign-text"><span class="user" dir="{{ bill.signature_text|textdir }}">{{ bill.signature_text }}</span></div>{% endif %}
+        {% if signature and bill.signature_text %}<div class="sign-name"><span class="user" dir="{{ bill.signature_text|textdir }}">{{ bill.signature_text }}</span></div>{% endif %}
+        <div class="sign-line">{{ labels.signature }}</div>
+      </div>
+    {% endif %}
+    </div>
