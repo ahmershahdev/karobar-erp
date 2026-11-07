@@ -17,7 +17,7 @@ Last updated: 2026-11-07. Update at the end of every work session.
 
 Agreed order, one PR each:
 
-- In review: `feat/discounts`. Line and bill discounts on invoices, quotations and the counter, with a per-role limit and a Sales discounts account. Lines take a percentage on screen (the API also takes an amount); the bill takes either.
+- In review: `feat/discounts`. Line and bill discounts on invoices, quotations and the counter, with a per-role limit and a Sales discounts account. Lines and the bill each take a percentage or an amount; the counter takes percentages.
 
 1. Keep the chat to the business, with short replies and a new chat button.
 2. Ask before every delete. All 13 delete actions in the app fire on one click.

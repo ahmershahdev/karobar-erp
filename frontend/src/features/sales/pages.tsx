@@ -244,6 +244,7 @@ function saleLines(lines: ItemLine[], taxRate: unknown) {
     tax_amount: line.tax || '0',
     tax_rate: taxRate ?? null,
     discount_percent: line.discount || null,
+    discount: line.discountAmount || '0',
   }));
 }
 
@@ -349,6 +350,7 @@ function SaleEditor({
           onChange={setLines}
           priceLabel={t('sal.price')}
           discountLabel={t('sal.lineDiscount')}
+          discountAmountLabel={t('sal.lineDiscountAmount')}
           {...(rate ? {} : { taxLabel: t('pur.tax') })}
         />
         <Actions>

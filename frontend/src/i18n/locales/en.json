@@ -972,8 +972,9 @@
     "billDiscountAs": "Bill discount is",
     "asPercent": "a percentage",
     "asAmount": "an amount",
-    "discountHint": "Line discounts come off first, then the bill discount. Tax is worked out on what is left.",
-    "discountGiven": "Discount given"
+    "discountHint": "Give a line discount as a percentage or an amount. Line discounts come off first, then the bill discount. Tax is worked out on what is left.",
+    "discountGiven": "Discount given",
+    "lineDiscountAmount": "Discount amount"
   },
   "led": {
     "receivables": "Who owes me",
