@@ -1,4 +1,6 @@
 from collections.abc import Iterator
+from decimal import Decimal
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 
@@ -226,3 +228,23 @@ def test_the_prompt_keeps_to_the_business_and_stays_short(boss: Member) -> None:
     assert "Only help with this business" in prompt
     assert "one to three sentences" in prompt
     assert "anything general" not in prompt
+
+
+def test_stock_quantities_reach_the_model_without_trailing_zeros(boss: Member) -> None:
+    rows = [
+        SimpleNamespace(product=SimpleNamespace(name="Soap"), on_hand=Decimal("100.0000")),
+        SimpleNamespace(product=SimpleNamespace(name="Tea"), on_hand=Decimal("1.5000")),
+    ]
+    with patch.object(services, "low_stock", return_value=rows):
+        known = services.facts(boss.membership)
+    assert [row["on_hand"] for row in known["low_stock"]] == ["100", "1.5"]
+
+
+def test_bold_marks_are_taken_out_of_an_answer(boss: Member) -> None:
+    answer = {"choices": [{"message": {"content": "Open **Products** to add it."}}]}
+    with patch.object(services, "post_json", return_value=answer):
+        assert services.complete([]) == "Open Products to add it."
+
+
+def test_the_prompt_names_the_real_screens(boss: Member) -> None:
+    assert "Who owes me" in services.system_prompt(boss.user, boss.membership)

@@ -37,3 +37,4 @@ Also check a signed bill link returning a real PDF in Docker.
 - The chat check can't notice the newest messages being deleted in the database. Catching that needs the latest signature and count stored outside the chat table. Decide if it matters.
 - The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.
 - Dependabot alert 2: `minimatch` (medium), in development dependencies only. Fixed in 11.0.1.
+- Groq calls started failing after about a dozen quick questions in testing, probably its rate limit on this key. Check the plan's limits against expected use before switching the chat on in production.
