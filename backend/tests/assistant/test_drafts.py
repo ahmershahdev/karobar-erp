@@ -1,11 +1,9 @@
 import json
-from collections.abc import Iterator
 from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-from pytest_django.fixtures import Settings as SettingsWrapper
 
 from apps.assistant import drafts, services
 from apps.assistant.models import ChatMessage
@@ -14,35 +12,15 @@ from apps.purchasing.models import PurchaseOrder, Supplier
 from apps.sales.models import Invoice, SalesOrder
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import AuditEvent
+from tests.assistant.conftest import staff_in
 from tests.conftest import Member
-from tests.factories import create_membership, create_role
 from tests.sales.test_sales import Seller, make_seller
 
 D = Decimal
 
 
-@pytest.fixture(autouse=True)
-def groq(settings: SettingsWrapper) -> None:
-    settings.GROQ_API_KEY = "test-key"
-    settings.CHAT_SIGNING_KEY = "test-signing-key"
-
-
-@pytest.fixture
-def seller(db: None) -> Iterator[Seller]:
-    built = make_seller()
-    with tenant_context(built.shop.member.tenant):
-        built.shop.soap.sale_price = D("150")
-        built.shop.soap.save()
-        yield built
-
-
 def owner(s: Seller) -> Member:
     return s.shop.member
-
-
-def staff(s: Seller, permissions: dict[str, list[str]]) -> Member:
-    membership = create_membership(role=create_role(permissions=permissions))
-    return Member(user=membership.user, tenant=s.shop.member.tenant, membership=membership)
 
 
 def calls(tool: str, **arguments: Any) -> Any:
@@ -217,8 +195,8 @@ def test_another_business_rows_are_never_found(seller: Seller) -> None:
 
 
 def test_tools_follow_what_the_role_may_create(seller: Seller) -> None:
-    cashier = staff(seller, {"sales": ["view", "create"]})
-    viewer = staff(seller, {"sales": ["view"], "purchasing": ["view"]})
+    cashier = staff_in(seller, {"sales": ["view", "create"]})
+    viewer = staff_in(seller, {"sales": ["view"], "purchasing": ["view"]})
     names = {tool["function"]["name"] for tool in drafts.tools(cashier.membership)}
     assert names == {"draft_sales_invoice", "draft_quotation"}
     assert drafts.tools(viewer.membership) == []
@@ -229,7 +207,7 @@ def test_tools_follow_what_the_role_may_create(seller: Seller) -> None:
 
 
 def test_a_tool_the_person_was_not_given_makes_nothing(seller: Seller) -> None:
-    viewer = staff(seller, {"sales": ["view"]})
+    viewer = staff_in(seller, {"sales": ["view"]})
     with soap_bill():
         card = card_of(ask(viewer))
     assert card["problem"]["code"] == "not_allowed"
@@ -238,7 +216,7 @@ def test_a_tool_the_person_was_not_given_makes_nothing(seller: Seller) -> None:
 
 
 def test_losing_the_permission_before_confirm_stops_it(seller: Seller) -> None:
-    clerk = staff(seller, {"sales": ["view", "create"]})
+    clerk = staff_in(seller, {"sales": ["view", "create"]})
     with soap_bill():
         pk = ask(clerk).json()["id"]
     role = clerk.membership.role
@@ -253,7 +231,7 @@ def test_losing_the_permission_before_confirm_stops_it(seller: Seller) -> None:
 
 
 def test_only_the_person_who_asked_can_confirm(seller: Seller) -> None:
-    clerk = staff(seller, {"sales": ["view", "create"]})
+    clerk = staff_in(seller, {"sales": ["view", "create"]})
     with soap_bill():
         pk = ask(owner(seller)).json()["id"]
     assert confirm(clerk, pk).status_code == 404

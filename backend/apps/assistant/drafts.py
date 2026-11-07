@@ -21,6 +21,8 @@ from apps.sales import views as sales
 from apps.sales.models import Customer
 from apps.tenancy.models import Membership
 
+from . import lookups
+
 MAX_ITEMS = 30
 MAX_NAME = 150
 MAX_NOTE = 255
@@ -87,10 +89,7 @@ class NotAllowedError(Exception):
 
 def allowed(membership: Membership, module: str) -> bool:
     """The same test the document screens make before creating one."""
-    if membership.is_owner:
-        return True
-    role = membership.role
-    return role is not None and "create" in role.permissions.get(module, [])
+    return lookups.can(membership, module, "create")
 
 
 def tools(membership: Membership) -> list[dict[str, Any]]:
