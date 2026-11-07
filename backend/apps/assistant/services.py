@@ -257,6 +257,8 @@ def complete(
     }
     if tools:
         payload["tools"] = tools
+        # One call per turn: the loop runs lookups one after another, and a draft is one card.
+        payload["parallel_tool_calls"] = False
     try:
         answer = post_json(GROQ_URL, payload, settings.GROQ_API_KEY, timeout)
         reply = answer["choices"][0]["message"]

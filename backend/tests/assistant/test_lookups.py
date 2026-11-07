@@ -194,3 +194,10 @@ def test_the_tool_call_id_is_read_from_groq(seller: Seller) -> None:
         answer = services.complete([], lookups.tools(seller.shop.member.membership), 7)
     assert answer == services.ToolCall("look_up_product", "{}", "abc")
     assert sent.call_args.args[3] == 7
+
+
+def test_only_one_tool_call_is_asked_for_at_a_time(seller: Seller) -> None:
+    reply = {"choices": [{"message": {"content": "Hi"}}]}
+    with patch.object(services, "post_json", return_value=reply) as sent:
+        services.complete([], lookups.tools(seller.shop.member.membership))
+    assert sent.call_args.args[1]["parallel_tool_calls"] is False
