@@ -334,3 +334,25 @@ def test_joining_after_a_contract_starts_is_refused(boss: Member) -> None:
         f"/api/hr/employees/{person}/", {"joined_on": "2026-02-01"}, format="json"
     )
     assert reply.status_code == 400
+
+
+def test_a_contract_checks_the_latest_leaving_day(boss: Member) -> None:
+    stale = Employee.objects.get(pk=employee(boss).json()["id"])
+    plan = SalaryStructure.objects.get(pk=structure(boss).json()["id"])
+    Employee.objects.filter(pk=stale.pk).update(left_on=date(2026, 6, 30))
+    values = {
+        "employee": stale,
+        "structure": plan,
+        "starts_on": date(2026, 1, 1),
+        "basic_salary": D(1000),
+    }
+    with pytest.raises(services.OutsideEmploymentError):
+        services.save_contract(boss.user, values)
+
+
+def test_saving_an_old_copy_keeps_a_leaving_day_saved_meanwhile(boss: Member) -> None:
+    stale = Employee.objects.get(pk=employee(boss).json()["id"])
+    Employee.objects.filter(pk=stale.pk).update(left_on=date(2026, 6, 30))
+    services.save_employee(boss.user, stale, {"phone": "0300 0000000"})
+    fresh = Employee.objects.get(pk=stale.pk)
+    assert (fresh.phone, fresh.left_on) == ("0300 0000000", date(2026, 6, 30))

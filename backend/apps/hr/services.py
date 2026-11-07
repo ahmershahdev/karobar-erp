@@ -164,8 +164,10 @@ def save_contract(
     actor: User, values: dict[str, Any], contract: Contract | None = None
 ) -> Contract:
     target = contract or Contract()
-    employee: Employee = values.get("employee") or target.employee
-    lock_rows(Employee.objects.filter(pk=employee.pk))
+    chosen: Employee = values.get("employee") or target.employee
+    # The locked row, not the copy the request loaded: a leaving day saved a moment ago must
+    # count.
+    employee: Employee = lock_rows(Employee.objects.filter(pk=chosen.pk))[0]
     starts = values.get("starts_on", target.starts_on)
     ends = values.get("ends_on", target.ends_on)
     if starts < employee.joined_on or (
@@ -205,7 +207,9 @@ def save_employee(actor: User, employee: Employee, values: dict[str, Any]) -> Em
     stops when the person does. A contract that only starts after it is refused instead,
     because ending it would leave it ending before it began."""
     if employee.pk is not None:
-        lock_rows(Employee.objects.filter(pk=employee.pk))
+        # Work from the locked row: saving an older copy would undo a change made meanwhile,
+        # such as a leaving day.
+        employee = lock_rows(Employee.objects.filter(pk=employee.pk))[0]
     left_on = values.get("left_on", employee.left_on)
     joined_on = values.get("joined_on", employee.joined_on)
     if employee.pk is not None:
