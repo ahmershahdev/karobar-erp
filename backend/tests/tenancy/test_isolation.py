@@ -482,6 +482,8 @@ tenant_endpoint("api/hr/contracts/")(lambda m: ("/api/hr/contracts/", _contract(
 tenant_endpoint("api/hr/contracts/<int:pk>/")(
     lambda m: (f"/api/hr/contracts/{_contract(m).pk}/", _contract(m).pk)
 )
+
+
 def _bill_settings(member: Member) -> tuple[str, int]:
     billing.save(member.user, {"address": "Private Street"})
     return "/api/sales/bill-settings/", 0
