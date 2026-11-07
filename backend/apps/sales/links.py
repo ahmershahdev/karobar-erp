@@ -2,7 +2,8 @@
 
 The token is signed with the site's secret, so nobody can change the bill it names or guess one for
 another bill, and it stops working after BILL_LINK_DAYS. It names the business too, because this
-request has no signed-in user to take the tenant from.
+request has no signed-in user to take the tenant from. Signing does not hide the contents, so
+the business goes in as its public_id.
 """
 
 from decimal import Decimal
@@ -21,7 +22,7 @@ BILL_LINK_DAYS = 30
 
 
 def bill_token(invoice: Invoice) -> str:
-    return signing.dumps({"t": invoice.tenant_id, "i": invoice.pk}, salt=SALT)
+    return signing.dumps({"t": str(invoice.tenant.public_id), "i": invoice.pk}, salt=SALT)
 
 
 def read_bill_token(token: str) -> tuple[Tenant, int] | None:
@@ -29,7 +30,7 @@ def read_bill_token(token: str) -> tuple[Tenant, int] | None:
         data = signing.loads(token, salt=SALT, max_age=BILL_LINK_DAYS * 24 * 60 * 60)
     except signing.BadSignature:
         return None
-    tenant = Tenant.objects.filter(pk=data["t"]).first()
+    tenant = Tenant.objects.filter(public_id=data["t"]).first()
     return (tenant, data["i"]) if tenant else None
 
 
@@ -56,7 +57,10 @@ def bill_message(invoice: Invoice) -> str:
 
 
 def reminder_message(customer: Customer, owed: Decimal) -> str:
-    """A polite reminder. It only opens WhatsApp: someone still reads it and presses send."""
+    """A polite reminder. It only opens WhatsApp: someone still reads it and presses send.
+    Nothing comes back when they owe nothing, as a customer in credit has nothing to pay."""
+    if owed <= 0:
+        return ""
     return _chat(
         customer,
         f"Hello {customer.name}, a friendly reminder from {get_current_tenant().name}: "

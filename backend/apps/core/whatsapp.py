@@ -25,6 +25,9 @@ def whatsapp_number(phone: str, currency: str) -> str:
     elif digits.startswith("0") and not phone.strip().startswith("+"):
         code = CALLING_CODES.get(currency)
         digits = code + digits[1:] if code else ""
+    # No calling code starts with 0, so a 0 left here is a mistyped number.
+    if digits.startswith("0"):
+        return ""
     return digits if SHORTEST <= len(digits) <= LONGEST else ""
 
 
