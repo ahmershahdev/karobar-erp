@@ -3,6 +3,7 @@ import { useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
@@ -313,9 +314,9 @@ export function MembersPage() {
                     {roleOptions}
                   </select>
                   {can(membership, 'members', 'delete') && (
-                    <Button
-                      variant="danger"
-                      onClick={() =>
+                    <ConfirmButton
+                      message={t('confirm.member')}
+                      onConfirm={() =>
                         run(() =>
                           unwrap(
                             api.DELETE('/api/members/{id}/', { params: { path: { id: row.id } } }),
@@ -324,7 +325,7 @@ export function MembersPage() {
                       }
                     >
                       {t('workspace.remove')}
-                    </Button>
+                    </ConfirmButton>
                   )}
                 </div>
               )}
@@ -347,9 +348,9 @@ export function MembersPage() {
                 </div>
               </div>
               {row.status === 'pending' && can(membership, 'members', 'delete') && (
-                <Button
-                  variant="ghost"
-                  onClick={() =>
+                <ConfirmButton
+                  message={t('confirm.invitation')}
+                  onConfirm={() =>
                     run(() =>
                       unwrap(
                         api.DELETE('/api/invitations/{id}/', { params: { path: { id: row.id } } }),
@@ -358,7 +359,7 @@ export function MembersPage() {
                   }
                 >
                   {t('workspace.revoke')}
-                </Button>
+                </ConfirmButton>
               )}
             </li>
           ))}
@@ -438,9 +439,9 @@ export function RolesPage() {
                   </Button>
                 )}
                 {can(membership, 'roles', 'delete') && (
-                  <Button variant="danger" onClick={() => remove.mutate(role.id)}>
+                  <ConfirmButton onConfirm={() => remove.mutate(role.id)}>
                     {t('workspace.remove')}
-                  </Button>
+                  </ConfirmButton>
                 )}
               </div>
             </li>

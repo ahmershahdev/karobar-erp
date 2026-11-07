@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
@@ -415,13 +416,12 @@ function OrderRow({ order }: { order: SalesOrder }) {
             </Button>
           )}
         {order.status === 'draft' && can(membership, 'sales', 'delete') && (
-          <Button
-            variant="danger"
+          <ConfirmButton
             disabled={action.isPending}
-            onClick={() => action.mutate(() => unwrap(api.DELETE('/api/sales/orders/{id}/', id)))}
+            onConfirm={() => action.mutate(() => unwrap(api.DELETE('/api/sales/orders/{id}/', id)))}
           >
             {t('workspace.remove')}
-          </Button>
+          </ConfirmButton>
         )}
       </Actions>
       {invoiced && <p className="text-sm text-muted">{t('sal.invoiceStarted')}</p>}
@@ -507,13 +507,14 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
           </Button>
         )}
         {draft && can(membership, 'sales', 'delete') && (
-          <Button
-            variant="danger"
+          <ConfirmButton
             disabled={action.isPending}
-            onClick={() => action.mutate(() => unwrap(api.DELETE('/api/sales/invoices/{id}/', id)))}
+            onConfirm={() =>
+              action.mutate(() => unwrap(api.DELETE('/api/sales/invoices/{id}/', id)))
+            }
           >
             {t('workspace.remove')}
-          </Button>
+          </ConfirmButton>
         )}
         {!draft && <PrintButton path={`/api/sales/invoices/${invoice.id}/pdf/`} />}
         {!draft && <ShareButtons invoiceId={invoice.id} />}
@@ -731,13 +732,14 @@ function ReceiptRow({ receipt }: { receipt: CustomerReceipt }) {
         )}
         {!draft && <PrintButton path={`/api/sales/receipts/${receipt.id}/pdf/`} />}
         {draft && can(membership, 'sales', 'delete') && (
-          <Button
-            variant="danger"
+          <ConfirmButton
             disabled={action.isPending}
-            onClick={() => action.mutate(() => unwrap(api.DELETE('/api/sales/receipts/{id}/', id)))}
+            onConfirm={() =>
+              action.mutate(() => unwrap(api.DELETE('/api/sales/receipts/{id}/', id)))
+            }
           >
             {t('workspace.remove')}
-          </Button>
+          </ConfirmButton>
         )}
       </Actions>
       <ActionError error={action.error} />
@@ -800,15 +802,14 @@ function ReturnRow({ note }: { note: CreditNote }) {
           </Button>
         )}
         {draft && can(membership, 'sales', 'delete') && (
-          <Button
-            variant="danger"
+          <ConfirmButton
             disabled={action.isPending}
-            onClick={() =>
+            onConfirm={() =>
               action.mutate(() => unwrap(api.DELETE('/api/sales/credit-notes/{id}/', id)))
             }
           >
             {t('workspace.remove')}
-          </Button>
+          </ConfirmButton>
         )}
       </Actions>
       <ActionError error={action.error} />

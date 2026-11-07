@@ -1150,5 +1150,11 @@
     "tampered": "Warning: this chat has been changed since it was written.",
     "reset": "New chat",
     "resetDone": "New chat started. Earlier messages are kept for the record, but they are hidden and the assistant won't use them."
+  },
+  "confirm": {
+    "title": "Remove this?",
+    "body": "You can't get it back.",
+    "member": "This person will no longer be able to open this business.",
+    "invitation": "The invitation link will stop working."
   }
 }

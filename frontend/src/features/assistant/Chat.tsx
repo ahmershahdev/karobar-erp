@@ -50,9 +50,11 @@ export function Chat({ membership }: { membership: Membership }) {
       await ensureCsrf();
       return unwrap(api.POST('/api/assistant/reset/', { headers }));
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       // Cleared at once: waiting for the refetch would leave the old chat showing, or keep it
-      // there if the refetch failed.
+      // there if the refetch failed. A request from before the reset is stopped first, or its
+      // answer could put the old chat back.
+      await client.cancelQueries({ queryKey: keys.messages });
       client.setQueryData(keys.messages, []);
       setFresh(true);
       if (!ask.isPending) ask.reset();
