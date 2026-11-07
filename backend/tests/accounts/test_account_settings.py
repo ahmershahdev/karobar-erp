@@ -183,3 +183,28 @@ def test_an_email_change_still_succeeds_when_the_queue_is_down(
     assert post("/api/accounts/email/confirm/", {"token": token}) == 204
     user.refresh_from_db()
     assert user.email == "queue@example.test"
+
+
+def test_changing_the_password_ends_a_pending_email_change() -> None:
+    user = create_user()
+    token = make_email_change_token(user, "attacker@example.test")
+    user.set_password(NEW_PASSWORD)
+    user.save()
+    assert post("/api/accounts/email/confirm/", {"token": token}) == 400
+    user.refresh_from_db()
+    assert user.email != "attacker@example.test"
+
+
+def test_an_old_link_stays_dead_when_the_email_comes_back() -> None:
+    user = create_user()
+    original = user.email
+    first = make_email_change_token(user, "second@example.test")
+    assert post("/api/accounts/email/confirm/", {"token": first}) == 204
+    user.refresh_from_db()
+    back = make_email_change_token(user, original)
+    assert post("/api/accounts/email/confirm/", {"token": back}) == 204
+    user.refresh_from_db()
+    assert user.email == original
+    assert post("/api/accounts/email/confirm/", {"token": first}) == 400
+    user.refresh_from_db()
+    assert user.email == original

@@ -84,9 +84,11 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
 - A new password signs out every other session, through Django's session hash, and keeps the
   one that made the change. The owner gets an email either way.
 - A new email only takes effect from a signed link sent to the new address (`accounts.change-email`
-  salt, one day). The link signs the old address too, so it dies once the email changes either way,
-  and it is checked again under a row lock, so it can't be used twice at once. The old address is
-  told once the change is made.
+  salt, one day). The link signs a fingerprint of the password hash, the email and when it was last
+  confirmed, so any change of password or email ends every link sent before. Changing the password
+  therefore stops an attacker's pending change, and a link can't work again after the email goes
+  from A to B and back. It is checked again under a row lock, so it can't be used twice at once.
+  The old address is told once the change is made.
 - Asking for an address that already has an account gets the same answer as any other, and the
   owner of that address gets an email, so the form can't be used to find out who has an account.
 - Emailed links carry their token in the query string, so nginx logs the path without the query

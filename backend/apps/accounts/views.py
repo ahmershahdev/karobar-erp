@@ -296,13 +296,16 @@ class EmailChangeConfirmView(AnonymousFormView):
         if found is None:
             raise ValidationError({"token": [INVALID_LINK]})
         user, new = found
-        old = user.email
         try:
             with transaction.atomic():
-                user = lock_rows(User.objects.filter(pk=user.pk))[0]
-                # Checked again under the lock, so a link can't be used twice at once.
-                if user.email != old:
+                lock_rows(User.objects.filter(pk=user.pk))
+                # Read again under the lock: a link used twice at once, or racing a password
+                # change, fails here, because the account state it was signed for has moved on.
+                again = read_email_change_token(data.validated_data["token"])
+                if again is None or again[0].pk != user.pk:
                     raise ValidationError({"token": [INVALID_LINK]})
+                user = again[0]
+                old = user.email
                 user.email = new
                 user.email_verified_at = timezone.now()
                 user.save(update_fields=["email", "email_verified_at"])
