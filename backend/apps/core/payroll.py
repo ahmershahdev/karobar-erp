@@ -13,6 +13,7 @@ from .documents import percent_of
 from .money import quantize_money
 
 ZERO = Decimal(0)
+HUNDRED = Decimal(100)
 EARNING, DEDUCTION = "earning", "deduction"
 
 
@@ -58,7 +59,10 @@ def value(component: Component, basic: Decimal) -> Decimal:
         if component.amount < 0:
             raise PayrollError("a component can't be negative")
         return quantize_money(component.amount)
-    return percent_of(basic, component.percent or ZERO)
+    percent = component.percent or ZERO
+    if not ZERO <= percent <= HUNDRED:
+        raise PayrollError("a percentage of basic is between 0 and 100")
+    return percent_of(basic, percent)
 
 
 def breakdown(basic: Decimal, components: Sequence[Component]) -> Breakdown:

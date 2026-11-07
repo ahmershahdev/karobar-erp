@@ -55,7 +55,7 @@ def test_basic_alone_is_a_valid_structure() -> None:
     ],
 )
 def test_strange_components_are_refused(component: Component) -> None:
-    with pytest.raises((PayrollError, ValueError)):
+    with pytest.raises(PayrollError):
         value(component, D("1000"))
 
 

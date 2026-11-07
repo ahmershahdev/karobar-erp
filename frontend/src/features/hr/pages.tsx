@@ -6,6 +6,7 @@ import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Hint, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
+import { allPages } from '../../lib/api/pages';
 import type { components } from '../../lib/api/schema';
 import { can } from '../../lib/api/types';
 import { today } from '../../lib/dates';
@@ -85,6 +86,7 @@ export function DepartmentsPage() {
   const { membership } = useWorkspace();
   const departments = useDepartments();
   const save = useTenantAction(KEYS);
+  const remove = useTenantAction(KEYS);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   return (
@@ -135,6 +137,9 @@ export function DepartmentsPage() {
       )}
       <Panel title={t('hr.departments')}>
         {departments.data?.length === 0 && <p className="text-muted">{t('hr.noDepartments')}</p>}
+        {remove.isError && (
+          <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
+        )}
         <ul className="divide-y divide-line">
           {departments.data?.map((department) => (
             <li key={department.id} className="flex items-center justify-between gap-3 py-3">
@@ -145,7 +150,7 @@ export function DepartmentsPage() {
               {can(membership, 'hr', 'delete') && (
                 <ConfirmButton
                   onConfirm={() =>
-                    save.mutate(() =>
+                    remove.mutate(() =>
                       unwrap(
                         api.DELETE('/api/hr/departments/{id}/', {
                           params: { path: { id: department.id } },
@@ -747,12 +752,23 @@ export function EmployeesPage() {
   const [viewing, setViewing] = useState<Employee | null>(null);
   const employees = useQuery({
     queryKey: [membership.tenant_id, 'hr-employees', term, status],
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/hr/employees/', {
-          params: { query: { ...(term ? { q: term } : {}), ...(status ? { status } : {}) } },
-        }),
+    // Every page, as the customer list does, so a filter never stops at the first 50.
+    queryFn: async () => ({
+      results: await allPages((cursor) =>
+        unwrap(
+          api.GET('/api/hr/employees/', {
+            params: {
+              query: {
+                ...(term ? { q: term } : {}),
+                ...(status ? { status } : {}),
+                page_size: 200,
+                cursor,
+              } as never,
+            },
+          }),
+        ),
       ),
+    }),
   });
   return (
     <>

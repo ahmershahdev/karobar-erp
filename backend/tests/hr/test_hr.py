@@ -286,3 +286,51 @@ def test_records_name_themselves(boss: Member) -> None:
     assert str(saved.structure.components.first()) == "House rent"
     assert str(saved.structure) == "Staff"
     assert str(saved.employee) == "E1 Invented Worker"
+
+
+def test_a_percentage_over_100_is_refused_by_the_service(boss: Member) -> None:
+    over = services.ComponentInput("Rent", "earning", None, D(101))
+    with pytest.raises(services.BadComponentError):
+        services.save_structure(boss.user, {"name": "Z"}, [over])
+
+
+def test_a_contract_sits_inside_employment(boss: Member) -> None:
+    person = employee(boss, joined_on="2026-03-01").json()["id"]
+    plan = structure(boss).json()["id"]
+    assert contract(boss, person, plan, "2026-02-01").status_code == 400
+    boss.client().patch(f"/api/hr/employees/{person}/", {"left_on": "2026-12-31"}, format="json")
+    assert contract(boss, person, plan, "2026-03-01").status_code == 400
+    assert contract(boss, person, plan, "2026-03-01", "2027-01-31").status_code == 400
+    assert contract(boss, person, plan, "2026-03-01", "2026-12-31").status_code == 201
+
+
+def test_leaving_ends_a_contract_that_runs_past_it(boss: Member) -> None:
+    person = employee(boss).json()["id"]
+    plan = structure(boss).json()["id"]
+    pk = contract(boss, person, plan, "2026-01-01").json()["id"]
+    reply = boss.client().patch(
+        f"/api/hr/employees/{person}/", {"left_on": "2026-08-31"}, format="json"
+    )
+    assert reply.status_code == 200, reply.content
+    assert str(Contract.objects.get(pk=pk).ends_on) == "2026-08-31"
+
+
+def test_leaving_before_a_contract_starts_is_refused(boss: Member) -> None:
+    person = employee(boss).json()["id"]
+    plan = structure(boss).json()["id"]
+    contract(boss, person, plan, "2026-09-01")
+    reply = boss.client().patch(
+        f"/api/hr/employees/{person}/", {"left_on": "2026-08-31"}, format="json"
+    )
+    assert reply.status_code == 400
+    assert Employee.objects.get(pk=person).left_on is None
+
+
+def test_joining_after_a_contract_starts_is_refused(boss: Member) -> None:
+    person = employee(boss).json()["id"]
+    plan = structure(boss).json()["id"]
+    contract(boss, person, plan, "2026-01-01")
+    reply = boss.client().patch(
+        f"/api/hr/employees/{person}/", {"joined_on": "2026-02-01"}, format="json"
+    )
+    assert reply.status_code == 400

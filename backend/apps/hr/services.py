@@ -29,6 +29,14 @@ class HrError(Exception):
     message = "That can't be saved."
 
 
+class OutsideEmploymentError(HrError):
+    message = "A contract must fall between the day this person joined and the day they left."
+
+
+class LeavesBeforeContractError(HrError):
+    message = "This person has a contract starting after that day. Remove or move it first."
+
+
 class OverlapError(HrError):
     message = "This person already has a contract for some of those dates. End it first."
 
@@ -56,7 +64,6 @@ class DeductionsTooLargeError(HrError):
 # Departments and employees reuse the audited master-data helpers of inventory.
 save_department = inventory.save_master
 delete_department = inventory.delete_master
-save_employee = inventory.save_master
 delete_employee = inventory.delete_master
 
 
@@ -161,6 +168,10 @@ def save_contract(
     lock_rows(Employee.objects.filter(pk=employee.pk))
     starts = values.get("starts_on", target.starts_on)
     ends = values.get("ends_on", target.ends_on)
+    if starts < employee.joined_on or (
+        employee.left_on is not None and (ends is None or ends > employee.left_on)
+    ):
+        raise OutsideEmploymentError
     clash = _overlapping(employee, starts, ends)
     if target.pk is not None:
         clash = clash.exclude(pk=target.pk)
@@ -186,3 +197,26 @@ def current_contract(employee: Employee, on: date) -> Contract | None:
         .select_related("structure")
         .first()
     )
+
+
+@transaction.atomic
+def save_employee(actor: User, employee: Employee, values: dict[str, Any]) -> Employee:
+    """Setting a leaving day ends any contract still running after it on that day, so pay
+    stops when the person does. A contract that only starts after it is refused instead,
+    because ending it would leave it ending before it began."""
+    if employee.pk is not None:
+        lock_rows(Employee.objects.filter(pk=employee.pk))
+    left_on = values.get("left_on", employee.left_on)
+    joined_on = values.get("joined_on", employee.joined_on)
+    if employee.pk is not None:
+        contracts = Contract.objects.filter(employee=employee)
+        if contracts.filter(starts_on__lt=joined_on).exists():
+            raise OutsideEmploymentError
+        if left_on is not None:
+            if contracts.filter(starts_on__gt=left_on).exists():
+                raise LeavesBeforeContractError
+            running = contracts.filter(Q(ends_on__isnull=True) | Q(ends_on__gt=left_on))
+            for contract in running:
+                inventory.save_master(actor, contract, {"ends_on": left_on})
+    saved: Employee = inventory.save_master(actor, employee, values)
+    return saved
