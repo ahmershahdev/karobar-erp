@@ -8,6 +8,7 @@ Last updated: 2026-11-07. Update at the end of every work session.
 - Merged since `v0.5.0`: the business home page (#32), signed bill links, WhatsApp click-to-chat and the daily summary email (#33), and the business chat through Groq with signed messages (#34, `apps/assistant`, `apps/core/chain.py`; see `docs/security.md`).
 - Also merged: chat focus and new chat (#35), confirm before every delete (#36), name, email and password settings (#37), chat screen names per language (#38), and handing over a business and deleting an account (#39).
 - In review: `feat/chat-drafts`. The chat can propose a draft sales invoice, quotation or purchase order as a card; the person presses Confirm and the document's own save runs with their permissions. It never posts, pays or deletes. See `docs/security.md`. Checked live against Groq with invented names: it returned the right tool calls. Not yet tried by a person in the browser.
+- In review, stacked on #40: `feat/chat-lookups`. The chat can look up a product (price, packs, stock), a customer (balance, recent invoices) or a supplier (balance, recent bills) when asked, limited to what the role may view. Checked live against Groq with an invented result.
 - `feat/ai-assistant` is replaced by #33 and #34 and can be deleted.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
@@ -20,8 +21,10 @@ Last updated: 2026-11-07. Update at the end of every work session.
 Agreed order, one PR each:
 
 1. Review and merge chat drafts. Try it in the browser first: ask for a bill, press Confirm, open the draft.
-2. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
-3. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.
+2. Review and merge chat lookups after it.
+3. Discounts: a % or amount off per line and on the whole bill, on invoices, quotations and the counter, booked to a Sales discounts account. The owner sets which roles may give one and a maximum %. Coupon codes are not wanted yet.
+4. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
+5. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.
 
 Also check a signed bill link returning a real PDF in Docker.
 
