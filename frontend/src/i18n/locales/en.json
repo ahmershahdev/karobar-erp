@@ -1110,7 +1110,8 @@
     "addStore": "Add a store",
     "lineDiscount": "Discount % on this item",
     "saleDiscount": "Discount on this sale (%)",
-    "discountGiven": "Discount given"
+    "discountGiven": "Discount given",
+    "badDiscount": "A discount is a number from 0 to 100, with up to two decimals, such as 12.5."
   },
   "business": {
     "steps": {

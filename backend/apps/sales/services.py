@@ -208,21 +208,40 @@ def _check_discount(
     actor: User, lines: Sequence[OrderLineInput | InvoiceLineInput], priced: list[Priced]
 ) -> None:
     """Each line's discount, its own and its share of the bill, must stay within the role's
-    limit. Lines carried over from an order were checked when the order was saved."""
-    given = [
-        row
+    limit. A line carried over from an order may keep that order's discount for its quantity,
+    because the order was checked when it was saved; only anything above that is checked."""
+    extra = [
+        (row, row.gross - row.net - _carried(line))
         for line, row in zip(lines, priced, strict=True)
-        if row.gross - row.net > 0 and getattr(line, "order_line", None) is None
     ]
-    if not given:
+    extra = [(row, cut) for row, cut in extra if cut > 0]
+    if not extra:
         return
     membership = Membership.objects.filter(user=actor).select_related("role").first()
     if membership is not None and membership.is_owner:
         return
     role = membership.role if membership else None
     limit = role.max_discount_percent if role else ZERO
-    if any((row.gross - row.net) * 100 > row.gross * limit for row in given):
+    if any(cut * 100 > row.gross * limit for row, cut in extra):
         raise DiscountNotAllowedError
+
+
+def _carried(line: OrderLineInput | InvoiceLineInput) -> Decimal:
+    """The order's discount for this line's quantity, worked out exactly as invoicing the order
+    does, so a line made by invoicing the order carries no unchecked extra at all."""
+    order_line = getattr(line, "order_line", None)
+    if order_line is None:
+        return ZERO
+    try:
+        return share(
+            order_line.discount + order_line.bill_share,
+            order_line.invoiced_quantity,
+            line.quantity,
+            order_line.quantity,
+        )
+    except DocumentError:
+        # More than the order has left; posting refuses it anyway, so nothing is carried.
+        return ZERO
 
 
 def _line_tax(line: OrderLineInput | InvoiceLineInput, net: Decimal, on: date) -> Decimal:
@@ -542,7 +561,8 @@ def _post_invoice(actor: User, invoice: Invoice) -> Invoice:
     lines = list(locked.lines.select_related("product", "unit"))
     if not lines:
         raise NoLinesError
-    if locked.total <= 0:
+    # Zero is allowed only when everything was given away, so an empty bill still can't post.
+    if locked.total < 0 or (locked.total == 0 and locked.discount == 0):
         raise EmptyDocumentError
     _check_credit(locked.customer_id, locked.total)
     _invoice_against_order(locked, lines)

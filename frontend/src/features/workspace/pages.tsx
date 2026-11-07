@@ -548,6 +548,7 @@ export function RolesPage() {
                     setEditing(null);
                     setName('');
                     setGrants({});
+                    setMaxDiscount('0');
                   }}
                 >
                   {t('workspace.cancel')}

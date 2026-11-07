@@ -203,21 +203,25 @@ def _sell(
         raise NotEnoughCashError
     posted = sales._post_invoice(actor, invoice)
     role = "cash" if method == PosSale.Method.CASH else "bank"
-    receipt = sales.save_receipt(
-        actor,
-        {
-            "customer": customer,
-            "date": today,
-            "amount": posted.total,
-            "received_into": accounting.account_for_role(role),
-            "memo": f"Counter sale {posted.number}",
-        },
-        [sales.AllocationInput(posted, posted.total)],
-    )
+    # A sale given away in full takes no money, so there is nothing to record as received.
+    receipt = None
+    if posted.total > 0:
+        draft = sales.save_receipt(
+            actor,
+            {
+                "customer": customer,
+                "date": today,
+                "amount": posted.total,
+                "received_into": accounting.account_for_role(role),
+                "memo": f"Counter sale {posted.number}",
+            },
+            [sales.AllocationInput(posted, posted.total)],
+        )
+        receipt = sales._post_receipt(actor, draft)
     sale: PosSale = PosSale.objects.create(
         session=till,
         invoice=posted,
-        receipt=sales._post_receipt(actor, receipt),
+        receipt=receipt,
         method=method,
         amount=posted.total,
         tendered=given,

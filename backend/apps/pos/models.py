@@ -54,7 +54,10 @@ class PosSale(TenantOwnedModel):
 
     session = models.ForeignKey(PosSession, on_delete=models.PROTECT, related_name="sales")
     invoice = models.OneToOneField(Invoice, on_delete=models.PROTECT, related_name="+")
-    receipt = models.OneToOneField(CustomerReceipt, on_delete=models.PROTECT, related_name="+")
+    # Empty only for a sale given away in full, which takes no money.
+    receipt = models.OneToOneField(
+        CustomerReceipt, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
     method = models.CharField(max_length=10, choices=Method.choices)
     amount = money_field()
     tendered = money_field()

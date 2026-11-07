@@ -1106,7 +1106,8 @@
     "addStore": "أضف متجرًا",
     "lineDiscount": "نسبة الخصم على هذا الصنف",
     "saleDiscount": "خصم على هذا البيع (%)",
-    "discountGiven": "الخصم الممنوح"
+    "discountGiven": "الخصم الممنوح",
+    "badDiscount": "الخصم رقم من 0 إلى 100، بمنزلتين عشريتين كحد أقصى، مثل 12.5."
   },
   "business": {
     "steps": {

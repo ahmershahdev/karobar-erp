@@ -1110,7 +1110,8 @@
     "addStore": "اسٹور شامل کریں",
     "lineDiscount": "اس چیز پر رعایت %",
     "saleDiscount": "اس فروخت پر رعایت (%)",
-    "discountGiven": "دی گئی رعایت"
+    "discountGiven": "دی گئی رعایت",
+    "badDiscount": "رعایت 0 سے 100 تک کا عدد ہے، زیادہ سے زیادہ دو اعشاریہ کے ساتھ، جیسے 12.5۔"
   },
   "business": {
     "steps": {
