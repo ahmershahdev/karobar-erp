@@ -88,9 +88,12 @@ def _customers(membership: Membership, name: str) -> list[dict[str, Any]]:
                         "date": str(invoice.date),
                         "status": invoice.status,
                         "total": _number(invoice.total),
+                        # Only a posted invoice is owed; a draft's total isn't.
                         "still_open": _number(
                             invoice.total - invoice.amount_paid - invoice.amount_credited
-                        ),
+                        )
+                        if invoice.status == Invoice.Status.POSTED
+                        else None,
                         "due_date": str(invoice.due_date) if invoice.due_date else None,
                     }
                     for invoice in invoices
@@ -116,7 +119,9 @@ def _suppliers(membership: Membership, name: str) -> list[dict[str, Any]]:
                         "date": str(bill.date),
                         "status": bill.status,
                         "total": _number(bill.total),
-                        "still_open": _number(bill.total - bill.amount_paid),
+                        "still_open": _number(bill.total - bill.amount_paid)
+                        if bill.status == Bill.Status.POSTED
+                        else None,
                         "due_date": str(bill.due_date) if bill.due_date else None,
                     }
                     for bill in bills

@@ -76,9 +76,17 @@ def test_customer_lookups_carry_balances_and_bills_but_no_contact_details(
         [sales.InvoiceLineInput(seller.shop.soap, seller.shop.pcs, D(2), D(100))],
     )
     sales.post_invoice(seller.user, invoice)
+    sales.save_invoice(
+        seller.user,
+        {"customer": seller.customer, "warehouse": seller.shop.main, "date": timezone.localdate()},
+        [sales.InvoiceLineInput(seller.shop.soap, seller.shop.pcs, D(1), D(999))],
+    )
     [row] = found(seller.shop.member, "look_up_customer", "kiryana")
     assert row["owes_us"] == "200"
-    assert row["recent_invoices"][0]["still_open"] == "200"
+    draft, posted = row["recent_invoices"]
+    # A draft isn't owed, so it shows no open amount that would contradict the balance.
+    assert (draft["status"], draft["still_open"]) == ("draft", None)
+    assert posted["still_open"] == "200"
     text = json.dumps(row)
     assert "03000000000" not in text
     assert "example.invalid" not in text
