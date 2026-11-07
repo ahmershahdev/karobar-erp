@@ -1134,5 +1134,19 @@
     "copy": "Copy bill link",
     "copied": "Link copied",
     "remind": "Remind on WhatsApp"
+  },
+  "chat": {
+    "open": "Ask Karobar",
+    "title": "Ask about your business",
+    "close": "Close",
+    "notice": "Your question and the figures your role can see are sent to Groq, an outside AI service, to write the answer. The assistant can only talk, not change anything, and it can make mistakes, so check important numbers. Each message carries a signature, so any later change can be detected.",
+    "off": "The assistant is switched off on this server.",
+    "placeholder": "Ask anything, for example: how were sales today?",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "signed": "Signed {{id}}",
+    "verify": "Check this chat has not been changed",
+    "verified": "All {{count}} messages are intact.",
+    "tampered": "Warning: this chat has been changed since it was written."
   }
 }

@@ -15,6 +15,7 @@ from django.utils import timezone
 
 from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
+from apps.assistant import services as assistant
 from apps.inventory import services as inventory
 from apps.inventory.models import (
     Batch,
@@ -53,6 +54,7 @@ PUBLIC = {
 USER_LEVEL = {
     "api/accounts/logout/",
     "api/accounts/me/",
+    "api/assistant/ask/",
     "api/accounts/verify-email/resend/",
     "api/tenants/",
     "api/invitations/accept/",
@@ -375,6 +377,19 @@ tenant_endpoint("api/purchasing/ageing/")(
 )
 
 
+def _chat(member: Member) -> tuple[str, int]:
+    return "/api/assistant/messages/", assistant.record(member.user, "user", "Private").pk
+
+
+def _chat_check(member: Member) -> tuple[str, int]:
+    assistant.record(member.user, "user", "Private")
+    return "/api/assistant/check/", 0
+
+
+tenant_endpoint("api/assistant/messages/")(_chat)
+tenant_endpoint("api/assistant/check/")(_chat_check)
+
+
 def _automation(member: Member) -> tuple[str, int]:
     Tenant.objects.filter(pk=member.tenant.pk).update(daily_summary=False)
     return "/api/automation/", 0
@@ -578,6 +593,10 @@ def test_other_tenants_rows_are_invisible(
             # The owner sold something worth 5.00; none of it may reach another business's report.
             assert mine.json() != body
             assert '"5.00"' not in theirs.content.decode()
+            return
+        if route == "api/assistant/check/":
+            assert mine.json()["count"] == 1
+            assert body["count"] == 0
             return
         if route == "api/automation/":
             # The owner turned theirs off; that must not reach another business.

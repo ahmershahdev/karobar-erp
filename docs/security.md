@@ -206,3 +206,14 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 ## Signed bill links
 
 A customer can open one posted bill without an account through `/api/public/bills/<token>/`. The token is signed with `django.core.signing` under its own salt, names the business and the bill, and stops working after 30 days. A changed, old or draft link all answer 404. The response carries `Cache-Control: private, no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`, because the link is the key to the bill. Anyone holding the link can read that one bill until it expires, so it must only go to the customer. A link can't be withdrawn early except by rotating `SECRET_KEY`.
+
+## Business chat
+
+The chat (`apps/assistant`) sends the question, recent messages and the figures the person's role may see to Groq, an outside service. People are told this in the chat. A key in `GROQ_API_KEY` switches it on; without one it stays off.
+
+- **It can only talk.** No code path from a reply reaches a record, so a clever message or a product name written as an instruction can't change anything. Replies are shown as plain text.
+- **What it knows follows the role.** `facts()` includes sales and profit only with the reports permission, and low stock only with inventory. Each person sees only their own chat, even within a business. This covers new answers only: replies saved before someone lost a permission stay in their chat and still go to Groq as recent history. They hold nothing the person wasn't shown at the time, and they can't be edited because they are signed.
+- **Every message is signed.** Each row carries an HMAC-SHA256 over the business, the person, the words, the time and the signature before it (`apps/core/chain.py`). Editing, inserting or moving a message breaks the chain, and so does removing any message except the newest, and the check button in the chat finds it. Deleting the newest messages is not found, because nothing signed after them refers to them: the rest is still a valid, shorter chain.
+- **What the signature does not prove.** It shows the log has not changed since the server wrote it, and which signed-in account sent each message. It can't show who was at the keyboard, and it is not a legal electronic signature. The server holds the key, so someone with the key and the database could rewrite a whole chain.
+
+Keep `CHAT_SIGNING_KEY` stable in production. Production refuses to start with a `GROQ_API_KEY` and no `CHAT_SIGNING_KEY`. Elsewhere it falls back to `SECRET_KEY`, so rotating that would make old chats fail the check.

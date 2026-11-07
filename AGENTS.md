@@ -35,7 +35,7 @@ backend/apps/core/    pure business logic (posting rules, stock valuation, tax a
 backend/apps/platform/ cross-cutting web concerns: health, security headers, throttles, errors
 backend/apps/accounts/ the user model and sign-in flows
 backend/apps/tenancy/ tenants, members, roles and permissions, tenant scoping, audit log
-backend/apps/{accounting,inventory,purchasing,sales,pos,hr,payroll,reports}/
+backend/apps/{accounting,inventory,purchasing,sales,pos,hr,payroll,reports,assistant}/
 backend/tests/        mirrors apps/
 frontend/             React app: src/{app,pages,features,components,lib,i18n,styles}
 deploy/               nginx and production compose

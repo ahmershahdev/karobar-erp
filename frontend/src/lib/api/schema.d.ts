@@ -411,6 +411,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assistant/ask/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["assistant_ask_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assistant/check/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assistant_check_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assistant/messages/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assistant_messages_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit/": {
         parameters: {
             query?: never;
@@ -1955,6 +2003,23 @@ export interface components {
             readonly id: number;
             name: string;
         };
+        ChatAsk: {
+            message: string;
+        };
+        ChatCheck: {
+            enabled: boolean;
+            ok: boolean;
+            count: number;
+            broken_at: number | null;
+        };
+        ChatMessage: {
+            readonly id: number;
+            role: components["schemas"]["RoleEnum"];
+            content: string;
+            /** Format: date-time */
+            created_at?: string;
+            signature: string;
+        };
         CloseTill: {
             /** Format: decimal */
             counted_cash: string;
@@ -2803,6 +2868,12 @@ export interface components {
             name: string;
             permissions: unknown;
         };
+        /**
+         * @description * `user` - User
+         *     * `assistant` - Assistant
+         * @enum {string}
+         */
+        RoleEnum: "user" | "assistant";
         SaleRequest: {
             lines: components["schemas"]["CartLine"][];
             method: components["schemas"]["MethodEnum"];
@@ -3890,6 +3961,67 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    assistant_ask_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatAsk"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessage"];
+                };
+            };
+        };
+    };
+    assistant_check_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatCheck"];
+                };
+            };
+        };
+    };
+    assistant_messages_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessage"][];
+                };
             };
         };
     };

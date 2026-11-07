@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.sales",
     "apps.reports",
     "apps.pos",
+    "apps.assistant",
 ]
 
 MIDDLEWARE = [
@@ -171,6 +172,7 @@ REST_FRAMEWORK: dict[str, Any] = {
         "health": env("THROTTLE_HEALTH", default="120/min"),
         "session": env("THROTTLE_SESSION", default="120/min"),
         "tenancy": env("THROTTLE_TENANCY", default="300/min"),
+        "assistant": env("THROTTLE_ASSISTANT", default="20/min"),
     },
     "EXCEPTION_HANDLER": "apps.platform.exceptions.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -218,6 +220,12 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Karobar ERP <no-reply@lo
 # Email goes out through Resend's SMTP relay when RESEND_API_KEY is set (the API key is the SMTP
 # password, the user is literally "resend"), so no SDK is needed. Any other SMTP provider works
 # through the EMAIL_* variables instead. Without either, mail is printed to the console.
+# The business chat. Without a key it stays switched off. Its signing key is separate so it can be
+# kept when SECRET_KEY rotates: a new key can't verify the chats signed before it.
+GROQ_API_KEY: str = env("GROQ_API_KEY", default="")
+GROQ_MODEL: str = env("GROQ_MODEL", default="openai/gpt-oss-120b")
+CHAT_SIGNING_KEY: str = env("CHAT_SIGNING_KEY", default="") or SECRET_KEY
+
 RESEND_API_KEY: str = env("RESEND_API_KEY", default="")
 if RESEND_API_KEY:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

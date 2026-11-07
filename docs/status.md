@@ -1,62 +1,32 @@
 # Project status
 
-Last updated: 2026-11-06. Update at the end of every work session.
+Last updated: 2026-11-07. Update at the end of every work session.
 
 ## Where we are
 
-- On `main`: #21 (Resend, reCAPTCHA, OAuth, with the Google account takeover closed), #22 (white design, real logo, offline and 404 screens, Brotli, service worker, business slugs, clean URLs) and #20 (M4 purchasing).
-- M4 is released as `v0.4.0`: purchasing, sales, statements, ageing and PDF invoices and receipts. PDFs need Pango, so a Windows machine answers with a plain message.
-- M5: reports, tax rates as dated data, and the counter (POS): barcode scan, cash and card, change, printing, end-of-day count.
-- Emails use one branded layout with a plain text copy (`apps/platform/mail.py`); dropdown lists are themed with `appearance: base-select` where the browser supports it.
-- Not tested: the v2 checkbox being ticked by a person, Google and Facebook sign-in end to end, and the sales screens in Urdu and Arabic by a native reader.
-- Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory).
-  The Ledger Noir design, the floating navbar, the new footer and the ledger-opening intro are
-  on `main`.
-- PR #19 (`feat/design-pass-2`) is open with CI green: richer pages, module cards, redesigned
-  auth, and fixes for all 13 CodeRabbit findings (FIFO layer rounding, stock on hand doubled by
-  packs in search, exact barcode picks, live reduced-motion, focus and invite copy). Its review
-  threads still need resolving on GitHub before the ruleset lets it merge. SonarCloud flags
-  3.9% duplication; it is not a required check.
-- M4 part 1, purchasing, is on `feat/m4-purchasing` (stacked on #19):
-  - `apps/core`: `documents.line_amount` and `documents.share` (running-total slices), and the
-    `supplier_bill` posting rule, at 100% branch coverage.
-  - `apps/purchasing`: suppliers with balances; purchase orders (PO- numbers on confirm, closed
-    when fully received); goods receipts posted through the inventory engine against GRNI;
-    supplier bills clearing GRNI with purchase price variance, plus expense lines; supplier
-    payments allocated to bills under row locks, the rest as an advance.
-  - New chart roles `grni` (2160) and `purchase_variance` (5300), with a migration for
-    existing businesses.
-  - Screens: suppliers, purchase orders, goods received, bills, payments.
-  - 232 backend tests, including two payments racing to settle one bill.
-- M3 (inventory), merged in #18:
-  - `apps/core`: moving-average and FIFO valuation, unit conversion, stock posting rules, at
-    100% branch coverage.
-  - `apps/inventory`: units, categories, products with variants, packs and barcodes,
-    warehouses, batches with expiry, stock levels under row locks, FIFO cost layers, stock
-    entries (receipt, issue, transfer, count) posted with gapless GRN/GIN/TRF/ADJ numbers and
-    their cost posted to the books, low-stock and expiry alerts with a daily Celery email.
-  - Screens: products, stock entries with a line editor, stock on hand with value, alerts, setup.
-  - 179 backend tests, including two cashiers selling the last unit at once and three
-    first-ever receipts racing to create a stock level.
-- `npm run dev` now also runs Celery beat for scheduled jobs.
-
-- Open and stacked: #20 (M4 purchasing, on #19), #21 (Resend, reCAPTCHA v3 and v2, honeypot,
-  Google and Facebook sign-in, on #19), #22 (brand theme from the logo: navy, azure and ember,
-  Montserrat, new mark, preloader, curtain page transition, cursor, footer, on #21).
-- Google sign-in is configured in the Google Cloud project "Karobar ERP"
-  (`storied-catwalk-513610-u1`, in testing mode with the owner's Gmail as test user); a duplicate
-  empty "Karobar ERP" project was created by mistake and can be deleted. Facebook is waiting for
-  the owner to sign in at developers.facebook.com.
+- Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory), `v0.4.0` (M4 purchasing, sales, documents), `v0.5.0` (M5 counter, tax, reports, report indexes).
+- Merged since `v0.5.0`: the business home page (#32), and signed bill links, WhatsApp click-to-chat and the daily summary email (#33).
+- In review: the business chat through Groq with signed messages (`feat/business-chat`, `apps/assistant`, `apps/core/chain.py`). See `docs/security.md`. It replaces `feat/ai-assistant`, which can be deleted once it merges.
+- Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
+- `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
+- PDFs need Pango, so they can't be made on the maintainer's Windows machine. Printing and signed bill links work up to that step there. Test real PDFs in Docker.
+- Google sign-in is configured in the Google Cloud project "Karobar ERP" (`storied-catwalk-513610-u1`, in testing mode with the owner's Gmail as test user); a duplicate empty "Karobar ERP" project was created by mistake and can be deleted. Facebook is waiting for the owner to sign in at developers.facebook.com.
+- Not tested: the v2 checkbox being ticked by a person, Facebook sign-in end to end, a signed bill link returning a real PDF, and the sales screens in Urdu and Arabic by a native reader.
 
 ## Next session
 
-1. Tag `v0.5.0`: M5 is done.
-2. M6: HR and payroll.
+1. Merge the chat PR once CI and review are clean.
+2. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
+3. Check a signed bill link returning a real PDF in Docker.
 
 ## Open questions
 
 - A Facebook sign-up keeps its link when the address is confirmed by email, because that is how a real Facebook user confirms. Someone who claims another person's address and gets them to click the link would keep an account on it. Decide how Facebook accounts should be confirmed.
-
 - Reports that read all history stay slow at 1 million lines, on MySQL with its default 128 MB buffer pool: balance sheet and all-time trial balance about 4.7s, cash flow about 7s, dashboard about 4.4s. Each joins every line to its entry. A larger buffer pool should help, which was not measured; the real fix is keeping running balances per account or copying the date onto the line.
-
 - First tax and payroll rules to ship (Pakistan first, then the Gulf), with official sources.
+- Chat messages can never be deleted through the app, which is what makes them tamper-evident. Decide how long to keep them before launch.
+- Before switching the chat on in production: each question holds a web worker while it builds the figures and waits up to 20 seconds for Groq, and the Dockerfile runs 3 workers, so three people chatting at once could stall the whole API. Options are moving the call to Celery with polling, or caching the figures and adding workers.
+- Someone who loses a permission keeps the figures in their old chat replies, and those replies still go to Groq as history. The maintainer accepted this on #34 for now; fixing it needs each reply tagged with what it was allowed to include.
+- The chat check can't notice the newest messages being deleted in the database. Catching that needs the latest signature and count stored outside the chat table. Decide if it matters.
+- The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.
+- Dependabot alert 2: `minimatch` (medium), in development dependencies only. Fixed in 11.0.1.

@@ -721,6 +721,56 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/assistant/ask/:
+    post:
+      operationId: assistant_ask_create
+      tags:
+      - assistant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatAsk'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+          description: ''
+  /api/assistant/check/:
+    get:
+      operationId: assistant_check_retrieve
+      tags:
+      - assistant
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCheck'
+          description: ''
+  /api/assistant/messages/:
+    get:
+      operationId: assistant_messages_list
+      tags:
+      - assistant
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMessage'
+          description: ''
   /api/audit/:
     get:
       operationId: audit_list
@@ -4316,6 +4366,52 @@ components:
       required:
       - id
       - name
+    ChatAsk:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 2000
+      required:
+      - message
+    ChatCheck:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        ok:
+          type: boolean
+        count:
+          type: integer
+        broken_at:
+          type: integer
+          nullable: true
+      required:
+      - broken_at
+      - count
+      - enabled
+      - ok
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        signature:
+          type: string
+          maxLength: 64
+      required:
+      - content
+      - id
+      - role
+      - signature
     CloseTill:
       type: object
       properties:
@@ -6343,6 +6439,14 @@ components:
       - id
       - name
       - permissions
+    RoleEnum:
+      enum:
+      - user
+      - assistant
+      type: string
+      description: |-
+        * `user` - User
+        * `assistant` - Assistant
     SaleRequest:
       type: object
       properties:

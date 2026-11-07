@@ -23,7 +23,10 @@ const sessionHeaders: Middleware = {
       const token = csrfToken();
       if (token) request.headers.set('X-CSRFToken', token);
     }
-    if (activeTenant) request.headers.set('X-Tenant', activeTenant);
+    // A request already bound to a business keeps it, even if the person has since switched.
+    if (activeTenant && !request.headers.has('X-Tenant')) {
+      request.headers.set('X-Tenant', activeTenant);
+    }
     return request;
   },
 };
