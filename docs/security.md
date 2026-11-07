@@ -240,6 +240,10 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 - Dependencies are pinned to exact versions; Dependabot proposes updates; CI runs CodeQL and
   `npm audit`. A new dependency needs a reason in its pull request.
 
+## Employee records
+
+HR screens and `/api/hr/` follow the `hr` module permission like every other module, and another business's employees answer 404. An employee record can hold a national identity number (CNIC or Emirates ID) and a bank account, because payroll tax and salary transfers need them. They are optional, shown only to people with HR rights, never sent to the business chat, and never printed on anything but what payroll will need later. Employees who have had a contract are marked as left instead of deleted, so payroll history keeps pointing at them; deciding how long to keep a former employee's identity number is an open question for launch.
+
 ## Signed bill links
 
 A customer can open one posted bill without an account through `/api/public/bills/<token>/`. The token is signed with `django.core.signing` under its own salt, names the business and the bill, and stops working after 30 days. A changed, old or draft link all answer 404. The response carries `Cache-Control: private, no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`, because the link is the key to the bill. Anyone holding the link can read that one bill until it expires, so it must only go to the customer. A link can't be withdrawn early except by rotating `SECRET_KEY`.

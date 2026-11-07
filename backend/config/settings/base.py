@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "apps.reports",
     "apps.pos",
     "apps.assistant",
+    "apps.hr",
 ]
 
 MIDDLEWARE = [
@@ -189,7 +190,11 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     # The app's languages appear in more than one field; one name keeps one type in the frontend.
-    "ENUM_NAME_OVERRIDES": {"LocaleEnum": ["en", "ur", "ar"]},
+    "ENUM_NAME_OVERRIDES": {
+        "LocaleEnum": ["en", "ur", "ar"],
+        "ComponentKindEnum": "apps.hr.models.SalaryComponent.Kind",
+        "ContractKindEnum": "apps.hr.models.Contract.Kind",
+    },
 }
 
 CELERY_BROKER_URL = REDIS_URL
