@@ -459,6 +459,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assistant/reset/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["assistant_reset_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit/": {
         parameters: {
             query?: never;
@@ -2871,9 +2887,10 @@ export interface components {
         /**
          * @description * `user` - User
          *     * `assistant` - Assistant
+         *     * `reset` - Reset
          * @enum {string}
          */
-        RoleEnum: "user" | "assistant";
+        RoleEnum: "user" | "assistant" | "reset";
         SaleRequest: {
             lines: components["schemas"]["CartLine"][];
             method: components["schemas"]["MethodEnum"];
@@ -4022,6 +4039,24 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChatMessage"][];
                 };
+            };
+        };
+    };
+    assistant_reset_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

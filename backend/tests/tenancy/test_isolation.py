@@ -55,6 +55,7 @@ USER_LEVEL = {
     "api/accounts/logout/",
     "api/accounts/me/",
     "api/assistant/ask/",
+    "api/assistant/reset/",
     "api/accounts/verify-email/resend/",
     "api/tenants/",
     "api/invitations/accept/",

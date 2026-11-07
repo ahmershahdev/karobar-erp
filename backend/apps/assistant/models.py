@@ -14,6 +14,7 @@ class ChatMessage(TenantOwnedModel):
     class Role(models.TextChoices):
         USER = "user"
         ASSISTANT = "assistant"
+        RESET = "reset"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     role = models.CharField(max_length=10, choices=Role.choices)
