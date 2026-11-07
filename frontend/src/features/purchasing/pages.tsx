@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
@@ -628,15 +629,14 @@ function OrderRow({ order }: { order: PurchaseOrder }) {
           </Button>
         )}
         {order.status === 'draft' && can(membership, 'purchasing', 'delete') && (
-          <Button
-            variant="danger"
+          <ConfirmButton
             disabled={action.isPending}
-            onClick={() =>
+            onConfirm={() =>
               action.mutate(() => unwrap(api.DELETE('/api/purchasing/orders/{id}/', id)))
             }
           >
             {t('workspace.remove')}
-          </Button>
+          </ConfirmButton>
         )}
       </Actions>
       {receiptStarted && order.status === 'confirmed' && (
@@ -824,15 +824,14 @@ function ReceiptRow({ receipt }: { receipt: GoodsReceipt }) {
           </Button>
         )}
         {draft && can(membership, 'purchasing', 'delete') && (
-          <Button
-            variant="danger"
+          <ConfirmButton
             disabled={action.isPending}
-            onClick={() =>
+            onConfirm={() =>
               action.mutate(() => unwrap(api.DELETE('/api/purchasing/receipts/{id}/', id)))
             }
           >
             {t('workspace.remove')}
-          </Button>
+          </ConfirmButton>
         )}
       </Actions>
     </DocumentRow>
@@ -1139,15 +1138,14 @@ function BillRow({ bill }: { bill: Bill }) {
             </Button>
           )}
           {can(membership, 'purchasing', 'delete') && (
-            <Button
-              variant="danger"
+            <ConfirmButton
               disabled={action.isPending}
-              onClick={() =>
+              onConfirm={() =>
                 action.mutate(() => unwrap(api.DELETE('/api/purchasing/bills/{id}/', id)))
               }
             >
               {t('workspace.remove')}
-            </Button>
+            </ConfirmButton>
           )}
         </Actions>
       )}
@@ -1375,15 +1373,14 @@ function PaymentRow({ payment }: { payment: SupplierPayment }) {
             </Button>
           )}
           {can(membership, 'purchasing', 'delete') && (
-            <Button
-              variant="danger"
+            <ConfirmButton
               disabled={action.isPending}
-              onClick={() =>
+              onConfirm={() =>
                 action.mutate(() => unwrap(api.DELETE('/api/purchasing/payments/{id}/', id)))
               }
             >
               {t('workspace.remove')}
-            </Button>
+            </ConfirmButton>
           )}
         </Actions>
       )}

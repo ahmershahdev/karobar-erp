@@ -1148,5 +1148,11 @@
     "verify": "Check this chat has not been changed",
     "verified": "All {{count}} messages are intact.",
     "tampered": "Warning: this chat has been changed since it was written."
+  },
+  "confirm": {
+    "title": "Remove this?",
+    "body": "You can't get it back.",
+    "member": "This person will no longer be able to open this business.",
+    "invitation": "The invitation link will stop working."
   }
 }
