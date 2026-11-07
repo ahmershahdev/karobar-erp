@@ -3,7 +3,8 @@
 Each signature covers the record and the signature before it. Changing any record breaks its own
 signature; removing or inserting one breaks the next. Only someone holding the key can sign, so
 this shows a log has not been altered since the server wrote it. It says nothing about who was
-at the keyboard, and it is not a legal electronic signature.
+at the keyboard, and it is not a legal electronic signature. Nothing follows the newest
+record, so cutting records off the end leaves a valid, shorter chain.
 """
 
 import hashlib
@@ -26,7 +27,8 @@ def first_break(key: bytes, records: Sequence[tuple[dict[str, str], str]]) -> in
     """The position of the first record that doesn't check out, or None when all of them do."""
     previous = ""
     for position, (fields, signature) in enumerate(records):
-        if not hmac.compare_digest(sign(key, fields, previous), signature):
+        # As bytes: compare_digest raises on non-ASCII text, and a tampered row can hold any.
+        if not hmac.compare_digest(sign(key, fields, previous).encode(), signature.encode()):
             return position
         previous = signature
     return None

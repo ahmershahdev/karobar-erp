@@ -213,7 +213,7 @@ The chat (`apps/assistant`) sends the question, recent messages and the figures 
 
 - **It can only talk.** No code path from a reply reaches a record, so a clever message or a product name written as an instruction can't change anything. Replies are shown as plain text.
 - **What it knows follows the role.** `facts()` includes sales and profit only with the reports permission, and low stock only with inventory. Each person sees only their own chat, even within a business.
-- **Every message is signed.** Each row carries an HMAC-SHA256 over the business, the person, the words, the time and the signature before it (`apps/core/chain.py`). Editing, removing, inserting or moving a message breaks the chain, and the check button in the chat finds it.
+- **Every message is signed.** Each row carries an HMAC-SHA256 over the business, the person, the words, the time and the signature before it (`apps/core/chain.py`). Editing, inserting or moving a message breaks the chain, and so does removing any message except the newest, and the check button in the chat finds it. Deleting the newest messages is not found, because nothing signed after them refers to them: the rest is still a valid, shorter chain.
 - **What the signature does not prove.** It shows the log has not changed since the server wrote it, and which signed-in account sent each message. It can't show who was at the keyboard, and it is not a legal electronic signature. The server holds the key, so someone with the key and the database could rewrite a whole chain.
 
-Keep `CHAT_SIGNING_KEY` set and stable in production. It falls back to `SECRET_KEY`, so rotating that without setting this makes old chats fail the check.
+Keep `CHAT_SIGNING_KEY` stable in production. Production refuses to start with a `GROQ_API_KEY` and no `CHAT_SIGNING_KEY`. Elsewhere it falls back to `SECRET_KEY`, so rotating that would make old chats fail the check.

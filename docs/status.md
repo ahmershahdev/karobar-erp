@@ -24,6 +24,8 @@ Last updated: 2026-11-07. Update at the end of every work session.
 - A Facebook sign-up keeps its link when the address is confirmed by email, because that is how a real Facebook user confirms. Someone who claims another person's address and gets them to click the link would keep an account on it. Decide how Facebook accounts should be confirmed.
 - Reports that read all history stay slow at 1 million lines, on MySQL with its default 128 MB buffer pool: balance sheet and all-time trial balance about 4.7s, cash flow about 7s, dashboard about 4.4s. Each joins every line to its entry. A larger buffer pool should help, which was not measured; the real fix is keeping running balances per account or copying the date onto the line.
 - First tax and payroll rules to ship (Pakistan first, then the Gulf), with official sources.
-- Chat messages can never be deleted, which is what makes them tamper-evident. Decide how long to keep them before launch.
+- Chat messages can never be deleted through the app, which is what makes them tamper-evident. Decide how long to keep them before launch.
+- Before switching the chat on in production: each question holds a web worker while it builds the figures and waits up to 30 seconds for Groq, and the Dockerfile runs 3 workers, so three people chatting at once could stall the whole API. Options are moving the call to Celery with polling, or caching the figures and adding workers.
+- The chat check can't notice the newest messages being deleted in the database. Catching that needs the latest signature and count stored outside the chat table. Decide if it matters.
 - The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.
 - Dependabot alert 2: `minimatch` (medium), in development dependencies only. Fixed in 11.0.1.

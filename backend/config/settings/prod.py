@@ -3,6 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 from .base import *  # noqa: F403
 from .base import (
     EMAIL_BACKEND,
+    GROQ_API_KEY,
     RECAPTCHA_V2_SECRET_KEY,
     RECAPTCHA_V2_SITE_KEY,
     RECAPTCHA_V3_SECRET_KEY,
@@ -38,4 +39,7 @@ if not all(
     )
 ):
     raise ImproperlyConfigured("Set the RECAPTCHA_V3_* and RECAPTCHA_V2_* keys.")
+# Falling back to SECRET_KEY would make every old chat look tampered with after a rotation.
+if GROQ_API_KEY and not env("CHAT_SIGNING_KEY", default=""):
+    raise ImproperlyConfigured("Set CHAT_SIGNING_KEY when GROQ_API_KEY is set.")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
