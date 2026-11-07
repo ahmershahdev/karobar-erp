@@ -51,7 +51,7 @@ class ChatMessagesView(APIView):
 
     @extend_schema(responses=ChatMessageSerializer(many=True))
     def get(self, request: Request) -> Response:
-        newest = services.mine(actor(request)).order_by("-id")[:SHOWN]
+        newest = services.current(actor(request)).order_by("-id")[:SHOWN]
         return Response(ChatMessageSerializer(list(newest)[::-1], many=True).data)
 
 
@@ -70,6 +70,16 @@ class ChatAskView(APIView):
         except services.AssistantError as exc:
             raise AssistantUnavailable(type(exc).message) from exc
         return Response(ChatMessageSerializer(answer).data)
+
+
+class ChatResetView(APIView):
+    permission_classes = [IsTenantMember]
+    throttle_scope = "tenancy"
+
+    @extend_schema(request=None, responses={204: None})
+    def post(self, request: Request) -> Response:
+        services.reset(actor(request))
+        return Response(status=204)
 
 
 class ChatCheckView(APIView):

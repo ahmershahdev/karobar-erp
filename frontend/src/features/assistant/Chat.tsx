@@ -15,6 +15,7 @@ export function Chat({ membership }: { membership: Membership }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [showCheck, setShowCheck] = useState(false);
+  const [fresh, setFresh] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const keys = {
     messages: [membership.tenant_id, 'assistant', 'messages'],
@@ -43,6 +44,18 @@ export function Chat({ membership }: { membership: Membership }) {
         client.invalidateQueries({ queryKey: keys.check }),
       ]),
   });
+  const reset = useMutation({
+    mutationFn: async () => {
+      const headers = { 'X-Tenant': membership.tenant_id };
+      await ensureCsrf();
+      return unwrap(api.POST('/api/assistant/reset/', { headers }));
+    },
+    onSuccess: () => {
+      setFresh(true);
+      ask.reset();
+    },
+    onSettled: () => client.invalidateQueries({ queryKey: keys.messages }),
+  });
   const count = messages.data?.length;
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'end' });
@@ -52,6 +65,7 @@ export function Chat({ membership }: { membership: Membership }) {
     const message = text.trim();
     if (!message || ask.isPending) return;
     setText('');
+    setFresh(false);
     ask.mutate(message);
   };
 
@@ -75,19 +89,30 @@ export function Chat({ membership }: { membership: Membership }) {
     >
       <header className="flex items-center justify-between gap-3 border-b border-line p-4">
         <h2 className="text-lg">{t('chat.title')}</h2>
-        <button
-          type="button"
-          aria-label={t('chat.close')}
-          onClick={() => setOpen(false)}
-          className="grid size-10 place-items-center rounded-full border border-line"
-        >
-          &times;
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            disabled={!count || ask.isPending || reset.isPending}
+            onClick={() => reset.mutate()}
+            className="min-h-10 rounded-full border border-line px-3 text-sm disabled:opacity-40"
+          >
+            {t('chat.reset')}
+          </button>
+          <button
+            type="button"
+            aria-label={t('chat.close')}
+            onClick={() => setOpen(false)}
+            className="grid size-10 place-items-center rounded-full border border-line"
+          >
+            &times;
+          </button>
+        </div>
       </header>
       <div className="flex-1 space-y-3 overflow-y-auto p-4" data-lenis-prevent>
         <p className="rounded-xl bg-surface p-3 text-xs leading-relaxed text-muted">
           {off ? t('chat.off') : t('chat.notice')}
         </p>
+        {fresh && <p className="text-xs leading-relaxed text-muted">{t('chat.resetDone')}</p>}
         {messages.data?.map((message) => {
           const mine = message.role === 'user';
           return (
@@ -117,6 +142,9 @@ export function Chat({ membership }: { membership: Membership }) {
               {t('chat.thinking')}
             </p>
           </>
+        )}
+        {reset.isError && (
+          <p className="text-sm text-red">{errorText(reset.error, t('signIn.unavailable'))}</p>
         )}
         {ask.isError && (
           <p className="text-sm text-red">{errorText(ask.error, t('signIn.unavailable'))}</p>
