@@ -85,6 +85,9 @@ class Role(TenantOwnedModel):
     name = models.CharField(max_length=80)
     # {"sales": ["view", "create", "post"], ...}; checked by apps.tenancy.permissions.
     permissions = models.JSONField(default=dict)
+    # The most this role may take off a line, as a percentage of its price. The owner has no
+    # limit. Zero means people with this role can't give discounts.
+    max_discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
     class Meta(TenantOwnedModel.Meta):
         constraints = [models.UniqueConstraint(fields=["tenant", "name"], name="uniq_role_name")]

@@ -2,7 +2,15 @@ from django.db import models
 from django.db.models import F, Q
 
 from apps.accounting.models import Account, JournalEntry, TaxRate
-from apps.inventory.models import Product, StockEntry, Unit, Warehouse, money_field, quantity_field
+from apps.inventory.models import (
+    Product,
+    StockEntry,
+    Unit,
+    Warehouse,
+    money_field,
+    percent_field,
+    quantity_field,
+)
 from apps.purchasing.models import Document, PostedStatus
 from apps.tenancy.models import TenantOwnedModel
 
@@ -49,6 +57,11 @@ class SalesOrder(Document):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="+")
     quote_number = models.CharField(max_length=30, null=True, blank=True)  # noqa: DJ001
     valid_until = models.DateField(null=True, blank=True)
+    # The whole-bill discount: typed as a percentage, or as an amount when that is empty. It is
+    # spread over the lines, so `discount` is everything given off, lines and bill together.
+    discount_percent = percent_field()
+    bill_discount = money_field(default=0)
+    discount = money_field(default=0)
     total = money_field(default=0)
 
     class Meta(Document.Meta):
@@ -67,6 +80,11 @@ class SalesOrderLine(TenantOwnedModel):
     tax_rate = models.ForeignKey(
         TaxRate, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
     )
+    # The line's own discount, typed as a percentage or an amount, and its slice of the bill
+    # discount. Tax is worked out on what is left.
+    discount_percent = percent_field()
+    discount = money_field(default=0)
+    bill_share = money_field(default=0)
     tax_amount = money_field(default=0)
     invoiced_quantity = quantity_field(default=0)
 
@@ -95,6 +113,12 @@ class Invoice(Document):
     )
     warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="+")
     due_date = models.DateField(null=True, blank=True)
+    # The whole-bill discount: typed as a percentage, or as an amount when that is empty. It is
+    # spread over the lines, so `discount` is everything given off, lines and bill together.
+    discount_percent = percent_field()
+    bill_discount = money_field(default=0)
+    discount = money_field(default=0)
+    # After every discount, before tax.
     net = money_field(default=0)
     tax = money_field(default=0)
     total = money_field(default=0)
@@ -135,6 +159,12 @@ class InvoiceLine(TenantOwnedModel):
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name="+")
     quantity = quantity_field()
     unit_price = quantity_field()
+    # The line's own discount, typed as a percentage or an amount, and its slice of the bill
+    # discount. Tax is worked out on what is left.
+    discount_percent = percent_field()
+    discount = money_field(default=0)
+    bill_share = money_field(default=0)
+    # Quantity times price, less both discounts.
     amount = money_field()
     tax_rate = models.ForeignKey(
         TaxRate, on_delete=models.PROTECT, null=True, blank=True, related_name="+"

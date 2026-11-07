@@ -26,6 +26,7 @@
           <th>{{ labels.item }}</th>
           <th class="num">{{ labels.quantity }}</th>
           <th class="num">{{ labels.price }}</th>
+          {% if discount %}<th class="num">{{ labels.discount }}</th>{% endif %}
           <th class="num">{{ labels.tax }}</th>
           <th class="num">{{ labels.amount }}</th>
         </tr>
@@ -36,6 +37,7 @@
             <td>{{ line.name }}</td>
             <td class="num">{{ line.quantity }}</td>
             <td class="num">{{ line.price }}</td>
+            {% if discount %}<td class="num">{{ line.discount }}</td>{% endif %}
             <td class="num">{{ line.tax }}</td>
             <td class="num">{{ line.amount }}</td>
           </tr>
@@ -43,6 +45,7 @@
       </tbody>
     </table>
     <div class="totals">
+      {% if discount %}<div><span>{{ labels.discount }}</span><span class="num">{{ discount }}</span></div>{% endif %}
       <div><span>{{ labels.net }}</span><span class="num">{{ net }}</span></div>
       <div><span>{{ labels.tax }}</span><span class="num">{{ tax }}</span></div>
       <div class="grand"><span>{{ labels.total }} ({{ currency }})</span><span class="num">{{ total }}</span></div>

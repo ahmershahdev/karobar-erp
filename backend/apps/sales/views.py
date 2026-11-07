@@ -129,12 +129,13 @@ def _queryset(model: Any, lines: str, line_model: Any, *related: str) -> Callabl
 
 
 ZERO = Decimal(0)
+DISCOUNT = ("discount_percent", "bill_discount")
 ORDER = Kind(
     SalesOrder,
     SalesOrderSerializer,
     _queryset(SalesOrder, "lines", SalesOrderLine, "product", "unit"),
     services.save_order,
-    ("customer", "date", "valid_until", "warehouse", "memo"),
+    ("customer", "date", "valid_until", "warehouse", "memo", *DISCOUNT),
     "lines",
     lambda d: services.OrderLineInput(
         d["product"],
@@ -143,6 +144,8 @@ ORDER = Kind(
         d["unit_price"],
         d.get("tax_amount", ZERO),
         d.get("tax_rate"),
+        d.get("discount_percent"),
+        d.get("discount", ZERO),
     ),
     services.confirm_order,
 )
@@ -151,7 +154,7 @@ INVOICE = Kind(
     InvoiceSerializer,
     _queryset(Invoice, "lines", InvoiceLine, "product", "unit"),
     services.save_invoice,
-    ("customer", "order", "date", "due_date", "warehouse", "memo"),
+    ("customer", "order", "date", "due_date", "warehouse", "memo", *DISCOUNT),
     "lines",
     lambda d: services.InvoiceLineInput(
         d["product"],
@@ -162,6 +165,8 @@ INVOICE = Kind(
         d.get("order_line"),
         d.get("batch_number", ""),
         d.get("tax_rate"),
+        d.get("discount_percent"),
+        d.get("discount", ZERO),
     ),
     services.post_invoice,
 )

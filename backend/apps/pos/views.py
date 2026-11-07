@@ -110,12 +110,15 @@ class SaleView(PosView, generics.GenericAPIView[PosSession]):
             actor(request),
             session,
             [
-                services.CartLine(line["product"], line["unit"], line["quantity"])
+                services.CartLine(
+                    line["product"], line["unit"], line["quantity"], line.get("discount_percent")
+                )
                 for line in data["lines"]
             ],
             data["method"],
             data.get("tendered"),
             data.get("tax_rate"),
+            data.get("discount_percent"),
         )
         return Response(SaleResultSerializer(sale).data, 201)
 

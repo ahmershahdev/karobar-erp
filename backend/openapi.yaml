@@ -4561,6 +4561,11 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
       required:
       - product
       - quantity
@@ -5268,6 +5273,20 @@ components:
           type: string
           format: date
           nullable: true
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        bill_discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         net:
           type: string
           format: decimal
@@ -5317,6 +5336,7 @@ components:
       - customer
       - customer_name
       - date
+      - discount
       - id
       - journal_number
       - lines
@@ -5357,6 +5377,20 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        bill_share:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         amount:
           type: string
           format: decimal
@@ -5379,6 +5413,7 @@ components:
           readOnly: true
       required:
       - amount
+      - bill_share
       - id
       - product
       - product_name
@@ -6295,6 +6330,10 @@ components:
           type: string
           maxLength: 80
         permissions: {}
+        max_discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
     PatchedSupplier:
       type: object
       properties:
@@ -6725,6 +6764,10 @@ components:
           type: string
           maxLength: 80
         permissions: {}
+        max_discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
       required:
       - id
       - name
@@ -6759,6 +6802,11 @@ components:
           nullable: true
         tax_rate:
           type: integer
+          nullable: true
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
       required:
       - lines
@@ -6832,6 +6880,20 @@ components:
           nullable: true
         warehouse:
           type: integer
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        bill_discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         total:
           type: string
           format: decimal
@@ -6855,6 +6917,7 @@ components:
       - customer
       - customer_name
       - date
+      - discount
       - id
       - lines
       - number
@@ -6890,6 +6953,20 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+        discount_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        bill_share:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         tax_rate:
           type: integer
           nullable: true
@@ -6903,6 +6980,7 @@ components:
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
           readOnly: true
       required:
+      - bill_share
       - id
       - invoiced_quantity
       - product

@@ -28,6 +28,7 @@
     {"code": "4000", "name": "Income", "type": "income", "group": true},
     {"code": "4100", "name": "Sales", "type": "income", "parent": "4000", "role": "sales"},
     {"code": "4200", "name": "Sales returns", "type": "income", "parent": "4000", "role": "sales_returns"},
+    {"code": "4250", "name": "Sales discounts", "type": "income", "parent": "4000", "role": "sales_discounts"},
     {"code": "4300", "name": "Other income", "type": "income", "parent": "4000"},
     {"code": "5000", "name": "Cost of sales", "type": "expense", "group": true},
     {"code": "5100", "name": "Cost of goods sold", "type": "expense", "parent": "5000", "role": "cogs"},

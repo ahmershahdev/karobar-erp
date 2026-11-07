@@ -394,19 +394,25 @@ export function RolesPage() {
   const roles = useRoles();
   const [name, setName] = useState('');
   const [grants, setGrants] = useState<Record<string, string[]>>({});
+  const [maxDiscount, setMaxDiscount] = useState('0');
   const [editing, setEditing] = useState<number | null>(null);
   const client = useQueryClient();
   const save = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
       // The generated type marks the read-only id as required on input; the API ignores it.
-      const body = { name, permissions: grants } as never;
+      const body = {
+        name,
+        permissions: grants,
+        max_discount_percent: maxDiscount || '0',
+      } as never;
       if (editing === null) await unwrap(api.POST('/api/roles/', { body }));
       else await unwrap(api.PATCH('/api/roles/{id}/', { params: { path: { id: editing } }, body }));
     },
     onSuccess: async () => {
       setName('');
       setGrants({});
+      setMaxDiscount('0');
       setEditing(null);
       await client.invalidateQueries({ queryKey: [membership.tenant_id, 'roles'] });
     },
@@ -452,6 +458,7 @@ export function RolesPage() {
                       setEditing(role.id);
                       setName(role.name);
                       setGrants(role.permissions);
+                      setMaxDiscount(role.max_discount_percent ?? '0');
                     }}
                   >
                     {t('workspace.edit')}
@@ -483,6 +490,19 @@ export function RolesPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
+            <div>
+              <Field
+                label={t('workspace.maxDiscount')}
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                inputMode="decimal"
+                value={maxDiscount}
+                onChange={(e) => setMaxDiscount(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted">{t('workspace.maxDiscountHint')}</p>
+            </div>
             <div className="overflow-x-auto" data-lenis-prevent>
               <table className="w-full text-sm">
                 <thead>
@@ -528,6 +548,7 @@ export function RolesPage() {
                     setEditing(null);
                     setName('');
                     setGrants({});
+                    setMaxDiscount('0');
                   }}
                 >
                   {t('workspace.cancel')}

@@ -37,7 +37,7 @@ def test_a_new_business_gets_a_chart_a_year_and_a_series() -> None:
     ).json()
     client.credentials(HTTP_X_TENANT=body["tenant_id"])
     accounts = client.get("/api/accounting/accounts/").json()
-    assert len(accounts) == 39
+    assert len(accounts) == 40
     assert {a["role"] for a in accounts} >= {"cash", "receivables", "sales", "tax_output"}
     years = client.get("/api/accounting/fiscal-years/").json()
     assert len(years) == 1

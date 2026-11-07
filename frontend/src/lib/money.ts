@@ -41,3 +41,26 @@ export function lineMinor(price: string, quantity: number): number {
 export function taxMinor(amount: number, ratePercent: string): number {
   return Number((BigInt(amount) * scaled(ratePercent, 4) + 500_000n) / 1_000_000n);
 }
+
+// Halves round up, as ROUND_HALF_UP does on the server. Both numbers are whole and not negative.
+function roundDiv(top: bigint, bottom: bigint): bigint {
+  return (2n * top + bottom) / (2n * bottom);
+}
+
+/** A percentage of an amount in paisa, rounded once, as the invoice rounds it. */
+export function percentMinor(amount: number, percent: string): number {
+  return Number(roundDiv(BigInt(amount) * scaled(percent, 2), 10_000n));
+}
+
+/** A bill discount split over line amounts, all in paisa, the way the server splits it: from
+ * rounded running totals, so the parts always add back to the whole discount. */
+export function spreadMinor(amount: number, weights: number[]): number[] {
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (amount <= 0 || total <= 0) return weights.map(() => 0);
+  let done = 0;
+  return weights.map((weight) => {
+    const before = roundDiv(BigInt(amount) * BigInt(done), BigInt(total));
+    done += weight;
+    return Number(roundDiv(BigInt(amount) * BigInt(done), BigInt(total)) - before);
+  });
+}

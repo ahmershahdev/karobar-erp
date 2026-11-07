@@ -2144,6 +2144,8 @@ export interface components {
             unit: number;
             /** Format: decimal */
             quantity: string;
+            /** Format: decimal */
+            discount_percent?: string | null;
         };
         CashFlow: {
             /** Format: decimal */
@@ -2398,6 +2400,12 @@ export interface components {
             /** Format: date */
             due_date?: string | null;
             /** Format: decimal */
+            discount_percent?: string | null;
+            /** Format: decimal */
+            bill_discount?: string;
+            /** Format: decimal */
+            readonly discount: string;
+            /** Format: decimal */
             readonly net: string;
             /** Format: decimal */
             readonly tax: string;
@@ -2426,6 +2434,12 @@ export interface components {
             quantity: string;
             /** Format: decimal */
             unit_price: string;
+            /** Format: decimal */
+            discount_percent?: string | null;
+            /** Format: decimal */
+            discount?: string;
+            /** Format: decimal */
+            readonly bill_share: string;
             /** Format: decimal */
             readonly amount: string;
             tax_rate?: number | null;
@@ -2884,6 +2898,8 @@ export interface components {
             readonly id?: number;
             name?: string;
             permissions?: unknown;
+            /** Format: decimal */
+            max_discount_percent?: string;
         };
         PatchedSupplier: {
             readonly id?: number;
@@ -3044,6 +3060,8 @@ export interface components {
             readonly id: number;
             name: string;
             permissions: unknown;
+            /** Format: decimal */
+            max_discount_percent?: string;
         };
         /**
          * @description * `user` - User
@@ -3060,6 +3078,8 @@ export interface components {
             /** Format: decimal */
             tendered?: string | null;
             tax_rate?: number | null;
+            /** Format: decimal */
+            discount_percent?: string | null;
         };
         SaleResult: {
             readonly id: number;
@@ -3086,6 +3106,12 @@ export interface components {
             valid_until?: string | null;
             warehouse: number;
             /** Format: decimal */
+            discount_percent?: string | null;
+            /** Format: decimal */
+            bill_discount?: string;
+            /** Format: decimal */
+            readonly discount: string;
+            /** Format: decimal */
             readonly total: string;
             lines: components["schemas"]["SalesOrderLine"][];
             /** Format: email */
@@ -3104,6 +3130,12 @@ export interface components {
             quantity: string;
             /** Format: decimal */
             unit_price: string;
+            /** Format: decimal */
+            discount_percent?: string | null;
+            /** Format: decimal */
+            discount?: string;
+            /** Format: decimal */
+            readonly bill_share: string;
             tax_rate?: number | null;
             /** Format: decimal */
             tax_amount?: string;

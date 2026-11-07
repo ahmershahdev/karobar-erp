@@ -494,7 +494,9 @@
     },
     "businessNamePlaceholder": "For example, Hyderabad Traders",
     "account": "My account",
-    "makeOwner": "Make owner"
+    "makeOwner": "Make owner",
+    "maxDiscount": "Most discount this role may give (%)",
+    "maxDiscountHint": "Per line, counting the bill discount too. 0 means no discounts. The owner has no limit."
   },
   "modulesShort": {
     "members": "Members",
@@ -964,7 +966,15 @@
     "returns": "Returns",
     "returnsBody": "Goods that came back. Posting puts them in stock and takes the amount off what the customer owes.",
     "returnsHint": "To start a return, open the sale under Sales bills and press \"Customer returned goods\".",
-    "postReturn": "Post return"
+    "postReturn": "Post return",
+    "lineDiscount": "Discount %",
+    "billDiscount": "Discount on the whole bill",
+    "billDiscountAs": "Bill discount is",
+    "asPercent": "a percentage",
+    "asAmount": "an amount",
+    "discountHint": "Give a line discount as a percentage or an amount. Line discounts come off first, then the bill discount. Tax is worked out on what is left.",
+    "discountGiven": "Discount given",
+    "lineDiscountAmount": "Discount amount"
   },
   "led": {
     "receivables": "Who owes me",
@@ -1097,7 +1107,11 @@
     "pickStore": "Choose your store to start.",
     "noStore": "You have no store yet",
     "noStoreBody": "Stock and cash belong to a store, so add one first. It only takes a moment.",
-    "addStore": "Add a store"
+    "addStore": "Add a store",
+    "lineDiscount": "Discount % on this item",
+    "saleDiscount": "Discount on this sale (%)",
+    "discountGiven": "Discount given",
+    "badDiscount": "A discount is a number from 0 to 100, with up to two decimals, such as 12.5."
   },
   "business": {
     "steps": {

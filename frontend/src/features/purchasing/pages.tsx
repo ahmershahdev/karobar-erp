@@ -329,6 +329,9 @@ export interface ItemLine {
   quantity: string;
   price: string;
   tax?: string;
+  // Off this line, as a percentage or an amount; typing one clears the other. Sales only.
+  discount?: string;
+  discountAmount?: string;
 }
 
 export function itemLine(key: number): ItemLine {
@@ -340,11 +343,15 @@ export function ItemsEditor({
   onChange,
   priceLabel,
   taxLabel,
+  discountLabel,
+  discountAmountLabel,
 }: {
   lines: ItemLine[];
   onChange: (lines: ItemLine[]) => void;
   priceLabel: string;
   taxLabel?: string;
+  discountLabel?: string;
+  discountAmountLabel?: string;
 }) {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<Map<string, Product>>(new Map());
@@ -360,6 +367,8 @@ export function ItemsEditor({
               <th className={TH}>{t('inv.unit')}</th>
               <th className={TH}>{t('inv.quantity')}</th>
               <th className={TH}>{priceLabel}</th>
+              {discountLabel && <th className={TH}>{discountLabel}</th>}
+              {discountAmountLabel && <th className={TH}>{discountAmountLabel}</th>}
               {taxLabel && <th className={TH}>{taxLabel}</th>}
               <th />
             </tr>
@@ -407,6 +416,26 @@ export function ItemsEditor({
                       onChange={(price) => update(line.key, { price })}
                     />
                   </td>
+                  {discountLabel && (
+                    <td className="w-24 py-2 pe-2">
+                      <NumberCell
+                        label={discountLabel}
+                        value={line.discount ?? ''}
+                        onChange={(discount) => update(line.key, { discount, discountAmount: '' })}
+                      />
+                    </td>
+                  )}
+                  {discountAmountLabel && (
+                    <td className="w-28 py-2 pe-2">
+                      <NumberCell
+                        label={discountAmountLabel}
+                        value={line.discountAmount ?? ''}
+                        onChange={(discountAmount) =>
+                          update(line.key, { discountAmount, discount: '' })
+                        }
+                      />
+                    </td>
+                  )}
                   {taxLabel && (
                     <td className="w-28 py-2 pe-2">
                       <NumberCell

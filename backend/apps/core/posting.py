@@ -30,16 +30,22 @@ def _non_negative(**amounts: Decimal) -> None:
             raise ValueError(f"{name} cannot be negative")
 
 
-def sale(net: Decimal, tax: Decimal = ZERO, cost: Decimal = ZERO) -> list[Line]:
+def sale(
+    net: Decimal, tax: Decimal = ZERO, cost: Decimal = ZERO, discount: Decimal = ZERO
+) -> list[Line]:
     """A credit sale: the customer owes net plus tax, and stock leaves at cost.
 
-    Dr receivables (net + tax); Cr sales (net); Cr output tax (tax);
-    Dr cost of goods sold, Cr inventory (cost).
+    `net` is after any discount. The discount is shown on its own account, so sales keep the
+    full price and the profit and loss shows what was given away.
+
+    Dr receivables (net + tax); Dr sales discounts (discount); Cr sales (net + discount);
+    Cr output tax (tax); Dr cost of goods sold, Cr inventory (cost).
     """
-    _non_negative(net=net, tax=tax, cost=cost)
+    _non_negative(net=net, tax=tax, cost=cost, discount=discount)
     return _lines(
         ("receivables", net + tax, ZERO),
-        ("sales", ZERO, net),
+        ("sales_discounts", discount, ZERO),
+        ("sales", ZERO, net + discount),
         ("tax_output", ZERO, tax),
         ("cogs", cost, ZERO),
         ("inventory", ZERO, cost),
