@@ -13,7 +13,7 @@ from django.utils import timezone
 from rest_framework.request import Request
 
 from apps.core.documents import line_amount
-from apps.core.money import quantize_money, quantize_quantity
+from apps.core.money import MoneyError, quantize_money, quantize_quantity
 from apps.inventory.models import Product, ProductUnit, Unit, Warehouse
 from apps.purchasing import views as purchasing
 from apps.purchasing.models import PurchaseOrderLine, Supplier
@@ -253,7 +253,11 @@ def _line(kind: DraftKind, item: Any) -> dict[str, Any]:
         "sku",
     )
     unit, factor = _unit(product, item.get("unit"))
-    quantity = quantize_quantity(_number(item.get("quantity")))
+    try:
+        quantity = quantize_quantity(_number(item.get("quantity")))
+    except MoneyError as exc:
+        # Too large to round at all, such as 1e999999.
+        raise DraftProblemError("unclear") from exc
     if not Decimal(0) < quantity <= MAX_QUANTITY:
         raise DraftProblemError("unclear")
     given = item.get("price")

@@ -180,6 +180,8 @@ def test_a_name_matching_several_lists_them(seller: Seller) -> None:
         json.dumps({"customer": "C1", "items": [{"product": "SOAP-1", "quantity": True}]}),
         json.dumps({"customer": "C1", "items": [{"product": "SOAP-1", "quantity": "lots"}]}),
         json.dumps({"customer": "C1", "items": [{"product": "SOAP-1", "quantity": "NaN"}]}),
+        json.dumps({"customer": "C1", "items": [{"product": "SOAP-1", "quantity": "1e999999"}]}),
+        json.dumps({"customer": "C1", "items": [{"product": "SOAP-1", "quantity": "0.00001"}]}),
         json.dumps({"customer": "C1", "items": ["SOAP-1"]}),
         json.dumps(
             {"customer": "C1", "items": [{"product": "SOAP-1", "quantity": 1, "price": -1}]}
