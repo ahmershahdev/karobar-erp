@@ -2,6 +2,7 @@
 only propose a draft card (see drafts.py): nothing a reply says reaches a record until the person
 presses Confirm, and then only as a draft made with their own permissions."""
 
+import hmac
 import json
 import time
 from dataclasses import dataclass
@@ -58,6 +59,10 @@ class DraftGoneError(Exception):
 
 class AlreadyDoneError(Exception):
     pass
+
+
+class DraftChangedError(Exception):
+    """The card in the database no longer matches what was signed when it was shown."""
 
 
 @dataclass(frozen=True)
@@ -138,6 +143,12 @@ def confirm(request: Request, user: User, membership: Membership, pk: int) -> Ch
     card = current(user).filter(pk=pk, role=ChatMessage.Role.DRAFT).first()
     if card is None:
         raise DraftGoneError
+    # Checked before anything is read from it: a card edited in the database would otherwise
+    # save values the person never saw. Only this row and the one before are needed.
+    before = mine(user).filter(id__lt=card.pk).order_by("-id").first()
+    expected = sign(_key(), _fields(card), before.signature if before else "")
+    if not hmac.compare_digest(expected, card.signature):
+        raise DraftChangedError
     draft = load(card)
     if "problem" in draft or draft.get("kind") not in drafts.KINDS:
         raise DraftGoneError

@@ -1163,7 +1163,7 @@
       "customer": "Customer: {{name}}",
       "supplier": "Supplier: {{name}}",
       "warehouse": "Warehouse: {{name}}",
-      "noPrice": "No price yet",
+      "noPrice": "No price yet, saved as 0",
       "total": "Total",
       "hint": "Check it, then press Confirm. It is saved as a draft only. Tax is not added, so check it on the draft before you post.",
       "confirm": "Confirm",

@@ -241,6 +241,19 @@ def test_only_the_person_who_asked_can_confirm(seller: Seller) -> None:
     assert not Invoice.objects.exists()
 
 
+def test_a_card_changed_in_the_database_is_not_saved(seller: Seller) -> None:
+    with soap_bill():
+        pk = ask(owner(seller)).json()["id"]
+    card = ChatMessage.objects.get(pk=pk)
+    changed = json.loads(card.content)
+    changed["lines"][0]["quantity"] = "400"
+    ChatMessage.all_tenants.filter(pk=pk).update(content=json.dumps(changed))
+    reply = confirm(owner(seller), pk)
+    assert reply.status_code == 409
+    assert "changed" in reply.json()["detail"]
+    assert not Invoice.objects.exists()
+
+
 def test_a_card_from_before_a_new_chat_cannot_be_confirmed(seller: Seller) -> None:
     with soap_bill():
         pk = ask(owner(seller)).json()["id"]
