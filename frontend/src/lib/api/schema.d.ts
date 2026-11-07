@@ -2021,6 +2021,8 @@ export interface components {
         };
         ChatAsk: {
             message: string;
+            /** @default en */
+            language: components["schemas"]["LocaleEnum"];
         };
         ChatCheck: {
             enabled: boolean;

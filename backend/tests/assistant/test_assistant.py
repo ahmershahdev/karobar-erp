@@ -262,3 +262,27 @@ def test_an_answer_finishing_after_a_new_chat_is_dropped(boss: Member) -> None:
     assert not ChatMessage.objects.filter(role="assistant").exists()
     assert services.current(boss.user).count() == 0
     assert services.verify(boss.user)["ok"] is True
+
+
+def test_screen_names_follow_the_language_the_app_is_shown_in(boss: Member) -> None:
+    with said("Answer") as model:
+        reply = boss.client().post(
+            "/api/assistant/ask/", {"message": "Hi", "language": "ur"}, format="json"
+        )
+    assert reply.status_code == 200
+    prompt = model.call_args.args[0][0]["content"]
+    assert "میرے باقی پیسے" in prompt
+    assert "Who owes me" not in prompt
+
+
+def test_english_screen_names_are_the_default(boss: Member) -> None:
+    with said("Answer") as model:
+        boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+    assert "Who owes me" in model.call_args.args[0][0]["content"]
+
+
+def test_an_unknown_language_is_refused(boss: Member) -> None:
+    reply = boss.client().post(
+        "/api/assistant/ask/", {"message": "Hi", "language": "fr"}, format="json"
+    )
+    assert reply.status_code == 400
