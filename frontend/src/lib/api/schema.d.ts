@@ -229,6 +229,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/delete/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accounts_delete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/email/": {
         parameters: {
             query?: never;
@@ -922,6 +938,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["members_partial_update"];
+        trace?: never;
+    };
+    "/api/members/{id}/make-owner/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Hand the business to another member. Only the owner can, which the service checks. */
+        post: operations["members_make_owner_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/pos/products/": {
@@ -1922,6 +1955,10 @@ export interface components {
             is_group?: boolean;
             is_active?: boolean;
             readonly role: string | null;
+        };
+        AccountDelete: {
+            current_password: string;
+            email: string;
         };
         /**
          * @description * `create` - Create
@@ -3821,6 +3858,28 @@ export interface operations {
             };
         };
     };
+    accounts_delete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountDelete"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     accounts_email_create: {
         parameters: {
             query?: never;
@@ -5204,6 +5263,27 @@ export interface operations {
                 "application/json": components["schemas"]["PatchedMember"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Member"];
+                };
+            };
+        };
+    };
+    members_make_owner_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

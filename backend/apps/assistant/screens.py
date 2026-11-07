@@ -5,6 +5,7 @@ Kept in step with the frontend's locale files by tests/assistant/test_screens.py
 
 SCREEN_KEYS = (
     "workspace.overview",
+    "workspace.account",
     "pos.title",
     "inv.products",
     "inv.onHandTitle",
@@ -42,6 +43,7 @@ SCREEN_KEYS = (
 SCREENS: dict[str, tuple[str, ...]] = {
     "en": (
         "Overview",
+        "My account",
         "Counter",
         "Products",
         "Stock on hand",
@@ -77,6 +79,7 @@ SCREENS: dict[str, tuple[str, ...]] = {
     ),
     "ur": (
         "جائزہ",
+        "میرا اکاؤنٹ",
         "کاؤنٹر",
         "مصنوعات",
         "موجود اسٹاک",
@@ -112,6 +115,7 @@ SCREENS: dict[str, tuple[str, ...]] = {
     ),
     "ar": (
         "نظرة عامة",
+        "حسابي",
         "نقطة البيع",
         "المنتجات",
         "المخزون المتوفر",

@@ -100,3 +100,17 @@ def send_email_changed(old: str, new: str) -> None:
         ("Choose a new password", app_link("forgot-password")),
         "If this wasn't you, contact support@ahmershah.dev straight away.",
     )
+
+
+def send_account_deleted(old: str) -> None:
+    send_message(
+        old,
+        "Your Karobar ERP account was deleted",
+        "Your account was deleted",
+        [
+            "Your name, email and sign-in were removed from Karobar, and you left every business.",
+            "Records you made in a business stay there, marked as a former user.",
+        ],
+        None,
+        "If this wasn't you, contact support@ahmershah.dev straight away.",
+    )

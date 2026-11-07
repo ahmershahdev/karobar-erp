@@ -544,6 +544,22 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/accounts/delete/:
+    post:
+      operationId: accounts_delete_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountDelete'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/accounts/email/:
     post:
       operationId: accounts_email_create
@@ -1798,6 +1814,28 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/members/{id}/make-owner/:
+    post:
+      operationId: members_make_owner_create
+      description: Hand the business to another member. Only the owner can, which
+        the service checks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - members
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
   /api/pos/products/:
     get:
       operationId: pos_products_list
@@ -4055,6 +4093,18 @@ components:
       - name
       - role
       - type
+    AccountDelete:
+      type: object
+      properties:
+        current_password:
+          type: string
+          maxLength: 128
+        email:
+          type: string
+          maxLength: 254
+      required:
+      - current_password
+      - email
     ActionEnum:
       enum:
       - create

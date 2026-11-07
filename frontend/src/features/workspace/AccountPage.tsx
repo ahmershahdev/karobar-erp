@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, PasswordField } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
@@ -172,6 +173,63 @@ function PasswordForm() {
   );
 }
 
+function DeleteForm() {
+  const { t } = useTranslation();
+  const { me } = useWorkspace();
+  const navigate = useNavigate();
+  const client = useQueryClient();
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const remove = useMutation({
+    mutationFn: async () => {
+      await ensureCsrf();
+      await unwrap(
+        api.POST('/api/accounts/delete/', { body: { current_password: password, email } }),
+      );
+    },
+    onSuccess: () => {
+      // Nothing cached about the old account may show after it is gone.
+      client.clear();
+      void navigate('/', { replace: true });
+    },
+  });
+  const typed = email.trim().toLowerCase() === me.email;
+  return (
+    <Panel title={t('account.deleteTitle')}>
+      <p className="mb-4 max-w-prose text-sm text-muted">{t('account.deleteBody')}</p>
+      {me.has_password ? (
+        <div className="max-w-md space-y-4">
+          <PasswordField
+            label={t('account.currentPassword')}
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <Field
+            label={t('account.typeEmail', { email: me.email })}
+            autoComplete="off"
+            spellCheck={false}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          {remove.isError && (
+            <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
+          )}
+          <ConfirmButton
+            message={t('confirm.deleteAccount')}
+            disabled={remove.isPending || !password || !typed}
+            onConfirm={() => remove.mutate()}
+          >
+            {t('account.deleteButton')}
+          </ConfirmButton>
+        </div>
+      ) : (
+        <NoPassword />
+      )}
+    </Panel>
+  );
+}
+
 /** Settings that belong to the person, not to the business they are looking at. */
 export function AccountPage() {
   const { t } = useTranslation();
@@ -181,6 +239,7 @@ export function AccountPage() {
       <NameForm />
       <EmailForm />
       <PasswordForm />
+      <DeleteForm />
     </>
   );
 }

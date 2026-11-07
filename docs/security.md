@@ -94,6 +94,24 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
 - Emailed links carry their token in the query string, so nginx logs the path without the query
   and without the referrer (`log_format private`). Checked in the production image.
 
+### Handing over a business and deleting an account
+
+- Only the owner can make another member the owner (`transfer_ownership`). Both memberships are
+  locked in key order and the owner flag is checked again under the lock, so two hand-overs at
+  once can't leave two owners. The old owner stays a member with no role. Both changes are
+  audited and the new owner gets an email.
+- Deleting an account needs the current password and the person typing their own email. It is
+  refused while they own any business, so a business is never left without an owner.
+- The user row is never removed, because posted documents, journal entries and the signed chat
+  must keep pointing at whoever made them. It is anonymised instead, under a row lock: the email
+  becomes `former-user-<id>@karobar.invalid`, the name, password and linked Google or Facebook
+  sign-ins are removed, and the account is switched off, which ends every session. Each
+  membership is deleted with an audit row that names "a former member". The old address gets a
+  last email and can sign up again.
+- What stays: older audit rows and invitation records that already hold the address, such as
+  "member removed", keep it, because the audit log is never edited. Decide before launch whether
+  that needs a clean-up job for privacy rules.
+
 ## Rate limiting and denial of service
 
 | Layer | Limit |

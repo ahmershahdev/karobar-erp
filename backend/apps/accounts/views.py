@@ -20,10 +20,12 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from apps.platform.locking import lock_rows
+from apps.tenancy import services as tenancy
 
 from . import emails, humans, oauth
 from .models import User
 from .serializers import (
+    AccountDeleteSerializer,
     AuthConfigSerializer,
     EmailChangeSerializer,
     EmailSerializer,
@@ -49,6 +51,7 @@ SET_ONE_FIRST = (
 NOT_CURRENT = "That isn't your current password."
 SAME_EMAIL = "That is already your email."
 EMAIL_TAKEN = "That email now belongs to another account."
+TYPE_YOUR_EMAIL = "Type your email exactly as shown to confirm."
 
 
 @method_decorator(ensure_csrf_cookie, name="get")
@@ -382,3 +385,30 @@ class OAuthCallbackView(APIView):
             return _back_to_sign_in(exc.code)
         login(request._request, user, backend="django.contrib.auth.backends.ModelBackend")
         return HttpResponseRedirect(f"{settings.SITE_URL.rstrip('/')}{next_path}")
+
+
+class AccountDeleteView(APIView):
+    throttle_scope = "auth"
+
+    @extend_schema(request=AccountDeleteSerializer, responses={204: None})
+    def post(self, request: Request) -> Response:
+        data = AccountDeleteSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = cast(User, request.user)
+        _check_current_password(user, data.validated_data["current_password"])
+        if data.validated_data["email"].strip().lower() != user.email:
+            raise ValidationError({"email": [TYPE_YOUR_EMAIL]})
+        old = user.email
+        try:
+            tenancy.delete_account(user)
+        except tenancy.OwnsBusinessError as exc:
+            names = ", ".join(exc.names)
+            raise ValidationError(
+                {
+                    "detail": f"You own {names}. Hand each one to another member first, on its "
+                    "Members screen."
+                }
+            ) from exc
+        logout(request._request)
+        _notify_after_commit(emails.send_account_deleted, old)
+        return Response(status=status.HTTP_204_NO_CONTENT)
