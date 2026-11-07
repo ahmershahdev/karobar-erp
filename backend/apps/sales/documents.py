@@ -140,14 +140,18 @@ def invoice_html(invoice: Invoice, language: str) -> str:
     settings: BillSettings = context["bill"]
     if PosSale.objects.filter(invoice=invoice).exists():
         context["paper"] = settings.counter_paper
+    # The till roll is too narrow for the extra columns, and a counter sale is paid already, so
+    # it leaves out what only a credit bill needs. The totals still show tax and discount.
+    roll = context["paper"] == BillSettings.Paper.RECEIPT
     return render_to_string(
         "sales/invoice.html",
         {
             **context,
+            "roll": roll,
             "title": settings.title or LABELS[language]["invoice"],
-            "show_tax": settings.show_tax,
-            "show_sku": settings.show_sku,
-            "show_discount": settings.show_discount and bool(invoice.discount),
+            "show_tax": settings.show_tax and not roll,
+            "show_sku": settings.show_sku and not roll,
+            "show_discount": settings.show_discount and bool(invoice.discount) and not roll,
             "invoice": invoice,
             "lines": [
                 {

@@ -1,36 +1,51 @@
 <style>
-  @page { size: A4; margin: 18mm 16mm; }
+  @page { size: A4; margin: 14mm 14mm; }
   body { font-family: "Noto Sans", sans-serif; color: #0b1a3c; font-size: 11pt; line-height: 1.5; }
-  html[lang="ur"] body { font-family: "Noto Nastaliq Urdu", "Noto Sans", serif; line-height: 2.1; }
+  html[lang="ur"] body { font-family: "Noto Nastaliq Urdu", "Noto Sans", serif; line-height: 1.9; }
   html[lang="ar"] body { font-family: "Noto Kufi Arabic", "Noto Sans", sans-serif; line-height: 1.8; }
   h1 { font-size: 20pt; font-weight: 500; margin: 0 0 2mm; }
-  .head { display: flex; justify-content: space-between; border-bottom: 1px solid #c8cdd8; padding-bottom: 5mm; margin-bottom: 7mm; }
+  .head { display: flex; justify-content: space-between; border-bottom: 1px solid #c8cdd8; padding-bottom: 4mm; margin-bottom: 5mm; }
   .business { font-size: 14pt; font-weight: 600; }
   .muted { color: #566076; }
-  .facts { width: 100%; margin-bottom: 7mm; }
+  .facts { width: 100%; margin-bottom: 5mm; }
   table.lines { width: 100%; border-collapse: collapse; }
   table.lines th { text-align: start; color: #566076; font-weight: 400; border-bottom: 1px solid #c8cdd8; padding: 2mm 1mm; }
-  table.lines td { border-bottom: 1px solid #eef0f4; padding: 2.5mm 1mm; }
+  table.lines td { border-bottom: 1px solid #eef0f4; padding: 1.8mm 1mm; }
   /* Figures stay left to right in Urdu and Arabic, so their side is set by hand, not with end. */
   .num { font-family: "Noto Sans", sans-serif; font-weight: 400; direction: ltr; unicode-bidi: isolate; }
   table.lines th.num { font-family: inherit; }
   html[dir="ltr"] table.lines .num { text-align: right; }
   html[dir="rtl"] table.lines .num { text-align: left; }
-  .totals { margin-top: 6mm; margin-inline-start: auto; width: 45%; }
-  .totals div { display: flex; justify-content: space-between; padding: 1mm 0; }
+  .totals { margin-top: 4mm; margin-inline-start: auto; width: 45%; }
+  .totals div { display: flex; justify-content: space-between; padding: 0.6mm 0; }
   .grand .num { font-weight: 600; }
   .grand { border-top: 1px solid #0b1a3c; font-weight: 600; margin-top: 1mm; padding-top: 2mm !important; }
-  .logo { max-height: 22mm; max-width: 60mm; margin-bottom: 2mm; }
+  .logo { max-height: 18mm; max-width: 60mm; margin-bottom: 2mm; }
   .from .muted { font-size: 9.5pt; }
   .doc { text-align: end; }
   h1, .business { color: {{ accent }}; }
   .head { border-bottom-color: {{ accent }}; }
   .grand { border-top-color: {{ accent }}; }
-  .foot { margin-top: 10mm; border-top: 1px solid #c8cdd8; padding-top: 4mm; font-size: 9.5pt; color: #566076; }
-  .foot p { margin: 0 0 3mm; }
+  .foot { margin-top: 6mm; border-top: 1px solid #c8cdd8; padding-top: 3mm; font-size: 9pt; color: #566076; line-height: 1.4; break-inside: avoid; }
+  .foot p { margin: 0 0 2mm; }
+  .foot .notes { display: flex; gap: 6mm; }
+  .foot .notes p { flex: 1 1 0; }
+  /* What the business typed: its own direction, and Latin letters and digits in the Latin font
+     even on an Urdu or Arabic bill. Letters the font lacks fall back to the page font. */
+  .user { unicode-bidi: isolate; }
+  .user[dir="ltr"] { direction: ltr; }
+  .user[dir="rtl"] { direction: rtl; }
+  .end { display: flex; gap: 8mm; align-items: flex-end; margin-top: 6mm; break-inside: avoid; }
+  .end .foot { flex: 1 1 auto; margin-top: 0; }
+  .end .sign { flex: 0 0 52mm; margin-top: 0; margin-inline-start: auto; }
+  .foot .notes { flex-wrap: wrap; }
+  .foot .notes p { min-width: 32mm; }
+  html[lang="ur"] .totals div { padding: 1mm 0; }
+  html[lang="ur"] .user, html[lang="ar"] .user { font-family: "Noto Sans", "Noto Nastaliq Urdu", "Noto Kufi Arabic", sans-serif; }
+  .totals, .sign { break-inside: avoid; }
   .foot .thanks { color: {{ accent }}; font-size: 11pt; }
-  .sign { margin-top: 12mm; width: 60mm; margin-inline-start: auto; text-align: center; }
-  .sign img { max-height: 18mm; max-width: 60mm; }
+  .sign { margin-top: 6mm; width: 60mm; margin-inline-start: auto; text-align: center; }
+  .sign img { max-height: 15mm; max-width: 60mm; }
   .sign-text { font-family: "Brush Script MT", "Segoe Script", cursive; font-style: italic; font-size: 18pt; color: {{ accent }}; line-height: 1.2; }
   .sign-name { font-size: 9pt; }
   .sign-line { border-top: 1px solid #0b1a3c; margin-top: 1mm; padding-top: 1mm; font-size: 8.5pt; color: #566076; }
@@ -83,5 +98,12 @@
   html.receipt .head h1, html.receipt .head .business { color: {{ accent }}; }
   html.receipt table.lines th { background: none; color: #566076; }
   html.receipt .grand { background: none; color: inherit; padding: 2mm 0 0 !important; border-top: 1px solid {{ accent }}; }
-  html.receipt .sign { margin-top: 6mm; width: 100%; }
+  html.receipt .sign { margin-top: 5mm; width: 100%; }
+  html.receipt .sign img { max-height: 12mm; }
+  html.receipt h1 { text-transform: none; letter-spacing: 0; font-weight: 600; }
+  html.receipt .grand { font-size: inherit; }
+  html.receipt .foot .notes { display: block; }
+  html.receipt .end { display: block; }
+  html.receipt .end .sign { margin-top: 5mm; }
+  html.receipt .end .foot { margin-top: 4mm; }
 </style>

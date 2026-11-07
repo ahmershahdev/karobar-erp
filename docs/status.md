@@ -23,7 +23,7 @@ Last updated: 2026-11-07. Update at the end of every work session.
 Agreed order, one PR each:
 
 1. Review and merge discounts (#42).
-2. Review and merge the custom bill after #42. Check a real PDF in Docker on A4 and on the 80 mm roll.
+2. Review and merge the custom bill after #42. Real PDFs were made in the Docker image on 2026-11-07 for all six templates, in Urdu and Arabic, on the 80 mm roll and for a 25-line bill: each fits one page except the 25-line bill, which splits cleanly.
 3. Before switching the chat on in production: move each answer to a Celery job the screen polls, so a slow Groq reply or lookup can't hold a web worker.
 4. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
 5. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.

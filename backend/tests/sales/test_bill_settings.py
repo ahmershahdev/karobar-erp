@@ -14,6 +14,7 @@ from apps.accounting.models import NumberSeries
 from apps.pos import services as pos
 from apps.sales import billing, documents, services
 from apps.sales.models import BillSettings
+from apps.sales.templatetags.bill_text import textdir
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import AuditEvent
 from tests.conftest import Member
@@ -308,14 +309,14 @@ def test_a_signature_picture_is_cleaned_and_printed(seller: Seller) -> None:
     html = documents.invoice_html(sold(seller), "en")
     assert "Authorised signature" in html
     # With a picture, the typed name goes underneath it as the signer's name.
-    assert 'class="sign-name">A. Invented' in html
+    assert '<div class="sign-name"><span class="user" dir="ltr">A. Invented</span>' in html
     assert seller.shop.member.client().delete(SIGNATURE).json()["signature"] is None
 
 
 def test_a_typed_signature_prints_in_handwriting_style(seller: Seller) -> None:
     billing.save(seller.user, {"signature_text": "A. Invented"})
     html = documents.invoice_html(sold(seller), "ur")
-    assert 'class="sign-text">A. Invented' in html
+    assert '<div class="sign-text"><span class="user" dir="ltr">A. Invented</span>' in html
     assert "مجاز دستخط" in html
 
 
@@ -335,3 +336,26 @@ def test_each_template_can_be_chosen_and_printed(seller: Seller, template: str) 
 def test_an_unknown_template_is_refused(seller: Seller) -> None:
     reply = seller.shop.member.client().patch(URL, {"template": "fancy"}, format="json")
     assert reply.status_code == 400
+
+
+def test_text_the_business_typed_runs_its_own_way(seller: Seller) -> None:
+    billing.save(seller.user, {"thanks": "شکریہ", "payment_terms": "Pay in 15 days."})
+    html = documents.invoice_html(sold(seller), "ur")
+    # WeasyPrint has no dir="auto", so the server marks each text from its first strong letter.
+    assert '<span class="user" dir="rtl">شکریہ</span>' in html
+    assert '<span class="user" dir="ltr">Pay in 15 days.</span>' in html
+
+
+@pytest.mark.parametrize(
+    ("text", "direction"),
+    [
+        ("Shop 12", "ltr"),
+        ("دکان 12", "rtl"),
+        ("12 دکان", "rtl"),
+        ("مرحبا", "rtl"),
+        ("", "ltr"),
+        ("123", "ltr"),
+    ],
+)
+def test_the_direction_comes_from_the_first_strong_letter(text: str, direction: str) -> None:
+    assert textdir(text) == direction
