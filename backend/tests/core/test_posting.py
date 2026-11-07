@@ -122,3 +122,20 @@ def test_split_places_balances_in_columns() -> None:
     assert split(AccountType.INCOME, D("100")) == (D("0.00"), D("100.00"))
     assert split(AccountType.ASSET, D("-5")) == (D("0.00"), D("5.00"))
     assert split(AccountType.LIABILITY, D("-30")) == (D("30.00"), D("0.00"))
+
+
+def test_a_discounted_sale_keeps_full_price_in_sales() -> None:
+    lines = posting.sale(D("900"), D("162"), D("500"), D("100"))
+    assert [(line.account, line.debit, line.credit) for line in lines] == [
+        ("receivables", D("1062.00"), D("0.00")),
+        ("sales_discounts", D("100.00"), D("0.00")),
+        ("sales", D("0.00"), D("1000.00")),
+        ("tax_output", D("0.00"), D("162.00")),
+        ("cogs", D("500.00"), D("0.00")),
+        ("inventory", D("0.00"), D("500.00")),
+    ]
+
+
+def test_a_negative_discount_is_refused() -> None:
+    with pytest.raises(ValueError, match="discount"):
+        posting.sale(D("100"), discount=D("-1"))

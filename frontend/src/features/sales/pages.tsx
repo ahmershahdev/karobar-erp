@@ -243,7 +243,24 @@ function saleLines(lines: ItemLine[], taxRate: unknown) {
     unit_price: line.price || '0',
     tax_amount: line.tax || '0',
     tax_rate: taxRate ?? null,
+    discount_percent: line.discount || null,
   }));
+}
+
+// The whole-bill discount goes as a percentage or an amount, never both.
+function billDiscount(kind: string, value: string) {
+  if (!value) return {};
+  return kind === 'percent' ? { discount_percent: value } : { bill_discount: value };
+}
+
+function DiscountGiven({ amount }: { amount: string }) {
+  const { t, i18n } = useTranslation();
+  if (toMinor(amount) <= 0) return null;
+  return (
+    <p className="text-sm text-muted">
+      {t('sal.discountGiven')}: {formatMoney(amount, i18n.resolvedLanguage)}
+    </p>
+  );
 }
 
 function SaleEditor({
@@ -267,6 +284,8 @@ function SaleEditor({
   const [lines, setLines] = useState<ItemLine[]>([itemLine(0)]);
   const rates = useSaleTaxRates();
   const [picked, setPicked] = useState('');
+  const [billKind, setBillKind] = useState('percent');
+  const [billValue, setBillValue] = useState('');
   // Only rates that apply on this date. The server checks again, so this is a convenience.
   const usable = rates.data?.filter(
     (item) => item.valid_from <= date && (!item.valid_to || date <= item.valid_to),
@@ -305,12 +324,31 @@ function SaleEditor({
             </option>
           ))}
         </Select>
+        <Field
+          label={t('sal.billDiscount')}
+          type="number"
+          min="0"
+          step="0.01"
+          inputMode="decimal"
+          value={billValue}
+          onChange={(e) => setBillValue(e.target.value)}
+        />
+        <Select
+          label={t('sal.billDiscountAs')}
+          value={billKind}
+          onChange={(e) => setBillKind(e.target.value)}
+        >
+          <option value="percent">{t('sal.asPercent')}</option>
+          <option value="amount">{t('sal.asAmount')}</option>
+        </Select>
       </div>
+      <p className="mt-2 text-xs text-muted">{t('sal.discountHint')}</p>
       <div className="mt-4 space-y-4">
         <ItemsEditor
           lines={lines}
           onChange={setLines}
           priceLabel={t('sal.price')}
+          discountLabel={t('sal.lineDiscount')}
           {...(rate ? {} : { taxLabel: t('pur.tax') })}
         />
         <Actions>
@@ -323,6 +361,7 @@ function SaleEditor({
                   date,
                   warehouse: Number(warehouse),
                   taxRate: rate ? Number(rate) : null,
+                  ...billDiscount(billKind, billValue),
                 },
                 filled(lines),
               )
@@ -362,6 +401,7 @@ function OrderRow({ order }: { order: SalesOrder }) {
           formatMoney(line.unit_price, i18n.resolvedLanguage),
         ])}
       />
+      <DiscountGiven amount={order.discount} />
       <Actions>
         {order.status === 'draft' && can(membership, 'sales', 'update') && (
           <Button
@@ -490,6 +530,7 @@ function InvoiceRow({ invoice }: { invoice: Invoice }) {
           money(line.amount),
         ])}
       />
+      <DiscountGiven amount={invoice.discount} />
       {!draft && (
         <p className="text-sm text-muted">
           {t('sal.leftToPay')}: {formatMoney(left, i18n.resolvedLanguage)}

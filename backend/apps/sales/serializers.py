@@ -23,6 +23,16 @@ from .models import (
 DOCUMENT_FIELDS = ("id", "number", "status", "date", "memo", "customer", "customer_name")
 DOCUMENT_READ_ONLY = ("id", "number", "status", "posted_at")
 OPTIONAL_MEMO = {"memo": {"required": False, "max_length": 255}}
+# The whole-bill discount: a percentage, or an amount when the percentage is empty.
+BILL_DISCOUNT = {
+    "discount_percent": {
+        "required": False,
+        "allow_null": True,
+        "min_value": Decimal(0),
+        "max_value": Decimal(100),
+    },
+    "bill_discount": {"required": False, "min_value": Decimal(0)},
+}
 
 
 class CustomerSerializer(serializers.ModelSerializer[Customer]):
@@ -85,15 +95,25 @@ class SalesOrderLineSerializer(_ProductLine):
             "unit_code",
             "quantity",
             "unit_price",
+            "discount_percent",
+            "discount",
+            "bill_share",
             "tax_rate",
             "tax_amount",
             "invoiced_quantity",
         )
-        read_only_fields = ("id", "invoiced_quantity")
+        read_only_fields = ("id", "invoiced_quantity", "bill_share")
         extra_kwargs = {
             "quantity": {"min_value": Decimal("0.0001")},
             "unit_price": {"min_value": Decimal(0)},
             "tax_amount": {"required": False, "min_value": Decimal(0)},
+            "discount_percent": {
+                "required": False,
+                "allow_null": True,
+                "min_value": Decimal(0),
+                "max_value": Decimal(100),
+            },
+            "discount": {"required": False, "min_value": Decimal(0)},
         }
 
 
@@ -109,14 +129,18 @@ class SalesOrderSerializer(_DocumentSerializer):
             "quote_number",
             "valid_until",
             "warehouse",
+            "discount_percent",
+            "bill_discount",
+            "discount",
             "total",
             "lines",
             "created_by",
             "posted_at",
         )
-        read_only_fields = (*DOCUMENT_READ_ONLY, "quote_number", "total")
+        read_only_fields = (*DOCUMENT_READ_ONLY, "quote_number", "total", "discount")
         extra_kwargs = {
             **OPTIONAL_MEMO,
+            **BILL_DISCOUNT,
             "valid_until": {"required": False, "allow_null": True},
         }
 
@@ -137,14 +161,24 @@ class InvoiceLineSerializer(_ProductLine):
             "unit_code",
             "quantity",
             "unit_price",
+            "discount_percent",
+            "discount",
+            "bill_share",
             "amount",
             "tax_rate",
             "tax_amount",
             "batch_number",
             "returned_quantity",
         )
-        read_only_fields = ("id", "amount", "returned_quantity")
+        read_only_fields = ("id", "amount", "returned_quantity", "bill_share")
         extra_kwargs = {
+            "discount_percent": {
+                "required": False,
+                "allow_null": True,
+                "min_value": Decimal(0),
+                "max_value": Decimal(100),
+            },
+            "discount": {"required": False, "min_value": Decimal(0)},
             "quantity": {"min_value": Decimal("0.0001")},
             "unit_price": {"min_value": Decimal(0)},
             "tax_amount": {"required": False, "min_value": Decimal(0)},
@@ -168,6 +202,9 @@ class InvoiceSerializer(_DocumentSerializer):
             "order",
             "warehouse",
             "due_date",
+            "discount_percent",
+            "bill_discount",
+            "discount",
             "net",
             "tax",
             "total",
@@ -185,9 +222,11 @@ class InvoiceSerializer(_DocumentSerializer):
             "total",
             "amount_paid",
             "amount_credited",
+            "discount",
         )
         extra_kwargs = {
             **OPTIONAL_MEMO,
+            **BILL_DISCOUNT,
             "due_date": {"required": False, "allow_null": True},
         }
 

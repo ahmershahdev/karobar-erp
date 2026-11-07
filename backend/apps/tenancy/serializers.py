@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any
 
 from rest_framework import serializers
@@ -44,9 +45,16 @@ class RoleSerializer(serializers.ModelSerializer[Role]):
 
     class Meta:
         model = Role
-        fields = ("id", "name", "permissions")
+        fields = ("id", "name", "permissions", "max_discount_percent")
         read_only_fields = ("id",)
-        extra_kwargs = {"name": {"max_length": 80}}
+        extra_kwargs = {
+            "name": {"max_length": 80},
+            "max_discount_percent": {
+                "required": False,
+                "min_value": Decimal(0),
+                "max_value": Decimal(100),
+            },
+        }
 
     def validate_permissions(self, value: Any) -> dict[str, list[str]]:
         problems = permission_problems(value)

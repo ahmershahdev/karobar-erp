@@ -7,7 +7,7 @@ hold: two invoices for one customer can't both pass the check on the same balanc
 post writes, including its stock moves and journal entries, commits or rolls back together.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -24,14 +24,14 @@ from apps.accounts.models import User
 from apps.core import posting
 from apps.core.balances import AccountType
 from apps.core.credit import over_limit
-from apps.core.documents import line_amount, share
+from apps.core.documents import DocumentError, line_amount, percent_of, share, spread
 from apps.core.money import quantize_money, quantize_quantity
 from apps.core.tax import is_valid_on, tax_on
 from apps.inventory import services as inventory
 from apps.inventory.models import Product, StockEntry, Unit, Warehouse
 from apps.platform.locking import lock_rows, retry_on_deadlock
 from apps.tenancy import audit
-from apps.tenancy.models import AuditEvent
+from apps.tenancy.models import AuditEvent, Membership
 
 from .models import (
     CreditNote,
@@ -112,6 +112,14 @@ class TaxRateNotValidError(SalesError):
     message = "That tax rate doesn't apply on this document's date."
 
 
+class DiscountTooLargeError(SalesError):
+    message = "A discount can't be more than the price it comes off."
+
+
+class DiscountNotAllowedError(SalesError):
+    message = "That discount is more than your role allows. Ask the owner to raise your limit."
+
+
 class CreditLimitError(SalesError):
     message = "This would take the customer over their credit limit."
 
@@ -124,6 +132,9 @@ class OrderLineInput:
     unit_price: Decimal
     tax_amount: Decimal = ZERO
     tax_rate: TaxRate | None = None
+    # A percentage wins over an amount; with neither, the line has no discount of its own.
+    discount_percent: Decimal | None = None
+    discount: Decimal = ZERO
 
 
 @dataclass(frozen=True)
@@ -136,6 +147,8 @@ class InvoiceLineInput:
     order_line: SalesOrderLine | None = None
     batch_number: str = ""
     tax_rate: TaxRate | None = None
+    discount_percent: Decimal | None = None
+    discount: Decimal = ZERO
 
 
 @dataclass(frozen=True)
@@ -150,14 +163,83 @@ class CreditLineInput:
     quantity: Decimal
 
 
-def _line_tax(line: OrderLineInput | InvoiceLineInput, on: date) -> Decimal:
-    """A chosen rate decides the tax. Without one, the amount typed stands."""
+@dataclass(frozen=True)
+class Priced:
+    """One line's price before and after its discounts."""
+
+    gross: Decimal
+    discount: Decimal
+    bill_share: Decimal
+
+    @property
+    def net(self) -> Decimal:
+        return self.gross - self.discount - self.bill_share
+
+
+def _priced(
+    lines: Sequence[OrderLineInput | InvoiceLineInput], header: dict[str, Any]
+) -> tuple[list[Priced], Decimal]:
+    """Each line's discounts, and the bill discount spread over the lines in proportion to what
+    is left of each. A discount comes off before tax, as on a printed bill."""
+    try:
+        gross = [line_amount(line.quantity, line.unit_price) for line in lines]
+        own = [
+            quantize_money(line.discount)
+            if line.discount_percent is None
+            else percent_of(amount, line.discount_percent)
+            for line, amount in zip(lines, gross, strict=True)
+        ]
+        if any(not ZERO <= cut <= amount for cut, amount in zip(own, gross, strict=True)):
+            raise DiscountTooLargeError
+        after = [amount - cut for amount, cut in zip(gross, own, strict=True)]
+        percent = header.get("discount_percent")
+        bill = (
+            quantize_money(header.get("bill_discount") or ZERO)
+            if percent is None
+            else percent_of(sum(after, ZERO), percent)
+        )
+        shares = spread(bill, after)
+    except DocumentError as exc:
+        raise DiscountTooLargeError from exc
+    return [Priced(*row) for row in zip(gross, own, shares, strict=True)], bill
+
+
+def _check_discount(
+    actor: User, lines: Sequence[OrderLineInput | InvoiceLineInput], priced: list[Priced]
+) -> None:
+    """Each line's discount, its own and its share of the bill, must stay within the role's
+    limit. Lines carried over from an order were checked when the order was saved."""
+    given = [
+        row
+        for line, row in zip(lines, priced, strict=True)
+        if row.gross - row.net > 0 and getattr(line, "order_line", None) is None
+    ]
+    if not given:
+        return
+    membership = Membership.objects.filter(user=actor).select_related("role").first()
+    if membership is not None and membership.is_owner:
+        return
+    role = membership.role if membership else None
+    limit = role.max_discount_percent if role else ZERO
+    if any((row.gross - row.net) * 100 > row.gross * limit for row in given):
+        raise DiscountNotAllowedError
+
+
+def _line_tax(line: OrderLineInput | InvoiceLineInput, net: Decimal, on: date) -> Decimal:
+    """A chosen rate decides the tax, on the price after discounts. Without one, the amount
+    typed stands."""
     rate = line.tax_rate
     if rate is None:
         return line.tax_amount
     if not is_valid_on(rate.valid_from, rate.valid_to, on):
         raise TaxRateNotValidError
-    return tax_on(line_amount(line.quantity, line.unit_price), rate.rate)
+    return tax_on(net, rate.rate)
+
+
+def _discounts(target: Any, header: dict[str, Any], bill: Decimal, priced: list[Priced]) -> None:
+    target.discount_percent = header.get("discount_percent")
+    target.bill_discount = bill
+    target.discount = sum((row.gross - row.net for row in priced), ZERO)
 
 
 def _still_valid(rate: TaxRate | None, on: date) -> TaxRate | None:
@@ -266,10 +348,13 @@ def save_order(
     action = Action.UPDATE if order else Action.CREATE
     target = _locked_draft(SalesOrder, order) if order else SalesOrder(created_by=actor)
     _apply(target, header, ("customer", "warehouse", "date", "valid_until", "memo"))
-    taxes = [_line_tax(line, target.date) for line in lines]
-    target.total = sum(
-        (line_amount(line.quantity, line.unit_price) for line in lines), sum(taxes, ZERO)
-    )
+    priced, bill = _priced(lines, header)
+    _check_discount(actor, lines, priced)
+    _discounts(target, header, bill, priced)
+    taxes = [
+        _line_tax(line, row.net, target.date) for line, row in zip(lines, priced, strict=True)
+    ]
+    target.total = sum((row.net for row in priced), sum(taxes, ZERO))
     target.save()
     target.lines.all().delete()
     SalesOrderLine.objects.bulk_create(
@@ -280,10 +365,13 @@ def save_order(
             unit=line.unit,
             quantity=line.quantity,
             unit_price=line.unit_price,
+            discount_percent=line.discount_percent,
+            discount=row.discount,
+            bill_share=row.bill_share,
             tax_rate=line.tax_rate,
             tax_amount=tax,
         )
-        for line, tax in zip(lines, taxes, strict=True)
+        for line, row, tax in zip(lines, priced, taxes, strict=True)
     )
     audit.record(action, target, actor, {"total": [None, str(target.total)]})
     return target
@@ -331,10 +419,6 @@ def close_order(actor: User, order: SalesOrder) -> SalesOrder:
 # Invoices
 
 
-def _net(lines: list[InvoiceLineInput]) -> Decimal:
-    return sum((line_amount(line.quantity, line.unit_price) for line in lines), ZERO)
-
-
 @transaction.atomic
 def save_invoice(
     actor: User,
@@ -347,8 +431,14 @@ def save_invoice(
     action = Action.UPDATE if invoice else Action.CREATE
     target = _locked_draft(Invoice, invoice) if invoice else Invoice(created_by=actor)
     _apply(target, header, ("customer", "order", "warehouse", "date", "due_date", "memo"))
-    taxes = [quantize_money(_line_tax(line, target.date)) for line in lines]
-    target.net, target.tax = _net(lines), sum(taxes, ZERO)
+    priced, bill = _priced(lines, header)
+    _check_discount(actor, lines, priced)
+    _discounts(target, header, bill, priced)
+    taxes = [
+        quantize_money(_line_tax(line, row.net, target.date))
+        for line, row in zip(lines, priced, strict=True)
+    ]
+    target.net, target.tax = sum((row.net for row in priced), ZERO), sum(taxes, ZERO)
     target.total = target.net + target.tax
     target.save()
     target.lines.all().delete()
@@ -361,12 +451,15 @@ def save_invoice(
             unit=line.unit,
             quantity=line.quantity,
             unit_price=line.unit_price,
-            amount=line_amount(line.quantity, line.unit_price),
+            discount_percent=line.discount_percent,
+            discount=row.discount,
+            bill_share=row.bill_share,
+            amount=row.net,
             tax_rate=line.tax_rate,
             tax_amount=tax,
             batch_number=line.batch_number,
         )
-        for line, tax in zip(lines, taxes, strict=True)
+        for line, row, tax in zip(lines, priced, taxes, strict=True)
     )
     audit.record(action, target, actor, {"total": [None, str(target.total)]})
     return target
@@ -392,6 +485,14 @@ def invoice_order(actor: User, order: SalesOrder, on: date) -> Invoice:
             ),
             line,
             tax_rate=_still_valid(line.tax_rate, on),
+            # The order's discounts, its own and its share of the bill, come across as an
+            # amount for the part still to invoice, so a split order gives the same total.
+            discount=share(
+                line.discount + line.bill_share,
+                line.invoiced_quantity,
+                line.quantity - line.invoiced_quantity,
+                line.quantity,
+            ),
         )
         for line in locked.lines.select_related("product", "unit", "tax_rate")
         if line.invoiced_quantity < line.quantity
@@ -478,7 +579,7 @@ def _post_invoice(actor: User, invoice: Invoice) -> Invoice:
         actor,
         locked.date,
         locked.memo or f"Invoice {locked.number} to {customer.name}",
-        posting.sale(locked.net, locked.tax),
+        posting.sale(locked.net, locked.tax, discount=locked.discount),
         {},
         ("invoice", str(locked.pk)),
     )

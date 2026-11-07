@@ -3,6 +3,7 @@
 import hashlib
 import secrets
 from datetime import timedelta
+from decimal import Decimal
 from typing import Any
 
 from django.db import IntegrityError, models, transaction
@@ -112,12 +113,19 @@ def create_tenant(
 
 @transaction.atomic
 def save_role(
-    actor: User, name: str, permissions: dict[str, list[str]], role: Role | None = None
+    actor: User,
+    name: str,
+    permissions: dict[str, list[str]],
+    role: Role | None = None,
+    max_discount_percent: Decimal | None = None,
 ) -> Role:
-    fields = ("name", "permissions")
+    """`max_discount_percent` left out keeps the role's limit; a new role starts at none."""
+    fields = ("name", "permissions", "max_discount_percent")
     before = _snapshot(role, fields) if role else dict.fromkeys(fields)
     target = role or Role(name=name, permissions=permissions)
     target.name, target.permissions = name, permissions
+    if max_discount_percent is not None:
+        target.max_discount_percent = max_discount_percent
     try:
         with transaction.atomic():
             target.save()

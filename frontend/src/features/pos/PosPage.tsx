@@ -7,7 +7,14 @@ import { Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
 import { today } from '../../lib/dates';
-import { formatMoney, lineMinor, taxMinor, toMinor } from '../../lib/money';
+import {
+  formatMoney,
+  lineMinor,
+  percentMinor,
+  spreadMinor,
+  taxMinor,
+  toMinor,
+} from '../../lib/money';
 import { ActionError } from '../purchasing/pages';
 import { PrintButton } from '../sales/ledgers';
 import { useTenantAction, useWorkspace } from '../workspace/hooks';
@@ -27,6 +34,13 @@ interface Found {
 
 interface CartLine extends Found {
   quantity: number;
+  // A percentage off this line, as typed.
+  discount: string;
+}
+
+function percentOrNone(value: string): string | null {
+  const number = Number(value);
+  return value && number > 0 && number <= 100 ? value : null;
 }
 
 interface Till {
@@ -153,6 +167,7 @@ function Counter({ till }: { till: Till }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [rate, setRate] = useState('');
   const [given, setGiven] = useState('');
+  const [saleDiscount, setSaleDiscount] = useState('');
   const [done, setDone] = useState<Done | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [scanFailed, setScanFailed] = useState(false);
@@ -181,7 +196,7 @@ function Counter({ till }: { till: Till }) {
       const same = lines.find((line) => line.id === item.id && line.unit === item.unit);
       return same
         ? lines.map((line) => (line === same ? { ...line, quantity: line.quantity + 1 } : line))
-        : [...lines, { ...item, quantity: 1 }];
+        : [...lines, { ...item, quantity: 1, discount: '' }];
     });
     setTerm('');
     setNotFound(false);
@@ -205,6 +220,9 @@ function Counter({ till }: { till: Till }) {
     else if (found.length === 0) setNotFound(true);
   };
 
+  const setDiscount = (line: CartLine, discount: string) =>
+    setCart((lines) => lines.map((item) => (item === line ? { ...item, discount } : item)));
+
   const setQuantity = (line: CartLine, quantity: number) =>
     setCart((lines) =>
       quantity <= 0
@@ -212,10 +230,27 @@ function Counter({ till }: { till: Till }) {
         : lines.map((item) => (item === line ? { ...item, quantity } : item)),
     );
 
-  const net = cart.reduce((sum, line) => sum + linePaisa(line), 0);
-  const tax = chosen
-    ? cart.reduce((sum, line) => sum + taxMinor(linePaisa(line), chosen.rate), 0)
-    : 0;
+  // The same order as the server: each line's own discount, then the sale's discount spread
+  // over what is left, then tax on each line's remainder. The server works it out again.
+  const after = cart.map((line) => {
+    const gross = linePaisa(line);
+    const percent = percentOrNone(line.discount);
+    return gross - (percent ? percentMinor(gross, percent) : 0);
+  });
+  const salePercent = percentOrNone(saleDiscount);
+  const shares = spreadMinor(
+    salePercent
+      ? percentMinor(
+          after.reduce((sum, value) => sum + value, 0),
+          salePercent,
+        )
+      : 0,
+    after,
+  );
+  const lineNets = after.map((value, index) => value - (shares[index] ?? 0));
+  const net = lineNets.reduce((sum, value) => sum + value, 0);
+  const off = cart.reduce((sum, line) => sum + linePaisa(line), 0) - net;
+  const tax = chosen ? lineNets.reduce((sum, value) => sum + taxMinor(value, chosen.rate), 0) : 0;
   const total = net + tax;
   const change = toMinor(given) - total;
   const priceless = cart.some((line) => line.price === null);
@@ -226,10 +261,12 @@ function Counter({ till }: { till: Till }) {
         product: line.id,
         unit: line.unit,
         quantity: String(line.quantity),
+        discount_percent: percentOrNone(line.discount),
       })),
       method,
       tendered: method === 'cash' && given ? given : null,
       tax_rate: rate ? Number(rate) : null,
+      discount_percent: salePercent,
     } as never;
     sale.mutate(async () => {
       const result = await unwrap(
@@ -238,6 +275,7 @@ function Counter({ till }: { till: Till }) {
       setDone(result);
       setCart([]);
       setGiven('');
+      setSaleDiscount('');
     });
   };
 
@@ -337,6 +375,18 @@ function Counter({ till }: { till: Till }) {
                   >
                     +
                   </button>
+                  <input
+                    aria-label={t('pos.lineDiscount')}
+                    placeholder="%"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={line.discount}
+                    onChange={(e) => setDiscount(line, e.target.value)}
+                    className="min-h-11 w-16 rounded-xl border border-line bg-canvas px-2 text-center"
+                  />
                   <span className="w-24 text-end font-mono text-sm tabular-nums">
                     {line.price === null ? t('pos.noPrice') : money(linePaisa(line))}
                   </span>
@@ -350,12 +400,27 @@ function Counter({ till }: { till: Till }) {
       <div className="space-y-4">
         <Panel title={t('pos.toPay')}>
           <p className="text-4xl font-medium tabular-nums">{money(total)}</p>
+          {off > 0 && (
+            <p className="mt-1 text-sm text-muted">
+              {t('pos.discountGiven')}: {money(off)}
+            </p>
+          )}
           {tax > 0 && (
             <p className="mt-1 text-sm text-muted">
               {t('pur.tax')}: {money(tax)}
             </p>
           )}
           <div className="mt-4 space-y-4">
+            <Field
+              label={t('pos.saleDiscount')}
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              inputMode="decimal"
+              value={saleDiscount}
+              onChange={(e) => setSaleDiscount(e.target.value)}
+            />
             {(usable?.length ?? 0) > 0 && (
               <Select label={t('pur.tax')} value={rate} onChange={(e) => setRate(e.target.value)}>
                 <option value="">{t('pos.noTax')}</option>

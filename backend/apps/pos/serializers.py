@@ -55,6 +55,14 @@ class CartLineSerializer(serializers.Serializer[Any]):
     quantity = serializers.DecimalField(
         max_digits=18, decimal_places=4, min_value=Decimal("0.0001")
     )
+    discount_percent = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        min_value=Decimal(0),
+        max_value=Decimal(100),
+        required=False,
+        allow_null=True,
+    )
 
 
 class SaleRequestSerializer(serializers.Serializer[Any]):
@@ -62,6 +70,15 @@ class SaleRequestSerializer(serializers.Serializer[Any]):
     method = serializers.ChoiceField(choices=PosSale.Method.choices)
     tendered = money(min_value=Decimal(0), required=False, allow_null=True)
     tax_rate = scoped(TaxRate, allow_null=True, required=False)
+    # Off the whole sale, after any line discounts.
+    discount_percent = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        min_value=Decimal(0),
+        max_value=Decimal(100),
+        required=False,
+        allow_null=True,
+    )
 
     def validate_lines(self, value: list[Any]) -> list[Any]:
         return capped(value)

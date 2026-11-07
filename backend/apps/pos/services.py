@@ -64,6 +64,7 @@ class CartLine:
     product: Product
     unit: Unit
     quantity: Decimal
+    discount_percent: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -136,7 +137,14 @@ def _invoice_line(line: CartLine, tax_rate: TaxRate | None) -> sales.InvoiceLine
     price = _price(line.product, inventory.factor_for(line.product, line.unit))
     if price is None:
         raise NoPriceError
-    return sales.InvoiceLineInput(line.product, line.unit, line.quantity, price, tax_rate=tax_rate)
+    return sales.InvoiceLineInput(
+        line.product,
+        line.unit,
+        line.quantity,
+        price,
+        tax_rate=tax_rate,
+        discount_percent=line.discount_percent,
+    )
 
 
 def sell(
@@ -146,8 +154,11 @@ def sell(
     method: str,
     tendered: Decimal | None = None,
     tax_rate: TaxRate | None = None,
+    discount_percent: Decimal | None = None,
 ) -> PosSale:
-    sale: PosSale = retry_on_deadlock(_sell)(actor, session, lines, method, tendered, tax_rate)
+    sale: PosSale = retry_on_deadlock(_sell)(
+        actor, session, lines, method, tendered, tax_rate, discount_percent
+    )
     return sale
 
 
@@ -159,8 +170,12 @@ def _sell(
     method: str,
     tendered: Decimal | None,
     tax_rate: TaxRate | None,
+    discount_percent: Decimal | None,
 ) -> PosSale:
-    """Stock, the invoice, the money and the till record commit together or not at all."""
+    """Stock, the invoice, the money and the till record commit together or not at all.
+
+    Prices come from the products; only discounts come from the request, and the role's limit
+    is checked when the invoice is saved."""
     till = _open_session(session)
     # A product can be withdrawn or repriced while it sits in a cart, so its row is read and held
     # here, and the sale uses that copy. The lock keeps either change from landing mid-sale.
@@ -175,7 +190,12 @@ def _sell(
     customer = _walk_in()
     invoice = sales.save_invoice(
         actor,
-        {"customer": customer, "warehouse": till.warehouse, "date": today},
+        {
+            "customer": customer,
+            "warehouse": till.warehouse,
+            "date": today,
+            "discount_percent": discount_percent,
+        },
         [_invoice_line(line, tax_rate) for line in lines],
     )
     given = invoice.total if method == PosSale.Method.CARD or tendered is None else tendered

@@ -15,6 +15,12 @@ def money_field(**kwargs: Any) -> "models.DecimalField[Any, Any]":
     return models.DecimalField(max_digits=18, decimal_places=2, **kwargs)
 
 
+def percent_field(**kwargs: Any) -> "models.DecimalField[Any, Any]":
+    """A percentage such as 12.50. Empty means none was typed."""
+    options = {"null": True, "blank": True, **kwargs}
+    return models.DecimalField(max_digits=5, decimal_places=2, **options)
+
+
 class Unit(TenantOwnedModel):
     code = models.CharField(max_length=10)
     name = models.CharField(max_length=50)

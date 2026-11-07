@@ -112,7 +112,12 @@ class RoleListView(generics.ListCreateAPIView[Role]):
     def perform_create(self, serializer: RoleSerializer) -> None:  # type: ignore[override]
         data = serializer.validated_data
         serializer.instance = run(
-            services.save_role, actor(self.request), data["name"], data["permissions"]
+            services.save_role,
+            actor(self.request),
+            data["name"],
+            data["permissions"],
+            None,
+            data.get("max_discount_percent"),
         )
 
 
@@ -134,6 +139,7 @@ class RoleDetailView(generics.RetrieveUpdateDestroyAPIView[Role]):
             data.get("name", role.name),
             data.get("permissions", role.permissions),
             role,
+            data.get("max_discount_percent"),
         )
 
     def perform_destroy(self, instance: Role) -> None:

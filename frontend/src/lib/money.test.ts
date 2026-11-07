@@ -1,6 +1,14 @@
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { formatMoney, fromMinor, lineMinor, taxMinor, toMinor } from './money';
+import {
+  formatMoney,
+  fromMinor,
+  lineMinor,
+  percentMinor,
+  spreadMinor,
+  taxMinor,
+  toMinor,
+} from './money';
 
 it('converts decimal strings to minor units without float drift', () => {
   expect(toMinor('0.1') + toMinor('0.2')).toBe(30);
@@ -32,4 +40,20 @@ it('rounds a line and its tax the way the invoice does, without float error', ()
   expect(lineMinor('0.0049', 1)).toBe(0);
   expect(taxMinor(50, '1.0000')).toBe(1);
   expect(taxMinor(1999, '17.5000')).toBe(350);
+});
+
+describe('discounts', () => {
+  it('takes a percentage off and rounds halves up, as the server does', () => {
+    expect(percentMinor(9999, '12.5')).toBe(1250);
+    expect(percentMinor(1, '50')).toBe(1);
+    expect(percentMinor(20000, '0')).toBe(0);
+  });
+
+  it('spreads a bill discount so the parts add back exactly', () => {
+    expect(spreadMinor(100, [1000, 1000, 1000])).toEqual([33, 34, 33]);
+    expect(spreadMinor(3000, [10000, 20000])).toEqual([1000, 2000]);
+    const parts = spreadMinor(1777, [333, 5000, 0, 1201]);
+    expect(parts.reduce((sum, part) => sum + part, 0)).toBe(1777);
+    expect(spreadMinor(0, [5, 0])).toEqual([0, 0]);
+  });
 });

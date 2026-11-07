@@ -329,6 +329,8 @@ export interface ItemLine {
   quantity: string;
   price: string;
   tax?: string;
+  // A percentage off this line. Sales only.
+  discount?: string;
 }
 
 export function itemLine(key: number): ItemLine {
@@ -340,11 +342,13 @@ export function ItemsEditor({
   onChange,
   priceLabel,
   taxLabel,
+  discountLabel,
 }: {
   lines: ItemLine[];
   onChange: (lines: ItemLine[]) => void;
   priceLabel: string;
   taxLabel?: string;
+  discountLabel?: string;
 }) {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<Map<string, Product>>(new Map());
@@ -360,6 +364,7 @@ export function ItemsEditor({
               <th className={TH}>{t('inv.unit')}</th>
               <th className={TH}>{t('inv.quantity')}</th>
               <th className={TH}>{priceLabel}</th>
+              {discountLabel && <th className={TH}>{discountLabel}</th>}
               {taxLabel && <th className={TH}>{taxLabel}</th>}
               <th />
             </tr>
@@ -407,6 +412,15 @@ export function ItemsEditor({
                       onChange={(price) => update(line.key, { price })}
                     />
                   </td>
+                  {discountLabel && (
+                    <td className="w-24 py-2 pe-2">
+                      <NumberCell
+                        label={discountLabel}
+                        value={line.discount ?? ''}
+                        onChange={(discount) => update(line.key, { discount })}
+                      />
+                    </td>
+                  )}
                   {taxLabel && (
                     <td className="w-28 py-2 pe-2">
                       <NumberCell

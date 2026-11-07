@@ -26,6 +26,7 @@ LABELS: dict[str, dict[str, str]] = {
         "item": "Item",
         "quantity": "Quantity",
         "price": "Price",
+        "discount": "Discount",
         "tax": "Sales tax",
         "amount": "Amount",
         "net": "Before tax",
@@ -45,6 +46,7 @@ LABELS: dict[str, dict[str, str]] = {
         "item": "چیز",
         "quantity": "تعداد",
         "price": "قیمت",
+        "discount": "رعایت",
         "tax": "سیلز ٹیکس",
         "amount": "رقم",
         "net": "ٹیکس سے پہلے",
@@ -64,6 +66,7 @@ LABELS: dict[str, dict[str, str]] = {
         "item": "الصنف",
         "quantity": "الكمية",
         "price": "السعر",
+        "discount": "الخصم",
         "tax": "ضريبة المبيعات",
         "amount": "المبلغ",
         "net": "قبل الضريبة",
@@ -118,11 +121,14 @@ def invoice_html(invoice: Invoice, language: str) -> str:
                     "name": line.product.name,
                     "quantity": f"{_quantity(line.quantity)} {line.unit.code}",
                     "price": _price(line.unit_price),
+                    # Its own discount and its share of the bill's, so the column adds up.
+                    "discount": _money(line.discount + line.bill_share),
                     "tax": _money(line.tax_amount),
                     "amount": _money(line.amount),
                 }
                 for line in invoice.lines.select_related("product", "unit")
             ],
+            "discount": _money(invoice.discount) if invoice.discount else None,
             "net": _money(invoice.net),
             "tax": _money(invoice.tax),
             "total": _money(invoice.total),
