@@ -38,9 +38,16 @@ interface CartLine extends Found {
   discount: string;
 }
 
+// Plain decimals with up to two places, as the server takes them. Anything else, such as
+// 1e1, would break the sums below, so it is shown as a mistake instead.
+const PERCENT = /^\d{1,3}(\.\d{1,2})?$/;
+
+function percentOk(value: string): boolean {
+  return value === '' || (PERCENT.test(value) && Number(value) <= 100);
+}
+
 function percentOrNone(value: string): string | null {
-  const number = Number(value);
-  return value && number > 0 && number <= 100 ? value : null;
+  return value && percentOk(value) && Number(value) > 0 ? value : null;
 }
 
 interface Till {
@@ -254,6 +261,7 @@ function Counter({ till }: { till: Till }) {
   const total = net + tax;
   const change = toMinor(given) - total;
   const priceless = cart.some((line) => line.price === null);
+  const badDiscount = !percentOk(saleDiscount) || cart.some((line) => !percentOk(line.discount));
 
   const pay = (method: 'cash' | 'card') => {
     const body = {
@@ -385,7 +393,10 @@ function Counter({ till }: { till: Till }) {
                     inputMode="decimal"
                     value={line.discount}
                     onChange={(e) => setDiscount(line, e.target.value)}
-                    className="min-h-11 w-16 rounded-xl border border-line bg-canvas px-2 text-center"
+                    aria-invalid={!percentOk(line.discount)}
+                    className={`min-h-11 w-16 rounded-xl border bg-canvas px-2 text-center ${
+                      percentOk(line.discount) ? 'border-line' : 'border-red'
+                    }`}
                   />
                   <span className="w-24 text-end font-mono text-sm tabular-nums">
                     {line.price === null ? t('pos.noPrice') : money(linePaisa(line))}
@@ -448,7 +459,11 @@ function Counter({ till }: { till: Till }) {
               <button
                 type="button"
                 disabled={
-                  sale.isPending || cart.length === 0 || priceless || (given !== '' && change < 0)
+                  sale.isPending ||
+                  cart.length === 0 ||
+                  priceless ||
+                  badDiscount ||
+                  (given !== '' && change < 0)
                 }
                 onClick={() => pay('cash')}
                 className="btn btn-primary !min-h-16 !text-lg disabled:opacity-40"
@@ -457,7 +472,7 @@ function Counter({ till }: { till: Till }) {
               </button>
               <button
                 type="button"
-                disabled={sale.isPending || cart.length === 0 || priceless}
+                disabled={sale.isPending || cart.length === 0 || priceless || badDiscount}
                 onClick={() => pay('card')}
                 className="btn btn-ghost !min-h-16 !text-lg disabled:opacity-40"
               >
@@ -465,6 +480,7 @@ function Counter({ till }: { till: Till }) {
               </button>
             </div>
             {priceless && <p className="text-sm text-red">{t('pos.needsPrice')}</p>}
+            {badDiscount && <p className="text-sm text-red">{t('pos.badDiscount')}</p>}
             <ActionError error={sale.error} />
           </div>
         </Panel>

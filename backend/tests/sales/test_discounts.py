@@ -293,3 +293,66 @@ def test_a_printed_bill_shows_the_discount_only_when_there_is_one(seller: Seller
     assert "Discount" in html
     assert "100.00" in html
     assert "رعایت" in documents.invoice_html(cut, "ur")
+
+
+def confirmed_order(s: Seller, percent: str = "30") -> SalesOrder:
+    order = services.save_order(
+        s.user,
+        header(s),
+        [
+            services.OrderLineInput(
+                s.shop.soap, s.shop.pcs, D("10"), D("100"), discount_percent=D(percent)
+            )
+        ],
+    )
+    return services.confirm_order(s.user, order)
+
+
+def test_an_order_line_cannot_carry_more_than_the_order_gave(seller: Seller) -> None:
+    order = confirmed_order(seller)
+    order_line = order.lines.get()
+    person = clerk(seller, "0")
+    # Four of the ten carry four tenths of the order's 300 off; asking for more is checked.
+    carried = line(seller, "4", "100", order_line=order_line, discount=D("120"))
+    services.save_invoice(person.user, header(seller, order=order), [carried])
+    greedy = line(seller, "4", "100", order_line=order_line, discount=D("121"))
+    with pytest.raises(services.DiscountNotAllowedError):
+        services.save_invoice(person.user, header(seller, order=order), [greedy])
+
+
+def test_extra_on_an_order_line_is_allowed_within_the_limit(seller: Seller) -> None:
+    order = confirmed_order(seller)
+    person = clerk(seller, "5")
+    extra = line(seller, "10", "100", order_line=order.lines.get(), discount=D("350"))
+    invoice = services.save_invoice(person.user, header(seller, order=order), [extra])
+    assert invoice.discount == D("350.00")
+    too_much = line(seller, "10", "100", order_line=order.lines.get(), discount=D("351"))
+    with pytest.raises(services.DiscountNotAllowedError):
+        services.save_invoice(person.user, header(seller, order=order), [too_much])
+
+
+def test_a_fully_discounted_bill_posts_with_nothing_owed(seller: Seller) -> None:
+    invoice = services.save_invoice(
+        seller.user, header(seller), [line(seller, discount_percent=D("100"))]
+    )
+    posted = services.post_invoice(seller.user, invoice)
+    assert posted.total == D("0.00")
+    assert role_balance("sales_discounts") == D("1000.00")
+    assert role_balance("sales") == D("-1000.00")
+    assert role_balance("receivables") == D("0")
+
+
+def test_an_empty_bill_still_cannot_post(seller: Seller) -> None:
+    invoice = services.save_invoice(seller.user, header(seller), [line(seller, price="0")])
+    with pytest.raises(services.EmptyDocumentError):
+        services.post_invoice(seller.user, invoice)
+
+
+def test_the_counter_can_give_a_sale_away(seller: Seller) -> None:
+    seller.shop.soap.sale_price = D("100")
+    seller.shop.soap.save()
+    session = pos.open_till(seller.user, seller.shop.main, D("0"))
+    cart = [pos.CartLine(seller.shop.soap, seller.shop.pcs, D("1"), D("100"))]
+    sale = pos.sell(seller.user, session, cart, "cash", D("0"))
+    assert (sale.amount, sale.change, sale.receipt) == (D("0.00"), D("0.00"), None)
+    assert sale.invoice.discount == D("100.00")
