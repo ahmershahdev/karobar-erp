@@ -26,6 +26,8 @@ class ChatMessageSerializer(serializers.ModelSerializer[ChatMessage]):
 
 class ChatAskSerializer(serializers.Serializer[Any]):
     message = serializers.CharField(max_length=MAX_QUESTION, trim_whitespace=True)
+    # The language the app is shown in, so screen names match the person's screen.
+    language = serializers.ChoiceField(choices=services.LANGUAGES, default="en")
 
 
 class ChatCheckSerializer(serializers.Serializer[Any]):
@@ -65,7 +67,10 @@ class ChatAskView(APIView):
         body.is_valid(raise_exception=True)
         try:
             answer = services.ask(
-                actor(request), membership_of(request), body.validated_data["message"]
+                actor(request),
+                membership_of(request),
+                body.validated_data["message"],
+                body.validated_data["language"],
             )
         except services.AssistantError as exc:
             raise AssistantUnavailable(type(exc).message) from exc

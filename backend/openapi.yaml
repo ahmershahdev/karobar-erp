@@ -4382,6 +4382,10 @@ components:
         message:
           type: string
           maxLength: 2000
+        language:
+          allOf:
+          - $ref: '#/components/schemas/LocaleEnum'
+          default: en
       required:
       - message
     ChatCheck:

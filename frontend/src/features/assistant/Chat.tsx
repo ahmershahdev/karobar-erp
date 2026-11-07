@@ -9,8 +9,12 @@ import { ensureCsrf } from '../auth/session';
 import { errorText } from '../workspace/hooks';
 
 /** The business chat. Answers show as plain text, so nothing a model writes can run on the page. */
+// The chat names screens in the language the app is shown in.
+const LANGUAGES = ['en', 'ur', 'ar'] as const;
+
 export function Chat({ membership }: { membership: Membership }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = LANGUAGES.find((code) => code === i18n.resolvedLanguage) ?? 'en';
   const client = useQueryClient();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
@@ -36,7 +40,7 @@ export function Chat({ membership }: { membership: Membership }) {
       // Read before waiting: the person may switch business, and a message can't be taken back.
       const headers = { 'X-Tenant': membership.tenant_id };
       await ensureCsrf();
-      return unwrap(api.POST('/api/assistant/ask/', { body: { message }, headers }));
+      return unwrap(api.POST('/api/assistant/ask/', { body: { message, language }, headers }));
     },
     onSettled: () =>
       Promise.all([
