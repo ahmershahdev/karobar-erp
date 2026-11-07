@@ -840,6 +840,16 @@ paths:
                 items:
                   $ref: '#/components/schemas/ChatMessage'
           description: ''
+  /api/assistant/reset/:
+    post:
+      operationId: assistant_reset_create
+      tags:
+      - assistant
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/audit/:
     get:
       operationId: audit_list
@@ -6548,10 +6558,12 @@ components:
       enum:
       - user
       - assistant
+      - reset
       type: string
       description: |-
         * `user` - User
         * `assistant` - Assistant
+        * `reset` - Reset
     SaleRequest:
       type: object
       properties:

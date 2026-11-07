@@ -1,4 +1,6 @@
 from collections.abc import Iterator
+from decimal import Decimal
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 
@@ -169,3 +171,94 @@ def test_without_a_key_it_says_so(boss: Member, settings: SettingsWrapper) -> No
 def test_a_very_long_message_is_refused(boss: Member) -> None:
     reply = boss.client().post("/api/assistant/ask/", {"message": "x" * 2001}, format="json")
     assert reply.status_code == 400
+
+
+def test_a_new_chat_hides_old_messages_from_the_person_and_the_model(boss: Member) -> None:
+    with said("Old answer"):
+        services.ask(boss.user, boss.membership, "Old question")
+    client = boss.client()
+    assert client.post("/api/assistant/reset/").status_code == 204
+    assert client.get("/api/assistant/messages/").json() == []
+    with said("New answer") as model:
+        services.ask(boss.user, boss.membership, "New question")
+    sent = [row["content"] for row in model.call_args.args[0][1:]]
+    assert sent == ["New question"]
+
+
+def test_a_new_chat_keeps_every_message_signed_and_checkable(boss: Member) -> None:
+    with said("Answer"):
+        services.ask(boss.user, boss.membership, "Question")
+    services.reset(boss.user)
+    assert ChatMessage.objects.count() == 3
+    assert services.verify(boss.user) == {"ok": True, "count": 2, "broken_at": None}
+
+
+def test_removing_a_reset_to_bring_messages_back_is_caught(boss: Member) -> None:
+    with said("Answer"):
+        services.ask(boss.user, boss.membership, "Question")
+    services.reset(boss.user)
+    with said("Later"):
+        services.ask(boss.user, boss.membership, "Next")
+    marker = ChatMessage.objects.get(role="reset")
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM assistant_chatmessage WHERE id = %s", [marker.pk])
+    assert services.verify(boss.user)["ok"] is False
+
+
+def test_resetting_an_empty_chat_adds_nothing(boss: Member) -> None:
+    services.reset(boss.user)
+    with said("Answer"):
+        services.ask(boss.user, boss.membership, "Question")
+    services.reset(boss.user)
+    services.reset(boss.user)
+    assert ChatMessage.objects.filter(role="reset").count() == 1
+
+
+def test_a_reset_only_touches_that_persons_chat(boss: Member) -> None:
+    other = staff(boss)
+    services.record(other.user, "user", "Mine")
+    services.record(boss.user, "user", "Theirs")
+    services.reset(boss.user)
+    assert services.current(boss.user).count() == 0
+    assert services.current(other.user).count() == 1
+
+
+def test_the_prompt_keeps_to_the_business_and_stays_short(boss: Member) -> None:
+    prompt = services.system_prompt(boss.user, boss.membership)
+    assert "Only help with this business" in prompt
+    assert "one to three sentences" in prompt
+    assert "anything general" not in prompt
+
+
+def test_stock_quantities_reach_the_model_without_trailing_zeros(boss: Member) -> None:
+    rows = [
+        SimpleNamespace(product=SimpleNamespace(name="Soap"), on_hand=Decimal("100.0000")),
+        SimpleNamespace(product=SimpleNamespace(name="Tea"), on_hand=Decimal("1.5000")),
+    ]
+    with patch.object(services, "low_stock", return_value=rows):
+        known = services.facts(boss.membership)
+    assert [row["on_hand"] for row in known["low_stock"]] == ["100", "1.5"]
+
+
+def test_bold_marks_are_taken_out_of_an_answer(boss: Member) -> None:
+    answer = {"choices": [{"message": {"content": "Open **Products** to add it."}}]}
+    with patch.object(services, "post_json", return_value=answer):
+        assert services.complete([]) == "Open Products to add it."
+
+
+def test_the_prompt_names_the_real_screens(boss: Member) -> None:
+    assert "Who owes me" in services.system_prompt(boss.user, boss.membership)
+
+
+def test_an_answer_finishing_after_a_new_chat_is_dropped(boss: Member) -> None:
+    def think(messages: list[dict[str, str]]) -> str:
+        services.reset(boss.user)
+        return "Answer to the old chat"
+
+    with patch.object(services, "complete", side_effect=think):
+        reply = boss.client().post("/api/assistant/ask/", {"message": "Old"}, format="json")
+    assert reply.status_code == 503
+    assert "new chat" in reply.json()["detail"]
+    assert not ChatMessage.objects.filter(role="assistant").exists()
+    assert services.current(boss.user).count() == 0
+    assert services.verify(boss.user)["ok"] is True

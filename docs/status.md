@@ -5,8 +5,8 @@ Last updated: 2026-11-07. Update at the end of every work session.
 ## Where we are
 
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory), `v0.4.0` (M4 purchasing, sales, documents), `v0.5.0` (M5 counter, tax, reports, report indexes).
-- Merged since `v0.5.0`: the business home page (#32), and signed bill links, WhatsApp click-to-chat and the daily summary email (#33).
-- In review: the business chat through Groq with signed messages (`feat/business-chat`, `apps/assistant`, `apps/core/chain.py`). See `docs/security.md`. It replaces `feat/ai-assistant`, which can be deleted once it merges.
+- Merged since `v0.5.0`: the business home page (#32), signed bill links, WhatsApp click-to-chat and the daily summary email (#33), and the business chat through Groq with signed messages (#34, `apps/assistant`, `apps/core/chain.py`; see `docs/security.md`).
+- `feat/ai-assistant` is replaced by #33 and #34 and can be deleted.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
 - PDFs need Pango, so they can't be made on the maintainer's Windows machine. Printing and signed bill links work up to that step there. Test real PDFs in Docker.
@@ -15,9 +15,16 @@ Last updated: 2026-11-07. Update at the end of every work session.
 
 ## Next session
 
-1. Merge the chat PR once CI and review are clean.
-2. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
-3. Check a signed bill link returning a real PDF in Docker.
+Agreed order, one PR each:
+
+1. Keep the chat to the business, with short replies and a new chat button.
+2. Ask before every delete. All 13 delete actions in the app fire on one click.
+3. Account settings: change name, email and password, and delete an account by anonymising it. None of this exists yet.
+4. Chat tasks: drafts only, shown as a card the person confirms. Never posting, paying or deleting.
+5. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
+6. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.
+
+Also check a signed bill link returning a real PDF in Docker.
 
 ## Open questions
 
@@ -30,3 +37,4 @@ Last updated: 2026-11-07. Update at the end of every work session.
 - The chat check can't notice the newest messages being deleted in the database. Catching that needs the latest signature and count stored outside the chat table. Decide if it matters.
 - The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.
 - Dependabot alert 2: `minimatch` (medium), in development dependencies only. Fixed in 11.0.1.
+- Groq calls started failing after about a dozen quick questions in testing, probably its rate limit on this key. Check the plan's limits against expected use before switching the chat on in production.
