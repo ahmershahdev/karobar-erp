@@ -356,3 +356,13 @@ def test_saving_an_old_copy_keeps_a_leaving_day_saved_meanwhile(boss: Member) ->
     services.save_employee(boss.user, stale, {"phone": "0300 0000000"})
     fresh = Employee.objects.get(pk=stale.pk)
     assert (fresh.phone, fresh.left_on) == ("0300 0000000", date(2026, 6, 30))
+
+
+def test_a_contract_stays_with_its_employee(boss: Member) -> None:
+    first = employee(boss).json()["id"]
+    second = employee(boss, "E2").json()["id"]
+    plan = structure(boss).json()["id"]
+    pk = contract(boss, first, plan, "2026-01-01").json()["id"]
+    moved = boss.client().patch(f"/api/hr/contracts/{pk}/", {"employee": second}, format="json")
+    assert moved.status_code == 400
+    assert Contract.objects.get(pk=pk).employee_id == first

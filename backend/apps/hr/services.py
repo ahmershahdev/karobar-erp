@@ -37,6 +37,10 @@ class LeavesBeforeContractError(HrError):
     message = "This person has a contract starting after that day. Remove or move it first."
 
 
+class ContractOwnerError(HrError):
+    message = "A contract stays with its employee. Give the other person a contract of their own."
+
+
 class OverlapError(HrError):
     message = "This person already has a contract for some of those dates. End it first."
 
@@ -164,6 +168,13 @@ def save_contract(
     actor: User, values: dict[str, Any], contract: Contract | None = None
 ) -> Contract:
     target = contract or Contract()
+    # A contract never moves to someone else, so locking its one employee is always enough.
+    if (
+        target.pk is not None
+        and "employee" in values
+        and values["employee"].pk != target.employee_id
+    ):
+        raise ContractOwnerError
     chosen: Employee = values.get("employee") or target.employee
     # The locked row, not the copy the request loaded: a leaving day saved a moment ago must
     # count.
