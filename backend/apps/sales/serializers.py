@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import Any
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.accounting.models import Account, TaxRate
@@ -8,7 +9,9 @@ from apps.inventory.models import Product, Unit, Warehouse
 from apps.inventory.serializers import scoped
 from apps.purchasing.serializers import AgeingRowSerializer, capped
 
+from . import billing
 from .models import (
+    BillSettings,
     CreditNote,
     CreditNoteLine,
     Customer,
@@ -322,3 +325,21 @@ class ReceivableRowSerializer(AgeingRowSerializer):
 class BillShareSerializer(serializers.Serializer[Any]):
     link = serializers.CharField()
     whatsapp = serializers.CharField()
+
+
+class BillSettingsSerializer(serializers.ModelSerializer[BillSettings]):
+    logo = serializers.SerializerMethodField()
+    invoice_prefix = serializers.CharField(max_length=10, required=False)
+
+    class Meta:
+        model = BillSettings
+        fields = (*billing.FIELDS, "logo", "invoice_prefix")
+        extra_kwargs = {"accent": {"min_length": 7, "max_length": 7}}
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_logo(self, settings: BillSettings) -> str | None:
+        return billing.logo_data_uri(settings)
+
+
+class BillLogoSerializer(serializers.Serializer[Any]):
+    logo = serializers.FileField(max_length=200)

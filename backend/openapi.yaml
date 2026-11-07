@@ -3141,6 +3141,85 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReceivableRow'
           description: ''
+  /api/sales/bill-settings/:
+    get:
+      operationId: sales_bill_settings_retrieve
+      description: Business-wide, like the daily summary, so it sits with the people
+        who run the business.
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+    patch:
+      operationId: sales_bill_settings_partial_update
+      description: Business-wide, like the daily summary, so it sits with the people
+        who run the business.
+      tags:
+      - sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBillSettings'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+  /api/sales/bill-settings/logo/:
+    get:
+      operationId: sales_bill_settings_logo_retrieve
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+          description: ''
+    put:
+      operationId: sales_bill_settings_logo_update
+      tags:
+      - sales
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BillLogo'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
+    delete:
+      operationId: sales_bill_settings_logo_destroy
+      tags:
+      - sales
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/sales/credit-notes/:
     get:
       operationId: sales_credit_notes_list
@@ -4449,6 +4528,72 @@ components:
       - id
       - quantity
       - unit_price
+    BillLogo:
+      type: object
+      properties:
+        logo:
+          type: string
+          format: uri
+      required:
+      - logo
+    BillSettings:
+      type: object
+      properties:
+        address:
+          type: string
+          maxLength: 300
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        tax_label:
+          type: string
+          maxLength: 20
+        tax_number:
+          type: string
+          maxLength: 40
+        title:
+          type: string
+          maxLength: 40
+        thanks:
+          type: string
+          maxLength: 200
+        payment_terms:
+          type: string
+          maxLength: 300
+        bank_details:
+          type: string
+          maxLength: 500
+        return_policy:
+          type: string
+          maxLength: 500
+        accent:
+          type: string
+          maxLength: 7
+          minLength: 7
+        show_tax:
+          type: boolean
+        show_discount:
+          type: boolean
+        show_sku:
+          type: boolean
+        counter_paper:
+          $ref: '#/components/schemas/CounterPaperEnum'
+        logo:
+          type: string
+          nullable: true
+          readOnly: true
+        invoice_prefix:
+          type: string
+          maxLength: 10
+      required:
+      - logo
     BillShare:
       type: object
       properties:
@@ -4692,6 +4837,14 @@ components:
         * `no_warehouse` - no_warehouse
         * `too_many` - too_many
         * `not_allowed` - not_allowed
+    CounterPaperEnum:
+      enum:
+      - a4
+      - receipt
+      type: string
+      description: |-
+        * `a4` - A4
+        * `receipt` - Receipt
     CreditLine:
       type: object
       properties:
@@ -6182,6 +6335,62 @@ components:
       properties:
         daily_summary:
           type: boolean
+    PatchedBillSettings:
+      type: object
+      properties:
+        address:
+          type: string
+          maxLength: 300
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        tax_label:
+          type: string
+          maxLength: 20
+        tax_number:
+          type: string
+          maxLength: 40
+        title:
+          type: string
+          maxLength: 40
+        thanks:
+          type: string
+          maxLength: 200
+        payment_terms:
+          type: string
+          maxLength: 300
+        bank_details:
+          type: string
+          maxLength: 500
+        return_policy:
+          type: string
+          maxLength: 500
+        accent:
+          type: string
+          maxLength: 7
+          minLength: 7
+        show_tax:
+          type: boolean
+        show_discount:
+          type: boolean
+        show_sku:
+          type: boolean
+        counter_paper:
+          $ref: '#/components/schemas/CounterPaperEnum'
+        logo:
+          type: string
+          nullable: true
+          readOnly: true
+        invoice_prefix:
+          type: string
+          maxLength: 10
     PatchedCategory:
       type: object
       properties:

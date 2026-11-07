@@ -4,6 +4,7 @@ A new URL that isn't listed below fails test_every_endpoint_is_classified, which
 nobody can add an endpoint without deciding how tenants are kept apart on it.
 """
 
+import io
 import json
 from collections.abc import Callable, Iterator
 from decimal import Decimal
@@ -13,6 +14,7 @@ import pytest
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver
 from django.utils import timezone
+from PIL import Image
 
 from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
@@ -32,6 +34,7 @@ from apps.pos import services as pos
 from apps.pos.models import PosSession
 from apps.purchasing import services as purchasing
 from apps.purchasing.models import Bill, GoodsReceipt, PurchaseOrder, Supplier, SupplierPayment
+from apps.sales import billing
 from apps.sales import services as sales
 from apps.sales.models import CreditNote, Customer, CustomerReceipt, Invoice, SalesOrder
 from apps.tenancy import audit, services
@@ -412,6 +415,22 @@ def _automation(member: Member) -> tuple[str, int]:
 
 
 tenant_endpoint("api/automation/")(_automation)
+
+
+def _bill_settings(member: Member) -> tuple[str, int]:
+    billing.save(member.user, {"address": "Private Street"})
+    return "/api/sales/bill-settings/", 0
+
+
+def _bill_logo(member: Member) -> tuple[str, int]:
+    picture = io.BytesIO()
+    Image.new("RGB", (4, 4)).save(picture, format="PNG")
+    billing.set_logo(member.user, picture.getvalue())
+    return "/api/sales/bill-settings/logo/", 0
+
+
+tenant_endpoint("api/sales/bill-settings/")(_bill_settings)
+tenant_endpoint("api/sales/bill-settings/logo/")(_bill_logo)
 tenant_endpoint("api/sales/invoices/<int:pk>/share/")(
     lambda m: (f"/api/sales/invoices/{_invoice(m, True).pk}/share/", 0)
 )
@@ -599,6 +618,10 @@ def test_other_tenants_rows_are_invisible(
     assert mine.status_code == 200
 
     theirs = outsider.client().get(url)
+    if route == "api/sales/bill-settings/logo/":
+        # The owner has a logo; another business has none, so there is nothing to show it.
+        assert theirs.status_code == 404
+        return
     if "<" in route:
         assert theirs.status_code == 404
         for method in ("patch", "delete"):
@@ -617,6 +640,10 @@ def test_other_tenants_rows_are_invisible(
         if route == "api/assistant/check/":
             assert mine.json()["count"] == 1
             assert body["count"] == 0
+            return
+        if route == "api/sales/bill-settings/":
+            assert mine.json()["address"] == "Private Street"
+            assert body["address"] == ""
             return
         if route == "api/automation/":
             # The owner turned theirs off; that must not reach another business.

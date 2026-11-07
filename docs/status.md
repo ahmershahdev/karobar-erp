@@ -10,6 +10,7 @@ Last updated: 2026-11-07. Update at the end of every work session.
 - Merged: chat drafts (#40). The chat can propose a draft sales invoice, quotation or purchase order as a card; the person presses Confirm and the document's own save runs with their permissions. It never posts, pays or deletes. See `docs/security.md`. Checked live against Groq with invented names: it returned the right tool calls. Not yet tried by a person in the browser.
 - Merged: chat lookups (#41). The chat can look up a product (price, packs, stock), a customer (balance, recent invoices) or a supplier (balance, recent bills) when asked, limited to what the role may view. Checked live against Groq with an invented result.
 - In review: `feat/discounts`. Line and bill discounts on invoices, quotations and the counter, with a per-role limit and a Sales discounts account. Lines and the bill each take a percentage or an amount; the counter takes percentages.
+- In review, stacked on #42: `feat/custom-bill`. A Bill design screen for the logo, business details, title and number prefix, footer, colour, columns and an 80 mm till roll for counter sales. Printed bills, receipts and signed bill links all use it.
 - `feat/ai-assistant` is replaced by #33 and #34 and can be deleted.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
@@ -22,7 +23,7 @@ Last updated: 2026-11-07. Update at the end of every work session.
 Agreed order, one PR each:
 
 1. Review and merge discounts (#42).
-2. Custom bill: business details and logo, title and invoice number prefix, footer (thanks, payment terms, bank details, returns), accent colour, which columns show, and an 80mm till receipt for the counter.
+2. Review and merge the custom bill after #42. Check a real PDF in Docker on A4 and on the 80 mm roll.
 3. Before switching the chat on in production: move each answer to a Celery job the screen polls, so a slow Groq reply or lookup can't hold a web worker.
 4. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
 5. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.

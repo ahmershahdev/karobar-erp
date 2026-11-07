@@ -240,6 +240,12 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 - Dependencies are pinned to exact versions; Dependabot proposes updates; CI runs CodeQL and
   `npm audit`. A new dependency needs a reason in its pull request.
 
+## Bill logos
+
+The only file upload is the logo on the Bill design screen (`/api/sales/bill-settings/logo/`), open to people with update rights on members. The request is capped at 2 MB by Django and the file at 1 MB by the view, which reads one byte past the limit and no further. Pillow checks the claimed picture size before decoding, so a small file that unpacks to a huge picture is refused, and only PNG, JPEG and WebP are accepted; SVG never is, because it can carry script. The picture is then decoded and written out again as a fresh PNG of at most 600 by 600 pixels, so metadata or anything else hidden in the file is left behind, and only that copy is stored, in the database. It is shown as a `data:` URL, which the CSP already allows for images, and served back only to the same business with `Cache-Control: private, no-store`.
+
+The bill's accent colour goes into the print style sheet, so it is accepted only as `#` and six hex digits, and only when it reads on white at 4.5 to 1 or better (`apps/core/colours.py`).
+
 ## Signed bill links
 
 A customer can open one posted bill without an account through `/api/public/bills/<token>/`. The token is signed with `django.core.signing` under its own salt, names the business and the bill, and stops working after 30 days. A changed, old or draft link all answer 404. The response carries `Cache-Control: private, no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`, because the link is the key to the bill. Anyone holding the link can read that one bill until it expires, so it must only go to the customer. A link can't be withdrawn early except by rotating `SECRET_KEY`.

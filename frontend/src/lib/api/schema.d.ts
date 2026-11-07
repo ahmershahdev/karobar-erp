@@ -1568,6 +1568,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sales/bill-settings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Business-wide, like the daily summary, so it sits with the people who run the business. */
+        get: operations["sales_bill_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Business-wide, like the daily summary, so it sits with the people who run the business. */
+        patch: operations["sales_bill_settings_partial_update"];
+        trace?: never;
+    };
+    "/api/sales/bill-settings/logo/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sales_bill_settings_logo_retrieve"];
+        put: operations["sales_bill_settings_logo_update"];
+        post?: never;
+        delete: operations["sales_bill_settings_logo_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sales/credit-notes/": {
         parameters: {
             query?: never;
@@ -2095,6 +2129,29 @@ export interface components {
             /** Format: decimal */
             tax_amount?: string;
         };
+        BillLogo: {
+            /** Format: uri */
+            logo: string;
+        };
+        BillSettings: {
+            address?: string;
+            phone?: string;
+            email?: string;
+            tax_label?: string;
+            tax_number?: string;
+            title?: string;
+            thanks?: string;
+            payment_terms?: string;
+            bank_details?: string;
+            return_policy?: string;
+            accent?: string;
+            show_tax?: boolean;
+            show_discount?: boolean;
+            show_sku?: boolean;
+            counter_paper?: components["schemas"]["CounterPaperEnum"];
+            readonly logo: string | null;
+            invoice_prefix?: string;
+        };
         BillShare: {
             link: string;
             whatsapp: string;
@@ -2197,6 +2254,12 @@ export interface components {
          * @enum {string}
          */
         CodeEnum: "unclear" | "not_found" | "ambiguous" | "no_warehouse" | "too_many" | "not_allowed";
+        /**
+         * @description * `a4` - A4
+         *     * `receipt` - Receipt
+         * @enum {string}
+         */
+        CounterPaperEnum: "a4" | "receipt";
         CreditLine: {
             readonly id: number;
             invoice_line: number;
@@ -2838,6 +2901,25 @@ export interface components {
         };
         PatchedAutomation: {
             daily_summary?: boolean;
+        };
+        PatchedBillSettings: {
+            address?: string;
+            phone?: string;
+            email?: string;
+            tax_label?: string;
+            tax_number?: string;
+            title?: string;
+            thanks?: string;
+            payment_terms?: string;
+            bank_details?: string;
+            return_policy?: string;
+            accent?: string;
+            show_tax?: boolean;
+            show_discount?: boolean;
+            show_sku?: boolean;
+            counter_paper?: components["schemas"]["CounterPaperEnum"];
+            readonly logo?: string | null;
+            invoice_prefix?: string;
         };
         PatchedCategory: {
             readonly id?: number;
@@ -6698,6 +6780,108 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReceivableRow"][];
                 };
+            };
+        };
+    };
+    sales_bill_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillSettings"];
+                };
+            };
+        };
+    };
+    sales_bill_settings_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBillSettings"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillSettings"];
+                };
+            };
+        };
+    };
+    sales_bill_settings_logo_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+        };
+    };
+    sales_bill_settings_logo_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["BillLogo"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillSettings"];
+                };
+            };
+        };
+    };
+    sales_bill_settings_logo_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

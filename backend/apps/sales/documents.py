@@ -9,9 +9,11 @@ from typing import Any
 
 from django.template.loader import render_to_string
 
+from apps.pos.models import PosSale
 from apps.tenancy.context import get_current_tenant
 
-from .models import CustomerReceipt, Invoice
+from . import billing
+from .models import BillSettings, CustomerReceipt, Invoice
 
 LANGUAGES = ("en", "ur", "ar")
 
@@ -35,6 +37,10 @@ LABELS: dict[str, dict[str, str]] = {
         "left": "Still to pay",
         "received": "Received with thanks",
         "reference": "Reference",
+        "tax_number": "Tax number",
+        "payment_terms": "Payment terms",
+        "bank_details": "Bank details",
+        "return_policy": "Returns",
     },
     "ur": {
         "invoice": "بل",
@@ -55,6 +61,10 @@ LABELS: dict[str, dict[str, str]] = {
         "left": "باقی رقم",
         "received": "شکریہ کے ساتھ وصول ہوئی",
         "reference": "حوالہ",
+        "tax_number": "ٹیکس نمبر",
+        "payment_terms": "ادائیگی کی شرائط",
+        "bank_details": "بینک کی تفصیل",
+        "return_policy": "واپسی",
     },
     "ar": {
         "invoice": "فاتورة",
@@ -75,6 +85,10 @@ LABELS: dict[str, dict[str, str]] = {
         "left": "المتبقي",
         "received": "استلمنا مع الشكر",
         "reference": "المرجع",
+        "tax_number": "الرقم الضريبي",
+        "payment_terms": "شروط الدفع",
+        "bank_details": "بيانات البنك",
+        "return_policy": "الإرجاع",
     },
 }
 
@@ -100,25 +114,40 @@ def _quantity(value: Decimal) -> str:
 
 def _context(language: str) -> dict[str, Any]:
     tenant = get_current_tenant()
+    settings = billing.current()
     return {
         "business": tenant.name,
         "currency": tenant.base_currency,
         "labels": LABELS[language],
         "language": language,
         "dir": "ltr" if language == "en" else "rtl",
+        "bill": settings,
+        "logo": billing.logo_data_uri(settings),
+        # Checked to be six hex digits when saved, so it is safe inside the style sheet.
+        "accent": settings.accent,
+        "paper": BillSettings.Paper.A4,
     }
 
 
 def invoice_html(invoice: Invoice, language: str) -> str:
     left = invoice.total - invoice.amount_paid - invoice.amount_credited
+    context = _context(language)
+    settings: BillSettings = context["bill"]
+    if PosSale.objects.filter(invoice=invoice).exists():
+        context["paper"] = settings.counter_paper
     return render_to_string(
         "sales/invoice.html",
         {
-            **_context(language),
+            **context,
+            "title": settings.title or LABELS[language]["invoice"],
+            "show_tax": settings.show_tax,
+            "show_sku": settings.show_sku,
+            "show_discount": settings.show_discount and bool(invoice.discount),
             "invoice": invoice,
             "lines": [
                 {
                     "name": line.product.name,
+                    "sku": line.product.sku,
                     "quantity": f"{_quantity(line.quantity)} {line.unit.code}",
                     "price": _price(line.unit_price),
                     # Its own discount and its share of the bill's, so the column adds up.

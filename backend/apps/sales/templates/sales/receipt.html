@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ language }}" dir="{{ dir }}">
+<html lang="{{ language }}" dir="{{ dir }}" class="{{ paper }}">
   <head>
     <meta charset="utf-8" />
     <title>{{ labels.receipt }} {{ receipt.number }}</title>
@@ -7,8 +7,18 @@
   </head>
   <body>
     <div class="head">
-      <div class="business">{{ business }}</div>
-      <div>
+      <div class="from">
+        {% if logo %}<img class="logo" src="{{ logo }}" alt="" />{% endif %}
+        <div class="business">{{ business }}</div>
+        {% if bill.address %}<div class="muted">{{ bill.address }}</div>{% endif %}
+        {% if bill.phone or bill.email %}
+          <div class="muted">{{ bill.phone }}{% if bill.phone and bill.email %} &middot; {% endif %}{{ bill.email }}</div>
+        {% endif %}
+        {% if bill.tax_number %}
+          <div class="muted">{{ bill.tax_label|default:labels.tax_number }}: <span class="num">{{ bill.tax_number }}</span></div>
+        {% endif %}
+      </div>
+      <div class="doc">
         <h1>{{ labels.receipt }}</h1>
         <div class="muted">{{ labels.number }}: <span class="num">{{ receipt.number }}</span></div>
       </div>
@@ -24,5 +34,13 @@
       <div class="grand"><span>{{ labels.amount }} ({{ currency }})</span><span class="num">{{ amount }}</span></div>
     </div>
     <p class="muted">{{ labels.received }}</p>
+    {% if bill.thanks or bill.payment_terms or bill.bank_details or bill.return_policy %}
+      <div class="foot">
+        {% if bill.thanks %}<p class="thanks">{{ bill.thanks }}</p>{% endif %}
+        {% if bill.payment_terms %}<p><strong>{{ labels.payment_terms }}</strong><br />{{ bill.payment_terms|linebreaksbr }}</p>{% endif %}
+        {% if bill.bank_details %}<p><strong>{{ labels.bank_details }}</strong><br />{{ bill.bank_details|linebreaksbr }}</p>{% endif %}
+        {% if bill.return_policy %}<p><strong>{{ labels.return_policy }}</strong><br />{{ bill.return_policy|linebreaksbr }}</p>{% endif %}
+      </div>
+    {% endif %}
   </body>
 </html>

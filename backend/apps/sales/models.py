@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import F, Q
 
-from apps.accounting.models import Account, JournalEntry, TaxRate
+from apps.accounting.models import Account, JournalEntry, NumberSeries, TaxRate
 from apps.inventory.models import (
     Product,
     StockEntry,
@@ -267,3 +267,45 @@ class CreditNoteLine(TenantOwnedModel):
 
     def __str__(self) -> str:
         return f"{self.invoice_line_id} {self.quantity}"
+
+
+class BillSettings(TenantOwnedModel):
+    """How this business's bills look: its details, wording, footer and layout. One row per
+    business; until it is saved, the defaults below apply."""
+
+    class Paper(models.TextChoices):
+        A4 = "a4"
+        RECEIPT = "receipt"
+
+    address = models.CharField(max_length=300, blank=True)
+    phone = models.CharField(max_length=40, blank=True)
+    email = models.EmailField(blank=True)
+    # The name the tax office uses, such as NTN, STRN or VAT number, and the number itself.
+    tax_label = models.CharField(max_length=20, blank=True)
+    tax_number = models.CharField(max_length=40, blank=True)
+    # Always a PNG this app wrote, never the uploaded file, so nothing hidden in it survives.
+    logo = models.BinaryField(null=True, blank=True, editable=False)
+    # Empty means the word for "Invoice" in the bill's language.
+    title = models.CharField(max_length=40, blank=True)
+    thanks = models.CharField(max_length=200, blank=True)
+    payment_terms = models.CharField(max_length=300, blank=True)
+    bank_details = models.CharField(max_length=500, blank=True)
+    return_policy = models.CharField(max_length=500, blank=True)
+    accent = models.CharField(max_length=7, default="#0b1a3c")
+    show_tax = models.BooleanField(default=True)
+    show_discount = models.BooleanField(default=True)
+    show_sku = models.BooleanField(default=False)
+    # Counter sales can print on a narrow till roll; other bills are always A4.
+    counter_paper = models.CharField(max_length=10, choices=Paper.choices, default=Paper.A4)
+
+    class Meta(TenantOwnedModel.Meta):
+        constraints = [models.UniqueConstraint(fields=["tenant"], name="uniq_bill_settings")]
+
+    def __str__(self) -> str:
+        return f"Bill settings {self.tenant_id}"
+
+    @property
+    def invoice_prefix(self) -> str:
+        """Lives on the invoice number series, so posting reads it in one place."""
+        series = NumberSeries.objects.filter(key="INV").first()
+        return series.prefix if series else "INV-"

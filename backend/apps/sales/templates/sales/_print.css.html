@@ -20,4 +20,25 @@
   .totals div { display: flex; justify-content: space-between; padding: 1mm 0; }
   .grand .num { font-weight: 600; }
   .grand { border-top: 1px solid #0b1a3c; font-weight: 600; margin-top: 1mm; padding-top: 2mm !important; }
+  .logo { max-height: 22mm; max-width: 60mm; margin-bottom: 2mm; }
+  .from .muted { font-size: 9.5pt; }
+  .doc { text-align: end; }
+  h1, .business { color: {{ accent }}; }
+  .head { border-bottom-color: {{ accent }}; }
+  .grand { border-top-color: {{ accent }}; }
+  .foot { margin-top: 10mm; border-top: 1px solid #c8cdd8; padding-top: 4mm; font-size: 9.5pt; color: #566076; }
+  .foot p { margin: 0 0 3mm; }
+  .foot .thanks { color: {{ accent }}; font-size: 11pt; }
+  /* A till roll: one narrow column, small type, nothing side by side. */
+  @page receipt { size: 80mm 297mm; margin: 4mm; }
+  html.receipt body { page: receipt; font-size: 8.5pt; }
+  html.receipt .head { display: block; padding-bottom: 3mm; margin-bottom: 3mm; }
+  html.receipt .doc { text-align: start; margin-top: 2mm; }
+  html.receipt h1 { font-size: 12pt; }
+  html.receipt .business { font-size: 11pt; }
+  html.receipt .logo { max-height: 14mm; max-width: 40mm; }
+  html.receipt .facts { margin-bottom: 3mm; }
+  html.receipt table.lines th, html.receipt table.lines td { padding: 1mm 0.5mm; }
+  html.receipt .totals { width: 100%; margin-top: 3mm; }
+  html.receipt .foot { margin-top: 4mm; font-size: 8pt; }
 </style>
