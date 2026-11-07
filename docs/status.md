@@ -12,6 +12,7 @@ Last updated: 2026-11-07. Update at the end of every work session.
 - Merged: discounts (#42). Line and bill discounts on invoices, quotations and the counter, with a per-role limit and a Sales discounts account. Lines and the bill each take a percentage or an amount; the counter takes percentages.
 - In review: `feat/hr-employees`, the first M6 piece: departments, salary structures (allowances and deductions as fixed amounts or a % of basic, with a monthly preview), employees and contracts that never overlap. No income tax or payroll run yet.
 - Merged: the bill design (#43). A Bill design screen with six templates (classic, modern, minimal, bold, compact, elegant), logo, business details, title and number prefix (INV- by default), a signature typed or uploaded, footer, colour, columns and an 80 mm till roll for counter sales. Uploaded pictures go through the checks in `docs/security.md`. Printed bills, receipts and signed bill links all use it.
+- In review, stacked on the employees PR: `feat/hr-attendance-leave`. The work week and public holidays (filled from the `holidays` library, editable), kinds of leave with yearly allowances, asking for and approving leave in working days, daily attendance, and the nightly job that clears former employees' bank accounts after 90 days and national IDs after six years.
 - `feat/ai-assistant` is replaced by #33 and #34 and can be deleted.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
@@ -44,5 +45,4 @@ Also check a signed bill link returning a real PDF in Docker.
 - Groq calls started failing after about a dozen quick questions in testing, probably its rate limit on this key. Check the plan's limits against expected use before switching the chat on in production.
 - Chat drafts carry no tax: the card says so and the person adds it on the draft. Products have no default tax rate to take it from. Decide if they should.
 - A chat draft's prices are the ones on the card when it was proposed, not when Confirm is pressed. The date is the day of Confirm.
-- How long to keep a former employee's national ID and bank account after they leave.
 - Deleting an account keeps the address in older audit rows and invitation records, because the audit log is never edited. Decide before launch whether privacy rules need a clean-up job.

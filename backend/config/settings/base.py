@@ -194,6 +194,9 @@ SPECTACULAR_SETTINGS = {
         "LocaleEnum": ["en", "ur", "ar"],
         "ComponentKindEnum": "apps.hr.models.SalaryComponent.Kind",
         "ContractKindEnum": "apps.hr.models.Contract.Kind",
+        "LeaveStatusEnum": "apps.hr.models.LeaveRequest.Status",
+        "AttendanceStatusEnum": "apps.hr.models.Attendance.Status",
+        "StatusEnum": "apps.accounting.models.JournalEntry.Status",
     },
 }
 
@@ -213,6 +216,10 @@ CELERY_BEAT_SCHEDULE = {
     "daily-summaries": {
         "task": "apps.reports.tasks.send_daily_summaries",
         "schedule": crontab(hour=2, minute=5),
+    },
+    "former-employee-details": {
+        "task": "apps.hr.tasks.clear_former_employee_details",
+        "schedule": crontab(hour=2, minute=20),
     },
 }
 

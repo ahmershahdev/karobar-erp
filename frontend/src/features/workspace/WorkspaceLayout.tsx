@@ -185,6 +185,9 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       { path: 'employees', label: t('hr.employees'), icon: 'members' },
       { path: 'departments', label: t('hr.departments'), icon: 'chart' },
       { path: 'salary-structures', label: t('hr.structures'), icon: 'payments' },
+      { path: 'leave', label: t('hr.leave'), icon: 'periods' },
+      { path: 'attendance', label: t('hr.attendance'), icon: 'entries' },
+      { path: 'holidays', label: t('hr.holidays'), icon: 'audit' },
     ].map((item) => ({
       to: `${base}/hr/${item.path}`,
       label: item.label,

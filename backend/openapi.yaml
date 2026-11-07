@@ -979,6 +979,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/hr/attendance/:
+    get:
+      operationId: hr_attendance_retrieve
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Day'
+          description: ''
+    post:
+      operationId: hr_attendance_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkDay'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Marked'
+          description: ''
   /api/hr/contracts/:
     get:
       operationId: hr_contracts_list
@@ -1315,6 +1353,400 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/hr/holidays/:
+    get:
+      operationId: hr_holidays_list
+      parameters:
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Holiday'
+          description: ''
+    post:
+      operationId: hr_holidays_create
+      parameters:
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Holiday'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+  /api/hr/holidays/{id}/:
+    get:
+      operationId: hr_holidays_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+    patch:
+      operationId: hr_holidays_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHoliday'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holiday'
+          description: ''
+    delete:
+      operationId: hr_holidays_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/holidays/fill/:
+    post:
+      operationId: hr_holidays_fill_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fill'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Filled'
+          description: ''
+  /api/hr/leave/:
+    get:
+      operationId: hr_leave_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: employee
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - pending
+          - rejected
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLeaveRequestList'
+          description: ''
+    post:
+      operationId: hr_leave_create
+      parameters:
+      - in: query
+        name: employee
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - pending
+          - rejected
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/hr/leave-types/:
+    get:
+      operationId: hr_leave_types_list
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveType'
+          description: ''
+    post:
+      operationId: hr_leave_types_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveType'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+  /api/hr/leave-types/{id}/:
+    get:
+      operationId: hr_leave_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+    patch:
+      operationId: hr_leave_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveType'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+    delete:
+      operationId: hr_leave_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/leave/{id}/:
+    get:
+      operationId: hr_leave_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+    delete:
+      operationId: hr_leave_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/leave/{id}/approve/:
+    post:
+      operationId: hr_leave_approve_create
+      description: Approving or refusing leave is a decision like posting, so it needs
+        the post right.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/hr/leave/{id}/reject/:
+    post:
+      operationId: hr_leave_reject_create
+      description: Approving or refusing leave is a decision like posting, so it needs
+        the post right.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/hr/leave/balances/:
+    get:
+      operationId: hr_leave_balances_list
+      parameters:
+      - in: query
+        name: employee
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: year
+        schema:
+          type: integer
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Balance'
+          description: ''
   /api/hr/salary-structures/:
     get:
       operationId: hr_salary_structures_list
@@ -1436,6 +1868,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Pay'
+          description: ''
+  /api/hr/settings/:
+    get:
+      operationId: hr_settings_retrieve
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HrSettings'
+          description: ''
+    patch:
+      operationId: hr_settings_partial_update
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedHrSettings'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HrSettings'
           description: ''
   /api/inventory/alerts/:
     get:
@@ -4813,6 +5277,16 @@ components:
       - bill
       - bill_number
       - id
+    AttendanceStatusEnum:
+      enum:
+      - present
+      - absent
+      - half_day
+      type: string
+      description: |-
+        * `present` - Present
+        * `absent` - Absent
+        * `half_day` - Half Day
     AuditEvent:
       type: object
       properties:
@@ -4870,6 +5344,40 @@ components:
           type: boolean
       required:
       - daily_summary
+    Balance:
+      type: object
+      properties:
+        leave_type:
+          type: integer
+        name:
+          type: string
+        paid:
+          type: boolean
+        allowed:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        taken:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        pending:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        left:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          nullable: true
+      required:
+      - allowed
+      - leave_type
+      - left
+      - name
+      - paid
+      - pending
+      - taken
     BalanceSheet:
       type: object
       properties:
@@ -5746,6 +6254,26 @@ components:
         date:
           type: string
           format: date
+    Day:
+      type: object
+      properties:
+        'on':
+          type: string
+          format: date
+        working_day:
+          type: boolean
+        holiday:
+          type: string
+          nullable: true
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayEntry'
+      required:
+      - holiday
+      - 'on'
+      - people
+      - working_day
     DayAmount:
       type: object
       properties:
@@ -5759,6 +6287,42 @@ components:
       required:
       - amount
       - date
+    DayEntry:
+      type: object
+      properties:
+        employee:
+          type: integer
+        code:
+          type: string
+        full_name:
+          type: string
+        status:
+          type: string
+        note:
+          type: string
+        on_leave:
+          type: boolean
+      required:
+      - code
+      - employee
+      - full_name
+      - note
+      - on_leave
+      - status
+    DayRow:
+      type: object
+      properties:
+        employee:
+          type: integer
+        status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        note:
+          type: string
+          default: ''
+          maxLength: 255
+      required:
+      - employee
+      - status
     Department:
       type: object
       properties:
@@ -5866,6 +6430,22 @@ components:
       - full_name
       - id
       - joined_on
+    Fill:
+      type: object
+      properties:
+        year:
+          type: integer
+          maximum: 2100
+          minimum: 2000
+      required:
+      - year
+    Filled:
+      type: object
+      properties:
+        added:
+          type: integer
+      required:
+      - added
     FiscalPeriod:
       type: object
       properties:
@@ -6010,6 +6590,35 @@ components:
           type: string
       required:
       - status
+    Holiday:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        'on':
+          type: string
+          format: date
+        name:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - name
+      - 'on'
+    HolidayCountryEnum:
+      enum:
+      - PK
+      - AE
+      - SA
+      type: string
+      description: |-
+        * `PK` - PK
+        * `AE` - AE
+        * `SA` - SA
     Home:
       type: object
       properties:
@@ -6049,6 +6658,25 @@ components:
       - product
       - sale
       - store
+    HrSettings:
+      type: object
+      properties:
+        weekend:
+          type: array
+          items:
+            type: integer
+            maximum: 6
+            minimum: 0
+          maxItems: 6
+        holiday_country:
+          $ref: '#/components/schemas/HolidayCountryEnum'
+        id_retention_years:
+          type: integer
+          maximum: 50
+          minimum: 6
+      required:
+      - holiday_country
+      - weekend
     Invitation:
       type: object
       properties:
@@ -6358,6 +6986,86 @@ components:
       - account_code
       - account_name
       - id
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: integer
+        employee_name:
+          type: string
+          readOnly: true
+        leave_type:
+          type: integer
+        leave_type_name:
+          type: string
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LeaveStatusEnum'
+          readOnly: true
+        note:
+          type: string
+          maxLength: 255
+        decided_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - days
+      - decided_at
+      - employee
+      - employee_name
+      - ends_on
+      - id
+      - leave_type
+      - leave_type_name
+      - starts_on
+      - status
+    LeaveStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `approved` - Approved
+        * `rejected` - Rejected
+    LeaveType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 60
+        paid:
+          type: boolean
+        days_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
     Ledger:
       type: object
       properties:
@@ -6448,6 +7156,26 @@ components:
       required:
       - email
       - password
+    MarkDay:
+      type: object
+      properties:
+        'on':
+          type: string
+          format: date
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayRow'
+      required:
+      - 'on'
+      - rows
+    Marked:
+      type: object
+      properties:
+        changed:
+          type: integer
+      required:
+      - changed
     Me:
       type: object
       properties:
@@ -6835,6 +7563,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JournalEntry'
+    PaginatedLeaveRequestList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaveRequest'
     PaginatedMemberList:
       type: object
       required:
@@ -7284,6 +8031,54 @@ components:
           - $ref: '#/components/schemas/CurrentContract'
           nullable: true
           readOnly: true
+    PatchedHoliday:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        'on':
+          type: string
+          format: date
+        name:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          maxLength: 200
+    PatchedHrSettings:
+      type: object
+      properties:
+        weekend:
+          type: array
+          items:
+            type: integer
+            maximum: 6
+            minimum: 0
+          maxItems: 6
+        holiday_country:
+          $ref: '#/components/schemas/HolidayCountryEnum'
+        id_retention_years:
+          type: integer
+          maximum: 50
+          minimum: 6
+    PatchedLeaveType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 60
+        paid:
+          type: boolean
+        days_per_year:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,1})?$
+        is_active:
+          type: boolean
     PatchedMember:
       type: object
       properties:

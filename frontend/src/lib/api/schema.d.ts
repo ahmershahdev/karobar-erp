@@ -620,6 +620,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/hr/attendance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_attendance_retrieve"];
+        put?: never;
+        post: operations["hr_attendance_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/hr/contracts/": {
         parameters: {
             query?: never;
@@ -716,6 +732,168 @@ export interface paths {
         patch: operations["hr_employees_partial_update"];
         trace?: never;
     };
+    "/api/hr/holidays/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_holidays_list"];
+        put?: never;
+        post: operations["hr_holidays_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/holidays/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_holidays_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["hr_holidays_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["hr_holidays_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/holidays/fill/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hr_holidays_fill_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/leave/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_list"];
+        put?: never;
+        post: operations["hr_leave_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/leave-types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_types_list"];
+        put?: never;
+        post: operations["hr_leave_types_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/leave-types/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_types_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["hr_leave_types_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["hr_leave_types_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/leave/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["hr_leave_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/leave/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Approving or refusing leave is a decision like posting, so it needs the post right. */
+        post: operations["hr_leave_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/leave/{id}/reject/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Approving or refusing leave is a decision like posting, so it needs the post right. */
+        post: operations["hr_leave_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/leave/balances/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_leave_balances_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/hr/salary-structures/": {
         parameters: {
             query?: never;
@@ -763,6 +941,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/hr/settings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_settings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["hr_settings_partial_update"];
         trace?: never;
     };
     "/api/inventory/alerts/": {
@@ -2218,6 +2412,13 @@ export interface components {
             /** Format: decimal */
             amount: string;
         };
+        /**
+         * @description * `present` - Present
+         *     * `absent` - Absent
+         *     * `half_day` - Half Day
+         * @enum {string}
+         */
+        AttendanceStatusEnum: "present" | "absent" | "half_day";
         AuditEvent: {
             readonly id: number;
             readonly action: components["schemas"]["ActionEnum"];
@@ -2236,6 +2437,19 @@ export interface components {
         };
         Automation: {
             daily_summary: boolean;
+        };
+        Balance: {
+            leave_type: number;
+            name: string;
+            paid: boolean;
+            /** Format: decimal */
+            allowed: string;
+            /** Format: decimal */
+            taken: string;
+            /** Format: decimal */
+            pending: string;
+            /** Format: decimal */
+            left: string | null;
         };
         BalanceSheet: {
             assets: components["schemas"]["ReportSection"];
@@ -2564,11 +2778,32 @@ export interface components {
             /** Format: date */
             date?: string;
         };
+        Day: {
+            /** Format: date */
+            on: string;
+            working_day: boolean;
+            holiday: string | null;
+            people: components["schemas"]["DayEntry"][];
+        };
         DayAmount: {
             /** Format: date */
             date: string;
             /** Format: decimal */
             amount: string;
+        };
+        DayEntry: {
+            employee: number;
+            code: string;
+            full_name: string;
+            status: string;
+            note: string;
+            on_leave: boolean;
+        };
+        DayRow: {
+            employee: number;
+            status: components["schemas"]["AttendanceStatusEnum"];
+            /** @default  */
+            note: string;
         };
         Department: {
             readonly id: number;
@@ -2605,6 +2840,12 @@ export interface components {
             /** Format: date */
             left_on?: string | null;
             readonly current_contract: components["schemas"]["CurrentContract"] | null;
+        };
+        Fill: {
+            year: number;
+        };
+        Filled: {
+            added: number;
         };
         FiscalPeriod: {
             readonly id: number;
@@ -2655,6 +2896,20 @@ export interface components {
         Health: {
             status: string;
         };
+        Holiday: {
+            readonly id: number;
+            /** Format: date */
+            on: string;
+            name: string;
+            source?: string;
+        };
+        /**
+         * @description * `PK` - PK
+         *     * `AE` - AE
+         *     * `SA` - SA
+         * @enum {string}
+         */
+        HolidayCountryEnum: "PK" | "AE" | "SA";
         Home: {
             setup: components["schemas"]["HomeSetup"];
             attention: components["schemas"]["HomeAttention"];
@@ -2669,6 +2924,11 @@ export interface components {
             product: boolean;
             price: boolean;
             sale: boolean;
+        };
+        HrSettings: {
+            weekend: number[];
+            holiday_country: components["schemas"]["HolidayCountryEnum"];
+            id_retention_years?: number;
         };
         Invitation: {
             readonly id: number;
@@ -2774,6 +3034,38 @@ export interface components {
             credit?: string;
             description?: string;
         };
+        LeaveRequest: {
+            readonly id: number;
+            employee: number;
+            readonly employee_name: string;
+            leave_type: number;
+            readonly leave_type_name: string;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+            /** Format: decimal */
+            readonly days: string;
+            readonly status: components["schemas"]["LeaveStatusEnum"];
+            note?: string;
+            /** Format: date-time */
+            readonly decided_at: string | null;
+        };
+        /**
+         * @description * `pending` - Pending
+         *     * `approved` - Approved
+         *     * `rejected` - Rejected
+         * @enum {string}
+         */
+        LeaveStatusEnum: "pending" | "approved" | "rejected";
+        LeaveType: {
+            readonly id: number;
+            name: string;
+            paid?: boolean;
+            /** Format: decimal */
+            days_per_year?: string;
+            is_active?: boolean;
+        };
         Ledger: {
             account: components["schemas"]["Account"];
             /** Format: decimal */
@@ -2811,6 +3103,14 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+        };
+        MarkDay: {
+            /** Format: date */
+            on: string;
+            rows: components["schemas"]["DayRow"][];
+        };
+        Marked: {
+            changed: number;
         };
         Me: {
             /** Format: uuid */
@@ -3021,6 +3321,19 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["JournalEntry"][];
+        };
+        PaginatedLeaveRequestList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["LeaveRequest"][];
         };
         PaginatedMemberList: {
             /**
@@ -3240,6 +3553,26 @@ export interface components {
             /** Format: date */
             left_on?: string | null;
             readonly current_contract?: components["schemas"]["CurrentContract"] | null;
+        };
+        PatchedHoliday: {
+            readonly id?: number;
+            /** Format: date */
+            on?: string;
+            name?: string;
+            source?: string;
+        };
+        PatchedHrSettings: {
+            weekend?: number[];
+            holiday_country?: components["schemas"]["HolidayCountryEnum"];
+            id_retention_years?: number;
+        };
+        PatchedLeaveType: {
+            readonly id?: number;
+            name?: string;
+            paid?: boolean;
+            /** Format: decimal */
+            days_per_year?: string;
+            is_active?: boolean;
         };
         PatchedMember: {
             readonly id?: number;
@@ -4929,6 +5262,50 @@ export interface operations {
             };
         };
     };
+    hr_attendance_retrieve: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Day"];
+                };
+            };
+        };
+    };
+    hr_attendance_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkDay"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Marked"];
+                };
+            };
+        };
+    };
     hr_contracts_list: {
         parameters: {
             query?: {
@@ -5271,6 +5648,406 @@ export interface operations {
             };
         };
     };
+    hr_holidays_list: {
+        parameters: {
+            query?: {
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Holiday"][];
+                };
+            };
+        };
+    };
+    hr_holidays_create: {
+        parameters: {
+            query?: {
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Holiday"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Holiday"];
+                };
+            };
+        };
+    };
+    hr_holidays_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Holiday"];
+                };
+            };
+        };
+    };
+    hr_holidays_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_holidays_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedHoliday"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Holiday"];
+                };
+            };
+        };
+    };
+    hr_holidays_fill_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Fill"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Filled"];
+                };
+            };
+        };
+    };
+    hr_leave_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                employee?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                status?: "approved" | "pending" | "rejected";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedLeaveRequestList"];
+                };
+            };
+        };
+    };
+    hr_leave_create: {
+        parameters: {
+            query?: {
+                employee?: number;
+                status?: "approved" | "pending" | "rejected";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequest"];
+                };
+            };
+        };
+    };
+    hr_leave_types_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveType"][];
+                };
+            };
+        };
+    };
+    hr_leave_types_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveType"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveType"];
+                };
+            };
+        };
+    };
+    hr_leave_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveType"];
+                };
+            };
+        };
+    };
+    hr_leave_types_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_leave_types_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedLeaveType"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveType"];
+                };
+            };
+        };
+    };
+    hr_leave_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequest"];
+                };
+            };
+        };
+    };
+    hr_leave_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_leave_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequest"];
+                };
+            };
+        };
+    };
+    hr_leave_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequest"];
+                };
+            };
+        };
+    };
+    hr_leave_balances_list: {
+        parameters: {
+            query: {
+                employee: number;
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Balance"][];
+                };
+            };
+        };
+    };
     hr_salary_structures_list: {
         parameters: {
             query?: never;
@@ -5398,6 +6175,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Pay"];
+                };
+            };
+        };
+    };
+    hr_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HrSettings"];
+                };
+            };
+        };
+    };
+    hr_settings_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedHrSettings"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HrSettings"];
                 };
             };
         };
