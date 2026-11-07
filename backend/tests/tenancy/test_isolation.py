@@ -57,6 +57,7 @@ USER_LEVEL = {
     "api/accounts/me/",
     "api/accounts/password/",
     "api/accounts/email/",
+    "api/accounts/delete/",
     "api/assistant/ask/",
     "api/assistant/reset/",
     "api/accounts/verify-email/resend/",
@@ -488,6 +489,7 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
         f"/api/accounting/entries/{_posted(m)}/reverse/"
     ),
     "api/pos/sessions/<int:pk>/sale/": lambda m: f"/api/pos/sessions/{_till(m).pk}/sale/",
+    "api/members/<int:pk>/make-owner/": lambda m: f"/api/members/{_member(m)}/make-owner/",
     "api/pos/sessions/<int:pk>/close/": lambda m: f"/api/pos/sessions/{_till(m).pk}/close/",
     "api/sales/orders/<int:pk>/quote/": lambda m: f"/api/sales/orders/{_sales_order(m).pk}/quote/",
     "api/sales/orders/<int:pk>/confirm/": lambda m: (

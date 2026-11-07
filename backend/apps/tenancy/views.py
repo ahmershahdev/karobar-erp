@@ -1,10 +1,13 @@
+import logging
 from typing import Any, cast
 
 from django.db import transaction
 from django.db.models import QuerySet
 from drf_spectacular.utils import extend_schema
+from kombu.exceptions import OperationalError  # type: ignore[import-untyped, unused-ignore]
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +19,7 @@ from apps.platform.mail import send_message
 from . import audit, services
 from .context import get_current_tenant
 from .models import AuditEvent, Invitation, Membership, Role
-from .permissions import HasModulePermission
+from .permissions import HasModulePermission, IsTenantMember
 from .serializers import (
     AcceptInvitationSerializer,
     AuditEventSerializer,
@@ -237,3 +240,34 @@ class AuditEventDetailView(generics.RetrieveAPIView[AuditEvent]):
 
     def get_queryset(self) -> QuerySet[AuditEvent]:
         return AuditEvent.objects.select_related("user")
+
+
+logger = logging.getLogger(__name__)
+
+
+class MemberOwnerView(APIView):
+    """Hand the business to another member. Only the owner can, which the service checks."""
+
+    permission_classes = [IsTenantMember]
+    throttle_scope = "tenancy"
+
+    @extend_schema(request=None, responses=MemberSerializer)
+    def post(self, request: Request, pk: int) -> Response:
+        target = get_object_or_404(Membership.objects.select_related("user", "role"), pk=pk)
+        membership = run(services.transfer_ownership, actor(request), target)
+        tenant = get_current_tenant()
+        try:
+            send_message(
+                membership.user.email,
+                f"You now own {tenant.name} on Karobar ERP",
+                f"{tenant.name} is yours",
+                [
+                    f"{actor(request).email} handed {tenant.name} to you. "
+                    "You now have full control."
+                ],
+                ("Open the business", app_link(f"app/{tenant.slug}")),
+                "",
+            )
+        except OperationalError:
+            logger.exception("Could not queue an ownership notice")
+        return Response(MemberSerializer(membership).data)

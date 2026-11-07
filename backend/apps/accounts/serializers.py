@@ -91,3 +91,11 @@ class AuthConfigSerializer(serializers.Serializer[None]):
     recaptcha_v3_site_key = serializers.CharField(allow_blank=True)
     recaptcha_v2_site_key = serializers.CharField(allow_blank=True)
     oauth_providers = serializers.ListField(child=serializers.CharField())
+
+
+class AccountDeleteSerializer(serializers.Serializer[None]):
+    current_password = serializers.CharField(
+        max_length=128, trim_whitespace=False, allow_blank=True
+    )
+    # Typing the address is the deliberate step: it can't be done by a stray click.
+    email = serializers.CharField(max_length=254)

@@ -9,6 +9,7 @@ urlpatterns = [
     path("roles/<int:pk>/", views.RoleDetailView.as_view(), name="role-detail"),
     path("members/", views.MemberListView.as_view(), name="member-list"),
     path("members/<int:pk>/", views.MemberDetailView.as_view(), name="member-detail"),
+    path("members/<int:pk>/make-owner/", views.MemberOwnerView.as_view(), name="member-owner"),
     path("invitations/", views.InvitationListView.as_view(), name="invitation-list"),
     path("invitations/<int:pk>/", views.InvitationDetailView.as_view(), name="invitation-detail"),
     path("invitations/accept/", views.AcceptInvitationView.as_view(), name="invitation-accept"),

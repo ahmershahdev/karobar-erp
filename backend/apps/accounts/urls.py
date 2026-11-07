@@ -15,6 +15,7 @@ urlpatterns = [
     path("password/", views.PasswordChangeView.as_view(), name="password-change"),
     path("email/", views.EmailChangeView.as_view(), name="email-change"),
     path("email/confirm/", views.EmailChangeConfirmView.as_view(), name="email-change-confirm"),
+    path("delete/", views.AccountDeleteView.as_view(), name="account-delete"),
     path("signup/", views.SignUpView.as_view(), name="signup"),
     path("session/", views.SessionView.as_view(), name="session"),
     path("verify-email/", views.VerifyEmailView.as_view(), name="verify-email"),

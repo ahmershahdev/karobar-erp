@@ -493,7 +493,8 @@
       }
     },
     "businessNamePlaceholder": "For example, Hyderabad Traders",
-    "account": "My account"
+    "account": "My account",
+    "makeOwner": "Make owner"
   },
   "modulesShort": {
     "members": "Members",
@@ -1158,7 +1159,9 @@
     "title": "Remove this?",
     "body": "You can't get it back.",
     "member": "This person will no longer be able to open this business.",
-    "invitation": "The invitation link will stop working."
+    "invitation": "The invitation link will stop working.",
+    "owner": "They become the owner, with full control of this business. You stay a member with no role until they give you one, and only they can hand it back.",
+    "deleteAccount": "Your account will be deleted now and you will be signed out. This cannot be undone."
   },
   "account": {
     "title": "My account",
@@ -1178,6 +1181,10 @@
     "changePassword": "Change password",
     "passwordChanged": "Password changed. Any other device you were signed in on has been signed out.",
     "noPassword": "You sign in with Google or Facebook, so you have no password yet.",
-    "setPassword": "Set a password first"
+    "setPassword": "Set a password first",
+    "deleteTitle": "Delete account",
+    "deleteBody": "This removes your name, email and sign-in from Karobar, and you leave every business. Records you made stay in each business, marked as a former user. If you own a business, hand it to another member first, on its Members screen.",
+    "typeEmail": "Type {{email}} to confirm",
+    "deleteButton": "Delete my account"
   }
 }

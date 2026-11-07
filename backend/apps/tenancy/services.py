@@ -9,6 +9,7 @@ from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 
 from apps.accounts.models import User
+from apps.platform.locking import lock_rows
 
 from . import audit
 from .context import tenant_context
@@ -216,3 +217,86 @@ def accept_invitation(user: User, token: str) -> Membership:
         if created:
             audit.record(Action.CREATE, membership, user, {"user": [None, user.email]})
     return membership
+
+
+class NotTheOwnerError(TenancyError):
+    message = "Only the owner can hand the business to someone else."
+
+
+class AlreadyOwnerError(TenancyError):
+    message = "This person already owns the business."
+
+
+class InactiveMemberError(TenancyError):
+    message = "This person can no longer sign in, so they can't own the business."
+
+
+@transaction.atomic
+def transfer_ownership(actor: User, target: Membership) -> Membership:
+    """Make `target` the owner. The old owner stays a member with no role until given one."""
+    current = Membership.objects.filter(user=actor, is_owner=True).first()
+    rows = {
+        row.pk: row
+        for row in lock_rows(
+            Membership.objects.filter(pk__in=[target.pk, *([current.pk] if current else [])])
+        )
+    }
+    # Checked again under the lock: two hand-overs at once must not leave two owners.
+    if current is None or not rows[current.pk].is_owner:
+        raise NotTheOwnerError
+    current, target = rows[current.pk], rows[target.pk]
+    if target.is_owner:
+        raise AlreadyOwnerError
+    if not target.user.is_active:
+        raise InactiveMemberError
+    before = current.role.name if current.role else None
+    current.is_owner = False
+    current.role = None
+    current.save(update_fields=["is_owner", "role"])
+    target.is_owner = True
+    target.save(update_fields=["is_owner"])
+    audit.record(
+        Action.UPDATE, current, actor, {"is_owner": [True, False], "role": [before, None]}
+    )
+    audit.record(Action.UPDATE, target, actor, {"is_owner": [False, True]})
+    return target
+
+
+class OwnsBusinessError(Exception):
+    def __init__(self, names: list[str]) -> None:
+        super().__init__()
+        self.names = names
+
+
+def former_user_email(user: User) -> str:
+    # .invalid can never receive mail, and the address reads as a former user wherever records
+    # show who made them.
+    return f"former-user-{user.public_id.hex[:12]}@karobar.invalid"
+
+
+@transaction.atomic
+def delete_account(user: User) -> None:
+    """Anonymise the person and leave every business.
+
+    The row stays, because posted documents, journal entries and the signed chat must keep
+    pointing at whoever made them. Name, email, password and linked sign-ins go, so nothing
+    left identifies them and the email can be used for a new account.
+    """
+    user = lock_rows(User.objects.filter(pk=user.pk))[0]
+    memberships = lock_rows(Membership.all_tenants.filter(user=user))
+    owned = [row.tenant_id for row in memberships if row.is_owner]
+    if owned:
+        raise OwnsBusinessError(
+            sorted(Tenant.objects.filter(pk__in=owned).values_list("name", flat=True))
+        )
+    for row in memberships:
+        with tenant_context(row.tenant):
+            audit.record(Action.DELETE, row, user, {"user": ["a former member", None]})
+            row.delete()
+    user.social_accounts.all().delete()
+    user.email = former_user_email(user)
+    user.full_name = ""
+    user.email_verified_at = None
+    user.is_active = False
+    user.set_unusable_password()
+    user.save(update_fields=["email", "full_name", "email_verified_at", "is_active", "password"])

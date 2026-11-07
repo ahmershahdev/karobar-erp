@@ -213,6 +213,7 @@ function useRoles() {
 
 export function MembersPage() {
   const { t } = useTranslation();
+  const client = useQueryClient();
   const { membership } = useWorkspace();
   const roles = useRoles();
   const members = useQuery({
@@ -313,6 +314,24 @@ export function MembersPage() {
                   >
                     {roleOptions}
                   </select>
+                  {membership.is_owner && (
+                    <ConfirmButton
+                      message={t('confirm.owner')}
+                      onConfirm={() =>
+                        run(async () => {
+                          await unwrap(
+                            api.POST('/api/members/{id}/make-owner/', {
+                              params: { path: { id: row.id } },
+                            }),
+                          );
+                          // This person is no longer the owner, so their own access changes.
+                          await client.invalidateQueries({ queryKey: sessionKeys.tenants });
+                        })
+                      }
+                    >
+                      {t('workspace.makeOwner')}
+                    </ConfirmButton>
+                  )}
                   {can(membership, 'members', 'delete') && (
                     <ConfirmButton
                       message={t('confirm.member')}

@@ -38,3 +38,4 @@ Also check a signed bill link returning a real PDF in Docker.
 - The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.
 - Dependabot alert 2: `minimatch` (medium), in development dependencies only. Fixed in 11.0.1.
 - Groq calls started failing after about a dozen quick questions in testing, probably its rate limit on this key. Check the plan's limits against expected use before switching the chat on in production.
+- Deleting an account keeps the address in older audit rows and invitation records, because the audit log is never edited. Decide before launch whether privacy rules need a clean-up job.
