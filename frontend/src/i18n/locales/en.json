@@ -1172,7 +1172,7 @@
     "newEmail": "New email",
     "currentPassword": "Current password",
     "sendLink": "Send a confirmation link",
-    "linkSent": "We sent a link to {{email}}. Open it within a day to finish. Until then, your old email keeps working.",
+    "linkSent": "If {{email}} can be used, a link is on its way there. Open it within a day to finish. Until then, your old email keeps working. If nothing arrives, check spam, or try another address.",
     "passwordTitle": "Password",
     "newPassword": "New password",
     "changePassword": "Change password",

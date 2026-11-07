@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState, type SyntheticEvent } from 'react';
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 
@@ -253,8 +253,12 @@ function EmailLinkPage({
     onSuccess: () => client.invalidateQueries({ queryKey: sessionKeys.me }),
   });
   const { mutate } = mutation;
+  // Development mode runs effects twice, and a second send of a one-time link fails.
+  const sent = useRef('');
   useEffect(() => {
-    if (token) mutate();
+    if (!token || sent.current === token) return;
+    sent.current = token;
+    mutate();
   }, [token, mutate]);
 
   return (
