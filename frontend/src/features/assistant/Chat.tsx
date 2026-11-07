@@ -32,8 +32,10 @@ export function Chat({ membership }: { membership: Membership }) {
   });
   const ask = useMutation({
     mutationFn: async (message: string) => {
+      // Read before waiting: the person may switch business, and a message can't be taken back.
+      const headers = { 'X-Tenant': membership.tenant_id };
       await ensureCsrf();
-      return unwrap(api.POST('/api/assistant/ask/', { body: { message } }));
+      return unwrap(api.POST('/api/assistant/ask/', { body: { message }, headers }));
     },
     onSettled: () =>
       Promise.all([

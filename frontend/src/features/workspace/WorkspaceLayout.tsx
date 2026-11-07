@@ -267,7 +267,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
         </div>
         {!me.email_verified && <VerifyBanner />}
         <Outlet context={{ me, membership } satisfies WorkspaceContext} />
-        <Chat membership={membership} />
+        <Chat key={membership.tenant_id} membership={membership} />
       </main>
     </div>
   );

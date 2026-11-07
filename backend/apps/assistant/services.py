@@ -20,7 +20,8 @@ from apps.tenancy.models import Membership
 from .models import ChatMessage
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_TIMEOUT_SECONDS = 30
+# Gunicorn and nginx both give up at 30 seconds, and the figures are read before this starts.
+GROQ_TIMEOUT_SECONDS = 20
 HISTORY = 12
 MAX_ANSWER_TOKENS = 700
 LOW_STOCK_SHOWN = 10
