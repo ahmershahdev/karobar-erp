@@ -139,6 +139,14 @@ class AlreadyConfirmed(APIException):
     default_code = "already_confirmed"
 
 
+class DraftChanged(APIException):
+    status_code = 409
+    default_detail = (
+        "This draft was changed after it was shown, so it was not saved. Ask for it again."
+    )
+    default_code = "draft_changed"
+
+
 class ChatConfirmView(APIView):
     permission_classes = [IsTenantMember]
     throttle_scope = "tenancy"
@@ -151,6 +159,8 @@ class ChatConfirmView(APIView):
             raise NotFound from exc
         except services.AlreadyDoneError as exc:
             raise AlreadyConfirmed from exc
+        except services.DraftChangedError as exc:
+            raise DraftChanged from exc
         except drafts.NotAllowedError as exc:
             raise PermissionDenied(
                 "Your role can no longer make this kind of document. Ask the owner."
