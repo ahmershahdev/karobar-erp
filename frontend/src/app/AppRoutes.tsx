@@ -53,6 +53,7 @@ import {
   SuppliersPage,
 } from '../features/purchasing/pages';
 import { AccountPage } from '../features/workspace/AccountPage';
+import { BillDesignPage } from '../features/workspace/BillDesignPage';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
   AuditPage,
@@ -152,6 +153,7 @@ export default function AppRoutes() {
         <Route index element={<OverviewPage />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="members" element={<MembersPage />} />
+        <Route path="bill-design" element={<BillDesignPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="accounting/journal" element={<JournalPage />} />

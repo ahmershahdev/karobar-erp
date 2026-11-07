@@ -240,6 +240,22 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 - Dependencies are pinned to exact versions; Dependabot proposes updates; CI runs CodeQL and
   `npm audit`. A new dependency needs a reason in its pull request.
 
+## Bill pictures
+
+The only file uploads are the logo and the signature picture on the Bill design screen (`/api/sales/bill-settings/logo/` and `/signature/`), open to people with update rights on members. Each file goes through these checks in order (`apps/sales/billing.clean_image`), and fails as one plain message:
+
+1. The browser's stated type must be PNG, JPEG or WebP and the name must end in a matching extension. This is a first filter only, as both can be faked.
+2. nginx refuses any request over 2 MB (`client_max_body_size`). Django's own upload limits don't count file data, so the view also refuses a request whose stated length is over 1 MB plus 64 KB before reading it, and reads the file only to one byte past 1 MB.
+3. The first bytes must be a PNG, JPEG or WebP signature. A web page, script, program or GIF renamed to `.png` stops here.
+4. Pillow is told to use only the decoder for that format, so a file can't pass as one format and be read by another, less careful decoder.
+5. The claimed size is checked before decoding: each side 16 to 5000 pixels and at most 25 million pixels, so a small file that unpacks to a huge picture is refused. A picture with more than one frame (an animation) is refused.
+6. `verify()` checks the file's structure, then a full decode refuses a damaged or cut-off file.
+7. Only the pixels are kept: the picture is written out again as a fresh PNG, at most 600 by 600 for a logo and 600 by 200 for a signature. Metadata, scripts, or a second file hidden after the picture are all left behind, so a file built to attack a viewer or printer is harmless once stored.
+
+The copy is stored in the database, shown as a `data:` URL, which the CSP already allows for images, and served back only to the same business with `Cache-Control: private, no-store`. Nothing is ever served from the original upload. There is no virus scanner: the uploads are never run or stored as sent, so the re-encoding above is the protection. If uploads of other kinds are added later, scan them (for example with ClamAV in the Docker setup) before keeping them.
+
+The bill's accent colour goes into the print style sheet, so it is accepted only as `#` and six hex digits, and only when it reads on white at 4.5 to 1 or better (`apps/core/colours.py`).
+
 ## Signed bill links
 
 A customer can open one posted bill without an account through `/api/public/bills/<token>/`. The token is signed with `django.core.signing` under its own salt, names the business and the bill, and stops working after 30 days. A changed, old or draft link all answer 404. The response carries `Cache-Control: private, no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`, because the link is the key to the bill. Anyone holding the link can read that one bill until it expires, so it must only go to the customer. A link can't be withdrawn early except by rotating `SECRET_KEY`.

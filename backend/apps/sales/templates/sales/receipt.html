@@ -1,20 +1,15 @@
 <!doctype html>
-<html lang="{{ language }}" dir="{{ dir }}">
+{% load bill_text %}
+<html lang="{{ language }}" dir="{{ dir }}" class="{{ paper }} t-{{ template }}">
   <head>
     <meta charset="utf-8" />
     <title>{{ labels.receipt }} {{ receipt.number }}</title>
     {% include "sales/_print.css.html" %}
   </head>
   <body>
-    <div class="head">
-      <div class="business">{{ business }}</div>
-      <div>
-        <h1>{{ labels.receipt }}</h1>
-        <div class="muted">{{ labels.number }}: <span class="num">{{ receipt.number }}</span></div>
-      </div>
-    </div>
+    {% include "sales/_bill_head.html" with doc_title=labels.receipt doc_number=receipt.number %}
     <div class="facts">
-      <div>{{ labels.customer }}: {{ receipt.customer.name }}</div>
+      <div>{{ labels.customer }}: <span class="user" dir="{{ receipt.customer.name|textdir }}">{{ receipt.customer.name }}</span></div>
       <div class="muted">{{ labels.date }}: <span class="num">{{ receipt.date|date:"Y-m-d" }}</span></div>
       {% if receipt.reference %}
         <div class="muted">{{ labels.reference }}: {{ receipt.reference }}</div>
@@ -24,5 +19,6 @@
       <div class="grand"><span>{{ labels.amount }} ({{ currency }})</span><span class="num">{{ amount }}</span></div>
     </div>
     <p class="muted">{{ labels.received }}</p>
+    {% include "sales/_bill_end.html" %}
   </body>
 </html>
