@@ -41,6 +41,7 @@ LABELS: dict[str, dict[str, str]] = {
         "payment_terms": "Payment terms",
         "bank_details": "Bank details",
         "return_policy": "Returns",
+        "signature": "Authorised signature",
     },
     "ur": {
         "invoice": "بل",
@@ -65,6 +66,7 @@ LABELS: dict[str, dict[str, str]] = {
         "payment_terms": "ادائیگی کی شرائط",
         "bank_details": "بینک کی تفصیل",
         "return_policy": "واپسی",
+        "signature": "مجاز دستخط",
     },
     "ar": {
         "invoice": "فاتورة",
@@ -89,6 +91,7 @@ LABELS: dict[str, dict[str, str]] = {
         "payment_terms": "شروط الدفع",
         "bank_details": "بيانات البنك",
         "return_policy": "الإرجاع",
+        "signature": "التوقيع المعتمد",
     },
 }
 
@@ -122,7 +125,9 @@ def _context(language: str) -> dict[str, Any]:
         "language": language,
         "dir": "ltr" if language == "en" else "rtl",
         "bill": settings,
-        "logo": billing.logo_data_uri(settings),
+        "logo": billing.data_uri(settings.logo),
+        "signature": billing.data_uri(settings.signature),
+        "template": settings.template,
         # Checked to be six hex digits when saved, so it is safe inside the style sheet.
         "accent": settings.accent,
         "paper": BillSettings.Paper.A4,

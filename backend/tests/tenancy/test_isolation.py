@@ -424,13 +424,23 @@ def _bill_settings(member: Member) -> tuple[str, int]:
 
 def _bill_logo(member: Member) -> tuple[str, int]:
     picture = io.BytesIO()
-    Image.new("RGB", (4, 4)).save(picture, format="PNG")
-    billing.set_logo(member.user, picture.getvalue())
+    Image.new("RGB", (20, 20)).save(picture, format="PNG")
+    billing.set_image(member.user, "logo", picture.getvalue())
     return "/api/sales/bill-settings/logo/", 0
 
 
 tenant_endpoint("api/sales/bill-settings/")(_bill_settings)
 tenant_endpoint("api/sales/bill-settings/logo/")(_bill_logo)
+
+
+def _bill_signature(member: Member) -> tuple[str, int]:
+    picture = io.BytesIO()
+    Image.new("RGB", (40, 20)).save(picture, format="PNG")
+    billing.set_image(member.user, "signature", picture.getvalue())
+    return "/api/sales/bill-settings/signature/", 0
+
+
+tenant_endpoint("api/sales/bill-settings/signature/")(_bill_signature)
 tenant_endpoint("api/sales/invoices/<int:pk>/share/")(
     lambda m: (f"/api/sales/invoices/{_invoice(m, True).pk}/share/", 0)
 )
@@ -618,8 +628,8 @@ def test_other_tenants_rows_are_invisible(
     assert mine.status_code == 200
 
     theirs = outsider.client().get(url)
-    if route == "api/sales/bill-settings/logo/":
-        # The owner has a logo; another business has none, so there is nothing to show it.
+    if route in ("api/sales/bill-settings/logo/", "api/sales/bill-settings/signature/"):
+        # The owner has a picture; another business has none, so there is nothing to show it.
         assert theirs.status_code == 404
         return
     if "<" in route:

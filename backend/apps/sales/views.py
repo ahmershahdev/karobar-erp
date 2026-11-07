@@ -42,7 +42,7 @@ from .models import (
     SalesOrderLine,
 )
 from .serializers import (
-    BillLogoSerializer,
+    BillImageSerializer,
     BillSettingsSerializer,
     BillShareSerializer,
     CreditNoteSerializer,
@@ -468,34 +468,37 @@ class BillSettingsView(APIView):
         return Response(BillSettingsSerializer(saved).data)
 
 
-class BillLogoView(APIView):
+class BillImageView(APIView):
+    """The logo or the signature picture, named by `kind` in the URL configuration."""
+
     permission_classes = [HasModulePermission]
     module = "members"
     throttle_scope = "tenancy"
     parser_classes = [MultiPartParser]
+    kind = "logo"
 
     @extend_schema(responses={(200, "image/png"): OpenApiTypes.BINARY})
     def get(self, request: Request) -> HttpResponse:
-        logo = billing.current().logo
-        if not logo:
+        picture = getattr(billing.current(), self.kind)
+        if not picture:
             raise NotFound
-        response = HttpResponse(bytes(logo), content_type="image/png")
+        response = HttpResponse(bytes(picture), content_type="image/png")
         response["Cache-Control"] = "private, no-store"
         return response
 
     @extend_schema(
-        request={"multipart/form-data": BillLogoSerializer}, responses=BillSettingsSerializer
+        request={"multipart/form-data": BillImageSerializer}, responses=BillSettingsSerializer
     )
     def put(self, request: Request) -> Response:
-        body = BillLogoSerializer(data=request.data)
+        body = BillImageSerializer(data=request.data)
         body.is_valid(raise_exception=True)
-        upload = body.validated_data["logo"]
+        upload = body.validated_data["image"]
         # One byte past the limit is enough to know it is too big, without reading the rest.
-        data = upload.read(billing.MAX_LOGO_BYTES + 1)
-        saved = _billing(billing.set_logo, actor(request), data)
+        data = upload.read(billing.MAX_IMAGE_BYTES + 1)
+        saved = _billing(billing.set_image, actor(request), self.kind, data)
         return Response(BillSettingsSerializer(saved).data)
 
     @extend_schema(request=None, responses=BillSettingsSerializer)
     def delete(self, request: Request) -> Response:
-        saved = billing.set_logo(actor(request), None)
+        saved = billing.set_image(actor(request), self.kind, None)
         return Response(BillSettingsSerializer(saved).data)

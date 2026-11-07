@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ language }}" dir="{{ dir }}" class="{{ paper }}">
+<html lang="{{ language }}" dir="{{ dir }}" class="{{ paper }} t-{{ template }}">
   <head>
     <meta charset="utf-8" />
     <title>{{ labels.receipt }} {{ receipt.number }}</title>
@@ -34,6 +34,13 @@
       <div class="grand"><span>{{ labels.amount }} ({{ currency }})</span><span class="num">{{ amount }}</span></div>
     </div>
     <p class="muted">{{ labels.received }}</p>
+    {% if signature or bill.signature_text %}
+      <div class="sign">
+        {% if signature %}<img src="{{ signature }}" alt="" />{% else %}<div class="sign-text">{{ bill.signature_text }}</div>{% endif %}
+        {% if signature and bill.signature_text %}<div class="sign-name">{{ bill.signature_text }}</div>{% endif %}
+        <div class="sign-line">{{ labels.signature }}</div>
+      </div>
+    {% endif %}
     {% if bill.thanks or bill.payment_terms or bill.bank_details or bill.return_policy %}
       <div class="foot">
         {% if bill.thanks %}<p class="thanks">{{ bill.thanks }}</p>{% endif %}

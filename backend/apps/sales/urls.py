@@ -22,7 +22,12 @@ urlpatterns = [
     path("orders/<int:pk>/close/", views.OrderCloseView.as_view(), name="so-close"),
     path("orders/<int:pk>/invoice/", views.OrderInvoiceView.as_view(), name="so-invoice"),
     path("bill-settings/", views.BillSettingsView.as_view(), name="bill-settings"),
-    path("bill-settings/logo/", views.BillLogoView.as_view(), name="bill-logo"),
+    path("bill-settings/logo/", views.BillImageView.as_view(kind="logo"), name="bill-logo"),
+    path(
+        "bill-settings/signature/",
+        views.BillImageView.as_view(kind="signature"),
+        name="bill-signature",
+    ),
     path("invoices/", views.InvoiceListView.as_view(), name="invoice-list"),
     path("invoices/<int:pk>/", views.InvoiceDetailView.as_view(), name="invoice-detail"),
     path("invoices/<int:pk>/post/", views.InvoicePostView.as_view(), name="invoice-post"),

@@ -329,17 +329,31 @@ class BillShareSerializer(serializers.Serializer[Any]):
 
 class BillSettingsSerializer(serializers.ModelSerializer[BillSettings]):
     logo = serializers.SerializerMethodField()
+    signature = serializers.SerializerMethodField()
     invoice_prefix = serializers.CharField(max_length=10, required=False)
 
     class Meta:
         model = BillSettings
-        fields = (*billing.FIELDS, "logo", "invoice_prefix")
+        fields = (*billing.FIELDS, "logo", "signature", "invoice_prefix")
         extra_kwargs = {"accent": {"min_length": 7, "max_length": 7}}
 
     @extend_schema_field(serializers.CharField(allow_null=True))
     def get_logo(self, settings: BillSettings) -> str | None:
-        return billing.logo_data_uri(settings)
+        return billing.data_uri(settings.logo)
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_signature(self, settings: BillSettings) -> str | None:
+        return billing.data_uri(settings.signature)
 
 
-class BillLogoSerializer(serializers.Serializer[Any]):
-    logo = serializers.FileField(max_length=200)
+class BillImageSerializer(serializers.Serializer[Any]):
+    image = serializers.FileField(max_length=200)
+
+    def validate_image(self, value: Any) -> Any:
+        # What the browser says is only a first filter; the bytes are checked when saved.
+        name = str(value.name or "").lower()
+        if value.content_type not in billing.IMAGE_TYPES or not name.endswith(
+            tuple(billing.IMAGE_EXTENSIONS)
+        ):
+            raise serializers.ValidationError(billing.BadImageError.message)
+        return value

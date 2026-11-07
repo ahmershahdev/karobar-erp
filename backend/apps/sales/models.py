@@ -277,6 +277,15 @@ class BillSettings(TenantOwnedModel):
         A4 = "a4"
         RECEIPT = "receipt"
 
+    # The overall look of an A4 bill. Each is a set of styles in _print.css.html.
+    class Template(models.TextChoices):
+        CLASSIC = "classic"
+        MODERN = "modern"
+        MINIMAL = "minimal"
+        BOLD = "bold"
+        COMPACT = "compact"
+        ELEGANT = "elegant"
+
     address = models.CharField(max_length=300, blank=True)
     phone = models.CharField(max_length=40, blank=True)
     email = models.EmailField(blank=True)
@@ -297,6 +306,11 @@ class BillSettings(TenantOwnedModel):
     show_sku = models.BooleanField(default=False)
     # Counter sales can print on a narrow till roll; other bills are always A4.
     counter_paper = models.CharField(max_length=10, choices=Paper.choices, default=Paper.A4)
+    template = models.CharField(max_length=10, choices=Template.choices, default=Template.CLASSIC)
+    # A signature at the bottom: a picture, or a typed name shown in handwriting style. With
+    # neither, the bill has no signature line.
+    signature = models.BinaryField(null=True, blank=True, editable=False)
+    signature_text = models.CharField(max_length=60, blank=True)
 
     class Meta(TenantOwnedModel.Meta):
         constraints = [models.UniqueConstraint(fields=["tenant"], name="uniq_bill_settings")]

@@ -1593,10 +1593,32 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description The logo or the signature picture, named by `kind` in the URL configuration. */
         get: operations["sales_bill_settings_logo_retrieve"];
+        /** @description The logo or the signature picture, named by `kind` in the URL configuration. */
         put: operations["sales_bill_settings_logo_update"];
         post?: never;
+        /** @description The logo or the signature picture, named by `kind` in the URL configuration. */
         delete: operations["sales_bill_settings_logo_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sales/bill-settings/signature/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The logo or the signature picture, named by `kind` in the URL configuration. */
+        get: operations["sales_bill_settings_signature_retrieve"];
+        /** @description The logo or the signature picture, named by `kind` in the URL configuration. */
+        put: operations["sales_bill_settings_signature_update"];
+        post?: never;
+        /** @description The logo or the signature picture, named by `kind` in the URL configuration. */
+        delete: operations["sales_bill_settings_signature_destroy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2114,6 +2136,10 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        BillImage: {
+            /** Format: uri */
+            image: string;
+        };
         BillLine: {
             readonly id: number;
             receipt_line?: number | null;
@@ -2128,10 +2154,6 @@ export interface components {
             readonly amount: string;
             /** Format: decimal */
             tax_amount?: string;
-        };
-        BillLogo: {
-            /** Format: uri */
-            logo: string;
         };
         BillSettings: {
             address?: string;
@@ -2149,7 +2171,10 @@ export interface components {
             show_discount?: boolean;
             show_sku?: boolean;
             counter_paper?: components["schemas"]["CounterPaperEnum"];
+            template?: components["schemas"]["TemplateEnum"];
+            signature_text?: string;
             readonly logo: string | null;
+            readonly signature: string | null;
             invoice_prefix?: string;
         };
         BillShare: {
@@ -2918,7 +2943,10 @@ export interface components {
             show_discount?: boolean;
             show_sku?: boolean;
             counter_paper?: components["schemas"]["CounterPaperEnum"];
+            template?: components["schemas"]["TemplateEnum"];
+            signature_text?: string;
             readonly logo?: string | null;
+            readonly signature?: string | null;
             invoice_prefix?: string;
         };
         PatchedCategory: {
@@ -3391,6 +3419,16 @@ export interface components {
             valid_to?: string | null;
             source: string;
         };
+        /**
+         * @description * `classic` - Classic
+         *     * `modern` - Modern
+         *     * `minimal` - Minimal
+         *     * `bold` - Bold
+         *     * `compact` - Compact
+         *     * `elegant` - Elegant
+         * @enum {string}
+         */
+        TemplateEnum: "classic" | "modern" | "minimal" | "bold" | "compact" | "elegant";
         TenantCreate: {
             name: string;
             /** @default PKR */
@@ -6853,7 +6891,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["BillLogo"];
+                "multipart/form-data": components["schemas"]["BillImage"];
             };
         };
         responses: {
@@ -6868,6 +6906,66 @@ export interface operations {
         };
     };
     sales_bill_settings_logo_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sales_bill_settings_signature_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+        };
+    };
+    sales_bill_settings_signature_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["BillImage"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillSettings"];
+                };
+            };
+        };
+    };
+    sales_bill_settings_signature_destroy: {
         parameters: {
             query?: never;
             header?: never;

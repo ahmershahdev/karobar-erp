@@ -29,6 +29,43 @@
   .foot { margin-top: 10mm; border-top: 1px solid #c8cdd8; padding-top: 4mm; font-size: 9.5pt; color: #566076; }
   .foot p { margin: 0 0 3mm; }
   .foot .thanks { color: {{ accent }}; font-size: 11pt; }
+  .sign { margin-top: 12mm; width: 60mm; margin-inline-start: auto; text-align: center; }
+  .sign img { max-height: 18mm; max-width: 60mm; }
+  .sign-text { font-family: "Brush Script MT", "Segoe Script", cursive; font-style: italic; font-size: 18pt; color: {{ accent }}; line-height: 1.2; }
+  .sign-name { font-size: 9pt; }
+  .sign-line { border-top: 1px solid #0b1a3c; margin-top: 1mm; padding-top: 1mm; font-size: 8.5pt; color: #566076; }
+  /* Templates. Classic is the plain style above; each of the others changes only what makes
+     it look different. The till roll below overrides them all, as a receipt has one look. */
+  html.t-modern .head { background: {{ accent }}; color: #ffffff; border: 0; border-radius: 3mm; padding: 6mm; }
+  html.t-modern .head h1, html.t-modern .head .business { color: #ffffff; }
+  html.t-modern .head .muted { color: #ffffff; opacity: 0.85; }
+  html.t-modern table.lines th { background: #f3f4f7; border-bottom: 0; }
+  html.t-modern .grand { background: {{ accent }}; color: #ffffff; border: 0; padding: 2mm 3mm !important; border-radius: 2mm; }
+  html.t-minimal .head { border-bottom: 0; }
+  html.t-minimal h1 { font-weight: 300; letter-spacing: 0.08em; text-transform: uppercase; color: #0b1a3c; }
+  html.t-minimal .business { color: #0b1a3c; font-weight: 500; }
+  html.t-minimal table.lines th { border-bottom: 0.5pt solid #c8cdd8; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; }
+  html.t-minimal table.lines td { border-bottom: 0; }
+  html.t-minimal .grand { border-top: 0.5pt solid {{ accent }}; color: {{ accent }}; }
+  html.t-bold body { border-top: 4mm solid {{ accent }}; padding-top: 4mm; }
+  html.t-bold h1 { font-size: 28pt; font-weight: 700; text-transform: uppercase; }
+  html.t-bold .head { border-bottom: 1.5pt solid {{ accent }}; }
+  html.t-bold table.lines th { background: {{ accent }}; color: #ffffff; border: 0; }
+  html.t-bold .grand { font-size: 14pt; border-top-width: 2pt; }
+  html.t-compact body { font-size: 9pt; line-height: 1.35; }
+  html.t-compact h1 { font-size: 15pt; }
+  html.t-compact .business { font-size: 12pt; }
+  html.t-compact .head { padding-bottom: 3mm; margin-bottom: 4mm; }
+  html.t-compact .facts { margin-bottom: 4mm; }
+  html.t-compact table.lines th, html.t-compact table.lines td { padding: 1.2mm 1mm; }
+  html.t-compact .foot { margin-top: 5mm; }
+  html[lang="en"].t-elegant body { font-family: "Noto Serif", Georgia, serif; }
+  html.t-elegant .head { display: block; text-align: center; border-bottom: 3px double {{ accent }}; }
+  html.t-elegant .doc { text-align: center; margin-top: 3mm; }
+  html.t-elegant h1 { font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; font-size: 16pt; }
+  html.t-elegant .business { font-size: 18pt; font-weight: 500; }
+  html.t-elegant table.lines th { border-bottom: 0.5pt solid {{ accent }}; font-style: italic; }
+  html.t-elegant .foot { text-align: center; border-top: 3px double #c8cdd8; }
   /* A till roll: one narrow column, small type, nothing side by side. */
   @page receipt { size: 80mm 297mm; margin: 4mm; }
   html.receipt body { page: receipt; font-size: 8.5pt; }
@@ -40,5 +77,11 @@
   html.receipt .facts { margin-bottom: 3mm; }
   html.receipt table.lines th, html.receipt table.lines td { padding: 1mm 0.5mm; }
   html.receipt .totals { width: 100%; margin-top: 3mm; }
-  html.receipt .foot { margin-top: 4mm; font-size: 8pt; }
+  html.receipt .foot { margin-top: 4mm; font-size: 8pt; text-align: start; border-top-style: solid; }
+  html.receipt body { border-top: 0; padding-top: 0; }
+  html.receipt .head { background: none; color: inherit; border-radius: 0; padding: 0 0 3mm; text-align: start; border-bottom: 1px solid {{ accent }}; }
+  html.receipt .head h1, html.receipt .head .business { color: {{ accent }}; }
+  html.receipt table.lines th { background: none; color: #566076; }
+  html.receipt .grand { background: none; color: inherit; padding: 2mm 0 0 !important; border-top: 1px solid {{ accent }}; }
+  html.receipt .sign { margin-top: 6mm; width: 100%; }
 </style>

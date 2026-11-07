@@ -1,4 +1,5 @@
-"""The look of this business's bills: its details, wording, footer, layout and logo."""
+"""The look of this business's bills: its details, wording, footer, layout, logo and
+signature."""
 
 import base64
 import io
@@ -18,11 +19,14 @@ from .models import BillSettings
 
 INVOICE_SERIES = ("INV", "INV-")
 PREFIX = re.compile(r"[A-Z0-9][A-Z0-9/-]{0,9}")
-MAX_LOGO_BYTES = 1024 * 1024
+MAX_IMAGE_BYTES = 1024 * 1024
 # Checked before decoding, so a small file that claims a huge picture can't eat the memory.
-MAX_LOGO_PIXELS = 25_000_000
-LOGO_BOX = (600, 600)
-LOGO_FORMATS = {"PNG", "JPEG", "WEBP"}
+MAX_IMAGE_PIXELS = 25_000_000
+MIN_SIDE, MAX_SIDE = 16, 5000
+# The largest each picture is stored at. A signature is a wide strip.
+BOXES = {"logo": (600, 600), "signature": (600, 200)}
+IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 FIELDS = (
     "address",
     "phone",
@@ -39,6 +43,8 @@ FIELDS = (
     "show_discount",
     "show_sku",
     "counter_paper",
+    "template",
+    "signature_text",
 )
 Action = AuditEvent.Action
 
@@ -55,8 +61,11 @@ class BadPrefixError(BillingError):
     message = "Use up to 10 capital letters, digits, - or /, starting with a letter or digit."
 
 
-class BadLogoError(BillingError):
-    message = "Upload a PNG, JPEG or WebP picture under 1 MB."
+class BadImageError(BillingError):
+    message = (
+        "Upload a PNG, JPEG or WebP picture under 1 MB, between 16 and 5000 pixels on each "
+        "side. Moving pictures and damaged files can't be used."
+    )
 
 
 def current() -> BillSettings:
@@ -64,10 +73,10 @@ def current() -> BillSettings:
     return BillSettings.objects.first() or BillSettings()
 
 
-def logo_data_uri(settings: BillSettings) -> str | None:
-    if not settings.logo:
+def data_uri(picture: bytes | memoryview | None) -> str | None:
+    if not picture:
         return None
-    return "data:image/png;base64," + base64.b64encode(bytes(settings.logo)).decode()
+    return "data:image/png;base64," + base64.b64encode(bytes(picture)).decode()
 
 
 @transaction.atomic
@@ -112,38 +121,73 @@ def _set_prefix(prefix: str) -> dict[str, list[str]]:
     return {"invoice_prefix": [old, prefix]}
 
 
-def _clean_logo(upload: bytes) -> bytes:
-    """Decode the picture and write a fresh PNG of it. Whatever else was in the file, such as
-    metadata or a second hidden format, is left behind."""
-    if not upload or len(upload) > MAX_LOGO_BYTES:
-        raise BadLogoError
+def _sniff(upload: bytes) -> str | None:
+    """What the first bytes say the file is. The decoder is then held to that one format, so a
+    file can't pass as a PNG and be read by some other, less careful decoder."""
+    if upload.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "PNG"
+    if upload.startswith(b"\xff\xd8\xff"):
+        return "JPEG"
+    if upload[:4] == b"RIFF" and upload[8:12] == b"WEBP":
+        return "WEBP"
+    return None
+
+
+def clean_image(upload: bytes, box: tuple[int, int]) -> bytes:
+    """Check a picture and write a fresh PNG of it.
+
+    Nothing from the upload is kept except the pixels: metadata, scripts or a second file
+    hidden after the picture are all left behind, so even a file built to attack a viewer is
+    harmless once stored. The checks come before the expensive work: size, what the first bytes
+    say, and the claimed picture size, then a structural check, then the full decode, which
+    refuses a damaged or cut-off file.
+    """
+    if not upload or len(upload) > MAX_IMAGE_BYTES:
+        raise BadImageError
+    kind = _sniff(upload)
+    if kind is None:
+        raise BadImageError
     try:
-        with Image.open(io.BytesIO(upload)) as picture:
-            if picture.format not in LOGO_FORMATS:
-                raise BadLogoError
+        with Image.open(io.BytesIO(upload), formats=[kind]) as picture:
             width, height = picture.size
-            if width * height > MAX_LOGO_PIXELS:
-                raise BadLogoError
+            frames = getattr(picture, "n_frames", 1)
+            if (
+                picture.format != kind
+                or frames != 1
+                or not MIN_SIDE <= width <= MAX_SIDE
+                or not MIN_SIDE <= height <= MAX_SIDE
+                or width * height > MAX_IMAGE_PIXELS
+            ):
+                raise BadImageError
+            picture.verify()
+        # verify() leaves the file unusable, so it is opened again for the real decode.
+        with Image.open(io.BytesIO(upload), formats=[kind]) as picture:
             picture.load()
             clean = picture.convert("RGBA")
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as exc:
-        raise BadLogoError from exc
-    clean.thumbnail(LOGO_BOX)
+    except (
+        UnidentifiedImageError,
+        OSError,
+        ValueError,
+        SyntaxError,
+        Image.DecompressionBombError,
+    ) as exc:
+        raise BadImageError from exc
+    clean.thumbnail(box)
     out = io.BytesIO()
     clean.save(out, format="PNG", optimize=True)
     return out.getvalue()
 
 
 @transaction.atomic
-def set_logo(actor: User, upload: bytes | None) -> BillSettings:
-    """`None` takes the logo off."""
-    logo = None if upload is None else _clean_logo(upload)
+def set_image(actor: User, kind: str, upload: bytes | None) -> BillSettings:
+    """Put up or take off (`None`) the logo or the signature picture."""
+    picture = None if upload is None else clean_image(upload, BOXES[kind])
     target = BillSettings.objects.select_for_update().first() or BillSettings()
     created = target.pk is None
-    had = bool(target.logo)
-    target.logo = logo
+    had = bool(getattr(target, kind))
+    setattr(target, kind, picture)
     target.save()
     audit.record(
-        Action.CREATE if created else Action.UPDATE, target, actor, {"logo": [had, bool(logo)]}
+        Action.CREATE if created else Action.UPDATE, target, actor, {kind: [had, bool(picture)]}
     )
     return target

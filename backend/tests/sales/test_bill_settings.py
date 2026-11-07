@@ -39,8 +39,19 @@ def picture(kind: str = "PNG", size: tuple[int, int] = (1200, 300), **save: Any)
     return out.getvalue()
 
 
-def upload(member: Member, data: bytes, name: str = "logo.png") -> Any:
-    return member.client().put(LOGO, {"logo": SimpleUploadedFile(name, data)}, format="multipart")
+CONTENT_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp"}
+
+
+def upload(
+    member: Member,
+    data: bytes,
+    name: str = "logo.png",
+    url: str = LOGO,
+    content_type: str | None = None,
+) -> Any:
+    kind = content_type or CONTENT_TYPES.get(name[name.rfind(".") :], "image/png")
+    file = SimpleUploadedFile(name, data, content_type=kind)
+    return member.client().put(url, {"image": file}, format="multipart")
 
 
 def sold(s: Seller) -> Any:
@@ -141,7 +152,7 @@ def test_jpeg_and_webp_logos_are_accepted(seller: Seller) -> None:
 
 @pytest.mark.parametrize(
     "data",
-    [b"not a picture", b"", b"\x89PNG\r\n\x1a\n" + b"0" * (billing.MAX_LOGO_BYTES + 1)],
+    [b"not a picture", b"", b"\x89PNG\r\n\x1a\n" + b"0" * (billing.MAX_IMAGE_BYTES + 1)],
 )
 def test_files_that_are_not_small_pictures_are_refused(seller: Seller, data: bytes) -> None:
     assert upload(seller.shop.member, data).status_code == 400
@@ -149,11 +160,14 @@ def test_files_that_are_not_small_pictures_are_refused(seller: Seller, data: byt
 
 
 def test_other_picture_formats_are_refused(seller: Seller) -> None:
-    assert upload(seller.shop.member, picture("GIF"), "logo.gif").status_code == 400
+    gif = picture("GIF")
+    assert upload(seller.shop.member, gif, "logo.gif", content_type="image/gif").status_code == 400
+    # Renamed to look like a PNG, it is still refused: the first bytes decide, not the name.
+    assert upload(seller.shop.member, gif, "logo.png").status_code == 400
 
 
 def test_a_picture_claiming_too_many_pixels_is_refused_before_decoding(seller: Seller) -> None:
-    with patch.object(billing, "MAX_LOGO_PIXELS", 100):
+    with patch.object(billing, "MAX_IMAGE_PIXELS", 100):
         assert upload(seller.shop.member, picture(size=(20, 20))).status_code == 400
 
 
@@ -181,7 +195,7 @@ def test_the_printed_bill_carries_the_business_details_and_footer(seller: Seller
             "show_sku": True,
         },
     )
-    billing.set_logo(seller.user, picture())
+    billing.set_image(seller.user, "logo", picture())
     html = documents.invoice_html(sold(seller), "en")
     for text in (
         "1 Invented Road",
@@ -199,7 +213,7 @@ def test_the_printed_bill_carries_the_business_details_and_footer(seller: Seller
         assert text in html
     # The tax column goes, but the tax total stays on the bill.
     assert html.count(">Sales tax<") == 1
-    assert 'class="a4"' in html
+    assert 'class="a4 t-classic"' in html
 
 
 def test_a_tax_label_replaces_the_default_words(seller: Seller) -> None:
@@ -217,9 +231,9 @@ def test_counter_sales_print_on_a_till_roll_when_chosen(seller: Seller) -> None:
     sale = pos.sell(
         seller.user, session, [pos.CartLine(seller.shop.soap, seller.shop.pcs, D(1))], "card"
     )
-    assert 'class="receipt"' in documents.invoice_html(sale.invoice, "en")
+    assert 'class="receipt t-classic"' in documents.invoice_html(sale.invoice, "en")
     # Bills that didn't come from the counter stay on A4.
-    assert 'class="a4"' in documents.invoice_html(sold(seller), "en")
+    assert 'class="a4 t-classic"' in documents.invoice_html(sold(seller), "en")
 
 
 def test_receipts_carry_the_business_details_too(seller: Seller) -> None:
@@ -237,3 +251,87 @@ def test_receipts_carry_the_business_details_too(seller: Seller) -> None:
     html = documents.receipt_html(receipt, "en")
     assert "1 Invented Road" in html
     assert "Thank you" in html
+
+
+SIGNATURE = "/api/sales/bill-settings/signature/"
+
+
+def test_a_file_named_like_a_picture_but_sent_as_something_else_is_refused(
+    seller: Seller,
+) -> None:
+    member = seller.shop.member
+    assert upload(member, picture(), "logo.exe").status_code == 400
+    assert upload(member, picture(), "logo.png", content_type="text/html").status_code == 400
+
+
+def test_a_web_page_dressed_as_a_png_is_refused(seller: Seller) -> None:
+    page = b"<html><script>alert(1)</script></html>"
+    assert upload(seller.shop.member, page, "logo.png").status_code == 400
+
+
+def test_anything_hidden_after_the_picture_is_dropped(seller: Seller) -> None:
+    hidden = picture() + b"<script>alert(1)</script>" + b"MZ" + b"\x00" * 64
+    assert upload(seller.shop.member, hidden).status_code == 200
+    stored = bytes(BillSettings.objects.get().logo or b"")
+    assert b"<script>" not in stored
+    assert b"MZ\x00" not in stored
+
+
+def test_a_damaged_or_cut_off_picture_is_refused(seller: Seller) -> None:
+    whole = picture()
+    assert upload(seller.shop.member, whole[: len(whole) // 2]).status_code == 400
+    broken = whole[:40] + b"\x00" * 40 + whole[80:]
+    assert upload(seller.shop.member, broken).status_code == 400
+
+
+@pytest.mark.parametrize("size", [(8, 8), (6000, 20), (20, 6000)])
+def test_pictures_too_small_or_too_long_are_refused(seller: Seller, size: tuple[int, int]) -> None:
+    assert upload(seller.shop.member, picture(size=size)).status_code == 400
+
+
+def test_a_moving_picture_is_refused(seller: Seller) -> None:
+    out = io.BytesIO()
+    first = Image.new("RGB", (40, 40), (0, 0, 0))
+    second = Image.new("RGB", (40, 40), (255, 255, 255))
+    first.save(out, format="PNG", save_all=True, append_images=[second])
+    assert upload(seller.shop.member, out.getvalue()).status_code == 400
+
+
+def test_a_signature_picture_is_cleaned_and_printed(seller: Seller) -> None:
+    reply = upload(seller.shop.member, picture(size=(1800, 300)), url=SIGNATURE)
+    assert reply.status_code == 200, reply.content
+    assert reply.json()["signature"].startswith("data:image/png;base64,")
+    with Image.open(io.BytesIO(bytes(BillSettings.objects.get().signature or b""))) as clean:
+        assert clean.size[0] <= 600
+        assert clean.size[1] <= 200
+    billing.save(seller.user, {"signature_text": "A. Invented"})
+    html = documents.invoice_html(sold(seller), "en")
+    assert "Authorised signature" in html
+    # With a picture, the typed name goes underneath it as the signer's name.
+    assert 'class="sign-name">A. Invented' in html
+    assert seller.shop.member.client().delete(SIGNATURE).json()["signature"] is None
+
+
+def test_a_typed_signature_prints_in_handwriting_style(seller: Seller) -> None:
+    billing.save(seller.user, {"signature_text": "A. Invented"})
+    html = documents.invoice_html(sold(seller), "ur")
+    assert 'class="sign-text">A. Invented' in html
+    assert "مجاز دستخط" in html
+
+
+def test_no_signature_means_no_signature_line(seller: Seller) -> None:
+    assert "Authorised signature" not in documents.invoice_html(sold(seller), "en")
+
+
+@pytest.mark.parametrize(
+    "template", ["classic", "modern", "minimal", "bold", "compact", "elegant"]
+)
+def test_each_template_can_be_chosen_and_printed(seller: Seller, template: str) -> None:
+    reply = seller.shop.member.client().patch(URL, {"template": template}, format="json")
+    assert reply.status_code == 200, reply.content
+    assert f"t-{template}" in documents.invoice_html(sold(seller), "en")
+
+
+def test_an_unknown_template_is_refused(seller: Seller) -> None:
+    reply = seller.shop.member.client().patch(URL, {"template": "fancy"}, format="json")
+    assert reply.status_code == 400

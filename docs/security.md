@@ -240,9 +240,19 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 - Dependencies are pinned to exact versions; Dependabot proposes updates; CI runs CodeQL and
   `npm audit`. A new dependency needs a reason in its pull request.
 
-## Bill logos
+## Bill pictures
 
-The only file upload is the logo on the Bill design screen (`/api/sales/bill-settings/logo/`), open to people with update rights on members. The request is capped at 2 MB by Django and the file at 1 MB by the view, which reads one byte past the limit and no further. Pillow checks the claimed picture size before decoding, so a small file that unpacks to a huge picture is refused, and only PNG, JPEG and WebP are accepted; SVG never is, because it can carry script. The picture is then decoded and written out again as a fresh PNG of at most 600 by 600 pixels, so metadata or anything else hidden in the file is left behind, and only that copy is stored, in the database. It is shown as a `data:` URL, which the CSP already allows for images, and served back only to the same business with `Cache-Control: private, no-store`.
+The only file uploads are the logo and the signature picture on the Bill design screen (`/api/sales/bill-settings/logo/` and `/signature/`), open to people with update rights on members. Each file goes through these checks in order (`apps/sales/billing.clean_image`), and fails as one plain message:
+
+1. The browser's stated type must be PNG, JPEG or WebP and the name must end in a matching extension. This is a first filter only, as both can be faked.
+2. The request is capped at 2 MB by Django and the file at 1 MB; the view reads one byte past the limit and no further.
+3. The first bytes must be a PNG, JPEG or WebP signature. A web page, script, program or GIF renamed to `.png` stops here.
+4. Pillow is told to use only the decoder for that format, so a file can't pass as one format and be read by another, less careful decoder.
+5. The claimed size is checked before decoding: each side 16 to 5000 pixels and at most 25 million pixels, so a small file that unpacks to a huge picture is refused. A picture with more than one frame (an animation) is refused.
+6. `verify()` checks the file's structure, then a full decode refuses a damaged or cut-off file.
+7. Only the pixels are kept: the picture is written out again as a fresh PNG, at most 600 by 600 for a logo and 600 by 200 for a signature. Metadata, scripts, or a second file hidden after the picture are all left behind, so a file built to attack a viewer or printer is harmless once stored.
+
+The copy is stored in the database, shown as a `data:` URL, which the CSP already allows for images, and served back only to the same business with `Cache-Control: private, no-store`. Nothing is ever served from the original upload. There is no virus scanner: the uploads are never run or stored as sent, so the re-encoding above is the protection. If uploads of other kinds are added later, scan them (for example with ClamAV in the Docker setup) before keeping them.
 
 The bill's accent colour goes into the print style sheet, so it is accepted only as `#` and six hex digits, and only when it reads on white at 4.5 to 1 or better (`apps/core/colours.py`).
 
