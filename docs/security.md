@@ -89,6 +89,8 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
   told once the change is made.
 - Asking for an address that already has an account gets the same answer as any other, and the
   owner of that address gets an email, so the form can't be used to find out who has an account.
+- Emailed links carry their token in the query string, so nginx logs the path without the query
+  and without the referrer (`log_format private`). Checked in the production image.
 
 ## Rate limiting and denial of service
 

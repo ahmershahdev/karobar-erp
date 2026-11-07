@@ -1,5 +1,6 @@
 import logging
-from typing import cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -225,6 +226,15 @@ class MeView(APIView):
         return Response(MeSerializer(user).data)
 
 
+def _notify_after_commit(send: Callable[..., None], *args: Any) -> None:
+    # The change is already saved. A queue failure here must not turn it into an error, or a
+    # retry would fail with a wrong password or a used link and confuse the person.
+    try:
+        send(*args)
+    except OperationalError:
+        logger.exception("Could not queue an account notice")
+
+
 def _check_current_password(user: User, password: str) -> None:
     # Someone at an unlocked computer must not be able to take the account over.
     if not user.has_usable_password():
@@ -250,7 +260,7 @@ class PasswordChangeView(APIView):
             user.save(update_fields=["password"])
         # The new hash signs out every other session; this keeps the one that made the change.
         update_session_auth_hash(request._request, user)
-        emails.send_password_changed(user)
+        _notify_after_commit(emails.send_password_changed, user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -298,7 +308,7 @@ class EmailChangeConfirmView(AnonymousFormView):
                 user.save(update_fields=["email", "email_verified_at"])
         except IntegrityError as exc:
             raise ValidationError({"token": [EMAIL_TAKEN]}) from exc
-        emails.send_email_changed(old, new)
+        _notify_after_commit(emails.send_email_changed, old, new)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

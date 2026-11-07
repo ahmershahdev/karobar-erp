@@ -1,7 +1,9 @@
 import pytest
 from django.core import mail, signing
+from kombu.exceptions import OperationalError  # type: ignore[import-untyped, unused-ignore]
 from rest_framework.test import APIClient
 
+from apps.accounts import emails
 from apps.accounts.models import User
 from apps.accounts.tokens import CHANGE_EMAIL_SALT, make_email_change_token
 from tests.accounts.test_flows import link_params, post
@@ -155,3 +157,29 @@ def test_settings_need_a_signed_in_person() -> None:
     assert client.patch("/api/accounts/me/", {"full_name": "x"}, format="json").status_code == 403
     assert client.post("/api/accounts/password/", {}, format="json").status_code == 403
     assert client.post("/api/accounts/email/", {}, format="json").status_code == 403
+
+
+def _queue_down(*_: object) -> None:
+    raise OperationalError("broker down")
+
+
+def test_a_password_change_still_succeeds_when_the_queue_is_down(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(emails, "send_password_changed", _queue_down)
+    user = create_user()
+    body = {"current_password": TEST_PASSWORD, "password": NEW_PASSWORD}
+    assert signed_in(user).post("/api/accounts/password/", body, format="json").status_code == 204
+    user.refresh_from_db()
+    assert user.check_password(NEW_PASSWORD)
+
+
+def test_an_email_change_still_succeeds_when_the_queue_is_down(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(emails, "send_email_changed", _queue_down)
+    user = create_user()
+    token = make_email_change_token(user, "queue@example.test")
+    assert post("/api/accounts/email/confirm/", {"token": token}) == 204
+    user.refresh_from_db()
+    assert user.email == "queue@example.test"
