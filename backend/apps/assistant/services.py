@@ -6,6 +6,8 @@ from typing import Any
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Subquery, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -69,14 +71,10 @@ def mine(user: User) -> Any:
 
 def current(user: User) -> Any:
     """The conversation since the last reset, which is all the person and the model see."""
-    last = (
-        mine(user)
-        .filter(role=ChatMessage.Role.RESET)
-        .order_by("-id")
-        .values_list("id", flat=True)
-        .first()
-    )
-    return mine(user).filter(id__gt=last or 0)
+    # One query, so a reset landing between reading the boundary and the messages can't let
+    # the old chat through.
+    last = mine(user).filter(role=ChatMessage.Role.RESET).order_by("-id").values("id")[:1]
+    return mine(user).filter(id__gt=Coalesce(Subquery(last), Value(0)))
 
 
 def reset(user: User) -> None:
