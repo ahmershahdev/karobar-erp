@@ -7,6 +7,7 @@ export const AUTH_PATHS = [
   '/forgot-password',
   '/reset-password',
   '/verify-email',
+  '/confirm-email',
   '/accept-invite',
   '/new-business',
 ] as const;

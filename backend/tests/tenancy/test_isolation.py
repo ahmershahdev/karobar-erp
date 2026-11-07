@@ -45,6 +45,7 @@ PUBLIC = {
     "api/accounts/verify-email/",
     "api/accounts/password-reset/",
     "api/accounts/password-reset/confirm/",
+    "api/accounts/email/confirm/",
     "api/accounts/config/",
     "api/accounts/session/",
     "api/accounts/oauth/<str:provider>/start/",
@@ -54,6 +55,8 @@ PUBLIC = {
 USER_LEVEL = {
     "api/accounts/logout/",
     "api/accounts/me/",
+    "api/accounts/password/",
+    "api/accounts/email/",
     "api/assistant/ask/",
     "api/assistant/reset/",
     "api/accounts/verify-email/resend/",

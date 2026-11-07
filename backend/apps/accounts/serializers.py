@@ -24,14 +24,37 @@ class LoginSerializer(HumanFields):
 class MeSerializer(serializers.ModelSerializer[User]):
     id = serializers.UUIDField(source="public_id", read_only=True)
     email_verified = serializers.SerializerMethodField()
+    has_password = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name", "email_verified")
+        fields = ("id", "email", "full_name", "email_verified", "has_password")
         read_only_fields = fields
 
     def get_email_verified(self, user: User) -> bool:
         return user.email_verified_at is not None
+
+    def get_has_password(self, user: User) -> bool:
+        """False for people who only ever signed in with Google or Facebook."""
+        return user.has_usable_password()
+
+
+class ProfileSerializer(serializers.Serializer[None]):
+    full_name = serializers.CharField(max_length=150, allow_blank=True, trim_whitespace=True)
+
+
+class PasswordChangeSerializer(serializers.Serializer[None]):
+    current_password = serializers.CharField(
+        max_length=128, trim_whitespace=False, allow_blank=True
+    )
+    password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+
+class EmailChangeSerializer(serializers.Serializer[None]):
+    email = serializers.EmailField(max_length=254)
+    current_password = serializers.CharField(
+        max_length=128, trim_whitespace=False, allow_blank=True
+    )
 
 
 class SessionSerializer(serializers.Serializer[None]):

@@ -87,6 +87,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
   const base = `/app/${membership.tenant_slug}`;
   const links = [
     { to: base, label: t('workspace.overview'), icon: 'overview', show: true, end: true },
+    { to: `${base}/account`, label: t('workspace.account'), icon: 'account', show: true },
     {
       to: `${base}/counter`,
       label: t('pos.title'),

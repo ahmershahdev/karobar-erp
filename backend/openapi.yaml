@@ -544,6 +544,41 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/accounts/email/:
+    post:
+      operationId: accounts_email_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChange'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          description: No response body
+  /api/accounts/email/confirm/:
+    post:
+      operationId: accounts_email_confirm_create
+      description: Opened from the link sent to the new address, maybe on a device
+        that isn't signed in.
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
   /api/accounts/login/:
     post:
       operationId: accounts_login_create
@@ -589,6 +624,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
+    patch:
+      operationId: accounts_me_partial_update
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
   /api/accounts/oauth/{provider}/callback/:
     get:
       operationId: accounts_oauth_callback_retrieve
@@ -622,6 +675,22 @@ paths:
       - {}
       responses:
         '302':
+          description: No response body
+  /api/accounts/password/:
+    post:
+      operationId: accounts_password_create
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
           description: No response body
   /api/accounts/password-reset/:
     post:
@@ -4752,6 +4821,19 @@ components:
           maxLength: 254
       required:
       - email
+    EmailChange:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        current_password:
+          type: string
+          maxLength: 128
+      required:
+      - current_password
+      - email
     FiscalPeriod:
       type: object
       properties:
@@ -5333,10 +5415,15 @@ components:
         email_verified:
           type: boolean
           readOnly: true
+        has_password:
+          type: boolean
+          description: False for people who only ever signed in with Google or Facebook.
+          readOnly: true
       required:
       - email
       - email_verified
       - full_name
+      - has_password
       - id
     Member:
       type: object
@@ -5831,6 +5918,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SupplierPayment'
+    PasswordChange:
+      type: object
+      properties:
+        current_password:
+          type: string
+          maxLength: 128
+        password:
+          type: string
+          maxLength: 128
+      required:
+      - current_password
+      - password
     PasswordResetConfirm:
       type: object
       properties:
@@ -6009,6 +6108,12 @@ components:
           format: decimal
           pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
           readOnly: true
+    PatchedProfile:
+      type: object
+      properties:
+        full_name:
+          type: string
+          maxLength: 150
     PatchedRole:
       type: object
       properties:

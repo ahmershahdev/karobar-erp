@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState, type SyntheticEvent } from 'react';
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 
@@ -231,7 +231,16 @@ export function SignUpPage() {
   );
 }
 
-export function VerifyEmailPage() {
+/** A page opened from an emailed link: it sends the link's token once and says how it went. */
+function EmailLinkPage({
+  title,
+  done,
+  send,
+}: {
+  title: string;
+  done: string;
+  send: (token: string) => Promise<unknown>;
+}) {
   const { t } = useTranslation();
   const [params] = useSearchParams();
   const client = useQueryClient();
@@ -239,19 +248,23 @@ export function VerifyEmailPage() {
   const mutation = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
-      await unwrap(api.POST('/api/accounts/verify-email/', { body: { token } }));
+      await send(token);
     },
     onSuccess: () => client.invalidateQueries({ queryKey: sessionKeys.me }),
   });
   const { mutate } = mutation;
+  // Development mode runs effects twice, and a second send of a one-time link fails.
+  const sent = useRef('');
   useEffect(() => {
-    if (token) mutate();
+    if (!token || sent.current === token) return;
+    sent.current = token;
+    mutate();
   }, [token, mutate]);
 
   return (
-    <AuthCard title={t('auth.verifyTitle')}>
+    <AuthCard title={title}>
       {mutation.isPending && <p className="text-muted">{t('auth.verifying')}</p>}
-      {mutation.isSuccess && <Alert tone="success">{t('auth.verified')}</Alert>}
+      {mutation.isSuccess && <Alert tone="success">{done}</Alert>}
       {(mutation.isError || !token) && (
         <Alert tone="error">{messageOf(mutation.error, t('auth.badLink'))}</Alert>
       )}
@@ -259,6 +272,29 @@ export function VerifyEmailPage() {
         {t('auth.continue')}
       </Link>
     </AuthCard>
+  );
+}
+
+export function VerifyEmailPage() {
+  const { t } = useTranslation();
+  return (
+    <EmailLinkPage
+      title={t('auth.verifyTitle')}
+      done={t('auth.verified')}
+      send={(token) => unwrap(api.POST('/api/accounts/verify-email/', { body: { token } }))}
+    />
+  );
+}
+
+/** Opened from the link sent to a new address. The person may not be signed in on this device. */
+export function ConfirmEmailPage() {
+  const { t } = useTranslation();
+  return (
+    <EmailLinkPage
+      title={t('auth.confirmTitle')}
+      done={t('auth.emailChanged')}
+      send={(token) => unwrap(api.POST('/api/accounts/email/confirm/', { body: { token } }))}
+    />
   );
 }
 

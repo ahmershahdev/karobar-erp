@@ -1,8 +1,9 @@
 import logging
-from typing import cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.db import IntegrityError, transaction
 from django.http import HttpResponseRedirect
 from django.utils import timezone
@@ -24,20 +25,30 @@ from . import emails, humans, oauth
 from .models import User
 from .serializers import (
     AuthConfigSerializer,
+    EmailChangeSerializer,
     EmailSerializer,
     LoginSerializer,
     MeSerializer,
+    PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
+    ProfileSerializer,
     SessionSerializer,
     SignUpSerializer,
     TokenSerializer,
     check_password_strength,
 )
-from .tokens import read_email_token, read_reset_token
+from .tokens import read_email_change_token, read_email_token, read_reset_token
 
 logger = logging.getLogger(__name__)
 
 INVALID_LINK = "This link is invalid or has expired."
+SET_ONE_FIRST = (
+    "Your account has no password yet. Sign out and use Forgot password to set one, then try "
+    "again."
+)
+NOT_CURRENT = "That isn't your current password."
+SAME_EMAIL = "That is already your email."
+EMAIL_TAKEN = "That email now belongs to another account."
 
 
 @method_decorator(ensure_csrf_cookie, name="get")
@@ -204,6 +215,104 @@ class MeView(APIView):
     @extend_schema(responses=MeSerializer)
     def get(self, request: Request) -> Response:
         return Response(MeSerializer(cast(User, request.user)).data)
+
+    @extend_schema(request=ProfileSerializer, responses=MeSerializer)
+    def patch(self, request: Request) -> Response:
+        data = ProfileSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = cast(User, request.user)
+        user.full_name = data.validated_data["full_name"]
+        user.save(update_fields=["full_name"])
+        return Response(MeSerializer(user).data)
+
+
+def _notify_after_commit(send: Callable[..., None], *args: Any) -> None:
+    # The change is already saved. A queue failure here must not turn it into an error, or a
+    # retry would fail with a wrong password or a used link and confuse the person.
+    try:
+        send(*args)
+    except OperationalError:
+        logger.exception("Could not queue an account notice")
+
+
+def _check_current_password(user: User, password: str) -> None:
+    # Someone at an unlocked computer must not be able to take the account over.
+    if not user.has_usable_password():
+        raise ValidationError({"current_password": [SET_ONE_FIRST]})
+    if not user.check_password(password):
+        raise ValidationError({"current_password": [NOT_CURRENT]})
+
+
+class PasswordChangeView(APIView):
+    # Tight, because it can be used to guess the current password.
+    throttle_scope = "auth"
+
+    @extend_schema(request=PasswordChangeSerializer, responses={204: None})
+    def post(self, request: Request) -> Response:
+        data = PasswordChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = cast(User, request.user)
+        _check_current_password(user, data.validated_data["current_password"])
+        password = check_password_strength(data.validated_data["password"], user)
+        with transaction.atomic():
+            user = lock_rows(User.objects.filter(pk=user.pk))[0]
+            user.set_password(password)
+            user.save(update_fields=["password"])
+        # The new hash signs out every other session; this keeps the one that made the change.
+        update_session_auth_hash(request._request, user)
+        _notify_after_commit(emails.send_password_changed, user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class EmailChangeView(APIView):
+    throttle_scope = "auth"
+
+    @extend_schema(request=EmailChangeSerializer, responses={202: None})
+    def post(self, request: Request) -> Response:
+        data = EmailChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = cast(User, request.user)
+        _check_current_password(user, data.validated_data["current_password"])
+        new = data.validated_data["email"].lower()
+        if new == user.email:
+            raise ValidationError({"email": [SAME_EMAIL]})
+        # The same answer either way, so this can't be used to find out who has an account. The
+        # owner of a taken address hears about it by email instead.
+        if User.objects.filter(email=new).exists():
+            emails.send_email_taken(new)
+        else:
+            emails.send_email_change(user, new)
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+
+class EmailChangeConfirmView(AnonymousFormView):
+    """Opened from the link sent to the new address, maybe on a device that isn't signed in."""
+
+    @extend_schema(request=TokenSerializer, responses={204: None})
+    def post(self, request: Request) -> Response:
+        data = TokenSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        found = read_email_change_token(data.validated_data["token"])
+        if found is None:
+            raise ValidationError({"token": [INVALID_LINK]})
+        user, new = found
+        try:
+            with transaction.atomic():
+                lock_rows(User.objects.filter(pk=user.pk))
+                # Read again under the lock: a link used twice at once, or racing a password
+                # change, fails here, because the account state it was signed for has moved on.
+                again = read_email_change_token(data.validated_data["token"])
+                if again is None or again[0].pk != user.pk:
+                    raise ValidationError({"token": [INVALID_LINK]})
+                user = again[0]
+                old = user.email
+                user.email = new
+                user.email_verified_at = timezone.now()
+                user.save(update_fields=["email", "email_verified_at"])
+        except IntegrityError as exc:
+            raise ValidationError({"token": [EMAIL_TAKEN]}) from exc
+        _notify_after_commit(emails.send_email_changed, old, new)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SessionView(APIView):

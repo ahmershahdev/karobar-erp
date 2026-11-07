@@ -7,6 +7,7 @@ import { Alert } from '../components/form';
 import { OfflineScreen } from '../components/OfflineScreen';
 import {
   AcceptInvitePage,
+  ConfirmEmailPage,
   ForgotPasswordPage,
   ResetPasswordPage,
   SignInPage,
@@ -51,6 +52,7 @@ import {
   ReceiptsPage,
   SuppliersPage,
 } from '../features/purchasing/pages';
+import { AccountPage } from '../features/workspace/AccountPage';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
   AuditPage,
@@ -105,6 +107,7 @@ const AUTH_PAGES: Record<AuthPath, ReactNode> = {
   '/forgot-password': <ForgotPasswordPage />,
   '/reset-password': <ResetPasswordPage />,
   '/verify-email': <VerifyEmailPage />,
+  '/confirm-email': <ConfirmEmailPage />,
   '/accept-invite': <AcceptInvitePage />,
   '/new-business': <RequireUser>{(me) => <NewBusinessPage me={me} />}</RequireUser>,
 };
@@ -147,6 +150,7 @@ export default function AppRoutes() {
         element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>}
       >
         <Route index element={<OverviewPage />} />
+        <Route path="account" element={<AccountPage />} />
         <Route path="members" element={<MembersPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="audit" element={<AuditPage />} />
