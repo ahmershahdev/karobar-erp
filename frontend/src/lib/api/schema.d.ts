@@ -508,6 +508,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assistant/drafts/{id}/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["assistant_drafts_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assistant/messages/": {
         parameters: {
             query?: never;
@@ -2083,6 +2099,46 @@ export interface components {
             link: string;
             whatsapp: string;
         };
+        /** @description A proposed draft, a draft that couldn't be made, or the record that one was confirmed. */
+        Card: {
+            kind?: components["schemas"]["CardKindEnum"];
+            party?: components["schemas"]["CardParty"];
+            warehouse?: components["schemas"]["CardParty"];
+            lines?: components["schemas"]["CardLine"][];
+            memo?: string;
+            total?: string;
+            problem?: components["schemas"]["CardProblem"];
+            /** @description On a done row: the card's id. */
+            draft?: number;
+            /** @description The saved draft's id. */
+            document?: number;
+        };
+        /**
+         * @description * `sales_invoice` - sales_invoice
+         *     * `quotation` - quotation
+         *     * `purchase_order` - purchase_order
+         * @enum {string}
+         */
+        CardKindEnum: "sales_invoice" | "quotation" | "purchase_order";
+        CardLine: {
+            product: number;
+            name: string;
+            sku: string;
+            unit: number;
+            unit_code: string;
+            quantity: string;
+            unit_price: string | null;
+        };
+        CardParty: {
+            id: number;
+            name: string;
+        };
+        CardProblem: {
+            code: components["schemas"]["CodeEnum"];
+            field: string;
+            name: string;
+            options: string[];
+        };
         CartLine: {
             product: number;
             unit: number;
@@ -2123,11 +2179,22 @@ export interface components {
             /** Format: date-time */
             created_at?: string;
             signature: string;
+            readonly card: components["schemas"]["Card"] | null;
         };
         CloseTill: {
             /** Format: decimal */
             counted_cash: string;
         };
+        /**
+         * @description * `unclear` - unclear
+         *     * `not_found` - not_found
+         *     * `ambiguous` - ambiguous
+         *     * `no_warehouse` - no_warehouse
+         *     * `too_many` - too_many
+         *     * `not_allowed` - not_allowed
+         * @enum {string}
+         */
+        CodeEnum: "unclear" | "not_found" | "ambiguous" | "no_warehouse" | "too_many" | "not_allowed";
         CreditLine: {
             readonly id: number;
             invoice_line: number;
@@ -2397,14 +2464,6 @@ export interface components {
             credit?: string;
             description?: string;
         };
-        /**
-         * @description * `receipt` - Receipt
-         *     * `issue` - Issue
-         *     * `transfer` - Transfer
-         *     * `adjustment` - Adjustment
-         * @enum {string}
-         */
-        KindEnum: "receipt" | "issue" | "transfer" | "adjustment";
         Ledger: {
             account: components["schemas"]["Account"];
             /** Format: decimal */
@@ -2990,9 +3049,11 @@ export interface components {
          * @description * `user` - User
          *     * `assistant` - Assistant
          *     * `reset` - Reset
+         *     * `draft` - Draft
+         *     * `done` - Done
          * @enum {string}
          */
-        RoleEnum: "user" | "assistant" | "reset";
+        RoleEnum: "user" | "assistant" | "reset" | "draft" | "done";
         SaleRequest: {
             lines: components["schemas"]["CartLine"][];
             method: components["schemas"]["MethodEnum"];
@@ -3101,7 +3162,7 @@ export interface components {
         StatusEnum: "draft" | "posted";
         StockEntry: {
             readonly id: number;
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["StockEntryKindEnum"];
             readonly number: string | null;
             /** Format: date */
             date: string;
@@ -3117,6 +3178,14 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        /**
+         * @description * `receipt` - Receipt
+         *     * `issue` - Issue
+         *     * `transfer` - Transfer
+         *     * `adjustment` - Adjustment
+         * @enum {string}
+         */
+        StockEntryKindEnum: "receipt" | "issue" | "transfer" | "adjustment";
         StockEntryLine: {
             readonly id: number;
             product: number;
@@ -4232,6 +4301,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatCheck"];
+                };
+            };
+        };
+    };
+    assistant_drafts_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessage"];
                 };
             };
         };

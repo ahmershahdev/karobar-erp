@@ -1,7 +1,9 @@
-"""The business chat. It answers from figures the person is allowed to see, and it can only talk:
-nothing here can change a record, so a clever message can't make it do anything."""
+"""The business chat. It answers from figures the person is allowed to see. Beyond talking it can
+only propose a draft card (see drafts.py): nothing a reply says reaches a record until the person
+presses Confirm, and then only as a draft made with their own permissions."""
 
 import json
+from dataclasses import dataclass
 from typing import Any
 
 from django.conf import settings
@@ -9,6 +11,7 @@ from django.db import transaction
 from django.db.models import Subquery, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from rest_framework.request import Request
 
 from apps.accounts.models import User
 from apps.core.chain import first_break, sign
@@ -19,6 +22,7 @@ from apps.reports import services as reports
 from apps.tenancy.context import get_current_tenant
 from apps.tenancy.models import Membership
 
+from . import drafts
 from .models import ChatMessage
 from .screens import SCREENS
 
@@ -41,6 +45,20 @@ class NotConfiguredError(AssistantError):
 
 class StartedOverError(AssistantError):
     message = "You started a new chat, so that answer was not kept. Please ask again."
+
+
+class DraftGoneError(Exception):
+    """No such card in this person's current chat."""
+
+
+class AlreadyDoneError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class ToolCall:
+    name: str
+    arguments: str
 
 
 def _key() -> bytes:
@@ -92,6 +110,36 @@ def record(
     message.signature = sign(_key(), _fields(message), last.signature if last else "")
     message.save()
     return message
+
+
+def load(message: ChatMessage) -> dict[str, Any]:
+    data = json.loads(message.content)
+    return data if isinstance(data, dict) else {}
+
+
+def done_for(user: User) -> dict[int, dict[str, Any]]:
+    """Confirmed cards in the current chat, by the id of the card."""
+    rows = (load(row) for row in current(user).filter(role=ChatMessage.Role.DONE))
+    return {row["draft"]: row for row in rows if isinstance(row.get("draft"), int)}
+
+
+@transaction.atomic
+def confirm(request: Request, user: User, membership: Membership, pk: int) -> ChatMessage:
+    """Save a card as a draft document, once. The document and the signed record of it are
+    written in one transaction, so a failed save leaves no record, and a second press waits on
+    the lock and then finds the first."""
+    lock_rows(Membership.objects.filter(user=user))
+    card = current(user).filter(pk=pk, role=ChatMessage.Role.DRAFT).first()
+    if card is None:
+        raise DraftGoneError
+    draft = load(card)
+    if "problem" in draft or draft.get("kind") not in drafts.KINDS:
+        raise DraftGoneError
+    if pk in done_for(user):
+        raise AlreadyDoneError
+    document = drafts.save(request, membership, draft)
+    content = json.dumps({"draft": pk, "kind": draft["kind"], "document": document.pk})
+    return record(user, ChatMessage.Role.DONE, content, answering=card)
 
 
 def verify(user: User) -> dict[str, Any]:
@@ -159,7 +207,7 @@ def system_prompt(user: User, membership: Membership, language: str = "en") -> s
         "Use only the figures in BUSINESS DATA below. Never guess a figure. A business question "
         "whose figure isn't there is still on topic: say you can't see it here, because their "
         "access may not include it, and name the screen that would show it.\n"
-        "You can't change anything in the system. Tell them which screen to use instead.\n"
+        f"{_abilities(membership)}\n"
         f"The screens, as they appear on this person's screen, are: {screens}. Name only these, "
         "exactly as written. The rest of the reply stays in the language of their message, "
         "even if the screen names are in another one. Never name a button or describe steps "
@@ -171,21 +219,43 @@ def system_prompt(user: User, membership: Membership, language: str = "en") -> s
     )
 
 
-def complete(messages: list[dict[str, str]]) -> str:
+def _abilities(membership: Membership) -> str:
+    names = [tool["function"]["name"] for tool in drafts.tools(membership)]
+    if not names:
+        return "You can't change anything in the system. Tell them which screen to use instead."
+    return (
+        "When they clearly ask you to make one, use a tool to prepare a draft: "
+        f"{', '.join(names)}. Use the names they said; the system finds the records and prices "
+        "and shows them a card to confirm, so don't ask for codes or prices first and don't "
+        "say it is done. Nothing is saved until they press Confirm, and it stays a draft. You "
+        "can't post, pay, delete or change anything else: for that, name the screen to use."
+    )
+
+
+def complete(
+    messages: list[dict[str, str]], tools: list[dict[str, Any]] | None = None
+) -> str | ToolCall:
+    payload: dict[str, Any] = {
+        "model": settings.GROQ_MODEL,
+        "messages": messages,
+        "temperature": 0.3,
+        "max_completion_tokens": MAX_ANSWER_TOKENS,
+    }
+    if tools:
+        payload["tools"] = tools
     try:
-        answer = post_json(
-            GROQ_URL,
-            {
-                "model": settings.GROQ_MODEL,
-                "messages": messages,
-                "temperature": 0.3,
-                "max_completion_tokens": MAX_ANSWER_TOKENS,
-            },
-            settings.GROQ_API_KEY,
-            GROQ_TIMEOUT_SECONDS,
-        )
-        text = answer["choices"][0]["message"]["content"]
-    except (OutboundError, KeyError, IndexError, TypeError) as exc:
+        answer = post_json(GROQ_URL, payload, settings.GROQ_API_KEY, GROQ_TIMEOUT_SECONDS)
+        reply = answer["choices"][0]["message"]
+        calls = reply.get("tool_calls") if tools else None
+        if calls:
+            # Only the first: one card per answer keeps what Confirm does easy to read.
+            call = calls[0]["function"]
+            name, arguments = call["name"], call["arguments"]
+            if not isinstance(name, str) or not isinstance(arguments, str):
+                raise AssistantError
+            return ToolCall(name, arguments)
+        text = reply["content"]
+    except (OutboundError, KeyError, IndexError, TypeError, AttributeError) as exc:
         raise AssistantError from exc
     if not isinstance(text, str) or not text.strip():
         raise AssistantError
@@ -198,7 +268,43 @@ def ask(user: User, membership: Membership, text: str, language: str = "en") -> 
         raise NotConfiguredError
     question = record(user, ChatMessage.Role.USER, text)
     recent = list(current(user).order_by("-id")[:HISTORY])
-    history = [{"role": row.role, "content": row.content} for row in reversed(recent)]
+    history = [_for_model(row) for row in reversed(recent)]
     prompt = {"role": "system", "content": system_prompt(user, membership, language)}
-    answer = complete([prompt, *history])
-    return record(user, ChatMessage.Role.ASSISTANT, answer, answering=question)
+    tools = drafts.tools(membership)
+    answer = complete([prompt, *history], tools)
+    if isinstance(answer, str):
+        return record(user, ChatMessage.Role.ASSISTANT, answer, answering=question)
+    # Only tools offered to this person count: a model can still name one it wasn't given.
+    offered = {tool["function"]["name"] for tool in tools}
+    card: dict[str, Any]
+    if answer.name not in offered:
+        card = {"problem": {"code": "not_allowed", "field": "", "name": "", "options": []}}
+    else:
+        try:
+            card = drafts.build(answer.name, answer.arguments)
+        except drafts.DraftProblemError as problem:
+            card = {"kind": drafts.BY_TOOL[answer.name], "problem": problem.data}
+    content = json.dumps(card, ensure_ascii=False)
+    return record(user, ChatMessage.Role.DRAFT, content, answering=question)
+
+
+def _for_model(row: ChatMessage) -> dict[str, str]:
+    """Cards go back to the model as a plain sentence, so it knows what it already proposed."""
+    if row.role in (ChatMessage.Role.USER, ChatMessage.Role.ASSISTANT):
+        return {"role": row.role, "content": row.content}
+    data = load(row)
+    kind = str(data.get("kind", "")).replace("_", " ")
+    if row.role == ChatMessage.Role.DONE:
+        said = f"They confirmed it, and a draft {kind} was saved. It is not posted."
+    elif "problem" in data:
+        problem = json.dumps(data["problem"], ensure_ascii=False)
+        said = f"I couldn't prepare that draft {kind}: {problem}"
+    else:
+        lines = ", ".join(
+            f"{line['quantity']} {line['unit_code']} {line['name']}" for line in data["lines"]
+        )
+        said = (
+            f"I prepared a draft {kind} for {data['party']['name']}: {lines}, total "
+            f"{data['total']}. It waits for them to press Confirm."
+        )
+    return {"role": "assistant", "content": f"({said})"}

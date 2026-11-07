@@ -31,7 +31,7 @@ Celery, never inside a web request.
 | `pos` | registers, sessions, counter sales |
 | `hr`, `payroll` | employees, attendance, leave, salary structures, payroll runs, payslips |
 | `reports` | trial balance, P&L, balance sheet, tax and stock reports, the business home figures, the daily summary |
-| `assistant` | the per-person business chat through Groq, with signed messages |
+| `assistant` | the per-person business chat through Groq, with signed messages and confirm-first drafts |
 | `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
 | `accounting` (built) | accounts, fiscal years and periods, number series, journal entries and lines, trial balance and ledger reports |
 | `inventory` (built) | units, categories, products and packs, warehouses, batches, stock levels, FIFO layers, stock entries and moves, alerts |
@@ -129,6 +129,7 @@ credits) live in `apps/core` as plain functions with full test coverage.
 | Facebook never links by email | Facebook doesn't say whether the email was verified, so linking by it would let a stranger take over an account |
 | A counter sale is an invoice and a receipt | One atomic post for the walk-in customer, so stock, books, reports and returns need no second path. Prices come from the product on the server, never from the request. One open till per store is enforced by a unique key that is cleared on closing, because MySQL has no partial unique index. A till difference is booked to cash over and short. |
 | Report indexes are measured, not guessed | Checked on 1.1 million journal lines and 1.1 million invoice lines: the dashboard went from 19.5s to 4.4s and document lists from about 1s to under 10ms. The entry number key leads with the number, because led by tenant it beat the (tenant, status, date) index in the planner. Reports grouped over every account stay on the plain filter, which measured faster. A covering index on journal lines was tried and gave nothing. |
+| The chat drafts, a person confirms | The model only names a customer, supplier and products; the server finds them and fills unit, price and warehouse, and the person presses Confirm before the document's own save runs. A name that doesn't match one record comes back as a coded card the app words in the person's language, so there is no second, slower call to the model. Drafts only: posting, paying and deleting stay on the screens. |
 | WhatsApp opens, a person sends | Click-to-chat links are free and need no account with Meta. Sending by itself would need the WhatsApp Business API, with approval and a fee per message. |
 | Tax rates are data with a source | Each rate records its dates and the notice behind it, and rates are never in code. A chosen rate decides a sales line's tax on the server, rounded once per line; a rate used on a document can only be ended, not deleted. Supplier bills keep the tax as printed on the supplier's invoice. |
 | Reports read the journal, margins read documents | Anything that must agree with the books comes from journal lines. Only an invoice knows which product sold at what cost, so sales and margin come from documents. Income and expenses aren't closed by a year-end entry; the balance sheet adds profit to date, which is what makes it balance. |

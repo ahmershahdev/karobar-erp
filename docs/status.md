@@ -6,6 +6,8 @@ Last updated: 2026-11-07. Update at the end of every work session.
 
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory), `v0.4.0` (M4 purchasing, sales, documents), `v0.5.0` (M5 counter, tax, reports, report indexes).
 - Merged since `v0.5.0`: the business home page (#32), signed bill links, WhatsApp click-to-chat and the daily summary email (#33), and the business chat through Groq with signed messages (#34, `apps/assistant`, `apps/core/chain.py`; see `docs/security.md`).
+- Also merged: chat focus and new chat (#35), confirm before every delete (#36), name, email and password settings (#37), chat screen names per language (#38), and handing over a business and deleting an account (#39).
+- In review: `feat/chat-drafts`. The chat can propose a draft sales invoice, quotation or purchase order as a card; the person presses Confirm and the document's own save runs with their permissions. It never posts, pays or deletes. See `docs/security.md`. Checked live against Groq with invented names: it returned the right tool calls. Not yet tried by a person in the browser.
 - `feat/ai-assistant` is replaced by #33 and #34 and can be deleted.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
@@ -17,12 +19,9 @@ Last updated: 2026-11-07. Update at the end of every work session.
 
 Agreed order, one PR each:
 
-1. Keep the chat to the business, with short replies and a new chat button.
-2. Ask before every delete. All 13 delete actions in the app fire on one click.
-3. Account settings: change name, email and password, and delete an account by anonymising it. None of this exists yet.
-4. Chat tasks: drafts only, shown as a card the person confirms. Never posting, paying or deleting.
-5. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
-6. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.
+1. Review and merge chat drafts. Try it in the browser first: ask for a bill, press Confirm, open the draft.
+2. M6: HR and payroll, starting with employees, departments, contracts and salary structures.
+3. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.
 
 Also check a signed bill link returning a real PDF in Docker.
 
@@ -38,4 +37,6 @@ Also check a signed bill link returning a real PDF in Docker.
 - The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.
 - Dependabot alert 2: `minimatch` (medium), in development dependencies only. Fixed in 11.0.1.
 - Groq calls started failing after about a dozen quick questions in testing, probably its rate limit on this key. Check the plan's limits against expected use before switching the chat on in production.
+- Chat drafts carry no tax: the card says so and the person adds it on the draft. Products have no default tax rate to take it from. Decide if they should.
+- A chat draft's prices are the ones on the card when it was proposed, not when Confirm is pressed. The date is the day of Confirm.
 - Deleting an account keeps the address in older audit rows and invitation records, because the audit log is never edited. Decide before launch whether privacy rules need a clean-up job.
