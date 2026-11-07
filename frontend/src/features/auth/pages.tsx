@@ -262,6 +262,38 @@ export function VerifyEmailPage() {
   );
 }
 
+/** Opened from the link sent to a new address. The person may not be signed in on this device. */
+export function ConfirmEmailPage() {
+  const { t } = useTranslation();
+  const [params] = useSearchParams();
+  const client = useQueryClient();
+  const token = params.get('token') ?? '';
+  const mutation = useMutation({
+    mutationFn: async () => {
+      await ensureCsrf();
+      await unwrap(api.POST('/api/accounts/email/confirm/', { body: { token } }));
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: sessionKeys.me }),
+  });
+  const { mutate } = mutation;
+  useEffect(() => {
+    if (token) mutate();
+  }, [token, mutate]);
+
+  return (
+    <AuthCard title={t('auth.confirmTitle')}>
+      {mutation.isPending && <p className="text-muted">{t('auth.verifying')}</p>}
+      {mutation.isSuccess && <Alert tone="success">{t('auth.emailChanged')}</Alert>}
+      {(mutation.isError || !token) && (
+        <Alert tone="error">{messageOf(mutation.error, t('auth.badLink'))}</Alert>
+      )}
+      <Link className={LINK} to="/app">
+        {t('auth.continue')}
+      </Link>
+    </AuthCard>
+  );
+}
+
 export function ForgotPasswordPage() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');

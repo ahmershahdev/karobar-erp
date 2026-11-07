@@ -229,6 +229,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/email/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accounts_email_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/email/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Opened from the link sent to the new address, maybe on a device that isn't signed in. */
+        post: operations["accounts_email_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/login/": {
         parameters: {
             query?: never;
@@ -274,7 +307,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["accounts_me_partial_update"];
         trace?: never;
     };
     "/api/accounts/oauth/{provider}/callback/": {
@@ -303,6 +336,22 @@ export interface paths {
         get: operations["accounts_oauth_start_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/password/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accounts_password_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2132,6 +2181,11 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        EmailChange: {
+            /** Format: email */
+            email: string;
+            current_password: string;
+        };
         FiscalPeriod: {
             readonly id: number;
             readonly number: number;
@@ -2341,6 +2395,8 @@ export interface components {
             readonly email: string;
             readonly full_name: string;
             readonly email_verified: boolean;
+            /** @description False for people who only ever signed in with Google or Facebook. */
+            readonly has_password: boolean;
         };
         Member: {
             readonly id: number;
@@ -2633,6 +2689,10 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["SupplierPayment"][];
         };
+        PasswordChange: {
+            current_password: string;
+            password: string;
+        };
         PasswordResetConfirm: {
             uid: string;
             token: string;
@@ -2702,6 +2762,9 @@ export interface components {
             packs?: components["schemas"]["Pack"][];
             /** Format: decimal */
             readonly on_hand?: string;
+        };
+        PatchedProfile: {
+            full_name?: string;
         };
         PatchedRole: {
             readonly id?: number;
@@ -3739,6 +3802,50 @@ export interface operations {
             };
         };
     };
+    accounts_email_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChange"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accounts_email_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Token"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     accounts_login_create: {
         parameters: {
             query?: never;
@@ -3799,6 +3906,29 @@ export interface operations {
             };
         };
     };
+    accounts_me_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProfile"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+        };
+    };
     accounts_oauth_callback_retrieve: {
         parameters: {
             query?: never;
@@ -3832,6 +3962,28 @@ export interface operations {
         responses: {
             /** @description No response body */
             302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accounts_password_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -372,7 +372,9 @@
       "3": "Good password.",
       "4": "Strong password. Nice."
     },
-    "googleHint": "Joined with Google? Use Continue with Google, or set a password with Forgot your password."
+    "googleHint": "Joined with Google? Use Continue with Google, or set a password with Forgot your password.",
+    "confirmTitle": "Confirm your new email",
+    "emailChanged": "Your email is changed. Use it next time you sign in."
   },
   "workspace": {
     "overview": "Overview",
@@ -490,7 +492,8 @@
         "body": "Scan, take the money, done"
       }
     },
-    "businessNamePlaceholder": "For example, Hyderabad Traders"
+    "businessNamePlaceholder": "For example, Hyderabad Traders",
+    "account": "My account"
   },
   "modulesShort": {
     "members": "Members",
@@ -1154,5 +1157,25 @@
     "body": "You can't get it back.",
     "member": "This person will no longer be able to open this business.",
     "invitation": "The invitation link will stop working."
+  },
+  "account": {
+    "title": "My account",
+    "subtitle": "Your name, email and password. They belong to you, not to a business.",
+    "nameTitle": "Your name",
+    "name": "Full name",
+    "save": "Save",
+    "saved": "Saved.",
+    "emailTitle": "Email",
+    "currentEmail": "You sign in with {{email}}.",
+    "newEmail": "New email",
+    "currentPassword": "Current password",
+    "sendLink": "Send a confirmation link",
+    "linkSent": "We sent a link to {{email}}. Open it within a day to finish. Until then, your old email keeps working.",
+    "passwordTitle": "Password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed. Any other device you were signed in on has been signed out.",
+    "noPassword": "You sign in with Google or Facebook, so you have no password yet.",
+    "setPassword": "Set a password first"
   }
 }

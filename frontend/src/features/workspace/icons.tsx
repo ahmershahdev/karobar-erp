@@ -3,6 +3,12 @@ import type { ReactNode } from 'react';
 // One simple picture per screen, so people who read slowly can find their way by shape.
 const PATHS: Record<string, ReactNode> = {
   overview: <path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" />,
+  account: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c.6-4.4 3.8-7 8-7s7.4 2.6 8 7" />
+    </>
+  ),
   members: (
     <>
       <circle cx="9" cy="8" r="3.5" />
