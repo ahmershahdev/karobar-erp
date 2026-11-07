@@ -1124,6 +1124,15 @@
       "low_stock": "Products running low: {{count}}",
       "overdue": "Overdue bills: {{count}}",
       "open_tills": "Tills still open: {{count}}"
-    }
+    },
+    "automation": "Automatic help",
+    "dailySummary": "Daily summary email",
+    "dailySummaryBody": "Each morning, get yesterday's sales and what needs attention. A quiet day sends nothing."
+  },
+  "share": {
+    "whatsapp": "Send on WhatsApp",
+    "copy": "Copy bill link",
+    "copied": "Link copied",
+    "remind": "Remind on WhatsApp"
   }
 }

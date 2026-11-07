@@ -38,6 +38,7 @@ class Tenant(models.Model):
     fiscal_year_start_month = models.PositiveSmallIntegerField(default=7)
     # "average" or "fifo". Fixed once stock has moved: changing it would revalue history.
     valuation_method = models.CharField(max_length=10, default="average")
+    daily_summary = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

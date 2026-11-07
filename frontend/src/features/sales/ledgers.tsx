@@ -32,7 +32,13 @@ export function ReportState({ pending, failed }: { pending: boolean; failed: boo
   return pending ? <p className="text-muted">{t('led.loading')}</p> : null;
 }
 
-function AgeingTable({ rows, nameLabel }: { rows: AgeingRow[]; nameLabel: string }) {
+function AgeingTable({
+  rows,
+  nameLabel,
+}: {
+  rows: (AgeingRow & { whatsapp?: string })[];
+  nameLabel: string;
+}) {
   const { t, i18n } = useTranslation();
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
   if (rows.length === 0) return <p className="text-muted">{t('led.allClear')}</p>;
@@ -49,6 +55,7 @@ function AgeingTable({ rows, nameLabel }: { rows: AgeingRow[]; nameLabel: string
             ))}
             <th className={`${TH} text-end`}>{t('led.advance')}</th>
             <th className={`${TH} text-end`}>{t('led.total')}</th>
+            {rows.some((row) => row.whatsapp) && <th className={TH} />}
           </tr>
         </thead>
         <tbody>
@@ -62,6 +69,18 @@ function AgeingTable({ rows, nameLabel }: { rows: AgeingRow[]; nameLabel: string
               ))}
               <td className={NUM}>{money(row.advance)}</td>
               <td className={`${NUM} font-medium`}>{money(row.total)}</td>
+              {row.whatsapp && (
+                <td className={TD}>
+                  <a
+                    href={row.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-ghost !py-2 !text-sm"
+                  >
+                    {t('share.remind')}
+                  </a>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -220,6 +239,54 @@ async function errorBody(response: Response): Promise<unknown> {
  * Opens a posted document as a PDF in the customer's language. The API needs the X-Tenant header,
  * which a plain link can't send, so the file is fetched and opened as a blob.
  */
+/** Opens WhatsApp with the bill ready to send. The tab opens first, or the browser would treat it
+ * as a pop-up, because the link only arrives after a request. */
+export function ShareButtons({ invoiceId }: { invoiceId: number }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const [problem, setProblem] = useState('');
+  const share = () =>
+    unwrap(api.GET('/api/sales/invoices/{id}/share/', { params: { path: { id: invoiceId } } }));
+  return (
+    <>
+      <Button
+        variant="ghost"
+        onClick={() => {
+          setProblem('');
+          const tab = window.open('', '_blank');
+          if (tab) tab.opener = null;
+          share().then(
+            (data) => {
+              if (tab) tab.location.href = data.whatsapp;
+            },
+            () => {
+              tab?.close();
+              setProblem(t('signIn.unavailable'));
+            },
+          );
+        }}
+      >
+        {t('share.whatsapp')}
+      </Button>
+      <Button
+        variant="ghost"
+        onClick={() => {
+          setProblem('');
+          share()
+            .then((data) => navigator.clipboard.writeText(data.link))
+            .then(
+              () => setCopied(true),
+              () => setProblem(t('signIn.unavailable')),
+            );
+        }}
+      >
+        {copied ? t('share.copied') : t('share.copy')}
+      </Button>
+      {problem && <p className="text-sm text-red">{problem}</p>}
+    </>
+  );
+}
+
 export function PrintButton({ path }: { path: string }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();

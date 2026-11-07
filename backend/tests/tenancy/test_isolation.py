@@ -48,6 +48,7 @@ PUBLIC = {
     "api/accounts/session/",
     "api/accounts/oauth/<str:provider>/start/",
     "api/accounts/oauth/<str:provider>/callback/",
+    "api/public/bills/<str:token>/",
 }
 USER_LEVEL = {
     "api/accounts/logout/",
@@ -372,6 +373,17 @@ tenant_endpoint("api/sales/ageing/")(
 tenant_endpoint("api/purchasing/ageing/")(
     lambda m: ("/api/purchasing/ageing/", _posted_bill(m).supplier_id)
 )
+
+
+def _automation(member: Member) -> tuple[str, int]:
+    Tenant.objects.filter(pk=member.tenant.pk).update(daily_summary=False)
+    return "/api/automation/", 0
+
+
+tenant_endpoint("api/automation/")(_automation)
+tenant_endpoint("api/sales/invoices/<int:pk>/share/")(
+    lambda m: (f"/api/sales/invoices/{_invoice(m, True).pk}/share/", 0)
+)
 tenant_endpoint("api/sales/invoices/<int:pk>/pdf/")(
     lambda m: (f"/api/sales/invoices/{_invoice(m, True).pk}/pdf/", 0)
 )
@@ -566,6 +578,11 @@ def test_other_tenants_rows_are_invisible(
             # The owner sold something worth 5.00; none of it may reach another business's report.
             assert mine.json() != body
             assert '"5.00"' not in theirs.content.decode()
+            return
+        if route == "api/automation/":
+            # The owner turned theirs off; that must not reach another business.
+            assert mine.json() == {"daily_summary": False}
+            assert body == {"daily_summary": True}
             return
         if isinstance(body, dict) and "total_value" in body:
             assert body == {"total_value": "0.00", "lines": 0}
