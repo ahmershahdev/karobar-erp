@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { saveBlob } from '../../lib/api/download';
@@ -319,9 +320,8 @@ function EntryRow({ entry, onEdit }: { entry: JournalEntry; onEdit: () => void }
               </Button>
             )}
             {!posted && can(membership, 'accounting', 'delete') && (
-              <Button
-                variant="danger"
-                onClick={() =>
+              <ConfirmButton
+                onConfirm={() =>
                   action.mutate(() =>
                     unwrap(
                       api.DELETE('/api/accounting/entries/{id}/', {
@@ -332,7 +332,7 @@ function EntryRow({ entry, onEdit }: { entry: JournalEntry; onEdit: () => void }
                 }
               >
                 {t('workspace.remove')}
-              </Button>
+              </ConfirmButton>
             )}
             {posted && entry.reversed_by === null && can(membership, 'accounting', 'post') && (
               <Button

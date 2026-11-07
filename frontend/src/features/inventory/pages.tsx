@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
@@ -587,9 +588,8 @@ function EntryRow({ entry }: { entry: StockEntry }) {
                 </Button>
               )}
               {can(membership, 'inventory', 'delete') && (
-                <Button
-                  variant="danger"
-                  onClick={() =>
+                <ConfirmButton
+                  onConfirm={() =>
                     action.mutate(() =>
                       unwrap(
                         api.DELETE('/api/inventory/stock-entries/{id}/', {
@@ -600,7 +600,7 @@ function EntryRow({ entry }: { entry: StockEntry }) {
                   }
                 >
                   {t('workspace.remove')}
-                </Button>
+                </ConfirmButton>
               )}
             </div>
           )}
