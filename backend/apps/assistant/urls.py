@@ -7,4 +7,5 @@ urlpatterns = [
     path("ask/", views.ChatAskView.as_view(), name="assistant-ask"),
     path("check/", views.ChatCheckView.as_view(), name="assistant-check"),
     path("reset/", views.ChatResetView.as_view(), name="assistant-reset"),
+    path("drafts/<int:pk>/confirm/", views.ChatConfirmView.as_view(), name="assistant-confirm"),
 ]

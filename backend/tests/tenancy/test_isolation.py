@@ -4,6 +4,7 @@ A new URL that isn't listed below fails test_every_endpoint_is_classified, which
 nobody can add an endpoint without deciding how tenants are kept apart on it.
 """
 
+import json
 from collections.abc import Callable, Iterator
 from decimal import Decimal
 from typing import Any
@@ -15,6 +16,7 @@ from django.utils import timezone
 
 from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
+from apps.assistant import drafts
 from apps.assistant import services as assistant
 from apps.inventory import services as inventory
 from apps.inventory.models import (
@@ -391,6 +393,15 @@ def _chat_check(member: Member) -> tuple[str, int]:
     return "/api/assistant/check/", 0
 
 
+def _chat_draft(member: Member) -> int:
+    _customer(member)
+    card = drafts.build(
+        "draft_sales_invoice",
+        json.dumps({"customer": "C-P", "items": [{"product": "P1", "quantity": 1}]}),
+    )
+    return assistant.record(member.user, "draft", json.dumps(card)).pk
+
+
 tenant_endpoint("api/assistant/messages/")(_chat)
 tenant_endpoint("api/assistant/check/")(_chat_check)
 
@@ -481,6 +492,9 @@ _register("purchasing/payments", _payment)
 TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/accounting/entries/<int:pk>/post/": lambda m: (
         f"/api/accounting/entries/{_draft(m)}/post/"
+    ),
+    "api/assistant/drafts/<int:pk>/confirm/": lambda m: (
+        f"/api/assistant/drafts/{_chat_draft(m)}/confirm/"
     ),
     "api/inventory/stock-entries/<int:pk>/post/": lambda m: (
         f"/api/inventory/stock-entries/{_stock_draft(m)}/post/"
@@ -628,7 +642,7 @@ def test_other_tenants_rows_cannot_be_acted_on(
     url = TENANT_ACTIONS[route](owner)
     before = list(JournalEntry.all_tenants.values_list("id", "status", "number"))
     stock_before = list(StockEntry.all_tenants.values_list("id", "status"))
-    documents = [PurchaseOrder, GoodsReceipt, Bill, SupplierPayment]
+    documents = [PurchaseOrder, GoodsReceipt, Bill, SupplierPayment, Invoice, SalesOrder]
     documents_before = [list(m.all_tenants.values_list("id", "status")) for m in documents]
     response = outsider.client().post(url, {"date": str(timezone.localdate())}, format="json")
     assert response.status_code == 404

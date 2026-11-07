@@ -1143,7 +1143,7 @@
     "open": "Ask Karobar",
     "title": "Ask about your business",
     "close": "Close",
-    "notice": "Your question and the figures your role can see are sent to Groq, an outside AI service, to write the answer. The assistant can only talk, not change anything, and it can make mistakes, so check important numbers. Each message carries a signature, so any later change can be detected.",
+    "notice": "Your question and the figures your role can see are sent to Groq, an outside AI service, to write the answer. The assistant can prepare a draft for you to check, but nothing is saved until you press Confirm, and it never posts, pays or deletes. It can make mistakes, so check important numbers. Each message carries a signature, so any later change can be detected.",
     "off": "The assistant is switched off on this server.",
     "placeholder": "Ask about your shop, for example: how were sales today?",
     "send": "Send",
@@ -1153,7 +1153,42 @@
     "verified": "All {{count}} messages are intact.",
     "tampered": "Warning: this chat has been changed since it was written.",
     "reset": "New chat",
-    "resetDone": "New chat started. Earlier messages are kept for the record, but they are hidden and the assistant won't use them."
+    "resetDone": "New chat started. Earlier messages are kept for the record, but they are hidden and the assistant won't use them.",
+    "draft": {
+      "kind": {
+        "sales_invoice": "Draft bill",
+        "quotation": "Draft quotation",
+        "purchase_order": "Draft purchase order"
+      },
+      "customer": "Customer: {{name}}",
+      "supplier": "Supplier: {{name}}",
+      "warehouse": "Warehouse: {{name}}",
+      "noPrice": "No price yet, saved as 0",
+      "total": "Total",
+      "hint": "Check it, then press Confirm. It is saved as a draft only. Tax is not added, so check it on the draft before you post.",
+      "confirm": "Confirm",
+      "saving": "Saving...",
+      "done": "Saved as a draft. Open it here to check and post it:",
+      "problem": {
+        "unclear": "I could not make that draft. Ask again with the name, the products and how many of each.",
+        "no_warehouse": "This business has no warehouse yet. Add one first, then ask again.",
+        "too_many": "That is too many items for one draft. Split it into smaller ones.",
+        "not_allowed": "Your role cannot make this kind of document, so I did not prepare it.",
+        "not_found": {
+          "customer": "I could not find a customer called \"{{name}}\". Check the name and ask again.",
+          "supplier": "I could not find a supplier called \"{{name}}\". Check the name and ask again.",
+          "product": "I could not find a product called \"{{name}}\". Check the name and ask again.",
+          "warehouse": "I could not find a warehouse called \"{{name}}\". Check the name and ask again.",
+          "unit": "\"{{name}}\" is not a unit or pack this product is sold in. Check it and ask again."
+        },
+        "ambiguous": {
+          "customer": "More than one customer matches \"{{name}}\": {{options}}. Say which one.",
+          "supplier": "More than one supplier matches \"{{name}}\": {{options}}. Say which one.",
+          "product": "More than one product matches \"{{name}}\": {{options}}. Say which one.",
+          "warehouse": "More than one warehouse matches \"{{name}}\": {{options}}. Say which one."
+        }
+      }
+    }
   },
   "confirm": {
     "title": "Remove this?",
