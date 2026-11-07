@@ -1277,6 +1277,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/home/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports_home_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/profit-loss/": {
         parameters: {
             query?: never;
@@ -2043,6 +2059,21 @@ export interface components {
         };
         Health: {
             status: string;
+        };
+        Home: {
+            setup: components["schemas"]["HomeSetup"];
+            attention: components["schemas"]["HomeAttention"];
+        };
+        HomeAttention: {
+            low_stock: number;
+            overdue: number;
+            open_tills: number;
+        };
+        HomeSetup: {
+            store: boolean;
+            product: boolean;
+            price: boolean;
+            sale: boolean;
         };
         Invitation: {
             readonly id: number;
@@ -5785,6 +5816,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+        };
+    };
+    reports_home_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Home"];
                 };
             };
         };

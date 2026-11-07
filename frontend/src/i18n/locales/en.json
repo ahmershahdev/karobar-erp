@@ -1094,5 +1094,36 @@
     "noStore": "You have no store yet",
     "noStoreBody": "Stock and cash belong to a store, so add one first. It only takes a moment.",
     "addStore": "Add a store"
+  },
+  "business": {
+    "steps": {
+      "store": {
+        "title": "Add a store",
+        "body": "Your stock and cash belong to a store."
+      },
+      "product": {
+        "title": "Add a product",
+        "body": "Add something you sell."
+      },
+      "price": {
+        "title": "Set a selling price",
+        "body": "Type a price next to a product."
+      },
+      "sale": {
+        "title": "Make your first sale",
+        "body": "Open the counter and sell something."
+      }
+    },
+    "setupTitle": "Get your shop ready",
+    "setupProgress": "{{done}} of {{total}} done",
+    "doThis": "Do this now",
+    "attention": "Needs your attention",
+    "today": "Your business today",
+    "noSales": "No sales yet. Your first sale will show here.",
+    "warnings": {
+      "low_stock": "Products running low: {{count}}",
+      "overdue": "Overdue bills: {{count}}",
+      "open_tills": "Tills still open: {{count}}"
+    }
   }
 }

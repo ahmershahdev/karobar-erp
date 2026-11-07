@@ -66,6 +66,24 @@ class ProductAmountSerializer(serializers.Serializer[Any]):
     amount = money()
 
 
+class HomeSetupSerializer(serializers.Serializer[Any]):
+    store = serializers.BooleanField()
+    product = serializers.BooleanField()
+    price = serializers.BooleanField()
+    sale = serializers.BooleanField()
+
+
+class HomeAttentionSerializer(serializers.Serializer[Any]):
+    low_stock = serializers.IntegerField()
+    overdue = serializers.IntegerField()
+    open_tills = serializers.IntegerField()
+
+
+class HomeSerializer(serializers.Serializer[Any]):
+    setup = HomeSetupSerializer()
+    attention = HomeAttentionSerializer()
+
+
 class DashboardSerializer(serializers.Serializer[Any]):
     sales_today = money()
     sales_month = money()

@@ -392,7 +392,7 @@ def _report(path: str) -> Callable[[Member], tuple[str, int]]:
     return make
 
 
-for _path in ("dashboard", "profit-loss", "balance-sheet", "cash-flow", "sales-tax"):
+for _path in ("dashboard", "home", "profit-loss", "balance-sheet", "cash-flow", "sales-tax"):
     tenant_endpoint(f"api/reports/{_path}/")(_report(_path))
 
 
