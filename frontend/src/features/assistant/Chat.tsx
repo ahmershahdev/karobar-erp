@@ -51,8 +51,11 @@ export function Chat({ membership }: { membership: Membership }) {
       return unwrap(api.POST('/api/assistant/reset/', { headers }));
     },
     onSuccess: () => {
+      // Cleared at once: waiting for the refetch would leave the old chat showing, or keep it
+      // there if the refetch failed.
+      client.setQueryData(keys.messages, []);
       setFresh(true);
-      ask.reset();
+      if (!ask.isPending) ask.reset();
     },
     onSettled: () => client.invalidateQueries({ queryKey: keys.messages }),
   });
@@ -63,7 +66,8 @@ export function Chat({ membership }: { membership: Membership }) {
 
   const send = () => {
     const message = text.trim();
-    if (!message || ask.isPending) return;
+    // A question sent mid-reset could land on one side of the marker and its answer on the other.
+    if (!message || ask.isPending || reset.isPending) return;
     setText('');
     setFresh(false);
     ask.mutate(message);
@@ -170,7 +174,7 @@ export function Chat({ membership }: { membership: Membership }) {
           />
           <button
             type="submit"
-            disabled={off || ask.isPending || !text.trim()}
+            disabled={off || ask.isPending || reset.isPending || !text.trim()}
             className="btn btn-primary !py-2.5 !text-sm disabled:opacity-40"
           >
             {t('chat.send')}

@@ -44,6 +44,10 @@ class NotConfiguredError(AssistantError):
     message = "The assistant isn't set up on this server yet."
 
 
+class StartedOverError(AssistantError):
+    message = "You started a new chat, so that answer was not kept. Please ask again."
+
+
 def _key() -> bytes:
     return str(settings.CHAT_SIGNING_KEY).encode()
 
@@ -83,9 +87,15 @@ def reset(user: User) -> None:
 
 
 @transaction.atomic
-def record(user: User, role: str, content: str) -> ChatMessage:
+def record(
+    user: User, role: str, content: str, answering: ChatMessage | None = None
+) -> ChatMessage:
     # One writer at a time per person, or two messages could claim the same place in the chain.
     lock_rows(Membership.objects.filter(user=user))
+    # Checked under the lock: a reset from another tab while the model was thinking would
+    # otherwise put an answer to the old chat at the start of the new one.
+    if answering and mine(user).filter(role=ChatMessage.Role.RESET, id__gt=answering.pk).exists():
+        raise StartedOverError
     last = mine(user).order_by("-id").first()
     message = ChatMessage(user=user, role=role, content=content, created_at=timezone.now())
     message.signature = sign(_key(), _fields(message), last.signature if last else "")
@@ -190,8 +200,9 @@ def complete(messages: list[dict[str, str]]) -> str:
 def ask(user: User, membership: Membership, text: str) -> ChatMessage:
     if not settings.GROQ_API_KEY:
         raise NotConfiguredError
-    record(user, ChatMessage.Role.USER, text)
+    question = record(user, ChatMessage.Role.USER, text)
     recent = list(current(user).order_by("-id")[:HISTORY])
     history = [{"role": row.role, "content": row.content} for row in reversed(recent)]
     prompt = {"role": "system", "content": system_prompt(user, membership)}
-    return record(user, ChatMessage.Role.ASSISTANT, complete([prompt, *history]))
+    answer = complete([prompt, *history])
+    return record(user, ChatMessage.Role.ASSISTANT, answer, answering=question)

@@ -248,3 +248,17 @@ def test_bold_marks_are_taken_out_of_an_answer(boss: Member) -> None:
 
 def test_the_prompt_names_the_real_screens(boss: Member) -> None:
     assert "Who owes me" in services.system_prompt(boss.user, boss.membership)
+
+
+def test_an_answer_finishing_after_a_new_chat_is_dropped(boss: Member) -> None:
+    def think(messages: list[dict[str, str]]) -> str:
+        services.reset(boss.user)
+        return "Answer to the old chat"
+
+    with patch.object(services, "complete", side_effect=think):
+        reply = boss.client().post("/api/assistant/ask/", {"message": "Old"}, format="json")
+    assert reply.status_code == 503
+    assert "new chat" in reply.json()["detail"]
+    assert not ChatMessage.objects.filter(role="assistant").exists()
+    assert services.current(boss.user).count() == 0
+    assert services.verify(boss.user)["ok"] is True
