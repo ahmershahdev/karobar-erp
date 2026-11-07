@@ -1,0 +1,18 @@
+{% load bill_text %}
+    <div class="head">
+      <div class="from">
+        {% if logo %}<img class="logo" src="{{ logo }}" alt="" />{% endif %}
+        <div class="business"><span class="user" dir="{{ business|textdir }}">{{ business }}</span></div>
+        {% if bill.address %}<div class="muted"><span class="user" dir="{{ bill.address|textdir }}">{{ bill.address }}</span></div>{% endif %}
+        {% if bill.phone or bill.email %}
+          <div class="muted"><span class="num">{{ bill.phone }}</span>{% if bill.phone and bill.email %} &middot; {% endif %}<span class="num">{{ bill.email }}</span></div>
+        {% endif %}
+        {% if bill.tax_number %}
+          <div class="muted"><span class="user" dir="{{ bill.tax_label|default:labels.tax_number|textdir }}">{{ bill.tax_label|default:labels.tax_number }}</span>: <span class="num">{{ bill.tax_number }}</span></div>
+        {% endif %}
+      </div>
+      <div class="doc">
+        <h1>{{ doc_title }}</h1>
+        <div class="muted">{{ labels.number }}: <span class="num">{{ doc_number }}</span></div>
+      </div>
+    </div>

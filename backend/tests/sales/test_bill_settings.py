@@ -359,3 +359,38 @@ def test_text_the_business_typed_runs_its_own_way(seller: Seller) -> None:
 )
 def test_the_direction_comes_from_the_first_strong_letter(text: str, direction: str) -> None:
     assert textdir(text) == direction
+
+
+def test_a_malformed_colour_gets_its_own_message(seller: Seller) -> None:
+    bad = seller.shop.member.client().patch(URL, {"accent": "#12345g"}, format="json")
+    light = seller.shop.member.client().patch(URL, {"accent": "#ffcc00"}, format="json")
+    assert "colour picker" in str(bad.json())
+    assert "too light" in str(light.json())
+
+
+def test_a_phone_photo_is_turned_upright_before_saving(seller: Seller) -> None:
+    out = io.BytesIO()
+    exif = Image.Exif()
+    exif[0x0112] = 6  # Orientation: the picture must be turned 90 degrees to stand upright.
+    Image.new("RGB", (80, 40), (10, 10, 10)).save(out, format="JPEG", exif=exif)
+    assert upload(seller.shop.member, out.getvalue(), "photo.jpg").status_code == 200
+    with Image.open(io.BytesIO(bytes(BillSettings.objects.get().logo or b""))) as clean:
+        assert clean.size == (40, 80)
+
+
+def test_taking_a_picture_off_needs_update_rights(seller: Seller) -> None:
+    upload(seller.shop.member, picture())
+    remover = create_membership(role=create_role(permissions={"members": ["view", "delete"]}))
+    editor = create_membership(role=create_role(permissions={"members": ["view", "update"]}))
+    tenant = seller.shop.member.tenant
+    only_delete = Member(user=remover.user, tenant=tenant, membership=remover)
+    can_update = Member(user=editor.user, tenant=tenant, membership=editor)
+    assert only_delete.client().delete(LOGO).status_code == 403
+    assert can_update.client().delete(LOGO).status_code == 200
+
+
+def test_an_oversized_request_is_refused_before_it_is_read(seller: Seller) -> None:
+    big = picture() + b"0" * (billing.MAX_REQUEST_BYTES + 1)
+    reply = upload(seller.shop.member, big)
+    assert reply.status_code == 400
+    assert not BillSettings.objects.exists()

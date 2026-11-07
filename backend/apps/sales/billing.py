@@ -7,7 +7,7 @@ import re
 from typing import Any
 
 from django.db import transaction
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from apps.accounting.models import NumberSeries
 from apps.accounts.models import User
@@ -20,6 +20,8 @@ from .models import BillSettings
 INVOICE_SERIES = ("INV", "INV-")
 PREFIX = re.compile(r"[A-Z0-9][A-Z0-9/-]{0,9}")
 MAX_IMAGE_BYTES = 1024 * 1024
+# The whole upload request: the picture plus the multipart wrapping around it.
+MAX_REQUEST_BYTES = MAX_IMAGE_BYTES + 64 * 1024
 # Checked before decoding, so a small file that claims a huge picture can't eat the memory.
 MAX_IMAGE_PIXELS = 25_000_000
 MIN_SIDE, MAX_SIDE = 16, 5000
@@ -51,6 +53,12 @@ Action = AuditEvent.Action
 
 class BillingError(Exception):
     message = "Those bill settings can't be saved."
+
+
+class BadAccentError(BillingError):
+    message = (
+        "Pick a colour from the colour picker, written as # and six digits or letters a to f."
+    )
 
 
 class UnreadableAccentError(BillingError):
@@ -88,7 +96,7 @@ def save(actor: User, data: dict[str, Any]) -> BillSettings:
     try:
         readable = readable_on_white(accent)
     except ColourError as exc:
-        raise UnreadableAccentError from exc
+        raise BadAccentError from exc
     if not readable:
         raise UnreadableAccentError
     for field in FIELDS:
@@ -163,7 +171,9 @@ def clean_image(upload: bytes, box: tuple[int, int]) -> bytes:
         # verify() leaves the file unusable, so it is opened again for the real decode.
         with Image.open(io.BytesIO(upload), formats=[kind]) as picture:
             picture.load()
-            clean = picture.convert("RGBA")
+            # Phone photos often keep their rotation only in EXIF, which is dropped below, so
+            # the pixels are turned upright first or the picture would print sideways.
+            clean = ImageOps.exif_transpose(picture).convert("RGBA")
     except (
         UnidentifiedImageError,
         OSError,

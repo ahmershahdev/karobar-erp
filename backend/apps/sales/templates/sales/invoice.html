@@ -7,23 +7,7 @@
     {% include "sales/_print.css.html" %}
   </head>
   <body>
-    <div class="head">
-      <div class="from">
-        {% if logo %}<img class="logo" src="{{ logo }}" alt="" />{% endif %}
-        <div class="business"><span class="user" dir="{{ business|textdir }}">{{ business }}</span></div>
-        {% if bill.address %}<div class="muted"><span class="user" dir="{{ bill.address|textdir }}">{{ bill.address }}</span></div>{% endif %}
-        {% if bill.phone or bill.email %}
-          <div class="muted"><span class="num">{{ bill.phone }}</span>{% if bill.phone and bill.email %} &middot; {% endif %}<span class="num">{{ bill.email }}</span></div>
-        {% endif %}
-        {% if bill.tax_number %}
-          <div class="muted"><span class="user" dir="{{ bill.tax_label|default:labels.tax_number|textdir }}">{{ bill.tax_label|default:labels.tax_number }}</span>: <span class="num">{{ bill.tax_number }}</span></div>
-        {% endif %}
-      </div>
-      <div class="doc">
-        <h1>{{ title }}</h1>
-        <div class="muted">{{ labels.number }}: <span class="num">{{ invoice.number }}</span></div>
-      </div>
-    </div>
+    {% include "sales/_bill_head.html" with doc_title=title doc_number=invoice.number %}
     <div class="facts">
       <div>{{ labels.customer }}: <span class="user" dir="{{ invoice.customer.name|textdir }}">{{ invoice.customer.name }}</span></div>
       <div class="muted">{{ labels.date }}: <span class="num">{{ invoice.date|date:"Y-m-d" }}</span></div>
@@ -63,24 +47,6 @@
       <div><span>{{ labels.paid }}</span><span class="num">{{ paid }}</span></div>
       <div><span>{{ labels.left }}</span><span class="num">{{ left }}</span></div>
     </div>
-    <div class="end">
-    {% if bill.thanks or bill.payment_terms or bill.bank_details or bill.return_policy %}
-      <div class="foot">
-        {% if bill.thanks %}<p class="thanks"><span class="user" dir="{{ bill.thanks|textdir }}">{{ bill.thanks }}</span></p>{% endif %}
-        <div class="notes">
-        {% if bill.payment_terms and not roll %}<p><strong>{{ labels.payment_terms }}</strong><br /><span class="user" dir="{{ bill.payment_terms|textdir }}">{{ bill.payment_terms|linebreaksbr }}</span></p>{% endif %}
-        {% if bill.bank_details and not roll %}<p><strong>{{ labels.bank_details }}</strong><br /><span class="user" dir="{{ bill.bank_details|textdir }}">{{ bill.bank_details|linebreaksbr }}</span></p>{% endif %}
-        {% if bill.return_policy %}<p><strong>{{ labels.return_policy }}</strong><br /><span class="user" dir="{{ bill.return_policy|textdir }}">{{ bill.return_policy|linebreaksbr }}</span></p>{% endif %}
-        </div>
-      </div>
-    {% endif %}
-    {% if signature or bill.signature_text %}
-      <div class="sign">
-        {% if signature %}<img src="{{ signature }}" alt="" />{% else %}<div class="sign-text"><span class="user" dir="{{ bill.signature_text|textdir }}">{{ bill.signature_text }}</span></div>{% endif %}
-        {% if signature and bill.signature_text %}<div class="sign-name"><span class="user" dir="{{ bill.signature_text|textdir }}">{{ bill.signature_text }}</span></div>{% endif %}
-        <div class="sign-line">{{ labels.signature }}</div>
-      </div>
-    {% endif %}
-    </div>
+    {% include "sales/_bill_end.html" %}
   </body>
 </html>

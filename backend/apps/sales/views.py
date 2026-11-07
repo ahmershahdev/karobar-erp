@@ -477,6 +477,12 @@ class BillImageView(APIView):
     parser_classes = [MultiPartParser]
     kind = "logo"
 
+    def initial(self, request: Request, *args: Any, **kwargs: Any) -> None:
+        # Taking a picture off changes the bill like putting one up, so both need update
+        # rights; delete rights alone don't remove it.
+        self.required_action = "update" if request.method == "DELETE" else None
+        super().initial(request, *args, **kwargs)
+
     @extend_schema(responses={(200, "image/png"): OpenApiTypes.BINARY})
     def get(self, request: Request) -> HttpResponse:
         picture = getattr(billing.current(), self.kind)
@@ -490,6 +496,10 @@ class BillImageView(APIView):
         request={"multipart/form-data": BillImageSerializer}, responses=BillSettingsSerializer
     )
     def put(self, request: Request) -> Response:
+        # Django's upload limits don't count file data, so the size is checked here before
+        # anything is read. nginx stops anything over 2 MB earlier still.
+        if int(request.META.get("CONTENT_LENGTH") or 0) > billing.MAX_REQUEST_BYTES:
+            raise ValidationError({"detail": billing.BadImageError.message})
         body = BillImageSerializer(data=request.data)
         body.is_valid(raise_exception=True)
         upload = body.validated_data["image"]
@@ -498,7 +508,7 @@ class BillImageView(APIView):
         saved = _billing(billing.set_image, actor(request), self.kind, data)
         return Response(BillSettingsSerializer(saved).data)
 
-    @extend_schema(request=None, responses=BillSettingsSerializer)
+    @extend_schema(request=None, responses={200: BillSettingsSerializer})
     def delete(self, request: Request) -> Response:
         saved = billing.set_image(actor(request), self.kind, None)
         return Response(BillSettingsSerializer(saved).data)

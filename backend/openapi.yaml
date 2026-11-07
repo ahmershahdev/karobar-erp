@@ -3221,8 +3221,12 @@ paths:
       security:
       - cookieAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
   /api/sales/bill-settings/signature/:
     get:
       operationId: sales_bill_settings_signature_retrieve
@@ -3267,8 +3271,12 @@ paths:
       security:
       - cookieAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillSettings'
+          description: ''
   /api/sales/credit-notes/:
     get:
       operationId: sales_credit_notes_list

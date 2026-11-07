@@ -245,7 +245,7 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 The only file uploads are the logo and the signature picture on the Bill design screen (`/api/sales/bill-settings/logo/` and `/signature/`), open to people with update rights on members. Each file goes through these checks in order (`apps/sales/billing.clean_image`), and fails as one plain message:
 
 1. The browser's stated type must be PNG, JPEG or WebP and the name must end in a matching extension. This is a first filter only, as both can be faked.
-2. The request is capped at 2 MB by Django and the file at 1 MB; the view reads one byte past the limit and no further.
+2. nginx refuses any request over 2 MB (`client_max_body_size`). Django's own upload limits don't count file data, so the view also refuses a request whose stated length is over 1 MB plus 64 KB before reading it, and reads the file only to one byte past 1 MB.
 3. The first bytes must be a PNG, JPEG or WebP signature. A web page, script, program or GIF renamed to `.png` stops here.
 4. Pillow is told to use only the decoder for that format, so a file can't pass as one format and be read by another, less careful decoder.
 5. The claimed size is checked before decoding: each side 16 to 5000 pixels and at most 25 million pixels, so a small file that unpacks to a huge picture is refused. A picture with more than one frame (an animation) is refused.

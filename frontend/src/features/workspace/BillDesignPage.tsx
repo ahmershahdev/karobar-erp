@@ -314,7 +314,7 @@ function PictureField({
             {kind === 'logo' ? t('bill.noLogo') : t('bill.noSignaturePicture')}
           </p>
         )}
-        <label className="btn btn-primary cursor-pointer !py-2.5 !text-sm">
+        <label className="btn btn-primary cursor-pointer !py-2.5 !text-sm focus-within:ring-2 focus-within:ring-azure">
           {kind === 'logo' ? t('bill.chooseLogo') : t('bill.chooseSignature')}
           <input
             type="file"
@@ -350,7 +350,14 @@ export function BillDesignPage() {
     queryFn: () => unwrap(api.GET('/api/sales/bill-settings/')),
   });
   if (!settings.data) {
-    return <PageTitle title={t('bill.title')} subtitle={t('bill.body')} />;
+    return (
+      <>
+        <PageTitle title={t('bill.title')} subtitle={t('bill.body')} />
+        {settings.isError && (
+          <Alert tone="error">{errorText(settings.error, t('signIn.unavailable'))}</Alert>
+        )}
+      </>
+    );
   }
   return <BillEditor settings={settings.data} />;
 }
@@ -391,7 +398,7 @@ function BillEditor({ settings }: { settings: Settings }) {
                 {TEMPLATES.map((template) => (
                   <label
                     key={template}
-                    className={`cursor-pointer space-y-2 rounded-xl border p-3 ${
+                    className={`cursor-pointer space-y-2 rounded-xl border p-3 focus-within:ring-2 focus-within:ring-azure ${
                       form.template === template ? 'border-ink' : 'border-line'
                     }`}
                   >
