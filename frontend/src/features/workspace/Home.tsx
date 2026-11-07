@@ -110,7 +110,7 @@ export function Home() {
   // Either tells us: returns can bring a month to zero, and the two requests finish apart.
   const hasSales =
     (setup?.sale ?? false) || data?.sales_by_day.some((day) => day.amount !== '0.00');
-  const failed = (home.isError && !home.data) || (report.isError && !data);
+  const failed = home.isError || report.isError;
 
   return (
     <div className="space-y-6">
