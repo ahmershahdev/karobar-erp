@@ -840,6 +840,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatCheck'
           description: ''
+  /api/assistant/drafts/{id}/confirm/:
+    post:
+      operationId: assistant_drafts_confirm_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+          description: ''
   /api/assistant/messages/:
     get:
       operationId: assistant_messages_list
@@ -4439,6 +4459,97 @@ components:
       required:
       - link
       - whatsapp
+    Card:
+      type: object
+      description: A proposed draft, a draft that couldn't be made, or the record
+        that one was confirmed.
+      properties:
+        kind:
+          $ref: '#/components/schemas/CardKindEnum'
+        party:
+          $ref: '#/components/schemas/CardParty'
+        warehouse:
+          $ref: '#/components/schemas/CardParty'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardLine'
+        memo:
+          type: string
+        total:
+          type: string
+        problem:
+          $ref: '#/components/schemas/CardProblem'
+        draft:
+          type: integer
+          description: 'On a done row: the card''s id.'
+        document:
+          type: integer
+          description: The saved draft's id.
+    CardKindEnum:
+      enum:
+      - sales_invoice
+      - quotation
+      - purchase_order
+      type: string
+      description: |-
+        * `sales_invoice` - sales_invoice
+        * `quotation` - quotation
+        * `purchase_order` - purchase_order
+    CardLine:
+      type: object
+      properties:
+        product:
+          type: integer
+        name:
+          type: string
+        sku:
+          type: string
+        unit:
+          type: integer
+        unit_code:
+          type: string
+        quantity:
+          type: string
+        unit_price:
+          type: string
+          nullable: true
+      required:
+      - name
+      - product
+      - quantity
+      - sku
+      - unit
+      - unit_code
+      - unit_price
+    CardParty:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    CardProblem:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/CodeEnum'
+        field:
+          type: string
+        name:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+      required:
+      - code
+      - field
+      - name
+      - options
     CartLine:
       type: object
       properties:
@@ -4545,7 +4656,13 @@ components:
         signature:
           type: string
           maxLength: 64
+        card:
+          allOf:
+          - $ref: '#/components/schemas/Card'
+          nullable: true
+          readOnly: true
       required:
+      - card
       - content
       - id
       - role
@@ -4559,6 +4676,22 @@ components:
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
       required:
       - counted_cash
+    CodeEnum:
+      enum:
+      - unclear
+      - not_found
+      - ambiguous
+      - no_warehouse
+      - too_many
+      - not_allowed
+      type: string
+      description: |-
+        * `unclear` - unclear
+        * `not_found` - not_found
+        * `ambiguous` - ambiguous
+        * `no_warehouse` - no_warehouse
+        * `too_many` - too_many
+        * `not_allowed` - not_allowed
     CreditLine:
       type: object
       properties:
@@ -5381,18 +5514,6 @@ components:
       - account_code
       - account_name
       - id
-    KindEnum:
-      enum:
-      - receipt
-      - issue
-      - transfer
-      - adjustment
-      type: string
-      description: |-
-        * `receipt` - Receipt
-        * `issue` - Issue
-        * `transfer` - Transfer
-        * `adjustment` - Adjustment
     Ledger:
       type: object
       properties:
@@ -6656,11 +6777,15 @@ components:
       - user
       - assistant
       - reset
+      - draft
+      - done
       type: string
       description: |-
         * `user` - User
         * `assistant` - Assistant
         * `reset` - Reset
+        * `draft` - Draft
+        * `done` - Done
     SaleRequest:
       type: object
       properties:
@@ -6992,7 +7117,7 @@ components:
           type: integer
           readOnly: true
         kind:
-          $ref: '#/components/schemas/KindEnum'
+          $ref: '#/components/schemas/StockEntryKindEnum'
         number:
           type: string
           readOnly: true
@@ -7043,6 +7168,18 @@ components:
       - posted_at
       - status
       - warehouse
+    StockEntryKindEnum:
+      enum:
+      - receipt
+      - issue
+      - transfer
+      - adjustment
+      type: string
+      description: |-
+        * `receipt` - Receipt
+        * `issue` - Issue
+        * `transfer` - Transfer
+        * `adjustment` - Adjustment
     StockEntryLine:
       type: object
       properties:

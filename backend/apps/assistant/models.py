@@ -15,6 +15,9 @@ class ChatMessage(TenantOwnedModel):
         USER = "user"
         ASSISTANT = "assistant"
         RESET = "reset"
+        # A card the chat proposed, and the row that records it was confirmed. Both hold JSON.
+        DRAFT = "draft"
+        DONE = "done"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     role = models.CharField(max_length=10, choices=Role.choices)

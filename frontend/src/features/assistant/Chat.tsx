@@ -7,6 +7,7 @@ import { unwrap } from '../../lib/api/errors';
 import type { Membership } from '../../lib/api/types';
 import { ensureCsrf } from '../auth/session';
 import { errorText } from '../workspace/hooks';
+import { DraftCard, DraftSaved } from './DraftCard';
 
 /** The business chat. Answers show as plain text, so nothing a model writes can run on the page. */
 // The chat names screens in the language the app is shown in.
@@ -66,6 +67,9 @@ export function Chat({ membership }: { membership: Membership }) {
     onSettled: () => client.invalidateQueries({ queryKey: keys.messages }),
   });
   const count = messages.data?.length;
+  const saved = new Set(
+    messages.data?.flatMap((message) => (message.role === 'done' ? [message.card?.draft] : [])),
+  );
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'end' });
   }, [count, ask.isPending, open]);
@@ -127,13 +131,24 @@ export function Chat({ membership }: { membership: Membership }) {
           const mine = message.role === 'user';
           return (
             <div key={message.id} className={mine ? 'ms-8' : 'me-8'}>
-              <p
-                className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                  mine ? 'bg-ink text-white' : 'bg-raised'
-                }`}
-              >
-                {message.content}
-              </p>
+              {message.role === 'draft' ? (
+                <DraftCard
+                  message={message}
+                  membership={membership}
+                  saved={saved.has(message.id)}
+                  messagesKey={keys.messages}
+                />
+              ) : message.role === 'done' && message.card ? (
+                <DraftSaved card={message.card} membership={membership} />
+              ) : (
+                <p
+                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                    mine ? 'bg-ink text-white' : 'bg-raised'
+                  }`}
+                >
+                  {message.content}
+                </p>
+              )}
               <p
                 className="mt-1 px-1 font-mono text-[0.65rem] text-muted"
                 title={message.signature}

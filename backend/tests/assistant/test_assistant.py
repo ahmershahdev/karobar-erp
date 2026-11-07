@@ -251,7 +251,7 @@ def test_the_prompt_names_the_real_screens(boss: Member) -> None:
 
 
 def test_an_answer_finishing_after_a_new_chat_is_dropped(boss: Member) -> None:
-    def think(messages: list[dict[str, str]]) -> str:
+    def think(*args: Any) -> str:
         services.reset(boss.user)
         return "Answer to the old chat"
 
