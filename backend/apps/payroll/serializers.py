@@ -1,13 +1,15 @@
 from decimal import Decimal
 from typing import Any
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from apps.accounting.models import Account
 from apps.hr.models import Employee
 from apps.hr.time_off import COUNTRIES
 from apps.inventory.serializers import scoped
 
-from .models import OpeningPay, PayrollRun, Payslip, TaxTable
+from .models import OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
 
 MAX_SLABS = 20
 
@@ -76,6 +78,25 @@ class PayslipSerializer(serializers.ModelSerializer[Payslip]):
         read_only_fields = fields
 
 
+class SalaryPaymentSerializer(serializers.ModelSerializer[SalaryPayment]):
+    paid_from = scoped(Account)
+    paid_from_name = serializers.CharField(source="paid_from.name", read_only=True)
+    entry_number = serializers.CharField(source="entry.number", read_only=True)
+
+    class Meta:
+        model = SalaryPayment
+        fields = (
+            "id",
+            "paid_on",
+            "paid_from",
+            "paid_from_name",
+            "amount",
+            "reference",
+            "entry_number",
+        )
+        read_only_fields = ("amount",)
+
+
 class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
     people = serializers.IntegerField(read_only=True)
     tax_table_name = serializers.CharField(
@@ -84,6 +105,7 @@ class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
     entry_number = serializers.CharField(
         source="entry.number", read_only=True, default=None, allow_null=True
     )
+    payment = serializers.SerializerMethodField()
 
     class Meta:
         model = PayrollRun
@@ -101,8 +123,14 @@ class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
             "entry_number",
             "worked_out_at",
             "posted_at",
+            "payment",
         )
         read_only_fields: tuple[str, ...] = fields
+
+    @extend_schema_field(SalaryPaymentSerializer(allow_null=True))
+    def get_payment(self, run: PayrollRun) -> Any:
+        payment = getattr(run, "payment", None)
+        return SalaryPaymentSerializer(payment).data if payment else None
 
 
 class PayrollRunDetailSerializer(PayrollRunSerializer):

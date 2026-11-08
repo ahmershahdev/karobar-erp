@@ -6,11 +6,14 @@ import { Link } from 'react-router';
 import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Hint, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
-import { unwrap } from '../../lib/api/errors';
+import { ApiError, errorBody, unwrap } from '../../lib/api/errors';
 import { allPages } from '../../lib/api/pages';
 import type { components } from '../../lib/api/schema';
 import { can } from '../../lib/api/types';
+import { today } from '../../lib/dates';
 import { formatMoney } from '../../lib/money';
+import { env } from '../../lib/env';
+import { postable, useAccounts } from '../purchasing/pages';
 import { PrintButton } from '../sales/ledgers';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
 import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
@@ -110,6 +113,110 @@ function Payslips({ run }: { run: RunDetail }) {
   );
 }
 
+// Paying a posted month
+
+function TransferListButton({ id, month }: { id: number; month: string }) {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const [problem, setProblem] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="space-y-2">
+      <Button
+        variant="ghost"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          setProblem('');
+          void fetch(`${env.apiBaseUrl}/api/payroll/runs/${id}/transfer-list/`, {
+            credentials: 'same-origin',
+            headers: { 'X-Tenant': membership.tenant_id },
+          })
+            .then(async (response) => {
+              if (!response.ok) {
+                throw new ApiError(response.status, await errorBody(response));
+              }
+              const url = URL.createObjectURL(await response.blob());
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `salaries-${month.slice(0, 7)}.csv`;
+              link.click();
+              window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+            })
+            .catch((error: unknown) => {
+              setProblem(error instanceof Error ? error.message : t('signIn.unavailable'));
+            })
+            .finally(() => setBusy(false));
+        }}
+      >
+        {t('payroll.transferList')}
+      </Button>
+      {problem && <Alert tone="error">{problem}</Alert>}
+    </div>
+  );
+}
+
+function PayForm({ id }: { id: number }) {
+  const { t } = useTranslation();
+  const action = useTenantAction(KEYS);
+  const accounts = useAccounts();
+  const [paidOn, setPaidOn] = useState(today);
+  const [paidFrom, setPaidFrom] = useState('');
+  const [reference, setReference] = useState('');
+  const money = postable(accounts.data, 'asset');
+  return (
+    <form
+      className="space-y-4 rounded-xl bg-surface p-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const body = { paid_on: paidOn, paid_from: Number(paidFrom), reference } as never;
+        action.mutate(() =>
+          unwrap(api.POST('/api/payroll/runs/{id}/pay/', { params: { path: { id } }, body })),
+        );
+      }}
+    >
+      <p className="font-medium">{t('payroll.payTitle')}</p>
+      <Hint>{t('payroll.payHint')}</Hint>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Field
+          label={t('payroll.paidOn')}
+          type="date"
+          required
+          value={paidOn}
+          onChange={(e) => setPaidOn(e.target.value)}
+        />
+        <Select
+          label={t('payroll.paidFrom')}
+          required
+          value={paidFrom}
+          onChange={(e) => setPaidFrom(e.target.value)}
+        >
+          <option value="">-</option>
+          {money.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.code} {account.name}
+            </option>
+          ))}
+        </Select>
+        <Field
+          label={t('payroll.reference')}
+          placeholder={t('payroll.referencePlaceholder')}
+          maxLength={60}
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
+        />
+      </div>
+      {accounts.isError && <Alert tone="error">{t('payroll.noAccounts')}</Alert>}
+      {action.isError && (
+        <Alert tone="error">{errorText(action.error, t('signIn.unavailable'))}</Alert>
+      )}
+      <Button type="submit" disabled={action.isPending}>
+        {t('payroll.pay')}
+      </Button>
+    </form>
+  );
+}
+
 function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
@@ -150,6 +257,25 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
         )}
         {action.isError && (
           <Alert tone="error">{errorText(action.error, t('signIn.unavailable'))}</Alert>
+        )}
+        {detail.payment && (
+          <Alert tone="success">
+            {t('payroll.paid', {
+              date: detail.payment.paid_on,
+              account: detail.payment.paid_from_name,
+              number: detail.payment.entry_number,
+            })}
+          </Alert>
+        )}
+        {!draft && (
+          <div className="flex flex-wrap items-start gap-3">
+            {can(membership, 'hr', 'view') && (
+              <TransferListButton id={detail.id} month={detail.month} />
+            )}
+          </div>
+        )}
+        {!draft && !detail.payment && can(membership, 'payroll', 'post') && (
+          <PayForm id={detail.id} />
         )}
         {draft && (
           <div className="flex flex-wrap gap-3">
@@ -420,7 +546,7 @@ export function PayrollPage() {
                     </td>
                     <td className={TD}>
                       {run.status === 'posted'
-                        ? `${t('payroll.posted')} · ${run.number ?? ''}`
+                        ? `${run.payment ? t('payroll.paidStatus') : t('payroll.posted')} · ${run.number ?? ''}`
                         : t('payroll.draft')}
                     </td>
                     <td className={NUM}>{run.people}</td>

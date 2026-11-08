@@ -159,3 +159,12 @@ def test_a_payroll_with_no_tax_has_no_tax_line() -> None:
 def test_a_payroll_cannot_keep_back_more_than_it_pays() -> None:
     with pytest.raises(ValueError, match="more than the gross"):
         posting.payroll(D("1000"), D("600"), D("500"))
+
+
+def test_paying_salaries_settles_what_was_owed() -> None:
+    assert posting.salary_payment(D("85670"), out_of="paid_from") == [
+        Line("salaries_payable", D("85670.00"), D("0.00")),
+        Line("paid_from", D("0.00"), D("85670.00")),
+    ]
+    with pytest.raises(ValueError, match="negative"):
+        posting.salary_payment(D("-1"))

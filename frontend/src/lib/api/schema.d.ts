@@ -1393,6 +1393,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/runs/{id}/pay/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Pay a posted month's salaries from a cash or bank account. */
+        post: operations["payroll_runs_pay_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payroll/runs/{id}/post/": {
         parameters: {
             query?: never;
@@ -1403,6 +1420,26 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["payroll_runs_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/runs/{id}/transfer-list/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The bank transfer list as CSV. It shows bank account numbers, which only people with HR
+         *     rights may see, so it needs HR view rights as well as payroll ones.
+         */
+        get: operations["payroll_runs_transfer_list_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3863,6 +3900,7 @@ export interface components {
             readonly worked_out_at: string;
             /** Format: date-time */
             readonly posted_at: string | null;
+            readonly payment: components["schemas"]["SalaryPayment"] | null;
         };
         PayrollRunDetail: {
             readonly id: number;
@@ -3885,6 +3923,7 @@ export interface components {
             readonly worked_out_at: string;
             /** Format: date-time */
             readonly posted_at: string | null;
+            readonly payment: components["schemas"]["SalaryPayment"] | null;
             readonly payslips: components["schemas"]["Payslip"][];
         };
         Payslip: {
@@ -4068,6 +4107,17 @@ export interface components {
             /** Format: decimal */
             percent?: string | null;
             taxable?: boolean;
+        };
+        SalaryPayment: {
+            readonly id: number;
+            /** Format: date */
+            paid_on: string;
+            paid_from: number;
+            readonly paid_from_name: string;
+            /** Format: decimal */
+            readonly amount: string;
+            reference?: string;
+            readonly entry_number: string;
         };
         SalaryStructure: {
             readonly id: number;
@@ -7607,6 +7657,31 @@ export interface operations {
             };
         };
     };
+    payroll_runs_pay_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryPayment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDetail"];
+                };
+            };
+        };
+    };
     payroll_runs_post_create: {
         parameters: {
             query?: never;
@@ -7624,6 +7699,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Posted"];
+                };
+            };
+        };
+    };
+    payroll_runs_transfer_list_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
         };

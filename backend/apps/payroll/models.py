@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 
-from apps.accounting.models import JournalEntry
+from apps.accounting.models import Account, JournalEntry
 from apps.hr.models import Employee
 from apps.inventory.models import money_field
 from apps.tenancy.models import TenantOwnedModel
@@ -154,3 +154,29 @@ class OpeningPay(TenantOwnedModel):
 
     def __str__(self) -> str:
         return f"{self.employee_id} {self.year_starts}"
+
+
+class SalaryPayment(TenantOwnedModel):
+    """A posted month's net pay leaving the bank or the till, all at once. It settles salaries
+    payable, so the books show the salaries as paid and the bank as lower."""
+
+    run = models.OneToOneField(PayrollRun, on_delete=models.PROTECT, related_name="payment")
+    paid_on = models.DateField()
+    # The cash or bank account the money left from.
+    paid_from = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="+")
+    amount = money_field()
+    reference = models.CharField(max_length=60, blank=True)
+    entry = models.OneToOneField(JournalEntry, on_delete=models.PROTECT, related_name="+")
+    paid_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["-paid_on", "-id"]
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gte=0), name="salary_payment_not_negative"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.run_id} {self.amount}"
