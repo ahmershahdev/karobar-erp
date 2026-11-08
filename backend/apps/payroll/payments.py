@@ -5,8 +5,6 @@ because it happens later, often in the first days of the next month, and from a 
 account or the till: Dr salaries payable, Cr that account, for the month's total net pay.
 """
 
-import csv
-import io
 from datetime import date
 from typing import Any
 
@@ -83,32 +81,23 @@ def pay(actor: User, run: PayrollRun, data: dict[str, Any]) -> SalaryPayment:
     return payment
 
 
-FORMULA_STARTS = ("=", "+", "-", "@", "\t", "\r")
+TRANSFER_HEADER = ("Code", "Name", "Bank account", "Net pay", "Reference")
 
 
-def _cell(text: str) -> str:
-    # A spreadsheet runs a cell that starts with = + - or @ as a formula. Names and accounts are
-    # typed by people, so such a cell gets a leading apostrophe and opens as plain text.
-    return f"'{text}" if text.startswith(FORMULA_STARTS) else text
-
-
-def transfer_list(run: PayrollRun) -> str:
-    """A CSV the business can hand to its bank or type into online banking: one row per person
-    with their bank account and net pay. Rows without a bank account are kept, with the account
-    left empty, so nobody is missed; they are paid in cash or the account is added first."""
-    out = io.StringIO()
-    writer = csv.writer(out)
-    writer.writerow(["Code", "Name", "Bank account", "Net pay", "Reference"])
-    for slip in (
-        Payslip.objects.filter(run=run).select_related("employee").order_by("employee__code")
-    ):
-        writer.writerow(
-            [
-                _cell(slip.employee.code),
-                _cell(slip.employee.full_name),
-                _cell(slip.employee.bank_account),
-                f"{slip.net:.2f}",
-                f"Salary {run.month:%Y-%m}",
-            ]
+def transfer_rows(run: PayrollRun) -> list[tuple[object, ...]]:
+    """Rows for the bank transfer list: one per person with their bank account and net pay.
+    People without a bank account are kept, with the account left empty, so nobody is missed;
+    they are paid in cash or the account is added first. platform.csv_export writes the file and
+    keeps cells from running as spreadsheet formulas."""
+    return [
+        (
+            slip.employee.code,
+            slip.employee.full_name,
+            slip.employee.bank_account,
+            slip.net,
+            f"Salary {run.month:%Y-%m}",
         )
-    return out.getvalue()
+        for slip in Payslip.objects.filter(run=run)
+        .select_related("employee")
+        .order_by("employee__code")
+    ]

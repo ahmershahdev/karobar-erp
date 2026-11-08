@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from apps.accounting.services import AccountingError
 from apps.accounts.models import User
 from apps.core.salary_tax import Slab
+from apps.platform.csv_export import csv_response
 from apps.sales import documents as printing
 from apps.tenancy.permissions import HasModulePermission, membership_of
 
@@ -256,8 +257,8 @@ class TransferListView(PayrollView, generics.GenericAPIView[PayrollRun]):
             raise ValidationError(
                 {"detail": "The transfer list is ready once the payroll is posted."}
             )
-        response = HttpResponse(payments.transfer_list(found), content_type="text/csv")
-        response["Content-Disposition"] = (
-            f'attachment; filename="salaries-{found.month:%Y-%m}.csv"'
+        return csv_response(
+            f"salaries-{found.month:%Y-%m}.csv",
+            payments.TRANSFER_HEADER,
+            payments.transfer_rows(found),
         )
-        return response

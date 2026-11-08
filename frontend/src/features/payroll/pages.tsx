@@ -10,6 +10,7 @@ import { ApiError, unwrap } from '../../lib/api/errors';
 import { allPages } from '../../lib/api/pages';
 import type { components } from '../../lib/api/schema';
 import { can } from '../../lib/api/types';
+import { today } from '../../lib/dates';
 import { formatMoney } from '../../lib/money';
 import { env } from '../../lib/env';
 import { postable, useAccounts } from '../purchasing/pages';
@@ -159,7 +160,7 @@ function PayForm({ id }: { id: number }) {
   const { t } = useTranslation();
   const action = useTenantAction(KEYS);
   const accounts = useAccounts();
-  const [paidOn, setPaidOn] = useState(new Date().toISOString().slice(0, 10));
+  const [paidOn, setPaidOn] = useState(today);
   const [paidFrom, setPaidFrom] = useState('');
   const [reference, setReference] = useState('');
   const money = postable(accounts.data, 'asset');

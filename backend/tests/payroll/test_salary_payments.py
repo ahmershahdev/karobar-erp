@@ -122,9 +122,11 @@ def test_the_transfer_list_has_everyones_account_and_net_pay(boss: Member) -> No
     post(boss, run_id)
     reply = boss.client().get(url)
     assert reply.status_code == 200
-    assert reply["Content-Type"] == "text/csv"
+    assert reply["Content-Type"] == "text/csv; charset=utf-8"
     assert reply["Content-Disposition"] == 'attachment; filename="salaries-2026-07.csv"'
-    rows = reply.content.decode().splitlines()
+    # The byte order mark makes Excel read Urdu and Arabic names correctly.
+    assert reply.content.startswith(b"\xef\xbb\xbf")
+    rows = reply.content.decode("utf-8-sig").splitlines()
     assert rows[0] == "Code,Name,Bank account,Net pay,Reference"
     assert rows[1] == "E1,Invented E1,PK00TEST0000000001,73110.00,Salary 2026-07"
     # A name that would run as a spreadsheet formula opens as text instead.
