@@ -65,8 +65,13 @@ in CI, and seed data.
 
 - [x] Employees, departments, contracts and salary structures (#44)
 - [x] Attendance and leave on working days (weekends and public holidays from the `holidays` library) (#45)
-- [ ] Monthly payroll: earnings, deductions, income tax from slabs stored as data per tax year (in review)
-- [ ] Payslips as PDF; payroll posts its journal entry (in review)
+- [x] Monthly payroll: earnings, deductions, income tax from slabs stored as data per tax year (#46, #47)
+- [x] Payslips as PDF; payroll posts its journal entry (#46)
+- [ ] Paying salaries: book the payment from bank or cash against salaries payable, with a bank transfer list
+- [ ] Undoing a posted payroll by a reversal, refused once its salaries are paid
+- [ ] Cancelling approved leave, giving the days back
+- [ ] Pakistan EOBI and provincial social security, from the official rates with their sources
+- [ ] Gulf payroll: GOSI and the UAE pension for nationals, end-of-service gratuity and the WPS salary file
 
 ## M7. Docs and launch (target 2027-06-13)
 
