@@ -1558,6 +1558,14 @@
     "paid": "Paid on {{date}} from {{account}} (journal entry {{number}}).",
     "paidStatus": "Paid",
     "transferList": "Download bank transfer list",
-    "noAccounts": "The accounts list needs accounting rights. Ask the owner to pay, or to give you them."
+    "noAccounts": "The accounts list needs accounting rights. Ask the owner to pay, or to give you them.",
+    "reversedStatus": "Undone",
+    "reversedNote": "This month was undone by journal entry {{number}}. Work it out again to pay it.",
+    "undoTitle": "Undo this payroll",
+    "undoHint": "Use this when a posted month is wrong and its salaries are not paid yet. Its journal entry is reversed and the month can be worked out again. A later posted month has to be undone first.",
+    "undoReason": "Why",
+    "undoReasonPlaceholder": "Wrong basic salary for one person",
+    "undo": "Undo payroll",
+    "undoConfirm": "This reverses the month's journal entry. The payslips stay as history, marked undone."
   }
 }

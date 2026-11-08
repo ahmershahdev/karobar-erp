@@ -198,6 +198,7 @@ SPECTACULAR_SETTINGS = {
         "LeaveStatusEnum": "apps.hr.models.LeaveRequest.Status",
         "AttendanceStatusEnum": "apps.hr.models.Attendance.Status",
         "CountryEnum": "apps.hr.time_off.COUNTRIES",
+        "PayrollStatusEnum": "apps.payroll.models.PayrollRun.Status",
         "StatusEnum": "apps.accounting.models.JournalEntry.Status",
     },
 }

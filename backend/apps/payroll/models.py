@@ -63,9 +63,14 @@ class PayrollRun(TenantOwnedModel):
     class Status(models.TextChoices):
         DRAFT = "draft"
         POSTED = "posted"
+        REVERSED = "reversed"
 
     # The first day of the month it pays.
     month = models.DateField()
+    # The same month while the run counts, cleared when it is reversed: unique per business, so
+    # a month has one live run but keeps its reversed ones as history. MySQL has no partial
+    # unique index, so this is how "one live run per month" is enforced.
+    live_month = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
     # Drafts have no number yet; NULLs don't collide in the unique (tenant, number) index.
     number = models.CharField(max_length=30, null=True, blank=True)  # noqa: DJ001
@@ -84,11 +89,21 @@ class PayrollRun(TenantOwnedModel):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
     )
     posted_at = models.DateTimeField(null=True, blank=True)
+    reversal = models.OneToOneField(
+        JournalEntry, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
+    reversed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
+    )
+    reversed_at = models.DateTimeField(null=True, blank=True)
+    reversal_reason = models.CharField(max_length=255, blank=True)
 
     class Meta(TenantOwnedModel.Meta):
-        ordering = ["-month"]
+        ordering = ["-month", "-id"]
         constraints = [
-            models.UniqueConstraint(fields=["tenant", "month"], name="uniq_payroll_month"),
+            models.UniqueConstraint(
+                fields=["tenant", "live_month"], name="one_live_payroll_month"
+            ),
             models.UniqueConstraint(fields=["tenant", "number"], name="uniq_payroll_number"),
         ]
 
