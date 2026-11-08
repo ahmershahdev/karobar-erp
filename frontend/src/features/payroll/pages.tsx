@@ -217,6 +217,57 @@ function PayForm({ id }: { id: number }) {
   );
 }
 
+function statusLabel(run: Run, t: (key: string) => string): string {
+  if (run.status === 'draft') {
+    return t('payroll.draft');
+  }
+  const word =
+    run.status === 'reversed'
+      ? t('payroll.reversedStatus')
+      : run.payment
+        ? t('payroll.paidStatus')
+        : t('payroll.posted');
+  return `${word} · ${run.number ?? ''}`;
+}
+
+function UndoForm({ id }: { id: number }) {
+  const { t } = useTranslation();
+  const action = useTenantAction(KEYS);
+  const [reason, setReason] = useState('');
+  return (
+    <div className="space-y-4 rounded-xl border border-line p-4">
+      <p className="font-medium">{t('payroll.undoTitle')}</p>
+      <Hint>{t('payroll.undoHint')}</Hint>
+      <Field
+        label={t('payroll.undoReason')}
+        placeholder={t('payroll.undoReasonPlaceholder')}
+        maxLength={255}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+      />
+      {action.isError && (
+        <Alert tone="error">{errorText(action.error, t('signIn.unavailable'))}</Alert>
+      )}
+      <ConfirmButton
+        message={t('payroll.undoConfirm')}
+        disabled={action.isPending}
+        onConfirm={() =>
+          action.mutate(() =>
+            unwrap(
+              api.POST('/api/payroll/runs/{id}/reverse/', {
+                params: { path: { id } },
+                body: { reason },
+              }),
+            ),
+          )
+        }
+      >
+        {t('payroll.undo')}
+      </ConfirmButton>
+    </div>
+  );
+}
+
 function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
@@ -237,7 +288,7 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
       title={monthName(detail.month.slice(0, 7), i18n.resolvedLanguage)}
       action={
         <span className="text-sm text-muted">
-          {draft ? t('payroll.draft') : `${t('payroll.posted')} · ${detail.number ?? ''}`}
+          {statusLabel(detail, t)}
           {detail.entry_number && ` · ${t('payroll.entry', { number: detail.entry_number })}`}
         </span>
       }
@@ -250,7 +301,7 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
           </p>
         )}
         <Payslips run={detail} />
-        {notice && (
+        {notice && !(notice === 'postedNow' && detail.status === 'reversed') && (
           <Alert tone={notice === 'postedNow' ? 'success' : 'notice'}>
             {t(`payroll.${notice}`)}
           </Alert>
@@ -267,15 +318,24 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
             })}
           </Alert>
         )}
-        {!draft && (
+        {detail.status === 'reversed' && (
+          <Alert tone="notice">
+            {t('payroll.reversedNote', { number: detail.reversal_number })}
+            {detail.reversal_reason && ` ${detail.reversal_reason}`}
+          </Alert>
+        )}
+        {detail.status === 'posted' && (
           <div className="flex flex-wrap items-start gap-3">
             {can(membership, 'hr', 'view') && (
               <TransferListButton id={detail.id} month={detail.month} />
             )}
           </div>
         )}
-        {!draft && !detail.payment && can(membership, 'payroll', 'post') && (
-          <PayForm id={detail.id} />
+        {detail.status === 'posted' && !detail.payment && can(membership, 'payroll', 'post') && (
+          <>
+            <PayForm id={detail.id} />
+            <UndoForm id={detail.id} />
+          </>
         )}
         {draft && (
           <div className="flex flex-wrap gap-3">
@@ -544,11 +604,7 @@ export function PayrollPage() {
                         {monthName(run.month.slice(0, 7), i18n.resolvedLanguage)}
                       </button>
                     </td>
-                    <td className={TD}>
-                      {run.status === 'posted'
-                        ? `${run.payment ? t('payroll.paidStatus') : t('payroll.posted')} · ${run.number ?? ''}`
-                        : t('payroll.draft')}
-                    </td>
+                    <td className={TD}>{statusLabel(run, t)}</td>
                     <td className={NUM}>{run.people}</td>
                     <td className={NUM}>{money(run.tax)}</td>
                     <td className={NUM}>{money(run.net)}</td>

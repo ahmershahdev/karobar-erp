@@ -22,6 +22,7 @@ from . import documents, openings, payments, runs, services
 from .models import OpeningPay, PayrollRun, Payslip, TaxTable
 from .serializers import (
     OpeningPaySerializer,
+    PayrollReverseSerializer,
     PayrollRunDetailSerializer,
     PayrollRunSerializer,
     PostedSerializer,
@@ -102,7 +103,7 @@ class TaxTableFillView(PayrollView):
 
 def _runs() -> QuerySet[PayrollRun]:
     runs_with_people: QuerySet[PayrollRun] = PayrollRun.objects.select_related(
-        "tax_table", "entry", "payment__paid_from", "payment__entry"
+        "tax_table", "entry", "reversal", "payment__paid_from", "payment__entry"
     ).annotate(people=Count("payslips"))
     return runs_with_people
 
@@ -262,3 +263,20 @@ class TransferListView(PayrollView, generics.GenericAPIView[PayrollRun]):
             payments.TRANSFER_HEADER,
             payments.transfer_rows(found),
         )
+
+
+class PayrollRunReverseView(PayrollView, generics.GenericAPIView[PayrollRun]):
+    """Undo a posted month that isn't paid yet."""
+
+    required_action = "post"
+
+    def get_queryset(self) -> QuerySet[PayrollRun]:
+        return PayrollRun.objects.all()
+
+    @extend_schema(request=PayrollReverseSerializer, responses=PayrollRunDetailSerializer)
+    def post(self, request: Request, pk: int) -> Response:
+        target = self.get_object()
+        body = PayrollReverseSerializer(data=request.data)
+        body.is_valid(raise_exception=True)
+        run(runs.reverse, actor(request), target, body.validated_data.get("reason", ""))
+        return Response(PayrollRunDetailSerializer(_detail(pk)).data)

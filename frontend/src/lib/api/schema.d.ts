@@ -1426,6 +1426,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/runs/{id}/reverse/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Undo a posted month that isn't paid yet. */
+        post: operations["payroll_runs_reverse_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payroll/runs/{id}/transfer-list/": {
         parameters: {
             query?: never;
@@ -3879,11 +3896,14 @@ export interface components {
             amount: string;
             taxable: boolean;
         };
+        PayrollReverse: {
+            reason?: string;
+        };
         PayrollRun: {
             readonly id: number;
             /** Format: date */
             readonly month: string;
-            readonly status: components["schemas"]["StatusEnum"];
+            readonly status: components["schemas"]["PayrollStatusEnum"];
             readonly number: string | null;
             readonly people: number;
             /** Format: decimal */
@@ -3901,12 +3921,16 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
             readonly payment: components["schemas"]["SalaryPayment"] | null;
+            readonly reversal_number: string | null;
+            /** Format: date-time */
+            readonly reversed_at: string | null;
+            readonly reversal_reason: string;
         };
         PayrollRunDetail: {
             readonly id: number;
             /** Format: date */
             readonly month: string;
-            readonly status: components["schemas"]["StatusEnum"];
+            readonly status: components["schemas"]["PayrollStatusEnum"];
             readonly number: string | null;
             readonly people: number;
             /** Format: decimal */
@@ -3924,8 +3948,19 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
             readonly payment: components["schemas"]["SalaryPayment"] | null;
+            readonly reversal_number: string | null;
+            /** Format: date-time */
+            readonly reversed_at: string | null;
+            readonly reversal_reason: string;
             readonly payslips: components["schemas"]["Payslip"][];
         };
+        /**
+         * @description * `draft` - Draft
+         *     * `posted` - Posted
+         *     * `reversed` - Reversed
+         * @enum {string}
+         */
+        PayrollStatusEnum: "draft" | "posted" | "reversed";
         Payslip: {
             readonly id: number;
             readonly employee: number;
@@ -7699,6 +7734,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Posted"];
+                };
+            };
+        };
+    };
+    payroll_runs_reverse_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PayrollReverse"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDetail"];
                 };
             };
         };

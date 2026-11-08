@@ -106,6 +106,9 @@ class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
         source="entry.number", read_only=True, default=None, allow_null=True
     )
     payment = serializers.SerializerMethodField()
+    reversal_number = serializers.CharField(
+        source="reversal.number", read_only=True, default=None, allow_null=True
+    )
 
     class Meta:
         model = PayrollRun
@@ -124,6 +127,9 @@ class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
             "worked_out_at",
             "posted_at",
             "payment",
+            "reversal_number",
+            "reversed_at",
+            "reversal_reason",
         )
         read_only_fields: tuple[str, ...] = fields
 
@@ -175,3 +181,7 @@ class OpeningPaySerializer(serializers.ModelSerializer[OpeningPay]):
             "note",
         )
         read_only_fields = ("year_starts",)
+
+
+class PayrollReverseSerializer(serializers.Serializer[Any]):
+    reason = serializers.CharField(max_length=255, required=False, allow_blank=True)

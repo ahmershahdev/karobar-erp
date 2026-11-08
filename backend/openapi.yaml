@@ -2996,6 +2996,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/Posted'
           description: ''
+  /api/payroll/runs/{id}/reverse/:
+    post:
+      operationId: payroll_runs_reverse_create
+      description: Undo a posted month that isn't paid yet.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollReverse'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollRunDetail'
+          description: ''
   /api/payroll/runs/{id}/transfer-list/:
     get:
       operationId: payroll_runs_transfer_list_retrieve
@@ -8754,6 +8780,12 @@ components:
       - kind
       - name
       - taxable
+    PayrollReverse:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
     PayrollRun:
       type: object
       properties:
@@ -8766,7 +8798,7 @@ components:
           readOnly: true
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/PayrollStatusEnum'
           readOnly: true
         number:
           type: string
@@ -8817,6 +8849,18 @@ components:
           - $ref: '#/components/schemas/SalaryPayment'
           nullable: true
           readOnly: true
+        reversal_number:
+          type: string
+          readOnly: true
+          nullable: true
+        reversed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        reversal_reason:
+          type: string
+          readOnly: true
       required:
       - deductions
       - entry_number
@@ -8828,6 +8872,9 @@ components:
       - payment
       - people
       - posted_at
+      - reversal_number
+      - reversal_reason
+      - reversed_at
       - status
       - tax
       - tax_table_name
@@ -8844,7 +8891,7 @@ components:
           readOnly: true
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/PayrollStatusEnum'
           readOnly: true
         number:
           type: string
@@ -8894,6 +8941,18 @@ components:
           allOf:
           - $ref: '#/components/schemas/SalaryPayment'
           nullable: true
+          readOnly: true
+        reversal_number:
+          type: string
+          readOnly: true
+          nullable: true
+        reversed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        reversal_reason:
+          type: string
           readOnly: true
         payslips:
           type: array
@@ -8912,10 +8971,23 @@ components:
       - payslips
       - people
       - posted_at
+      - reversal_number
+      - reversal_reason
+      - reversed_at
       - status
       - tax
       - tax_table_name
       - worked_out_at
+    PayrollStatusEnum:
+      enum:
+      - draft
+      - posted
+      - reversed
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `posted` - Posted
+        * `reversed` - Reversed
     Payslip:
       type: object
       properties:
