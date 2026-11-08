@@ -79,13 +79,25 @@ def test_holidays_are_filled_from_the_library_once(boss: Member) -> None:
     assert again.json()["added"] == 0
 
 
+@pytest.mark.parametrize("locale", ["C.UTF-8", "en_US.UTF-8", "ur_PK.UTF-8"])
+def test_holiday_names_do_not_follow_the_server_locale(
+    boss: Member, monkeypatch: pytest.MonkeyPatch, locale: str
+) -> None:
+    for name in ("LANGUAGE", "LC_ALL", "LC_MESSAGES"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("LANG", locale)
+    boss.client().post("/api/hr/holidays/fill/", {"year": 2027}, format="json")
+    assert Holiday.objects.get(on=date(2027, 8, 14)).name == "Independence Day"
+    assert Holiday.objects.filter(name__startswith="Eid-ul-Fitr").exists()
+
+
 def test_a_corrected_holiday_survives_a_refill(boss: Member) -> None:
     boss.client().post("/api/hr/holidays/fill/", {"year": 2027}, format="json")
-    eid = Holiday.objects.filter(name__icontains="Eid al-Fitr").first()
+    eid = Holiday.objects.filter(name__startswith="Eid-ul-Fitr").first()
     assert eid is not None
     reply = boss.client().patch(
         f"/api/hr/holidays/{eid.pk}/",
-        {"name": "Eid al-Fitr", "source": "Ruet-e-Hilal notice"},
+        {"name": "Eid-ul-Fitr", "source": "Ruet-e-Hilal notice"},
         format="json",
     )
     assert reply.status_code == 200

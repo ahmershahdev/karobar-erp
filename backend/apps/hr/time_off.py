@@ -24,6 +24,9 @@ from .services import HrError
 Action = AuditEvent.Action
 # The countries the app is built for. Others can be added once someone checks their list.
 COUNTRIES = ("PK", "AE", "SA")
+# The language of filled-in holiday names. Left unset, the library guesses from the server's
+# locale, so the same year could come out in Urdu on one machine and English on another.
+NAME_LANGUAGES = {"PK": "en_PK", "AE": "en_US", "SA": "en_US"}
 MAX_LEAVE_DAYS = 366
 MAX_ATTENDANCE_ROWS = 1000
 
@@ -123,7 +126,10 @@ def fill_holidays(actor: User, year: int) -> int:
     source = f"holidays {version('holidays')}; moon-sighted dates are estimates, check them"
     taken = set(Holiday.objects.filter(on__year=year).values_list("on", flat=True))
     added = 0
-    for on, name in sorted(holiday_data.country_holidays(country, years=year).items()):
+    found = holiday_data.country_holidays(
+        country, years=year, language=NAME_LANGUAGES.get(country, "en_US")
+    )
+    for on, name in sorted(found.items()):
         if on in taken:
             continue
         holiday = Holiday.objects.create(on=on, name=str(name)[:100], source=source)

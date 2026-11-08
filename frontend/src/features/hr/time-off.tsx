@@ -518,7 +518,7 @@ function WeekSettings({ settings }: { settings: Settings }) {
                     onChange={(e) =>
                       setWeekend(
                         e.target.checked
-                          ? [...weekend, day].sort()
+                          ? [...weekend, day].sort((a, b) => a - b)
                           : weekend.filter((d) => d !== day),
                       )
                     }
