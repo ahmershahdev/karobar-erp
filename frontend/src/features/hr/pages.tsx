@@ -600,6 +600,7 @@ function ContractsPanel({ employee }: { employee: Employee }) {
   const { membership } = useWorkspace();
   const structures = useStructures();
   const save = useTenantAction(KEYS);
+  const remove = useTenantAction(KEYS);
   const contracts = useQuery({
     queryKey: [membership.tenant_id, 'hr-contracts', employee.id],
     queryFn: () =>
@@ -642,7 +643,7 @@ function ContractsPanel({ employee }: { employee: Employee }) {
             {can(membership, 'hr', 'delete') && (
               <ConfirmButton
                 onConfirm={() =>
-                  save.mutate(() =>
+                  remove.mutate(() =>
                     unwrap(
                       api.DELETE('/api/hr/contracts/{id}/', {
                         params: { path: { id: contract.id } },
@@ -656,6 +657,9 @@ function ContractsPanel({ employee }: { employee: Employee }) {
             )}
           </div>
         ))}
+        {remove.isError && (
+          <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
+        )}
         {can(membership, 'hr', 'create') && (
           <form
             className="space-y-4 rounded-xl bg-surface p-4"
