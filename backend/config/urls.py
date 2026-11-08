@@ -15,6 +15,7 @@ urlpatterns = [
     path("api/purchasing/", include("apps.purchasing.urls")),
     path("api/sales/", include("apps.sales.urls")),
     path("api/hr/", include("apps.hr.urls")),
+    path("api/payroll/", include("apps.payroll.urls")),
     path("api/public/bills/<str:token>/", PublicBillView.as_view(), name="public-bill"),
     path("api/reports/", include("apps.reports.urls")),
     path("api/pos/", include("apps.pos.urls")),

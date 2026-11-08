@@ -150,6 +150,28 @@ def stock_out(cost: Decimal, contra: str) -> list[Line]:
     return _lines((contra, cost, ZERO), ("inventory", ZERO, cost))
 
 
+def payroll(gross: Decimal, deductions: Decimal, tax: Decimal) -> list[Line]:
+    """A month's salaries, owed but not yet paid.
+
+    The business's cost is the gross pay. What it keeps back is owed to others: income tax to the
+    tax office, other deductions (provident fund, loan repayments) to whoever they are for. The
+    rest is owed to the staff until the salaries are paid.
+
+    Dr salaries (gross); Cr withholding tax payable (tax); Cr payroll deductions payable
+    (deductions); Cr salaries payable (gross - deductions - tax).
+    """
+    _non_negative(gross=gross, deductions=deductions, tax=tax)
+    net = gross - deductions - tax
+    if quantize_money(net) < 0:
+        raise ValueError("tax and deductions cannot be more than the gross pay")
+    return _lines(
+        ("salaries", gross, ZERO),
+        ("withholding_payable", ZERO, tax),
+        ("payroll_deductions", ZERO, deductions),
+        ("salaries_payable", ZERO, net),
+    )
+
+
 def reversal(lines: Sequence[Line]) -> list[Line]:
     """The entry that cancels `lines`: every debit becomes a credit and the other way round.
 

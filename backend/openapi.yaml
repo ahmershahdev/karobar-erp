@@ -2778,6 +2778,255 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
           description: ''
+  /api/payroll/payslips/{id}/pdf/:
+    get:
+      operationId: payroll_payslips_pdf_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: lang
+        schema:
+          type: string
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/payroll/runs/:
+    get:
+      operationId: payroll_runs_list
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PayrollRun'
+          description: ''
+    post:
+      operationId: payroll_runs_create
+      description: Work out a month's payroll as a draft, or work out its draft again.
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkOut'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollRunDetail'
+          description: ''
+  /api/payroll/runs/{id}/:
+    get:
+      operationId: payroll_runs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollRunDetail'
+          description: ''
+    delete:
+      operationId: payroll_runs_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/payroll/runs/{id}/post/:
+    post:
+      operationId: payroll_runs_post_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Posted'
+          description: ''
+  /api/payroll/tax-tables/:
+    get:
+      operationId: payroll_tax_tables_list
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxTable'
+          description: ''
+    post:
+      operationId: payroll_tax_tables_create
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaxTable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxTable'
+          description: ''
+  /api/payroll/tax-tables/{id}/:
+    get:
+      operationId: payroll_tax_tables_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxTable'
+          description: ''
+    put:
+      operationId: payroll_tax_tables_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaxTable'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxTable'
+          description: ''
+    patch:
+      operationId: payroll_tax_tables_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaxTable'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxTable'
+          description: ''
+    delete:
+      operationId: payroll_tax_tables_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/payroll/tax-tables/fill/:
+    post:
+      operationId: payroll_tax_tables_fill_create
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TablesFilled'
+          description: ''
   /api/pos/products/:
     get:
       operationId: pos_products_list
@@ -5942,6 +6191,16 @@ components:
       description: |-
         * `a4` - A4
         * `receipt` - Receipt
+    CountryEnum:
+      enum:
+      - PK
+      - AE
+      - SA
+      type: string
+      description: |-
+        * `PK` - PK
+        * `AE` - AE
+        * `SA` - SA
     CreditLine:
       type: object
       properties:
@@ -6609,16 +6868,6 @@ components:
       - id
       - name
       - 'on'
-    HolidayCountryEnum:
-      enum:
-      - PK
-      - AE
-      - SA
-      type: string
-      description: |-
-        * `PK` - PK
-        * `AE` - AE
-        * `SA` - SA
     Home:
       type: object
       properties:
@@ -6669,7 +6918,7 @@ components:
             minimum: 0
           maxItems: 6
         holiday_country:
-          $ref: '#/components/schemas/HolidayCountryEnum'
+          $ref: '#/components/schemas/CountryEnum'
         id_retention_years:
           type: integer
           maximum: 50
@@ -8057,7 +8306,7 @@ components:
             minimum: 0
           maxItems: 6
         holiday_country:
-          $ref: '#/components/schemas/HolidayCountryEnum'
+          $ref: '#/components/schemas/CountryEnum'
         id_retention_years:
           type: integer
           maximum: 50
@@ -8240,6 +8489,30 @@ components:
         source:
           type: string
           maxLength: 255
+    PatchedTaxTable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        country:
+          $ref: '#/components/schemas/CountryEnum'
+        name:
+          type: string
+          maxLength: 80
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        source:
+          type: string
+          maxLength: 500
+        slabs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Slab'
     PatchedUnit:
       type: object
       properties:
@@ -8314,6 +8587,258 @@ components:
       - kind
       - name
       - taxable
+    PayrollRun:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        month:
+          type: string
+          format: date
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        people:
+          type: integer
+          readOnly: true
+        gross:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax_table_name:
+          type: string
+          readOnly: true
+          nullable: true
+        entry_number:
+          type: string
+          readOnly: true
+          nullable: true
+        worked_out_at:
+          type: string
+          format: date-time
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - deductions
+      - entry_number
+      - gross
+      - id
+      - month
+      - net
+      - number
+      - people
+      - posted_at
+      - status
+      - tax
+      - tax_table_name
+      - worked_out_at
+    PayrollRunDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        month:
+          type: string
+          format: date
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        number:
+          type: string
+          readOnly: true
+          nullable: true
+        people:
+          type: integer
+          readOnly: true
+        gross:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax_table_name:
+          type: string
+          readOnly: true
+          nullable: true
+        entry_number:
+          type: string
+          readOnly: true
+          nullable: true
+        worked_out_at:
+          type: string
+          format: date-time
+          readOnly: true
+        posted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        payslips:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payslip'
+          readOnly: true
+      required:
+      - deductions
+      - entry_number
+      - gross
+      - id
+      - month
+      - net
+      - number
+      - payslips
+      - people
+      - posted_at
+      - status
+      - tax
+      - tax_table_name
+      - worked_out_at
+    Payslip:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: integer
+          readOnly: true
+        employee_code:
+          type: string
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        month_days:
+          type: integer
+          readOnly: true
+        paid_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          readOnly: true
+        unpaid_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,1})?$
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayslipLine'
+          readOnly: true
+        gross:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        taxable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        projected_income:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        year_tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - deductions
+      - employee
+      - employee_code
+      - employee_name
+      - gross
+      - id
+      - lines
+      - month_days
+      - net
+      - paid_days
+      - projected_income
+      - tax
+      - taxable
+      - unpaid_days
+      - year_tax
+    PayslipLine:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        taxable:
+          type: boolean
+      required:
+      - amount
+      - kind
+      - name
+      - taxable
     PosWarehouse:
       type: object
       properties:
@@ -8330,6 +8855,16 @@ components:
       - code
       - id
       - name
+    Posted:
+      type: object
+      properties:
+        posted:
+          type: boolean
+        run:
+          $ref: '#/components/schemas/PayrollRunDetail'
+      required:
+      - posted
+      - run
     Product:
       type: object
       properties:
@@ -8990,6 +9525,25 @@ components:
       required:
       - email
       - password
+    Slab:
+      type: object
+      properties:
+        over:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        fixed:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+      required:
+      - fixed
+      - over
+      - rate
     Statement:
       type: object
       properties:
@@ -9369,6 +9923,13 @@ components:
       - status
       - supplier
       - supplier_name
+    TablesFilled:
+      type: object
+      properties:
+        added:
+          type: integer
+      required:
+      - added
     TaxRate:
       type: object
       properties:
@@ -9398,6 +9959,38 @@ components:
       - rate
       - source
       - valid_from
+    TaxTable:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        country:
+          $ref: '#/components/schemas/CountryEnum'
+        name:
+          type: string
+          maxLength: 80
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+        source:
+          type: string
+          maxLength: 500
+        slabs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Slab'
+      required:
+      - country
+      - ends_on
+      - id
+      - name
+      - slabs
+      - source
+      - starts_on
     TemplateEnum:
       enum:
       - classic
@@ -9636,6 +10229,14 @@ components:
       - code
       - id
       - name
+    WorkOut:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+      required:
+      - month
   securitySchemes:
     cookieAuth:
       type: apiKey

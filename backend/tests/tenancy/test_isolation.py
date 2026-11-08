@@ -20,6 +20,7 @@ from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
 from apps.assistant import drafts
 from apps.assistant import services as assistant
+from apps.core.salary_tax import Slab
 from apps.hr import services as hr
 from apps.hr import time_off
 from apps.hr.models import (
@@ -41,6 +42,9 @@ from apps.inventory.models import (
     Unit,
     Warehouse,
 )
+from apps.payroll import runs as payroll
+from apps.payroll import services as payroll_tax
+from apps.payroll.models import PayrollRun, Payslip, TaxTable
 from apps.pos import services as pos
 from apps.pos.models import PosSession
 from apps.purchasing import services as purchasing
@@ -77,6 +81,7 @@ USER_LEVEL = {
     "api/assistant/ask/",
     "api/assistant/reset/",
     "api/hr/holidays/fill/",
+    "api/payroll/tax-tables/fill/",
     "api/accounts/verify-email/resend/",
     "api/tenants/",
     "api/invitations/accept/",
@@ -550,6 +555,55 @@ tenant_endpoint("api/hr/contracts/<int:pk>/")(
 )
 
 
+def _tax_table(member: Member) -> TaxTable:
+    today = timezone.localdate()
+    found: TaxTable | None = TaxTable.objects.first()
+    return found or payroll_tax.save_table(
+        member.user,
+        {
+            "country": "PK",
+            "name": "Private",
+            "starts_on": today.replace(month=1, day=1),
+            "ends_on": today.replace(month=12, day=31),
+            "source": "Invented",
+        },
+        [Slab(Decimal(0), Decimal(0), Decimal(0))],
+    )
+
+
+def _payroll(member: Member, post: bool = False) -> PayrollRun:
+    found: PayrollRun | None = PayrollRun.objects.first()
+    if found is None:
+        _books(member)
+        _tax_table(member)
+        _contract(member)
+        found = payroll.work_out(member.user, timezone.localdate())
+        if post:
+            assert payroll.post(member.user, found)
+            found.refresh_from_db()
+    return found
+
+
+def _payslip(member: Member) -> Payslip:
+    found: Payslip = Payslip.objects.get(run=_payroll(member, post=True))
+    return found
+
+
+tenant_endpoint("api/payroll/tax-tables/")(
+    lambda m: ("/api/payroll/tax-tables/", _tax_table(m).pk)
+)
+tenant_endpoint("api/payroll/tax-tables/<int:pk>/")(
+    lambda m: (f"/api/payroll/tax-tables/{_tax_table(m).pk}/", _tax_table(m).pk)
+)
+tenant_endpoint("api/payroll/runs/")(lambda m: ("/api/payroll/runs/", _payroll(m).pk))
+tenant_endpoint("api/payroll/runs/<int:pk>/")(
+    lambda m: (f"/api/payroll/runs/{_payroll(m).pk}/", _payroll(m).pk)
+)
+tenant_endpoint("api/payroll/payslips/<int:pk>/pdf/")(
+    lambda m: (f"/api/payroll/payslips/{_payslip(m).pk}/pdf/", 0)
+)
+
+
 def _bill_settings(member: Member) -> tuple[str, int]:
     billing.save(member.user, {"address": "Private Street"})
     return "/api/sales/bill-settings/", 0
@@ -657,6 +711,7 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     ),
     "api/hr/leave/<int:pk>/approve/": lambda m: f"/api/hr/leave/{_leave(m).pk}/approve/",
     "api/hr/leave/<int:pk>/reject/": lambda m: f"/api/hr/leave/{_leave(m).pk}/reject/",
+    "api/payroll/runs/<int:pk>/post/": lambda m: f"/api/payroll/runs/{_payroll(m).pk}/post/",
     "api/assistant/drafts/<int:pk>/confirm/": lambda m: (
         f"/api/assistant/drafts/{_chat_draft(m)}/confirm/"
     ),

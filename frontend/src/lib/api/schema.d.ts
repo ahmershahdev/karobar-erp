@@ -1312,6 +1312,119 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/payslips/{id}/pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_payslips_pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/runs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_runs_list"];
+        put?: never;
+        /** @description Work out a month's payroll as a draft, or work out its draft again. */
+        post: operations["payroll_runs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/runs/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_runs_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["payroll_runs_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/runs/{id}/post/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payroll_runs_post_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/tax-tables/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_tax_tables_list"];
+        put?: never;
+        post: operations["payroll_tax_tables_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/tax-tables/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_tax_tables_retrieve"];
+        put: operations["payroll_tax_tables_update"];
+        post?: never;
+        delete: operations["payroll_tax_tables_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["payroll_tax_tables_partial_update"];
+        trace?: never;
+    };
+    "/api/payroll/tax-tables/fill/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payroll_tax_tables_fill_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pos/products/": {
         parameters: {
             query?: never;
@@ -2673,6 +2786,13 @@ export interface components {
          * @enum {string}
          */
         CounterPaperEnum: "a4" | "receipt";
+        /**
+         * @description * `PK` - PK
+         *     * `AE` - AE
+         *     * `SA` - SA
+         * @enum {string}
+         */
+        CountryEnum: "PK" | "AE" | "SA";
         CreditLine: {
             readonly id: number;
             invoice_line: number;
@@ -2903,13 +3023,6 @@ export interface components {
             name: string;
             source?: string;
         };
-        /**
-         * @description * `PK` - PK
-         *     * `AE` - AE
-         *     * `SA` - SA
-         * @enum {string}
-         */
-        HolidayCountryEnum: "PK" | "AE" | "SA";
         Home: {
             setup: components["schemas"]["HomeSetup"];
             attention: components["schemas"]["HomeAttention"];
@@ -2927,7 +3040,7 @@ export interface components {
         };
         HrSettings: {
             weekend: number[];
-            holiday_country: components["schemas"]["HolidayCountryEnum"];
+            holiday_country: components["schemas"]["CountryEnum"];
             id_retention_years?: number;
         };
         Invitation: {
@@ -3563,7 +3676,7 @@ export interface components {
         };
         PatchedHrSettings: {
             weekend?: number[];
-            holiday_country?: components["schemas"]["HolidayCountryEnum"];
+            holiday_country?: components["schemas"]["CountryEnum"];
             id_retention_years?: number;
         };
         PatchedLeaveType: {
@@ -3641,6 +3754,17 @@ export interface components {
             valid_to?: string | null;
             source?: string;
         };
+        PatchedTaxTable: {
+            readonly id?: number;
+            country?: components["schemas"]["CountryEnum"];
+            name?: string;
+            /** Format: date */
+            starts_on?: string;
+            /** Format: date */
+            ends_on?: string;
+            source?: string;
+            slabs?: components["schemas"]["Slab"][];
+        };
         PatchedUnit: {
             readonly id?: number;
             code?: string;
@@ -3671,10 +3795,92 @@ export interface components {
             amount: string;
             taxable: boolean;
         };
+        PayrollRun: {
+            readonly id: number;
+            /** Format: date */
+            readonly month: string;
+            readonly status: components["schemas"]["StatusEnum"];
+            readonly number: string | null;
+            readonly people: number;
+            /** Format: decimal */
+            readonly gross: string;
+            /** Format: decimal */
+            readonly deductions: string;
+            /** Format: decimal */
+            readonly tax: string;
+            /** Format: decimal */
+            readonly net: string;
+            readonly tax_table_name: string | null;
+            readonly entry_number: string | null;
+            /** Format: date-time */
+            readonly worked_out_at: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+        };
+        PayrollRunDetail: {
+            readonly id: number;
+            /** Format: date */
+            readonly month: string;
+            readonly status: components["schemas"]["StatusEnum"];
+            readonly number: string | null;
+            readonly people: number;
+            /** Format: decimal */
+            readonly gross: string;
+            /** Format: decimal */
+            readonly deductions: string;
+            /** Format: decimal */
+            readonly tax: string;
+            /** Format: decimal */
+            readonly net: string;
+            readonly tax_table_name: string | null;
+            readonly entry_number: string | null;
+            /** Format: date-time */
+            readonly worked_out_at: string;
+            /** Format: date-time */
+            readonly posted_at: string | null;
+            readonly payslips: components["schemas"]["Payslip"][];
+        };
+        Payslip: {
+            readonly id: number;
+            readonly employee: number;
+            readonly employee_code: string;
+            readonly employee_name: string;
+            readonly month_days: number;
+            /** Format: decimal */
+            readonly paid_days: string;
+            /** Format: decimal */
+            readonly unpaid_days: string;
+            readonly lines: components["schemas"]["PayslipLine"][];
+            /** Format: decimal */
+            readonly gross: string;
+            /** Format: decimal */
+            readonly deductions: string;
+            /** Format: decimal */
+            readonly taxable: string;
+            /** Format: decimal */
+            readonly tax: string;
+            /** Format: decimal */
+            readonly net: string;
+            /** Format: decimal */
+            readonly projected_income: string;
+            /** Format: decimal */
+            readonly year_tax: string;
+        };
+        PayslipLine: {
+            name: string;
+            kind: string;
+            /** Format: decimal */
+            amount: string;
+            taxable: boolean;
+        };
         PosWarehouse: {
             readonly id: number;
             readonly code: string;
             readonly name: string;
+        };
+        Posted: {
+            posted: boolean;
+            run: components["schemas"]["PayrollRunDetail"];
         };
         Product: {
             readonly id: number;
@@ -3918,6 +4124,14 @@ export interface components {
             password: string;
             full_name?: string;
         };
+        Slab: {
+            /** Format: decimal */
+            over: string;
+            /** Format: decimal */
+            fixed: string;
+            /** Format: decimal */
+            rate: string;
+        };
         Statement: {
             /** Format: decimal */
             opening: string;
@@ -4049,6 +4263,9 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        TablesFilled: {
+            added: number;
+        };
         TaxRate: {
             readonly id: number;
             name: string;
@@ -4059,6 +4276,17 @@ export interface components {
             /** Format: date */
             valid_to?: string | null;
             source: string;
+        };
+        TaxTable: {
+            readonly id: number;
+            country: components["schemas"]["CountryEnum"];
+            name: string;
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on: string;
+            source: string;
+            slabs: components["schemas"]["Slab"][];
         };
         /**
          * @description * `classic` - Classic
@@ -4155,6 +4383,10 @@ export interface components {
             code: string;
             name: string;
             is_active?: boolean;
+        };
+        WorkOut: {
+            /** Format: date */
+            month: string;
         };
     };
     responses: never;
@@ -7133,6 +7365,285 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Member"];
+                };
+            };
+        };
+    };
+    payroll_payslips_pdf_retrieve: {
+        parameters: {
+            query?: {
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    payroll_runs_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRun"][];
+                };
+            };
+        };
+    };
+    payroll_runs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkOut"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDetail"];
+                };
+            };
+        };
+    };
+    payroll_runs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDetail"];
+                };
+            };
+        };
+    };
+    payroll_runs_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    payroll_runs_post_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Posted"];
+                };
+            };
+        };
+    };
+    payroll_tax_tables_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxTable"][];
+                };
+            };
+        };
+    };
+    payroll_tax_tables_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxTable"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxTable"];
+                };
+            };
+        };
+    };
+    payroll_tax_tables_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxTable"];
+                };
+            };
+        };
+    };
+    payroll_tax_tables_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxTable"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxTable"];
+                };
+            };
+        };
+    };
+    payroll_tax_tables_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    payroll_tax_tables_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTaxTable"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxTable"];
+                };
+            };
+        };
+    };
+    payroll_tax_tables_fill_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TablesFilled"];
                 };
             };
         };

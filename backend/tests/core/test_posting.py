@@ -139,3 +139,23 @@ def test_a_discounted_sale_keeps_full_price_in_sales() -> None:
 def test_a_negative_discount_is_refused() -> None:
     with pytest.raises(ValueError, match="discount"):
         posting.sale(D("100"), discount=D("-1"))
+
+
+def test_a_payroll_owes_tax_deductions_and_net_pay() -> None:
+    lines = posting.payroll(gross=D("100000"), deductions=D("8330"), tax=D("6000"))
+    assert lines == [
+        Line("salaries", D("100000.00"), D("0.00")),
+        Line("withholding_payable", D("0.00"), D("6000.00")),
+        Line("payroll_deductions", D("0.00"), D("8330.00")),
+        Line("salaries_payable", D("0.00"), D("85670.00")),
+    ]
+
+
+def test_a_payroll_with_no_tax_has_no_tax_line() -> None:
+    accounts = [line.account for line in posting.payroll(D("30000"), D("0"), D("0"))]
+    assert accounts == ["salaries", "salaries_payable"]
+
+
+def test_a_payroll_cannot_keep_back_more_than_it_pays() -> None:
+    with pytest.raises(ValueError, match="more than the gross"):
+        posting.payroll(D("1000"), D("600"), D("500"))
