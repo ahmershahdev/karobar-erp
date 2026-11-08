@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import date
 from typing import Any, cast
 
 from django.db.models import Count, QuerySet
@@ -16,9 +17,10 @@ from apps.core.salary_tax import Slab
 from apps.sales import documents as printing
 from apps.tenancy.permissions import HasModulePermission
 
-from . import documents, runs, services
-from .models import PayrollRun, Payslip, TaxTable
+from . import documents, openings, runs, services
+from .models import OpeningPay, PayrollRun, Payslip, TaxTable
 from .serializers import (
+    OpeningPaySerializer,
     PayrollRunDetailSerializer,
     PayrollRunSerializer,
     PostedSerializer,
@@ -178,3 +180,38 @@ class PayslipPdfView(PayrollView, generics.GenericAPIView[Payslip]):
         name = f"{payslip.run.number}-{payslip.employee.code}"
         response["Content-Disposition"] = f'inline; filename="{name}.pdf"'
         return response
+
+
+class OpeningPayListView(PayrollView, generics.ListCreateAPIView[OpeningPay]):
+    serializer_class = OpeningPaySerializer
+    pagination_class = None
+
+    def get_queryset(self) -> QuerySet[OpeningPay]:
+        found = OpeningPay.objects.select_related("employee")
+        month = self.request.query_params.get("month", "")
+        if month:
+            try:
+                found = found.filter(year_starts=openings.year_starting(date.fromisoformat(month)))
+            except ValueError:
+                raise ValidationError({"month": "Give a date such as 2026-11-01."}) from None
+            except services.PayrollError:
+                return found.none()
+        return found
+
+    @extend_schema(parameters=[OpenApiParameter("month", str)])
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return super().get(request, *args, **kwargs)
+
+    def perform_create(self, serializer: OpeningPaySerializer) -> None:  # type: ignore[override]
+        saved = run(openings.save, actor(self.request), serializer.validated_data)
+        serializer.instance = OpeningPay.objects.select_related("employee").get(pk=saved.pk)
+
+
+class OpeningPayDetailView(PayrollView, generics.RetrieveDestroyAPIView[OpeningPay]):
+    serializer_class = OpeningPaySerializer
+
+    def get_queryset(self) -> QuerySet[OpeningPay]:
+        return OpeningPay.objects.select_related("employee")
+
+    def perform_destroy(self, instance: OpeningPay) -> None:
+        run(openings.delete, actor(self.request), instance)

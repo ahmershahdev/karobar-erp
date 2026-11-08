@@ -2778,6 +2778,81 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
           description: ''
+  /api/payroll/opening-pay/:
+    get:
+      operationId: payroll_opening_pay_list
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpeningPay'
+          description: ''
+    post:
+      operationId: payroll_opening_pay_create
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpeningPay'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningPay'
+          description: ''
+  /api/payroll/opening-pay/{id}/:
+    get:
+      operationId: payroll_opening_pay_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningPay'
+          description: ''
+    delete:
+      operationId: payroll_opening_pay_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/payroll/payslips/{id}/pdf/:
     get:
       operationId: payroll_payslips_pdf_retrieve
@@ -7541,6 +7616,48 @@ components:
           default: '0.00'
       required:
       - warehouse
+    OpeningPay:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: integer
+        employee_code:
+          type: string
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        month:
+          type: string
+          format: date
+          writeOnly: true
+        year_starts:
+          type: string
+          format: date
+          readOnly: true
+        taxable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        tax:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        note:
+          type: string
+          maxLength: 255
+      required:
+      - employee
+      - employee_code
+      - employee_name
+      - id
+      - month
+      - tax
+      - taxable
+      - year_starts
     OrderLine:
       type: object
       properties:

@@ -9,5 +9,11 @@ urlpatterns = [
     path("runs/", views.PayrollRunListView.as_view(), name="payroll-runs"),
     path("runs/<int:pk>/", views.PayrollRunDetailView.as_view(), name="payroll-run"),
     path("runs/<int:pk>/post/", views.PayrollRunPostView.as_view(), name="payroll-run-post"),
+    path("opening-pay/", views.OpeningPayListView.as_view(), name="payroll-opening-pay"),
+    path(
+        "opening-pay/<int:pk>/",
+        views.OpeningPayDetailView.as_view(),
+        name="payroll-opening-pay-detail",
+    ),
     path("payslips/<int:pk>/pdf/", views.PayslipPdfView.as_view(), name="payroll-payslip-pdf"),
 ]

@@ -1,17 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 import { ConfirmButton } from '../../components/ConfirmButton';
-import { Alert, Button, Field, Hint } from '../../components/form';
+import { Alert, Button, Field, Hint, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
+import { allPages } from '../../lib/api/pages';
 import type { components } from '../../lib/api/schema';
 import { can } from '../../lib/api/types';
 import { formatMoney } from '../../lib/money';
 import { PrintButton } from '../sales/ledgers';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 type Run = components['schemas']['PayrollRun'];
@@ -20,7 +22,7 @@ type Payslip = components['schemas']['Payslip'];
 type TaxTable = components['schemas']['TaxTable'];
 type Posted = components['schemas']['Posted'];
 
-const KEYS = ['payroll-runs', 'payroll-run', 'payroll-tax-tables'];
+const KEYS = ['payroll-runs', 'payroll-run', 'payroll-tax-tables', 'payroll-opening-pay'];
 
 function thisMonth(): string {
   const now = new Date();
@@ -50,11 +52,11 @@ function Payslips({ run }: { run: RunDetail }) {
         <thead>
           <tr className="border-b border-line">
             <th className={TH}>{t('payroll.employee')}</th>
-            <th className={`${TH} text-end`}>{t('payroll.paidDays')}</th>
-            <th className={`${TH} text-end`}>{t('payroll.gross')}</th>
-            <th className={`${TH} text-end`}>{t('payroll.deductions')}</th>
-            <th className={`${TH} text-end`}>{t('payroll.tax')}</th>
-            <th className={`${TH} text-end`}>{t('payroll.net')}</th>
+            <th className={NUM_TH}>{t('payroll.paidDays')}</th>
+            <th className={NUM_TH}>{t('payroll.gross')}</th>
+            <th className={NUM_TH}>{t('payroll.deductions')}</th>
+            <th className={NUM_TH}>{t('payroll.tax')}</th>
+            <th className={NUM_TH}>{t('payroll.net')}</th>
             {posted && <th className={TH}>{t('payroll.payslip')}</th>}
           </tr>
         </thead>
@@ -66,9 +68,12 @@ function Payslips({ run }: { run: RunDetail }) {
                 <span className="text-sm text-muted">{slip.employee_code}</span>
               </td>
               <td className={NUM}>
-                {days(slip.paid_days)} / {slip.month_days}
+                {/* Pinned left to right, so Urdu and Arabic read 28.5 / 30, not 30 / 28.5. */}
+                <span dir="ltr">
+                  {days(slip.paid_days)} / {slip.month_days}
+                </span>
                 {Number(slip.unpaid_days) > 0 && (
-                  <span className="block text-xs text-muted">
+                  <span className="block font-sans text-xs text-muted">
                     {t('payroll.unpaidDays', { days: days(slip.unpaid_days) })}
                   </span>
                 )}
@@ -79,7 +84,11 @@ function Payslips({ run }: { run: RunDetail }) {
               <td className={`${NUM} font-medium`}>{money(slip.net)}</td>
               {posted && (
                 <td className={TD}>
-                  <PrintButton path={`/api/payroll/payslips/${slip.id}/pdf/`} />
+                  {/* Narrow, so a printing error wraps under the button instead of widening
+                      the whole table. */}
+                  <div className="max-w-56 space-y-2">
+                    <PrintButton path={`/api/payroll/payslips/${slip.id}/pdf/`} />
+                  </div>
                 </td>
               )}
             </tr>
@@ -105,7 +114,8 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
   const action = useTenantAction(KEYS);
-  const [notice, setNotice] = useState('');
+  // A key, not the text, so the message follows the language if it changes.
+  const [notice, setNotice] = useState<'' | 'postedNow' | 'changed'>('');
   const run = useQuery({
     queryKey: [membership.tenant_id, 'payroll-run', id],
     queryFn: () => unwrap(api.GET('/api/payroll/runs/{id}/', { params: { path: { id } } })),
@@ -133,7 +143,11 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
           </p>
         )}
         <Payslips run={detail} />
-        {notice && <Alert tone="success">{notice}</Alert>}
+        {notice && (
+          <Alert tone={notice === 'postedNow' ? 'success' : 'notice'}>
+            {t(`payroll.${notice}`)}
+          </Alert>
+        )}
         {action.isError && (
           <Alert tone="error">{errorText(action.error, t('signIn.unavailable'))}</Alert>
         )}
@@ -152,7 +166,7 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
                     {
                       onSuccess: (result) => {
                         const outcome = result as Posted;
-                        setNotice(outcome.posted ? t('payroll.postedNow') : t('payroll.changed'));
+                        setNotice(outcome.posted ? 'postedNow' : 'changed');
                       },
                     },
                   );
@@ -181,6 +195,140 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
   );
 }
 
+// Pay from earlier in the tax year
+
+function OpeningPayPanel({ month }: { month: string }) {
+  const { t, i18n } = useTranslation();
+  const { membership } = useWorkspace();
+  const save = useTenantAction(KEYS);
+  const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
+  const [employee, setEmployee] = useState('');
+  const [taxable, setTaxable] = useState('');
+  const [tax, setTax] = useState('');
+  const [note, setNote] = useState('');
+  const people = useQuery({
+    queryKey: [membership.tenant_id, 'hr-employees', 'working'],
+    queryFn: () =>
+      allPages((cursor) =>
+        unwrap(
+          api.GET('/api/hr/employees/', {
+            params: { query: { status: 'active', page_size: 200, cursor } as never },
+          }),
+        ),
+      ),
+  });
+  const openings = useQuery({
+    queryKey: [membership.tenant_id, 'payroll-opening-pay', month],
+    queryFn: () => unwrap(api.GET('/api/payroll/opening-pay/', { params: { query: { month } } })),
+  });
+  return (
+    <Panel title={t('payroll.openingTitle')}>
+      <div className="space-y-4">
+        <Hint>{t('payroll.openingHint')}</Hint>
+        {openings.data?.length === 0 && <p className="text-muted">{t('payroll.openingNone')}</p>}
+        {!!openings.data?.length && (
+          <ul className="divide-y divide-line">
+            {openings.data.map((row) => (
+              <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span>
+                  <span className="font-medium">{row.employee_name}</span>{' '}
+                  <span className="text-sm text-muted">{row.employee_code}</span>
+                  <span className="block text-sm text-muted">
+                    {t('payroll.openingFigures', {
+                      taxable: money(row.taxable),
+                      tax: money(row.tax),
+                    })}
+                    {row.note && ` · ${row.note}`}
+                  </span>
+                </span>
+                <ConfirmButton
+                  onConfirm={() =>
+                    save.mutate(() =>
+                      unwrap(
+                        api.DELETE('/api/payroll/opening-pay/{id}/', {
+                          params: { path: { id: row.id } },
+                        }),
+                      ),
+                    )
+                  }
+                >
+                  {t('workspace.remove')}
+                </ConfirmButton>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form
+          className="grid gap-4 md:grid-cols-2 md:items-end"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const body = { employee: Number(employee), month, taxable, tax, note } as never;
+            save.mutate(() => unwrap(api.POST('/api/payroll/opening-pay/', { body })), {
+              onSuccess: () => {
+                setEmployee('');
+                setTaxable('');
+                setTax('');
+                setNote('');
+              },
+            });
+          }}
+        >
+          <Select
+            label={t('payroll.employee')}
+            required
+            value={employee}
+            onChange={(e) => setEmployee(e.target.value)}
+          >
+            <option value="">-</option>
+            {people.data?.map((person) => (
+              <option key={person.id} value={person.id}>
+                {person.full_name} ({person.code})
+              </option>
+            ))}
+          </Select>
+          <Field
+            label={t('payroll.openingNote')}
+            placeholder={t('payroll.openingNotePlaceholder')}
+            maxLength={255}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <Field
+            label={t('payroll.openingTaxable')}
+            type="number"
+            required
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder="290000"
+            value={taxable}
+            onChange={(e) => setTaxable(e.target.value)}
+          />
+          <Field
+            label={t('payroll.openingTax')}
+            type="number"
+            required
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder="0"
+            value={tax}
+            onChange={(e) => setTax(e.target.value)}
+          />
+          <div>
+            <Button type="submit" disabled={save.isPending}>
+              {t('payroll.openingSave')}
+            </Button>
+          </div>
+        </form>
+        {save.isError && (
+          <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
 export function PayrollPage() {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
@@ -190,6 +338,10 @@ export function PayrollPage() {
   const runs = useQuery({
     queryKey: [membership.tenant_id, 'payroll-runs'],
     queryFn: () => unwrap(api.GET('/api/payroll/runs/')),
+  });
+  const tables = useQuery({
+    queryKey: [membership.tenant_id, 'payroll-tax-tables'],
+    queryFn: () => unwrap(api.GET('/api/payroll/tax-tables/')),
   });
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
   return (
@@ -222,11 +374,22 @@ export function PayrollPage() {
             <Hint>{t('payroll.workOutHint')}</Hint>
           </div>
           {save.isError && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>
+              {tables.data?.length === 0 && (
+                <Link
+                  to={`/app/${membership.tenant_slug}/hr/tax-slabs`}
+                  className="inline-flex min-h-11 items-center font-medium underline underline-offset-4"
+                >
+                  {t('payroll.openSlabs')}
+                </Link>
+              )}
             </div>
           )}
         </Panel>
+      )}
+      {can(membership, 'payroll', 'create') && can(membership, 'hr', 'view') && month && (
+        <OpeningPayPanel month={`${month}-01`} />
       )}
       {open !== null && <RunPanel key={open} id={open} onRemoved={() => setOpen(null)} />}
       <Panel title={t('payroll.runs')}>
@@ -238,9 +401,9 @@ export function PayrollPage() {
                 <tr className="border-b border-line">
                   <th className={TH}>{t('payroll.month')}</th>
                   <th className={TH}>{t('payroll.status')}</th>
-                  <th className={`${TH} text-end`}>{t('payroll.people')}</th>
-                  <th className={`${TH} text-end`}>{t('payroll.tax')}</th>
-                  <th className={`${TH} text-end`}>{t('payroll.net')}</th>
+                  <th className={NUM_TH}>{t('payroll.people')}</th>
+                  <th className={NUM_TH}>{t('payroll.tax')}</th>
+                  <th className={NUM_TH}>{t('payroll.net')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -455,9 +618,9 @@ function TableCard({ table }: { table: TaxTable }) {
           <table className={TABLE}>
             <thead>
               <tr className="border-b border-line">
-                <th className={`${TH} text-end`}>{t('payroll.over')}</th>
-                <th className={`${TH} text-end`}>{t('payroll.fixed')}</th>
-                <th className={`${TH} text-end`}>{t('payroll.rate')}</th>
+                <th className={NUM_TH}>{t('payroll.over')}</th>
+                <th className={NUM_TH}>{t('payroll.fixed')}</th>
+                <th className={NUM_TH}>{t('payroll.rate')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">

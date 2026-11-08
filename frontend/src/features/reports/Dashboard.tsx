@@ -6,7 +6,7 @@ import { unwrap } from '../../lib/api/errors';
 import { formatMoney } from '../../lib/money';
 import { ReportState } from '../sales/ledgers';
 import { useWorkspace } from '../workspace/hooks';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 import SalesChart from './SalesChart';
 
@@ -62,7 +62,7 @@ export default function DashboardPage() {
                   <thead>
                     <tr>
                       <th className={TH}>{t('acc.date')}</th>
-                      <th className={`${TH} text-end`}>{t('pur.amount')}</th>
+                      <th className={NUM_TH}>{t('pur.amount')}</th>
                     </tr>
                   </thead>
                   <tbody>

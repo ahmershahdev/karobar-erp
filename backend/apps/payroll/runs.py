@@ -30,15 +30,21 @@ from apps.core import posting
 from apps.core.payroll import Breakdown, Component, breakdown, combine, share
 from apps.core.payroll import PayrollError as PayMathError
 from apps.core.salary_tax import Slab, months_left, withholding
-from apps.core.workdays import tax_year_end
 from apps.hr.models import Attendance, Contract, Employee, Holiday, LeaveRequest
 from apps.hr.time_off import settings_for
 from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
-from .models import PayrollRun, Payslip, TaxTable
-from .services import TAX_YEAR_STARTS, PayrollError, lock_business, slabs_of, table_for
+from .models import OpeningPay, PayrollRun, Payslip, TaxTable
+from .services import (
+    TAX_YEAR_STARTS,
+    PayrollError,
+    lock_business,
+    slabs_of,
+    table_for,
+    tax_year,
+)
 
 Action = AuditEvent.Action
 ZERO = Decimal(0)
@@ -105,11 +111,6 @@ def month_end(month: date) -> date:
 
 def _days(start: date, end: date) -> list[date]:
     return [start + timedelta(days=n) for n in range((end - start).days + 1)]
-
-
-def _tax_year(month: date, first: int) -> tuple[date, date]:
-    end = tax_year_end(month, first)
-    return date(end.year if first == 1 else end.year - 1, first, 1), end
 
 
 @dataclass(frozen=True)
@@ -207,9 +208,10 @@ def _month_records(first_day: date, end: date) -> Records:
 
 
 def _earlier_this_tax_year(first_day: date, first_month: int) -> dict[int, dict[str, Any]]:
-    """Each person's taxable pay and tax on this tax year's posted payslips before the month."""
-    year_start, _ = _tax_year(first_day, first_month)
-    return {
+    """Each person's taxable pay and tax this tax year before the month: posted payslips plus
+    any pay from before payroll ran here."""
+    year_start, _ = tax_year(first_day, first_month)
+    earlier: dict[int, dict[str, Any]] = {
         row["employee_id"]: row
         for row in Payslip.objects.filter(
             run__status=PayrollRun.Status.POSTED,
@@ -219,6 +221,12 @@ def _earlier_this_tax_year(first_day: date, first_month: int) -> dict[int, dict[
         .values("employee_id")
         .annotate(income=Sum("taxable"), tax=Sum("tax"))
     }
+    # Pay from before payroll ran here counts as earlier in the year too.
+    for opening in OpeningPay.objects.filter(year_starts=year_start):
+        row = earlier.setdefault(opening.employee_id, {"income": ZERO, "tax": ZERO})
+        row["income"] = (row["income"] or ZERO) + opening.taxable
+        row["tax"] = (row["tax"] or ZERO) + opening.tax
+    return earlier
 
 
 def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
@@ -286,7 +294,7 @@ def _check_order(run: PayrollRun, posting_it: bool) -> None:
     first = TAX_YEAR_STARTS.get(settings_for().holiday_country)
     if first is None:
         return
-    start, end = _tax_year(run.month, first)
+    start, end = tax_year(run.month, first)
     same_year = PayrollRun.objects.filter(month__range=(start, end)).exclude(pk=run.pk)
     if same_year.filter(month__gt=run.month, status=PayrollRun.Status.POSTED).exists():
         raise LaterPostedError

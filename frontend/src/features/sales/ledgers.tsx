@@ -8,7 +8,7 @@ import { ApiError, unwrap } from '../../lib/api/errors';
 import { env } from '../../lib/env';
 import { formatMoney } from '../../lib/money';
 import { useWorkspace } from '../workspace/hooks';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 const COLUMNS = ['current', 'days_1_30', 'days_31_60', 'days_61_90', 'over_90'] as const;
@@ -49,12 +49,12 @@ function AgeingTable({
           <tr>
             <th className={TH}>{nameLabel}</th>
             {COLUMNS.map((column) => (
-              <th key={column} className={`${TH} text-end`}>
+              <th key={column} className={NUM_TH}>
                 {t(`led.${column}`)}
               </th>
             ))}
-            <th className={`${TH} text-end`}>{t('led.advance')}</th>
-            <th className={`${TH} text-end`}>{t('led.total')}</th>
+            <th className={NUM_TH}>{t('led.advance')}</th>
+            <th className={NUM_TH}>{t('led.total')}</th>
             {rows.some((row) => row.whatsapp) && <th className={TH} />}
           </tr>
         </thead>
@@ -189,9 +189,9 @@ export function StatementPanel({
               <tr>
                 <th className={TH}>{t('acc.date')}</th>
                 <th className={TH}>{t('led.document')}</th>
-                <th className={`${TH} text-end`}>{t('led.charged')}</th>
-                <th className={`${TH} text-end`}>{t('led.paid')}</th>
-                <th className={`${TH} text-end`}>{t('led.balance')}</th>
+                <th className={NUM_TH}>{t('led.charged')}</th>
+                <th className={NUM_TH}>{t('led.paid')}</th>
+                <th className={NUM_TH}>{t('led.balance')}</th>
               </tr>
             </thead>
             <tbody>

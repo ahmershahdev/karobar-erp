@@ -11,7 +11,7 @@ import { can, type Account, type JournalEntry } from '../../lib/api/types';
 import { formatMoney, fromMinor, toMinor } from '../../lib/money';
 import { today } from '../../lib/dates';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 function useAccounts() {
@@ -116,8 +116,8 @@ function EntryEditor({ entry, onDone }: { entry?: JournalEntry; onDone: () => vo
             <tr>
               <th className={TH}>{t('ledger.account')}</th>
               <th className={TH}>{t('acc.description')}</th>
-              <th className={`${TH} text-end`}>{t('ledger.debit')}</th>
-              <th className={`${TH} text-end`}>{t('ledger.credit')}</th>
+              <th className={NUM_TH}>{t('ledger.debit')}</th>
+              <th className={NUM_TH}>{t('ledger.credit')}</th>
               <th />
             </tr>
           </thead>
@@ -593,8 +593,8 @@ export function TrialBalancePage() {
               <tr>
                 <th className={TH}>{t('acc.code')}</th>
                 <th className={TH}>{t('ledger.account')}</th>
-                <th className={`${TH} text-end`}>{t('ledger.debit')}</th>
-                <th className={`${TH} text-end`}>{t('ledger.credit')}</th>
+                <th className={NUM_TH}>{t('ledger.debit')}</th>
+                <th className={NUM_TH}>{t('ledger.credit')}</th>
               </tr>
             </thead>
             <tbody>
@@ -721,9 +721,9 @@ export function LedgerPage() {
                   <th className={TH}>{t('acc.date')}</th>
                   <th className={TH}>{t('acc.number')}</th>
                   <th className={TH}>{t('acc.memo')}</th>
-                  <th className={`${TH} text-end`}>{t('ledger.debit')}</th>
-                  <th className={`${TH} text-end`}>{t('ledger.credit')}</th>
-                  <th className={`${TH} text-end`}>{t('acc.balance')}</th>
+                  <th className={NUM_TH}>{t('ledger.debit')}</th>
+                  <th className={NUM_TH}>{t('ledger.credit')}</th>
+                  <th className={NUM_TH}>{t('acc.balance')}</th>
                 </tr>
               </thead>
               <tbody>

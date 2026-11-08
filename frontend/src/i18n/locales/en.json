@@ -1514,7 +1514,7 @@
     "addTables": "Add slabs",
     "fillHint": "Fill in the official slabs that come with the app, or type a year's slabs yourself. Check them against the law before relying on them.",
     "fill": "Fill in official slabs",
-    "filled": "{{added}} table(s) added.",
+    "filled": "Tables added: {{added}}.",
     "newTable": "Type in a new year",
     "noTables": "No tax slabs yet. Payroll needs them before it can work out income tax.",
     "tableName": "Name",
@@ -1531,6 +1531,16 @@
     "rate": "Rate %",
     "addSlab": "Add a slab",
     "saveTable": "Save slabs",
-    "editTable": "Change"
+    "editTable": "Change",
+    "openSlabs": "Open Tax slabs",
+    "openingTitle": "Pay before Karobar this tax year",
+    "openingHint": "If payroll starts here partway through the tax year, or someone joined from another job, type the taxable salary already paid and the tax already withheld this tax year. Income tax then counts the whole year. You can't change it once the person has posted pay here this tax year.",
+    "openingNone": "Nothing typed in for this tax year.",
+    "openingFigures": "Taxable salary {{taxable}} · tax withheld {{tax}}",
+    "openingTaxable": "Taxable salary already paid",
+    "openingTax": "Income tax already withheld",
+    "openingNote": "Note",
+    "openingNotePlaceholder": "July to October, from our old records",
+    "openingSave": "Save"
   }
 }

@@ -12,7 +12,7 @@ import { can } from '../../lib/api/types';
 import { today } from '../../lib/dates';
 import { formatMoney } from '../../lib/money';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 type Employee = components['schemas']['Employee'];
@@ -822,7 +822,7 @@ export function EmployeesPage() {
                 <th className={TH}>{t('hr.fullName')}</th>
                 <th className={TH}>{t('hr.jobTitle')}</th>
                 <th className={TH}>{t('hr.department')}</th>
-                <th className={`${TH} text-end`}>{t('hr.basic')}</th>
+                <th className={NUM_TH}>{t('hr.basic')}</th>
                 <th className={TH} />
               </tr>
             </thead>

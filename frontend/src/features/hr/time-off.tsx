@@ -11,7 +11,7 @@ import type { components } from '../../lib/api/schema';
 import { can } from '../../lib/api/types';
 import { today } from '../../lib/dates';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 type Settings = components['schemas']['HrSettings'];
@@ -158,9 +158,9 @@ function Balances({ employee }: { employee: number }) {
         <thead>
           <tr>
             <th className={TH}>{t('hr.leaveType')}</th>
-            <th className={`${TH} text-end`}>{t('hr.taken')}</th>
-            <th className={`${TH} text-end`}>{t('hr.waiting')}</th>
-            <th className={`${TH} text-end`}>{t('hr.leftThisYear')}</th>
+            <th className={NUM_TH}>{t('hr.taken')}</th>
+            <th className={NUM_TH}>{t('hr.waiting')}</th>
+            <th className={NUM_TH}>{t('hr.leftThisYear')}</th>
           </tr>
         </thead>
         <tbody>

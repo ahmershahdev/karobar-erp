@@ -10,7 +10,7 @@ import { can, type Product, type StockEntry } from '../../lib/api/types';
 import { formatMoney } from '../../lib/money';
 import { today } from '../../lib/dates';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
-import { CELL_INPUT, NUM, TABLE, TD, TH } from '../workspace/table';
+import { CELL_INPUT, NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 import { ProductPicker } from './ProductPicker';
 import { formatQuantity, useList, useUnits, useWarehouses } from './shared';
@@ -239,8 +239,8 @@ export function ProductsPage() {
                 <th className={TH}>{t('inv.sku')}</th>
                 <th className={TH}>{t('acc.name')}</th>
                 <th className={TH}>{t('inv.packs')}</th>
-                <th className={`${TH} text-end`}>{t('pos.sellingPrice')}</th>
-                <th className={`${TH} text-end`}>{t('inv.onHand')}</th>
+                <th className={NUM_TH}>{t('pos.sellingPrice')}</th>
+                <th className={NUM_TH}>{t('inv.onHand')}</th>
               </tr>
             </thead>
             <tbody>
@@ -691,8 +691,8 @@ export function StockOnHandPage() {
                 <th className={TH}>{t('inv.sku')}</th>
                 <th className={TH}>{t('inv.product')}</th>
                 <th className={TH}>{t('inv.warehouse')}</th>
-                <th className={`${TH} text-end`}>{t('inv.quantity')}</th>
-                <th className={`${TH} text-end`}>{t('inv.value')}</th>
+                <th className={NUM_TH}>{t('inv.quantity')}</th>
+                <th className={NUM_TH}>{t('inv.value')}</th>
               </tr>
             </thead>
             <tbody>
