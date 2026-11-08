@@ -1,7 +1,7 @@
 """The working week, public holidays, leave and attendance."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from importlib.metadata import version
 from typing import Any
@@ -261,6 +261,72 @@ def withdraw_leave(actor: User, request: LeaveRequest) -> None:
         raise NotPendingError
     audit.record(Action.DELETE, locked, actor, {"days": [str(locked.days), None]})
     locked.delete()
+
+
+class NotApprovedError(HrError):
+    message = (
+        "Only approved leave can be cancelled. A request that isn't approved yet can be withdrawn."
+    )
+
+
+class NothingToGiveBackError(HrError):
+    message = "They came back after the leave ended, so there are no days to give back."
+
+
+class LeaveInPostedPayrollError(HrError):
+    message = (
+        "Payroll is posted for a month with these unpaid days, so they already came off the pay. "
+        "Undo that payroll first."
+    )
+
+
+def _unpaid_days_paid_out(employee: Employee, start: date, end: date) -> bool:
+    # Imported here: payroll builds on HR, and only this check looks the other way.
+    from apps.payroll.models import PayrollRun  # noqa: PLC0415
+
+    return PayrollRun.objects.filter(
+        status=PayrollRun.Status.POSTED,
+        month__lte=end,
+        month__gte=start.replace(day=1),
+        payslips__employee=employee,
+    ).exists()
+
+
+@transaction.atomic
+def cancel_leave(actor: User, request: LeaveRequest, back_on: date | None = None) -> LeaveRequest:
+    """Give back approved leave: all of it, or, for someone who came back early, the days from
+    `back_on` (their first day back). A shortened request counts its working days again, so the
+    yearly balance gets the rest back.
+
+    Unpaid days in a month whose payroll is posted already came off the pay, so they can't be
+    given back until that payroll is undone. Paid leave doesn't change pay, so it can.
+    """
+    lock_rows(Employee.objects.filter(pk=request.employee_id))
+    locked: LeaveRequest = lock_rows(
+        LeaveRequest.objects.filter(pk=request.pk).select_related("leave_type")
+    )[0]
+    if locked.status != LeaveRequest.Status.APPROVED:
+        raise NotApprovedError
+    give_from = locked.starts_on if back_on is None else max(back_on, locked.starts_on)
+    if give_from > locked.ends_on:
+        raise NothingToGiveBackError
+    if not locked.leave_type.paid and _unpaid_days_paid_out(
+        locked.employee, give_from, locked.ends_on
+    ):
+        raise LeaveInPostedPayrollError
+    before = {"ends_on": str(locked.ends_on), "days": str(locked.days), "status": locked.status}
+    if give_from == locked.starts_on:
+        locked.status = LeaveRequest.Status.CANCELLED
+    else:
+        locked.ends_on = give_from - timedelta(days=1)
+        locked.days = Decimal(count_days(locked.starts_on, locked.ends_on))
+        if locked.days == 0:
+            # Only weekends and holidays were left: nothing was taken.
+            locked.status = LeaveRequest.Status.CANCELLED
+    locked.save(update_fields=["status", "ends_on", "days"])
+    after = {"ends_on": str(locked.ends_on), "days": str(locked.days), "status": locked.status}
+    audit.record(Action.UPDATE, locked, actor, {k: [before[k], after[k]] for k in after})
+    return locked
 
 
 # Attendance

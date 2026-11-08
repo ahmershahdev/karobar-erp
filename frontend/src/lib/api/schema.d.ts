@@ -861,6 +861,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/hr/leave/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Cancelling approved leave undoes a decision, so it needs the post right like approving. */
+        post: operations["hr_leave_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/hr/leave/{id}/reject/": {
         parameters: {
             query?: never;
@@ -2685,6 +2702,10 @@ export interface components {
             link: string;
             whatsapp: string;
         };
+        CancelLeave: {
+            /** Format: date */
+            back_on?: string | null;
+        };
         /** @description A proposed draft, a draft that couldn't be made, or the record that one was confirmed. */
         Card: {
             kind?: components["schemas"]["CardKindEnum"];
@@ -3200,9 +3221,10 @@ export interface components {
          * @description * `pending` - Pending
          *     * `approved` - Approved
          *     * `rejected` - Rejected
+         *     * `cancelled` - Cancelled
          * @enum {string}
          */
-        LeaveStatusEnum: "pending" | "approved" | "rejected";
+        LeaveStatusEnum: "pending" | "approved" | "rejected" | "cancelled";
         LeaveType: {
             readonly id: number;
             name: string;
@@ -6070,7 +6092,7 @@ export interface operations {
                 employee?: number;
                 /** @description Number of results to return per page. */
                 page_size?: number;
-                status?: "approved" | "pending" | "rejected";
+                status?: "approved" | "cancelled" | "pending" | "rejected";
             };
             header?: never;
             path?: never;
@@ -6092,7 +6114,7 @@ export interface operations {
         parameters: {
             query?: {
                 employee?: number;
-                status?: "approved" | "pending" | "rejected";
+                status?: "approved" | "cancelled" | "pending" | "rejected";
             };
             header?: never;
             path?: never;
@@ -6273,6 +6295,31 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequest"];
+                };
+            };
+        };
+    };
+    hr_leave_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CancelLeave"];
+            };
+        };
         responses: {
             200: {
                 headers: {

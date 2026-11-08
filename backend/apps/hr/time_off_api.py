@@ -284,6 +284,30 @@ class LeaveDecisionView(HrView, generics.GenericAPIView[LeaveRequest]):
         return Response(LeaveRequestSerializer(_leave().get(pk=decided.pk)).data)
 
 
+class CancelLeaveSerializer(serializers.Serializer[Any]):
+    # The first day back at work, for someone who came back early. Empty cancels all of it.
+    back_on = serializers.DateField(required=False, allow_null=True)
+
+
+class LeaveCancelView(HrView, generics.GenericAPIView[LeaveRequest]):
+    """Cancelling approved leave undoes a decision, so it needs the post right like approving."""
+
+    required_action = "post"
+
+    def get_queryset(self) -> QuerySet[LeaveRequest]:
+        return _leave()
+
+    @extend_schema(request=CancelLeaveSerializer, responses=LeaveRequestSerializer)
+    def post(self, request: Request, pk: int) -> Response:
+        target = self.get_object()
+        body = CancelLeaveSerializer(data=request.data)
+        body.is_valid(raise_exception=True)
+        done = run(
+            time_off.cancel_leave, actor(request), target, body.validated_data.get("back_on")
+        )
+        return Response(LeaveRequestSerializer(_leave().get(pk=done.pk)).data)
+
+
 class LeaveBalanceView(HrView):
     @extend_schema(
         parameters=[

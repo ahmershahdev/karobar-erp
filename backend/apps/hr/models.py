@@ -200,6 +200,7 @@ class LeaveRequest(TenantOwnedModel):
         PENDING = "pending"
         APPROVED = "approved"
         REJECTED = "rejected"
+        CANCELLED = "cancelled"
 
     employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name="leave")
     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT, related_name="+")

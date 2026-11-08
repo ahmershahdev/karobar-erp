@@ -733,6 +733,7 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     ),
     "api/hr/leave/<int:pk>/approve/": lambda m: f"/api/hr/leave/{_leave(m).pk}/approve/",
     "api/hr/leave/<int:pk>/reject/": lambda m: f"/api/hr/leave/{_leave(m).pk}/reject/",
+    "api/hr/leave/<int:pk>/cancel/": lambda m: f"/api/hr/leave/{_leave(m).pk}/cancel/",
     "api/payroll/runs/<int:pk>/post/": lambda m: f"/api/payroll/runs/{_payroll(m).pk}/post/",
     "api/assistant/drafts/<int:pk>/confirm/": lambda m: (
         f"/api/assistant/drafts/{_chat_draft(m)}/confirm/"

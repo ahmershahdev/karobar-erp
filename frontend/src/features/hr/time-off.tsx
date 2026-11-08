@@ -186,7 +186,9 @@ export function LeavePage() {
   const save = useTenantAction(KEYS);
   const empty = { employee: '', leave_type: '', starts_on: today(), ends_on: today(), note: '' };
   const [form, setForm] = useState(empty);
-  const [status, setStatus] = useState<'pending' | 'approved' | 'rejected' | ''>('pending');
+  const [status, setStatus] = useState<'pending' | 'approved' | 'rejected' | 'cancelled' | ''>(
+    'pending',
+  );
   const set = (patch: Partial<typeof empty>) => setForm({ ...form, ...patch });
   const requests = useQuery({
     queryKey: [membership.tenant_id, 'hr-leave', status],
@@ -294,13 +296,19 @@ export function LeavePage() {
             onChange={(e) => {
               const value = e.target.value;
               setStatus(
-                value === 'pending' || value === 'approved' || value === 'rejected' ? value : '',
+                value === 'pending' ||
+                  value === 'approved' ||
+                  value === 'rejected' ||
+                  value === 'cancelled'
+                  ? value
+                  : '',
               );
             }}
           >
             <option value="pending">{t('hr.statuses.pending')}</option>
             <option value="approved">{t('hr.statuses.approved')}</option>
             <option value="rejected">{t('hr.statuses.rejected')}</option>
+            <option value="cancelled">{t('hr.statuses.cancelled')}</option>
             <option value="">{t('hr.everyone')}</option>
           </Select>
         </div>
@@ -352,12 +360,51 @@ export function LeavePage() {
                   )}
                 </div>
               )}
+              {request.status === 'approved' && can(membership, 'hr', 'post') && (
+                <CancelLeave id={request.id} starts={request.starts_on} ends={request.ends_on} />
+              )}
             </li>
           ))}
         </ul>
       </Panel>
       <LeaveTypes />
     </>
+  );
+}
+
+function CancelLeave({ id, starts, ends }: { id: number; starts: string; ends: string }) {
+  const { t } = useTranslation();
+  const save = useTenantAction(KEYS);
+  const [backOn, setBackOn] = useState('');
+  return (
+    <div className="flex flex-wrap items-end gap-2">
+      <Field
+        label={t('hr.backOn')}
+        type="date"
+        min={starts}
+        max={ends}
+        hint={t('hr.backOnHint')}
+        value={backOn}
+        onChange={(e) => setBackOn(e.target.value)}
+      />
+      <ConfirmButton
+        message={backOn ? t('hr.cancelSomeConfirm') : t('hr.cancelAllConfirm')}
+        disabled={save.isPending}
+        onConfirm={() =>
+          save.mutate(() =>
+            unwrap(
+              api.POST('/api/hr/leave/{id}/cancel/', {
+                params: { path: { id } },
+                body: { back_on: backOn || null },
+              }),
+            ),
+          )
+        }
+      >
+        {t('hr.cancelLeave')}
+      </ConfirmButton>
+      {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
+    </div>
   );
 }
 

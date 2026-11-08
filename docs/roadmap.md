@@ -69,7 +69,7 @@ in CI, and seed data.
 - [x] Payslips as PDF; payroll posts its journal entry (#46)
 - [ ] Paying salaries: book the payment from bank or cash against salaries payable, with a bank transfer list
 - [ ] Undoing a posted payroll by a reversal, refused once its salaries are paid
-- [ ] Cancelling approved leave, giving the days back
+- [ ] Cancelling approved leave, giving the days back (in review)
 - [ ] Pakistan EOBI and provincial social security, from the official rates with their sources
 - [ ] Gulf payroll: GOSI and the UAE pension for nationals, end-of-service gratuity and the WPS salary file
 

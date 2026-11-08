@@ -40,5 +40,6 @@ urlpatterns = [
         time_off.LeaveDecisionView.as_view(approve=False),
         name="hr-leave-reject",
     ),
+    path("leave/<int:pk>/cancel/", time_off.LeaveCancelView.as_view(), name="hr-leave-cancel"),
     path("attendance/", time_off.AttendanceView.as_view(), name="hr-attendance"),
 ]
