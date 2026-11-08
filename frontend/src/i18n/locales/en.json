@@ -1426,7 +1426,8 @@
     "statuses": {
       "pending": "Waiting",
       "approved": "Approved",
-      "rejected": "Refused"
+      "rejected": "Refused",
+      "cancelled": "Cancelled"
     },
     "noLeave": "Nothing to show.",
     "workingDays": "{{days}} working days",
@@ -1479,7 +1480,12 @@
     "fillHint": "Adds the country's holidays. Eid and other moon-sighted dates are estimates: check them when they are announced and change the date here. Days already on the list are kept.",
     "noHolidays": "No holidays for this year yet.",
     "holidayName": "Holiday",
-    "holidayPlaceholder": "Eid al-Fitr"
+    "holidayPlaceholder": "Eid al-Fitr",
+    "cancelLeave": "Cancel leave",
+    "backOn": "Came back on",
+    "backOnHint": "Leave empty to cancel all of it.",
+    "cancelAllConfirm": "The whole leave is cancelled and its days go back to the yearly allowance.",
+    "cancelSomeConfirm": "The leave ends the day before they came back. The days from then go back to the yearly allowance."
   },
   "payroll": {
     "title": "Payroll",

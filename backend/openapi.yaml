@@ -1503,6 +1503,7 @@ paths:
           type: string
           enum:
           - approved
+          - cancelled
           - pending
           - rejected
       tags:
@@ -1529,6 +1530,7 @@ paths:
           type: string
           enum:
           - approved
+          - cancelled
           - pending
           - rejected
       tags:
@@ -1690,6 +1692,33 @@ paths:
         required: true
       tags:
       - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/hr/leave/{id}/cancel/:
+    post:
+      operationId: hr_leave_cancel_create
+      description: Cancelling approved leave undoes a decision, so it needs the post
+        right like approving.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelLeave'
       security:
       - cookieAuth: []
       responses:
@@ -6037,6 +6066,13 @@ components:
       required:
       - link
       - whatsapp
+    CancelLeave:
+      type: object
+      properties:
+        back_on:
+          type: string
+          format: date
+          nullable: true
     Card:
       type: object
       description: A proposed draft, a draft that couldn't be made, or the record
@@ -7441,11 +7477,13 @@ components:
       - pending
       - approved
       - rejected
+      - cancelled
       type: string
       description: |-
         * `pending` - Pending
         * `approved` - Approved
         * `rejected` - Rejected
+        * `cancelled` - Cancelled
     LeaveType:
       type: object
       properties:
