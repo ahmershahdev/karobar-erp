@@ -19,10 +19,10 @@ from apps.tenancy.permissions import HasModulePermission
 from . import documents, runs, services
 from .models import PayrollRun, Payslip, TaxTable
 from .serializers import (
-    TablesFilledSerializer,
     PayrollRunDetailSerializer,
     PayrollRunSerializer,
     PostedSerializer,
+    TablesFilledSerializer,
     TaxTableSerializer,
     WorkOutSerializer,
 )
