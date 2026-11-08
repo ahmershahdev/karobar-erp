@@ -11,6 +11,11 @@ urlpatterns = [
     path("runs/<int:pk>/post/", views.PayrollRunPostView.as_view(), name="payroll-run-post"),
     path("runs/<int:pk>/pay/", views.PayrollRunPayView.as_view(), name="payroll-run-pay"),
     path(
+        "runs/<int:pk>/reverse/",
+        views.PayrollRunReverseView.as_view(),
+        name="payroll-run-reverse",
+    ),
+    path(
         "runs/<int:pk>/transfer-list/",
         views.TransferListView.as_view(),
         name="payroll-run-transfer-list",

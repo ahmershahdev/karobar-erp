@@ -18,13 +18,14 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils import timezone
 
 from apps.accounting import services as accounting
+from apps.accounting.models import JournalEntry
 from apps.accounts.models import User
 from apps.core import posting
 from apps.core.payroll import Breakdown, Component, breakdown, combine, share
@@ -36,7 +37,7 @@ from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
-from .models import OpeningPay, PayrollRun, Payslip, TaxTable
+from .models import OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
 from .services import (
     TAX_YEAR_STARTS,
     PayrollError,
@@ -80,6 +81,17 @@ class EarlierDraftError(PayrollError):
 
 class LaterPostedError(PayrollError):
     message = "A later month of this tax year is already posted, so this month can't change."
+
+
+class NotPostedError(PayrollError):
+    message = "Only a posted payroll can be undone."
+
+
+class PaidError(PayrollError):
+    message = (
+        "This month's salaries are already paid, so it can't be undone. The money has left the "
+        "bank; correct it in next month's payroll instead."
+    )
 
 
 class PayTooLowError(PayrollError):
@@ -349,8 +361,8 @@ def work_out(actor: User, month: date) -> PayrollRun:
     """Work out a month's payroll as a draft, or work out an existing draft again."""
     first_day = month.replace(day=1)
     lock_business()
-    rows = lock_rows(PayrollRun.objects.filter(month=first_day))
-    run = rows[0] if rows else PayrollRun(month=first_day)
+    rows = lock_rows(PayrollRun.objects.filter(live_month=first_day))
+    run = rows[0] if rows else PayrollRun(month=first_day, live_month=first_day)
     if run.status == PayrollRun.Status.POSTED:
         raise AlreadyPostedError
     _check_order(run, posting_it=False)
@@ -426,3 +438,35 @@ def delete(actor: User, run: PayrollRun) -> None:
         raise NotDraftError
     audit.record(Action.DELETE, locked, actor, {"net": [str(locked.net), None]})
     locked.delete()
+
+
+@transaction.atomic
+def reverse(actor: User, run: PayrollRun, reason: str = "") -> PayrollRun:
+    """Undo a posted month. Its entry is reversed on the same date, so the month's books net to
+    nothing; the run stays as history, marked reversed, with its payslips and number. The month
+    can then be worked out again.
+
+    A paid month can't be undone: the money has gone. Nor can a month once a later month of the
+    same tax year is posted, because that month's tax counted this one.
+    """
+    lock_business()
+    locked: PayrollRun = lock_rows(PayrollRun.objects.filter(pk=run.pk))[0]
+    if locked.status != PayrollRun.Status.POSTED:
+        raise NotPostedError
+    if SalaryPayment.objects.filter(run=locked).exists():
+        raise PaidError
+    _check_order(locked, posting_it=False)
+    # Posting always sets the entry, so a posted run has one.
+    entry = cast(JournalEntry, locked.entry)
+    memo = f"Payroll {locked.month:%B %Y} undone" + (f": {reason}" if reason else "")
+    locked.reversal = accounting.reverse_entry(actor, entry, entry.date, memo[:255])
+    locked.status = PayrollRun.Status.REVERSED
+    locked.live_month = None
+    locked.reversed_by = actor
+    locked.reversed_at = timezone.now()
+    locked.reversal_reason = reason
+    locked.save()
+    audit.record(
+        Action.UPDATE, locked, actor, {"status": ["posted", "reversed"], "reason": [None, reason]}
+    )
+    return locked
