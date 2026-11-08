@@ -1,0 +1,53 @@
+<!doctype html>
+{% load bill_text %}
+<html lang="{{ language }}" dir="{{ dir }}" class="{{ paper }} t-{{ template }}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ labels.payslip }} {{ run.number }}</title>
+    {% include "sales/_print.css.html" %}
+    <style>
+      .pay table + table { margin-top: 5mm; }
+      .pay td.total { font-weight: 600; border-bottom: 0; }
+    </style>
+  </head>
+  <body>
+    {% include "sales/_bill_head.html" with doc_title=labels.payslip doc_number=run.number %}
+    <div class="facts">
+      <div>{{ labels.employee }}: <span class="user" dir="{{ employee.full_name|textdir }}">{{ employee.full_name }}</span> <span class="muted">({{ labels.code }} <span class="num">{{ employee.code }}</span>)</span></div>
+      {% if employee.department %}<div class="muted">{{ labels.department }}: <span class="user" dir="{{ employee.department.name|textdir }}">{{ employee.department.name }}</span></div>{% endif %}
+      {% if employee.job_title %}<div class="muted">{{ labels.job_title }}: <span class="user" dir="{{ employee.job_title|textdir }}">{{ employee.job_title }}</span></div>{% endif %}
+      <div class="muted">{{ labels.month }}: <span class="num">{{ run.month|date:"Y-m" }}</span></div>
+      <div class="muted">{{ labels.days }}: <span class="num">{{ paid_days }}</span> {{ labels.of }} <span class="num">{{ payslip.month_days }}</span>{% if unpaid_days %} &middot; {{ labels.unpaid }}: <span class="num">{{ unpaid_days }}</span>{% endif %}</div>
+    </div>
+    <div class="pay">
+      <table class="lines">
+        <thead><tr><th>{{ labels.earnings }}</th><th class="num">{{ currency }}</th></tr></thead>
+        <tbody>
+          {% for line in earnings %}
+            <tr><td><span class="user" dir="{{ line.name|textdir }}">{{ line.name }}</span></td><td class="num">{{ line.amount }}</td></tr>
+          {% endfor %}
+          <tr><td class="total">{{ labels.gross }}</td><td class="num total">{{ gross }}</td></tr>
+        </tbody>
+      </table>
+      <table class="lines">
+        <thead><tr><th>{{ labels.deductions }}</th><th class="num">{{ currency }}</th></tr></thead>
+        <tbody>
+          {% for line in deductions %}
+            <tr><td><span class="user" dir="{{ line.name|textdir }}">{{ line.name }}</span></td><td class="num">{{ line.amount }}</td></tr>
+          {% endfor %}
+          <tr><td>{{ labels.income_tax }}</td><td class="num">{{ tax }}</td></tr>
+          <tr><td class="total">{{ labels.total_deductions }}</td><td class="num total">{{ total_deductions }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="totals">
+      <div class="grand"><span>{{ labels.net }} ({{ currency }})</span><span class="num">{{ net }}</span></div>
+    </div>
+    {% if projected %}
+      <p class="muted">{{ labels.projected }}: <span class="num">{{ projected }}</span>. {{ labels.year_tax }}: <span class="num">{{ year_tax }}</span>.</p>
+    {% endif %}
+    <div class="end">
+      <div class="sign"><div class="sign-line">{{ labels.signature }}</div></div>
+    </div>
+  </body>
+</html>

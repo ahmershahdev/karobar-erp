@@ -55,6 +55,7 @@ import {
 import { AccountPage } from '../features/workspace/AccountPage';
 import { DepartmentsPage, EmployeesPage, SalaryStructuresPage } from '../features/hr/pages';
 import { AttendancePage, HolidaysPage, LeavePage } from '../features/hr/time-off';
+import { PayrollPage, TaxSlabsPage } from '../features/payroll/pages';
 import { BillDesignPage } from '../features/workspace/BillDesignPage';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
@@ -200,6 +201,8 @@ export default function AppRoutes() {
         <Route path="hr/leave" element={<LeavePage />} />
         <Route path="hr/attendance" element={<AttendancePage />} />
         <Route path="hr/holidays" element={<HolidaysPage />} />
+        <Route path="hr/payroll" element={<PayrollPage />} />
+        <Route path="hr/tax-slabs" element={<TaxSlabsPage />} />
       </Route>
       <Route path="*" element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>} />
     </Routes>

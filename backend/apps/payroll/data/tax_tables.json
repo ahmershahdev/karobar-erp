@@ -1,0 +1,20 @@
+{
+  "PK": [
+    {
+      "name": "Tax year 2027",
+      "starts_on": "2026-07-01",
+      "ends_on": "2027-06-30",
+      "source": "Income Tax Ordinance 2001, First Schedule, Part I, Division I, clause 2, as amended by the Finance Act 2026. Read from FBR Withholding Tax Rate Card updated to 30 June 2026 (https://download1.fbr.gov.pk/Docs/202681113864992WithholdingTaxRatesCard2027.pdf) and FBR Circular No. 2 of 2026-27. Check against the law before relying on it.",
+      "slabs": [
+        ["0", "0", "0"],
+        ["600000", "0", "1"],
+        ["1200000", "6000", "11"],
+        ["2200000", "116000", "20"],
+        ["3200000", "316000", "25"],
+        ["4100000", "541000", "29"],
+        ["5600000", "976000", "32"],
+        ["7000000", "1424000", "35"]
+      ]
+    }
+  ]
+}

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "apps.pos",
     "apps.assistant",
     "apps.hr",
+    "apps.payroll",
 ]
 
 MIDDLEWARE = [
@@ -196,6 +197,7 @@ SPECTACULAR_SETTINGS = {
         "ContractKindEnum": "apps.hr.models.Contract.Kind",
         "LeaveStatusEnum": "apps.hr.models.LeaveRequest.Status",
         "AttendanceStatusEnum": "apps.hr.models.Attendance.Status",
+        "CountryEnum": "apps.hr.time_off.COUNTRIES",
         "StatusEnum": "apps.accounting.models.JournalEntry.Status",
     },
 }

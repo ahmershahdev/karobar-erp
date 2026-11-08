@@ -21,6 +21,7 @@
     {"code": "2140", "name": "Withholding tax payable", "type": "liability", "parent": "2100", "role": "withholding_payable"},
     {"code": "2150", "name": "Accrued expenses", "type": "liability", "parent": "2100"},
     {"code": "2160", "name": "Goods received not invoiced", "type": "liability", "parent": "2100", "role": "grni"},
+    {"code": "2170", "name": "Payroll deductions payable", "type": "liability", "parent": "2100", "role": "payroll_deductions"},
     {"code": "3000", "name": "Equity", "type": "equity", "group": true},
     {"code": "3100", "name": "Owner's capital", "type": "equity", "parent": "3000", "role": "capital"},
     {"code": "3200", "name": "Owner's drawings", "type": "equity", "parent": "3000"},

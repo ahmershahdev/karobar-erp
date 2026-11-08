@@ -134,6 +134,12 @@ def _context(language: str) -> dict[str, Any]:
     }
 
 
+def letterhead(language: str) -> dict[str, Any]:
+    """The business's name, logo and look from its bill design, for other printed papers such
+    as payslips."""
+    return _context(language)
+
+
 def invoice_html(invoice: Invoice, language: str) -> str:
     left = invoice.total - invoice.amount_paid - invoice.amount_credited
     context = _context(language)

@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from apps.core.payroll import Component, PayrollError, breakdown, value
+from apps.core.payroll import Component, PayrollError, breakdown, combine, share, value
 
 D = Decimal
 
@@ -67,3 +67,57 @@ def test_deductions_cannot_exceed_earnings() -> None:
 def test_a_negative_basic_is_refused() -> None:
     with pytest.raises(PayrollError):
         breakdown(D("-1"), [])
+
+
+STAFF = [
+    Component("House rent", "earning", percent=D("45")),
+    Component("Medical", "earning", percent=D("10"), taxable=False),
+    Component("Provident fund", "deduction", percent=D("8.33")),
+]
+
+
+def test_half_a_month_is_half_of_every_line() -> None:
+    month = breakdown(D("50000"), STAFF)
+    half = share(month, D(15), 30)
+    assert [line.amount for line in half.lines] == [
+        D("25000.00"),
+        D("11250.00"),
+        D("2500.00"),
+        D("2082.50"),
+    ]
+    assert half.gross == D("38750.00")
+    assert half.taxable == D("36250.00")
+    assert half.net == half.gross - half.deductions
+
+
+def test_a_whole_month_and_no_days_are_the_month_and_nothing() -> None:
+    month = breakdown(D("50000"), STAFF)
+    assert share(month, D(31), 31) == month
+    assert share(month, D(0), 31).gross == D(0)
+
+
+@pytest.mark.parametrize(("days", "of"), [(D(-1), 30), (D(31), 30), (D(1), 0)])
+def test_impossible_days_are_refused(days: Decimal, of: int) -> None:
+    with pytest.raises(PayrollError):
+        share(breakdown(D("1000"), []), days, of)
+
+
+def test_a_raise_in_the_month_adds_both_pieces_line_by_line() -> None:
+    before = share(breakdown(D("30000"), STAFF), D(10), 30)
+    after = share(breakdown(D("60000"), STAFF), D(20), 30)
+    month = combine([before, after])
+    assert [line.name for line in month.lines] == [
+        "Basic",
+        "House rent",
+        "Medical",
+        "Provident fund",
+    ]
+    assert month.lines[0].amount == D("50000.00")
+    assert month.gross == before.gross + after.gross
+    assert month.deductions == before.deductions + after.deductions
+
+
+def test_combining_nothing_is_an_empty_payslip() -> None:
+    empty = combine([])
+    assert empty.lines == []
+    assert empty.gross == D(0)
