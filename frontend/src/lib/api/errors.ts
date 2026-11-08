@@ -27,3 +27,12 @@ export async function unwrap<T>(
   if (!response.ok) throw new ApiError(response.status, error);
   return data as T;
 }
+
+// The JSON body of a failed fetch, for files fetched outside the typed client (PDFs, CSVs).
+export async function errorBody(response: Response): Promise<unknown> {
+  try {
+    return JSON.parse(await response.text());
+  } catch {
+    return undefined;
+  }
+}

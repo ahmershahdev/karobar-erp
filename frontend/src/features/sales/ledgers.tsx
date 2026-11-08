@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Alert, Button, Field } from '../../components/form';
 import { api } from '../../lib/api/client';
-import { ApiError, unwrap } from '../../lib/api/errors';
+import { ApiError, errorBody, unwrap } from '../../lib/api/errors';
 import { env } from '../../lib/env';
 import { formatMoney } from '../../lib/money';
 import { useWorkspace } from '../workspace/hooks';
@@ -227,14 +227,6 @@ export function StatementPanel({
 }
 
 // A proxy in front of the API can answer with an HTML page, which must not surface as a JSON error.
-export async function errorBody(response: Response): Promise<unknown> {
-  try {
-    return JSON.parse(await response.text());
-  } catch {
-    return undefined;
-  }
-}
-
 /**
  * Opens a posted document as a PDF in the customer's language. The API needs the X-Tenant header,
  * which a plain link can't send, so the file is fetched and opened as a blob.
