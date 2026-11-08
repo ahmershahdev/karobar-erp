@@ -49,7 +49,10 @@ def year_starting(month: date) -> date:
 
 
 def _check_unpaid_here(employee: Employee, starts: date) -> None:
-    first = TAX_YEAR_STARTS[settings_for().holiday_country]
+    first = TAX_YEAR_STARTS.get(settings_for().holiday_country)
+    if first is None:
+        # The business moved to a country without salary tax; nothing posted depends on these.
+        return
     _, ends = tax_year(starts, first)
     if Payslip.objects.filter(
         employee=employee,

@@ -90,3 +90,11 @@ def test_a_country_without_salary_tax_needs_none(boss: Member) -> None:  # noqa:
     assert reply.status_code == 400
     assert "no tax on salaries" in reply.json()["detail"]
     assert boss.client().get("/api/payroll/opening-pay/?month=2026-11-01").json() == []
+
+
+def test_figures_can_be_removed_after_moving_to_a_country_without_salary_tax(
+    boss: Member,  # noqa: F811
+) -> None:
+    pk = opening(boss, person(), "1000", "0").json()["id"]
+    HrSettings.objects.create(holiday_country="SA", weekend=[4, 5])
+    assert boss.client().delete(f"/api/payroll/opening-pay/{pk}/").status_code == 204

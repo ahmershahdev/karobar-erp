@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-11-08 (evening). Update at the end of every work session.
+Last updated: 2026-11-09. Update at the end of every work session.
 
 ## Where we are
 
@@ -10,7 +10,7 @@ Last updated: 2026-11-08 (evening). Update at the end of every work session.
 - In review: `fix/payroll-polish`: pay before Karobar (taxable salary and tax from earlier in the tax year, so a business starting payroll mid-year withholds the right tax), number column headings that line up on every screen, the days column in Urdu and Arabic, a neutral notice colour, and a link to Tax slabs when they are missing. Found by trying the payroll screens in the browser on 2026-11-09.
 - Merged: `feat/payroll-run` (#46). Tax tables as data (Pakistan tax year 2027 ships from the Finance Act 2026, editable, fill-in button), monthly payroll runs worked out by calendar day from contracts with unpaid leave and absences taken off, income tax by the annualised method, posting in month order with one journal entry, and payslips as PDF on the business letterhead. Payroll has its own rights. Measured: 500 people work out in about 0.5s and post in about 0.3s. Payroll screens were tried in the browser on 2026-11-09 in English and Urdu; real payslip PDFs were made in Docker in all three languages.
 - Real PDFs were made in the Docker image on 2026-11-07 for all six bill templates, in Urdu and Arabic, on the 80 mm roll and for a 25-line bill; each fits one page except the 25-line bill, which splits cleanly. A signed bill link returning a PDF through the API has still not been tried.
-- Not tested by a person in the browser: chat drafts and lookups, discounts, the Bill design screen, all HR screens and the payroll screens. Not tested: the v2 checkbox being ticked by a person, Facebook sign-in end to end, and the sales and HR screens in Urdu and Arabic by a native reader.
+- Not tested by a person in the browser: chat drafts and lookups, discounts, the Bill design screen, and all HR screens. Not tested: the v2 checkbox being ticked by a person, Facebook sign-in end-to-end, and the sales and HR screens in Urdu and Arabic by a native reader.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
 - PDFs need Pango, so they can't be made on the maintainer's Windows machine. Use the Docker image for real PDFs.
