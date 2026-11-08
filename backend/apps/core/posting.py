@@ -172,6 +172,15 @@ def payroll(gross: Decimal, deductions: Decimal, tax: Decimal) -> list[Line]:
     )
 
 
+def salary_payment(amount: Decimal, out_of: str = "bank") -> list[Line]:
+    """The month's net pay leaves the bank or the till: what was owed to the staff is settled.
+
+    Dr salaries payable; Cr cash or bank.
+    """
+    _non_negative(amount=amount)
+    return _lines(("salaries_payable", amount, ZERO), (out_of, ZERO, amount))
+
+
 def reversal(lines: Sequence[Line]) -> list[Line]:
     """The entry that cancels `lines`: every debit becomes a credit and the other way round.
 

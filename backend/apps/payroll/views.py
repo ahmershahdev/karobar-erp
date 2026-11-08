@@ -6,7 +6,7 @@ from django.db.models import Count, QuerySet
 from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,15 +15,16 @@ from apps.accounting.services import AccountingError
 from apps.accounts.models import User
 from apps.core.salary_tax import Slab
 from apps.sales import documents as printing
-from apps.tenancy.permissions import HasModulePermission
+from apps.tenancy.permissions import HasModulePermission, membership_of
 
-from . import documents, openings, runs, services
+from . import documents, openings, payments, runs, services
 from .models import OpeningPay, PayrollRun, Payslip, TaxTable
 from .serializers import (
     OpeningPaySerializer,
     PayrollRunDetailSerializer,
     PayrollRunSerializer,
     PostedSerializer,
+    SalaryPaymentSerializer,
     TablesFilledSerializer,
     TaxTableSerializer,
     WorkOutSerializer,
@@ -100,7 +101,7 @@ class TaxTableFillView(PayrollView):
 
 def _runs() -> QuerySet[PayrollRun]:
     runs_with_people: QuerySet[PayrollRun] = PayrollRun.objects.select_related(
-        "tax_table", "entry"
+        "tax_table", "entry", "payment__paid_from", "payment__entry"
     ).annotate(people=Count("payslips"))
     return runs_with_people
 
@@ -215,3 +216,48 @@ class OpeningPayDetailView(PayrollView, generics.RetrieveDestroyAPIView[OpeningP
 
     def perform_destroy(self, instance: OpeningPay) -> None:
         run(openings.delete, actor(self.request), instance)
+
+
+class PayrollRunPayView(PayrollView, generics.GenericAPIView[PayrollRun]):
+    """Pay a posted month's salaries from a cash or bank account."""
+
+    required_action = "post"
+
+    def get_queryset(self) -> QuerySet[PayrollRun]:
+        return PayrollRun.objects.all()
+
+    @extend_schema(request=SalaryPaymentSerializer, responses=PayrollRunDetailSerializer)
+    def post(self, request: Request, pk: int) -> Response:
+        # The run first: another business's run is 404 whatever the body says.
+        target = self.get_object()
+        body = SalaryPaymentSerializer(data=request.data)
+        body.is_valid(raise_exception=True)
+        run(payments.pay, actor(request), target, body.validated_data)
+        return Response(PayrollRunDetailSerializer(_detail(pk)).data)
+
+
+class TransferListView(PayrollView, generics.GenericAPIView[PayrollRun]):
+    """The bank transfer list as CSV. It shows bank account numbers, which only people with HR
+    rights may see, so it needs HR view rights as well as payroll ones."""
+
+    def get_queryset(self) -> QuerySet[PayrollRun]:
+        return PayrollRun.objects.all()
+
+    @extend_schema(responses={(200, "text/csv"): str})
+    def get(self, request: Request, pk: int) -> HttpResponse:
+        found: PayrollRun = self.get_object()
+        membership = membership_of(request)
+        role = membership.role
+        if not membership.is_owner and (
+            role is None or "view" not in role.permissions.get("hr", [])
+        ):
+            raise PermissionDenied
+        if found.status != PayrollRun.Status.POSTED:
+            raise ValidationError(
+                {"detail": "The transfer list is ready once the payroll is posted."}
+            )
+        response = HttpResponse(payments.transfer_list(found), content_type="text/csv")
+        response["Content-Disposition"] = (
+            f'attachment; filename="salaries-{found.month:%Y-%m}.csv"'
+        )
+        return response

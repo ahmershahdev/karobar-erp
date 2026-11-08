@@ -227,7 +227,7 @@ export function StatementPanel({
 }
 
 // A proxy in front of the API can answer with an HTML page, which must not surface as a JSON error.
-async function errorBody(response: Response): Promise<unknown> {
+export async function errorBody(response: Response): Promise<unknown> {
   try {
     return JSON.parse(await response.text());
   } catch {

@@ -2949,6 +2949,33 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/payroll/runs/{id}/pay/:
+    post:
+      operationId: payroll_runs_pay_create
+      description: Pay a posted month's salaries from a cash or bank account.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryPayment'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollRunDetail'
+          description: ''
   /api/payroll/runs/{id}/post/:
     post:
       operationId: payroll_runs_post_create
@@ -2968,6 +2995,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Posted'
+          description: ''
+  /api/payroll/runs/{id}/transfer-list/:
+    get:
+      operationId: payroll_runs_transfer_list_retrieve
+      description: |-
+        The bank transfer list as CSV. It shows bank account numbers, which only people with HR
+        rights may see, so it needs HR view rights as well as payroll ones.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
           description: ''
   /api/payroll/tax-tables/:
     get:
@@ -8762,6 +8812,11 @@ components:
           format: date-time
           readOnly: true
           nullable: true
+        payment:
+          allOf:
+          - $ref: '#/components/schemas/SalaryPayment'
+          nullable: true
+          readOnly: true
       required:
       - deductions
       - entry_number
@@ -8770,6 +8825,7 @@ components:
       - month
       - net
       - number
+      - payment
       - people
       - posted_at
       - status
@@ -8834,6 +8890,11 @@ components:
           format: date-time
           readOnly: true
           nullable: true
+        payment:
+          allOf:
+          - $ref: '#/components/schemas/SalaryPayment'
+          nullable: true
+          readOnly: true
         payslips:
           type: array
           items:
@@ -8847,6 +8908,7 @@ components:
       - month
       - net
       - number
+      - payment
       - payslips
       - people
       - posted_at
@@ -9352,6 +9414,38 @@ components:
       required:
       - kind
       - name
+    SalaryPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        paid_on:
+          type: string
+          format: date
+        paid_from:
+          type: integer
+        paid_from_name:
+          type: string
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        reference:
+          type: string
+          maxLength: 60
+        entry_number:
+          type: string
+          readOnly: true
+      required:
+      - amount
+      - entry_number
+      - id
+      - paid_from
+      - paid_from_name
+      - paid_on
     SalaryStructure:
       type: object
       properties:
