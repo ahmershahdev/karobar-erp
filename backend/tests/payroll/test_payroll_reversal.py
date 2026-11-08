@@ -74,6 +74,17 @@ def test_only_a_posted_unpaid_month_is_undone(boss: Member) -> None:  # noqa: F8
     assert reverse(boss, draft).status_code == 400
 
 
+def test_an_undone_run_cannot_be_posted_again(boss: Member) -> None:  # noqa: F811
+    contract(boss, person(), "150000")
+    run_id = posted(boss)
+    reverse(boss, run_id)
+    reply = post(boss, run_id)
+    assert reply.status_code == 400
+    assert "was undone" in reply.json()["detail"]
+    assert PayrollRun.objects.get().status == PayrollRun.Status.REVERSED
+    assert PayrollRun.objects.get().live_month is None
+
+
 def test_a_paid_month_cannot_be_undone(boss: Member) -> None:  # noqa: F811
     contract(boss, person(), "150000")
     run_id = posted(boss)

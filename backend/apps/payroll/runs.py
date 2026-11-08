@@ -83,6 +83,10 @@ class LaterPostedError(PayrollError):
     message = "A later month of this tax year is already posted, so this month can't change."
 
 
+class UndoneError(PayrollError):
+    message = "This month's payroll was undone, so it can't be posted. Work the month out again."
+
+
 class NotPostedError(PayrollError):
     message = "Only a posted payroll can be undone."
 
@@ -393,6 +397,10 @@ def post(actor: User, run: PayrollRun) -> bool:
     locked: PayrollRun = lock_rows(PayrollRun.objects.filter(pk=run.pk))[0]
     if locked.status == PayrollRun.Status.POSTED:
         raise AlreadyPostedError
+    # Only a draft posts. An undone run is history: posting it again would give its month a
+    # second live run outside the one-live-run rule.
+    if locked.status != PayrollRun.Status.DRAFT:
+        raise UndoneError
     _check_order(locked, posting_it=True)
     table, figures = work_out_figures(locked.month)
     fresh = _fingerprint(
