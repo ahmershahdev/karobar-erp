@@ -1312,6 +1312,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/opening-pay/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_opening_pay_list"];
+        put?: never;
+        post: operations["payroll_opening_pay_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/opening-pay/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_opening_pay_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["payroll_opening_pay_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payroll/payslips/{id}/pdf/": {
         parameters: {
             query?: never;
@@ -3270,6 +3302,21 @@ export interface components {
              * @default 0.00
              */
             opening_float: string;
+        };
+        OpeningPay: {
+            readonly id: number;
+            employee: number;
+            readonly employee_code: string;
+            readonly employee_name: string;
+            /** Format: date */
+            month: string;
+            /** Format: date */
+            readonly year_starts: string;
+            /** Format: decimal */
+            taxable: string;
+            /** Format: decimal */
+            tax: string;
+            note?: string;
         };
         OrderLine: {
             readonly id: number;
@@ -7366,6 +7413,91 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Member"];
                 };
+            };
+        };
+    };
+    payroll_opening_pay_list: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningPay"][];
+                };
+            };
+        };
+    };
+    payroll_opening_pay_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningPay"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningPay"];
+                };
+            };
+        };
+    };
+    payroll_opening_pay_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningPay"];
+                };
+            };
+        };
+    };
+    payroll_opening_pay_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

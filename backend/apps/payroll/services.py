@@ -15,6 +15,7 @@ from django.db import transaction
 
 from apps.accounts.models import User
 from apps.core.salary_tax import SalaryTaxError, Slab, check_slabs
+from apps.core.workdays import tax_year_end
 from apps.hr.time_off import COUNTRIES, settings_for
 from apps.platform.locking import lock_rows
 from apps.tenancy import audit
@@ -54,6 +55,12 @@ class TableOverlapError(PayrollError):
 
 class TableInUseError(PayrollError):
     message = "Posted payroll used this table, so it stays as it is. Add a new table instead."
+
+
+def tax_year(month: date, first: int) -> tuple[date, date]:
+    """The first and last day of the tax year `month` falls in."""
+    end = tax_year_end(month, first)
+    return date(end.year if first == 1 else end.year - 1, first, 1), end
 
 
 def lock_business() -> None:

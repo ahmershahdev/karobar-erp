@@ -35,7 +35,7 @@ import {
 } from '../purchasing/pages';
 import { useTenantAction, useWorkspace } from '../workspace/hooks';
 import { PrintButton, ShareButtons, StatementPanel } from './ledgers';
-import { NUM, TABLE, TD, TH } from '../workspace/table';
+import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 // A sale moves stock and money, so every action refreshes all of these.
@@ -198,8 +198,8 @@ export function CustomersPage() {
               <tr>
                 <th className={TH}>{t('pur.name')}</th>
                 <th className={TH}>{t('pur.phone')}</th>
-                <th className={`${TH} text-end`}>{t('sal.creditLimit')}</th>
-                <th className={`${TH} text-end`}>{t('sal.balance')}</th>
+                <th className={NUM_TH}>{t('sal.creditLimit')}</th>
+                <th className={NUM_TH}>{t('sal.balance')}</th>
               </tr>
             </thead>
             <tbody>

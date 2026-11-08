@@ -23,7 +23,7 @@ import { ProductPicker } from '../inventory/ProductPicker';
 import { formatQuantity, useWarehouses } from '../inventory/shared';
 import { StatementPanel } from '../sales/ledgers';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
-import { CELL_INPUT, NUM, TABLE, TD, TH } from '../workspace/table';
+import { CELL_INPUT, NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 
 // Query keys a purchase can change. Posting a receipt moves stock, and bills and payments
@@ -290,8 +290,8 @@ export function SuppliersPage() {
                 <th className={TH}>{t('pur.code')}</th>
                 <th className={TH}>{t('pur.name')}</th>
                 <th className={TH}>{t('pur.phone')}</th>
-                <th className={`${TH} text-end`}>{t('pur.terms')}</th>
-                <th className={`${TH} text-end`}>{t('pur.balance')}</th>
+                <th className={NUM_TH}>{t('pur.terms')}</th>
+                <th className={NUM_TH}>{t('pur.balance')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1294,8 +1294,8 @@ function PaymentEditor({ onDone }: { onDone: () => void }) {
               <tr>
                 <th className={TH}>{t('pur.bill')}</th>
                 <th className={TH}>{t('pur.due')}</th>
-                <th className={`${TH} text-end`}>{t('pur.owing')}</th>
-                <th className={`${TH} text-end`}>{t('pur.allocate')}</th>
+                <th className={NUM_TH}>{t('pur.owing')}</th>
+                <th className={NUM_TH}>{t('pur.allocate')}</th>
               </tr>
             </thead>
             <tbody>

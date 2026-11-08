@@ -225,11 +225,19 @@ export function SubmitButton({
   );
 }
 
-export function Alert({ tone, children }: { tone: 'error' | 'success'; children: ReactNode }) {
-  const styles =
-    tone === 'error'
-      ? 'border-red/40 bg-red/10 text-red'
-      : 'border-green/40 bg-green/10 text-green';
+// 'notice' is for something the person should look at that is neither a failure nor done.
+export function Alert({
+  tone,
+  children,
+}: {
+  tone: 'error' | 'success' | 'notice';
+  children: ReactNode;
+}) {
+  const styles = {
+    error: 'border-red/40 bg-red/10 text-red',
+    success: 'border-green/40 bg-green/10 text-green',
+    notice: 'border-yellow/40 bg-yellow/10 text-ink',
+  }[tone];
   return (
     <p
       role={tone === 'error' ? 'alert' : 'status'}

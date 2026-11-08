@@ -125,3 +125,32 @@ class Payslip(TenantOwnedModel):
 
     def __str__(self) -> str:
         return f"{self.employee_id} {self.run_id}"
+
+
+class OpeningPay(TenantOwnedModel):
+    """Taxable salary paid and tax withheld earlier in a tax year, before payroll ran here: the
+    months before the business started using Karobar, or a previous employer's figures from the
+    certificate a new joiner brings. Without them, the annualised method sees only part of the
+    year and withholds too little."""
+
+    employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name="opening_pay")
+    # The first day of the tax year these figures belong to.
+    year_starts = models.DateField()
+    taxable = money_field()
+    tax = money_field()
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["-year_starts", "employee__code"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "employee", "year_starts"], name="uniq_opening_pay"
+            ),
+            models.CheckConstraint(
+                condition=Q(taxable__gte=0, tax__gte=0, tax__lte=F("taxable")),
+                name="opening_pay_in_range",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.employee_id} {self.year_starts}"

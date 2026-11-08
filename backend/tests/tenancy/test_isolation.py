@@ -42,9 +42,10 @@ from apps.inventory.models import (
     Unit,
     Warehouse,
 )
+from apps.payroll import openings as payroll_openings
 from apps.payroll import runs as payroll
 from apps.payroll import services as payroll_tax
-from apps.payroll.models import PayrollRun, Payslip, TaxTable
+from apps.payroll.models import OpeningPay, PayrollRun, Payslip, TaxTable
 from apps.pos import services as pos
 from apps.pos.models import PosSession
 from apps.purchasing import services as purchasing
@@ -598,6 +599,27 @@ tenant_endpoint("api/payroll/tax-tables/<int:pk>/")(
 tenant_endpoint("api/payroll/runs/")(lambda m: ("/api/payroll/runs/", _payroll(m).pk))
 tenant_endpoint("api/payroll/runs/<int:pk>/")(
     lambda m: (f"/api/payroll/runs/{_payroll(m).pk}/", _payroll(m).pk)
+)
+
+
+def _opening_pay(member: Member) -> OpeningPay:
+    found: OpeningPay | None = OpeningPay.objects.first()
+    return found or payroll_openings.save(
+        member.user,
+        {
+            "employee": _employee(member),
+            "month": timezone.localdate(),
+            "taxable": Decimal(1000),
+            "tax": Decimal(0),
+        },
+    )
+
+
+tenant_endpoint("api/payroll/opening-pay/")(
+    lambda m: ("/api/payroll/opening-pay/", _opening_pay(m).pk)
+)
+tenant_endpoint("api/payroll/opening-pay/<int:pk>/")(
+    lambda m: (f"/api/payroll/opening-pay/{_opening_pay(m).pk}/", _opening_pay(m).pk)
 )
 tenant_endpoint("api/payroll/payslips/<int:pk>/pdf/")(
     lambda m: (f"/api/payroll/payslips/{_payslip(m).pk}/pdf/", 0)

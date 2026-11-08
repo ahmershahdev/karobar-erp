@@ -3,9 +3,11 @@ from typing import Any
 
 from rest_framework import serializers
 
+from apps.hr.models import Employee
 from apps.hr.time_off import COUNTRIES
+from apps.inventory.serializers import scoped
 
-from .models import PayrollRun, Payslip, TaxTable
+from .models import OpeningPay, PayrollRun, Payslip, TaxTable
 
 MAX_SLABS = 20
 
@@ -120,3 +122,28 @@ class PostedSerializer(serializers.Serializer[Any]):
     # False when pay changed since the draft was made: the draft was updated instead.
     posted = serializers.BooleanField()
     run = PayrollRunDetailSerializer()
+
+
+class OpeningPaySerializer(serializers.ModelSerializer[OpeningPay]):
+    employee = scoped(Employee)
+    employee_code = serializers.CharField(source="employee.code", read_only=True)
+    employee_name = serializers.CharField(source="employee.full_name", read_only=True)
+    # Any day in the tax year the figures belong to.
+    month = serializers.DateField(write_only=True)
+    taxable = _money()
+    tax = _money()
+
+    class Meta:
+        model = OpeningPay
+        fields = (
+            "id",
+            "employee",
+            "employee_code",
+            "employee_name",
+            "month",
+            "year_starts",
+            "taxable",
+            "tax",
+            "note",
+        )
+        read_only_fields = ("year_starts",)
