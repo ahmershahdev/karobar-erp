@@ -301,7 +301,7 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
           </p>
         )}
         <Payslips run={detail} />
-        {notice && (
+        {notice && !(notice === 'postedNow' && detail.status === 'reversed') && (
           <Alert tone={notice === 'postedNow' ? 'success' : 'notice'}>
             {t(`payroll.${notice}`)}
           </Alert>

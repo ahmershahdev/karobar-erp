@@ -61,7 +61,9 @@ class Migration(migrations.Migration):
             name='status',
             field=models.CharField(choices=[('draft', 'Draft'), ('posted', 'Posted'), ('reversed', 'Reversed')], default='draft', max_length=10),
         ),
-        migrations.RunPython(fill_live_month, migrations.RunPython.noop),
+        # No way back: once a reversed month is worked out again, the old unique month would
+        # fail halfway through a rollback after the reversal columns were already dropped.
+        migrations.RunPython(fill_live_month),
         migrations.AddConstraint(
             model_name='payrollrun',
             constraint=models.UniqueConstraint(fields=('tenant', 'live_month'), name='one_live_payroll_month'),

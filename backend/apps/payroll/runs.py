@@ -405,14 +405,30 @@ def post(actor: User, run: PayrollRun) -> bool:
     table, figures = work_out_figures(locked.month)
     fresh = _fingerprint(
         [
-            (f.employee.pk, f.pay.gross, f.pay.deductions, f.tax, f.paid_days, _lines(f.pay))
+            (
+                f.employee.pk,
+                f.pay.gross,
+                f.pay.deductions,
+                f.tax,
+                f.paid_days,
+                f.projected_income,
+                f.year_tax,
+                _lines(f.pay),
+            )
             for f in figures
         ]
     )
     stored = _fingerprint(
         list(
             locked.payslips.values_list(
-                "employee_id", "gross", "deductions", "tax", "paid_days", "lines"
+                "employee_id",
+                "gross",
+                "deductions",
+                "tax",
+                "paid_days",
+                "projected_income",
+                "year_tax",
+                "lines",
             )
         )
     )
