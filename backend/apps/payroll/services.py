@@ -18,7 +18,8 @@ from apps.core.salary_tax import SalaryTaxError, Slab, check_slabs
 from apps.hr.time_off import COUNTRIES, settings_for
 from apps.platform.locking import lock_rows
 from apps.tenancy import audit
-from apps.tenancy.models import AuditEvent
+from apps.tenancy.context import get_current_tenant
+from apps.tenancy.models import AuditEvent, Tenant
 
 from .models import PayrollRun, TaxSlab, TaxTable
 
@@ -55,6 +56,14 @@ class TableInUseError(PayrollError):
     message = "Posted payroll used this table, so it stays as it is. Add a new table instead."
 
 
+def lock_business() -> None:
+    """Payroll changes run one at a time per business: saving a tax table, working a month out
+    and posting one all take this lock first, so their checks (no overlapping tables, months
+    posted in order) can't both pass for two requests at once. Always taken before any run or
+    table row, so the lock order stays business, run, table."""
+    Tenant.objects.select_for_update().get(pk=get_current_tenant().pk)
+
+
 def slabs_of(table: TaxTable) -> list[Slab]:
     return [Slab(s.over, s.fixed, s.rate) for s in table.slabs.all()]
 
@@ -84,6 +93,7 @@ def save_table(
     slabs: list[Slab],
     table: TaxTable | None = None,
 ) -> TaxTable:
+    lock_business()
     target: TaxTable = table or TaxTable()
     if target.pk is not None:
         target = lock_rows(TaxTable.objects.filter(pk=target.pk))[0]

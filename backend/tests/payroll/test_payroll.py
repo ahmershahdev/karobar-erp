@@ -11,7 +11,15 @@ from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, JournalEntry
 from apps.core.salary_tax import Slab
 from apps.hr import services as hr
-from apps.hr.models import Attendance, Contract, Employee, HrSettings, LeaveRequest, LeaveType
+from apps.hr.models import (
+    Attendance,
+    Contract,
+    Employee,
+    HrSettings,
+    LeaveRequest,
+    LeaveType,
+    SalaryComponent,
+)
 from apps.payroll import documents, services
 from apps.payroll.models import PayrollRun, Payslip, TaxTable
 from apps.sales.documents import PdfUnavailableError
@@ -434,6 +442,17 @@ def test_a_change_after_working_out_is_shown_before_posting(boss: Member) -> Non
     changed = post(boss, run).json()
     assert changed["posted"] is False
     assert changed["run"]["payslips"][0]["gross"] == "30000.00"
+    assert post(boss, run).json()["posted"] is True
+
+
+def test_a_renamed_pay_part_is_shown_before_posting(boss: Member) -> None:
+    contract(boss, person(), "50000", parts=STANDARD)
+    run = work_out(boss).json()["id"]
+    SalaryComponent.objects.filter(name="House rent").update(name="Accommodation")
+    changed = post(boss, run).json()
+    assert changed["posted"] is False
+    names = [line["name"] for line in changed["run"]["payslips"][0]["lines"]]
+    assert "Accommodation" in names
     assert post(boss, run).json()["posted"] is True
 
 

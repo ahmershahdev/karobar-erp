@@ -13,6 +13,7 @@ known here; the person settles that in their return.
 """
 
 import calendar
+import json
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -37,7 +38,7 @@ from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
 from .models import PayrollRun, Payslip, TaxTable
-from .services import TAX_YEAR_STARTS, PayrollError, slabs_of, table_for
+from .services import TAX_YEAR_STARTS, PayrollError, lock_business, slabs_of, table_for
 
 Action = AuditEvent.Action
 ZERO = Decimal(0)
@@ -293,6 +294,13 @@ def _check_order(run: PayrollRun, posting_it: bool) -> None:
         raise EarlierDraftError
 
 
+def _lines(pay: Breakdown) -> list[dict[str, Any]]:
+    return [
+        {"name": line.name, "kind": line.kind, "amount": str(line.amount), "taxable": line.taxable}
+        for line in pay.lines
+    ]
+
+
 def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> None:
     run.payslips.all().delete()
     Payslip.objects.bulk_create(
@@ -304,15 +312,7 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
                 month_days=f.month_days,
                 paid_days=f.paid_days,
                 unpaid_days=f.unpaid_days,
-                lines=[
-                    {
-                        "name": line.name,
-                        "kind": line.kind,
-                        "amount": str(line.amount),
-                        "taxable": line.taxable,
-                    }
-                    for line in f.pay.lines
-                ],
+                lines=_lines(f.pay),
                 gross=f.pay.gross,
                 deductions=f.pay.deductions,
                 taxable=f.pay.taxable,
@@ -340,6 +340,7 @@ def _totals(run: PayrollRun) -> dict[str, str]:
 def work_out(actor: User, month: date) -> PayrollRun:
     """Work out a month's payroll as a draft, or work out an existing draft again."""
     first_day = month.replace(day=1)
+    lock_business()
     rows = lock_rows(PayrollRun.objects.filter(month=first_day))
     run = rows[0] if rows else PayrollRun(month=first_day)
     if run.status == PayrollRun.Status.POSTED:
@@ -358,7 +359,9 @@ def work_out(actor: User, month: date) -> PayrollRun:
 
 
 def _fingerprint(rows: list[tuple[Any, ...]]) -> list[tuple[Any, ...]]:
-    return sorted(rows)
+    # The lines go in as text, so a renamed or reworded part counts as a change even when the
+    # totals are the same; the payslip prints the lines.
+    return sorted((*row[:-1], json.dumps(row[-1], sort_keys=True)) for row in rows)
 
 
 @transaction.atomic
@@ -366,16 +369,24 @@ def post(actor: User, run: PayrollRun) -> bool:
     """Post a draft and book its journal entry. Pay is worked out once more first; if anything
     changed since the draft was made (a contract, leave, attendance), the draft is updated
     instead and False comes back, so nobody posts figures they haven't seen."""
+    lock_business()
     locked: PayrollRun = lock_rows(PayrollRun.objects.filter(pk=run.pk))[0]
     if locked.status == PayrollRun.Status.POSTED:
         raise AlreadyPostedError
     _check_order(locked, posting_it=True)
     table, figures = work_out_figures(locked.month)
     fresh = _fingerprint(
-        [(f.employee.pk, f.pay.gross, f.pay.deductions, f.tax, f.paid_days) for f in figures]
+        [
+            (f.employee.pk, f.pay.gross, f.pay.deductions, f.tax, f.paid_days, _lines(f.pay))
+            for f in figures
+        ]
     )
     stored = _fingerprint(
-        list(locked.payslips.values_list("employee_id", "gross", "deductions", "tax", "paid_days"))
+        list(
+            locked.payslips.values_list(
+                "employee_id", "gross", "deductions", "tax", "paid_days", "lines"
+            )
+        )
     )
     if fresh != stored or table != locked.tax_table:
         _store(locked, table, figures)
