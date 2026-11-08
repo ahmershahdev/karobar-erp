@@ -60,11 +60,17 @@ def slabs_of(table: TaxTable) -> list[Slab]:
 
 
 def table_for(country: str, on: date) -> TaxTable | None:
-    return (
+    """The table covering `on`, locked until the transaction ends, so save_table and
+    delete_table wait while a payroll run reads and uses its slabs."""
+    locked = lock_rows(
         TaxTable.objects.filter(country=country, starts_on__lte=on, ends_on__gte=on)
-        .prefetch_related("slabs")
-        .first()
     )
+    if not locked:
+        return None
+    found: TaxTable | None = (
+        TaxTable.objects.filter(pk=locked[0].pk).prefetch_related("slabs").first()
+    )
+    return found
 
 
 def _used(table: TaxTable) -> bool:

@@ -228,6 +228,8 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
     table = None
     first_month = TAX_YEAR_STARTS.get(country)
     if first_month is not None:
+        # Locked, so the slabs can't change between working the month out and storing or
+        # posting it; both callers are inside a transaction.
         table = table_for(country, first_day)
         if table is None:
             raise NoTaxTableError
