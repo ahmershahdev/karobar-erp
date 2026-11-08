@@ -621,6 +621,9 @@ tenant_endpoint("api/payroll/opening-pay/")(
 tenant_endpoint("api/payroll/opening-pay/<int:pk>/")(
     lambda m: (f"/api/payroll/opening-pay/{_opening_pay(m).pk}/", _opening_pay(m).pk)
 )
+tenant_endpoint("api/payroll/runs/<int:pk>/transfer-list/")(
+    lambda m: (f"/api/payroll/runs/{_payroll(m, post=True).pk}/transfer-list/", 0)
+)
 tenant_endpoint("api/payroll/payslips/<int:pk>/pdf/")(
     lambda m: (f"/api/payroll/payslips/{_payslip(m).pk}/pdf/", 0)
 )
@@ -735,6 +738,9 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/hr/leave/<int:pk>/reject/": lambda m: f"/api/hr/leave/{_leave(m).pk}/reject/",
     "api/hr/leave/<int:pk>/cancel/": lambda m: f"/api/hr/leave/{_leave(m).pk}/cancel/",
     "api/payroll/runs/<int:pk>/post/": lambda m: f"/api/payroll/runs/{_payroll(m).pk}/post/",
+    "api/payroll/runs/<int:pk>/pay/": lambda m: (
+        f"/api/payroll/runs/{_payroll(m, post=True).pk}/pay/"
+    ),
     "api/assistant/drafts/<int:pk>/confirm/": lambda m: (
         f"/api/assistant/drafts/{_chat_draft(m)}/confirm/"
     ),

@@ -1547,6 +1547,17 @@
     "openingTax": "Income tax already withheld",
     "openingNote": "Note",
     "openingNotePlaceholder": "July to October, from our old records",
-    "openingSave": "Save"
+    "openingSave": "Save",
+    "payTitle": "Pay the salaries",
+    "payHint": "Once the money has gone out, record it here. It books the month's net pay out of the account you choose, so the books show the salaries as paid.",
+    "paidOn": "Paid on",
+    "paidFrom": "Paid from",
+    "reference": "Reference",
+    "referencePlaceholder": "Cheque or transfer number",
+    "pay": "Record the payment",
+    "paid": "Paid on {{date}} from {{account}} (journal entry {{number}}).",
+    "paidStatus": "Paid",
+    "transferList": "Download bank transfer list",
+    "noAccounts": "The accounts list needs accounting rights. Ask the owner to pay, or to give you them."
   }
 }
