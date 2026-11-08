@@ -211,8 +211,8 @@ function StructureEditor({
     components: rows.map((row) => ({
       name: row.name,
       kind: row.kind,
-      amount: row.how === 'amount' ? row.value || '0' : null,
-      percent: row.how === 'percent' ? row.value || '0' : null,
+      amount: row.how === 'amount' ? row.value : null,
+      percent: row.how === 'percent' ? row.value : null,
       taxable: row.taxable,
     })),
   } as never;
@@ -298,7 +298,9 @@ function StructureEditor({
               <input
                 aria-label={t('hr.partValue')}
                 type="number"
+                required
                 min="0"
+                max={row.how === 'percent' ? '100' : undefined}
                 step="0.01"
                 inputMode="decimal"
                 placeholder={row.how === 'percent' ? '45' : '3000'}

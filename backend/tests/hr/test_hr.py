@@ -4,6 +4,8 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from apps.hr import services
 from apps.hr.models import Contract, Department, Employee, SalaryStructure
@@ -146,6 +148,48 @@ def test_employees_are_made_searched_and_marked_as_left(boss: Member) -> None:
     assert [
         e["code"] for e in boss.client().get("/api/hr/employees/?status=left").json()["results"]
     ] == ["E1"]
+
+
+def test_the_audit_log_never_holds_an_id_or_bank_account(boss: Member) -> None:
+    made = employee(boss, national_id="12345-1234567-1", bank_account="PK00TEST0000000001")
+    assert made.status_code == 201, made.content
+    pk = made.json()["id"]
+    changed = boss.client().patch(
+        f"/api/hr/employees/{pk}/", {"bank_account": "PK00TEST0000000002"}, format="json"
+    )
+    assert changed.status_code == 200, changed.content
+    boss.client().patch(f"/api/hr/employees/{pk}/", {"national_id": ""}, format="json")
+    rows = list(
+        AuditEvent.objects.filter(model="hr.Employee", object_id=str(pk))
+        .order_by("id")
+        .values_list("changes", flat=True)
+    )
+    assert "1234567" not in str(rows)
+    assert "PK00TEST" not in str(rows)
+    assert rows[0]["national_id"] == [None, "kept"]
+    assert rows[1] == {"bank_account": ["kept", "kept"]}
+    assert rows[2] == {"national_id": ["kept", None]}
+
+
+def test_the_employee_list_loads_contracts_in_one_query(boss: Member) -> None:
+    plan = structure(boss).json()["id"]
+
+    def listed() -> tuple[int, list[Any]]:
+        with CaptureQueriesContext(connection) as queries:
+            rows = boss.client().get("/api/hr/employees/").json()["results"]
+        return len(queries), rows
+
+    first = employee(boss, "E1").json()["id"]
+    contract(boss, first, plan, "2026-01-01")
+    one, _ = listed()
+    for code in ("E2", "E3", "E4"):
+        contract(boss, employee(boss, code).json()["id"], plan, "2026-01-01")
+    employee(boss, "E5")  # No contract.
+    four, rows = listed()
+    assert four == one
+    by_code = {row["code"]: row["current_contract"] for row in rows}
+    assert by_code["E5"] is None
+    assert all(by_code[code]["structure_name"] == "Staff" for code in ("E1", "E2", "E3", "E4"))
 
 
 def test_someone_cannot_leave_before_joining(boss: Member) -> None:

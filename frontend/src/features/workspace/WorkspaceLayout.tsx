@@ -41,7 +41,7 @@ function VerifyBanner() {
   );
 }
 
-type Group = 'workspace' | 'sales' | 'reports' | 'accounting' | 'inventory' | 'purchasing';
+type Group = 'workspace' | 'sales' | 'reports' | 'accounting' | 'inventory' | 'purchasing' | 'hr';
 
 // The part after /app/<business>/, so a business called sales doesn't look like a group.
 function groupOf(path: string): Group {
@@ -50,7 +50,8 @@ function groupOf(path: string): Group {
     area === 'reports' ||
     area === 'accounting' ||
     area === 'inventory' ||
-    area === 'purchasing'
+    area === 'purchasing' ||
+    area === 'hr'
     ? area
     : 'workspace';
 }

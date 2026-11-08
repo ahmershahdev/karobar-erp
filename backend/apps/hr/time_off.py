@@ -59,6 +59,10 @@ class TooLongError(HrError):
     message = "Leave can be asked for at most a year at a time."
 
 
+class CrossesYearError(HrError):
+    message = "Leave over New Year needs two requests, one for each year's days."
+
+
 class NotEmployedError(HrError):
     message = "Those dates are outside the time this person works here."
 
@@ -203,6 +207,10 @@ def ask_leave(actor: User, data: dict[str, Any]) -> LeaveRequest:
         raise InactiveLeaveTypeError
     if (end - start).days >= MAX_LEAVE_DAYS:
         raise TooLongError
+    # Allowances are per calendar year and a request's days count in the year it starts, so
+    # leave over New Year is asked for as two requests.
+    if start.year != end.year:
+        raise CrossesYearError
     if start < employee.joined_on or (employee.left_on and end > employee.left_on):
         raise NotEmployedError
     if _overlapping_leave(employee, start, end).exists():

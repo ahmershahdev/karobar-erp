@@ -439,7 +439,8 @@
       "inventory": "Inventory",
       "purchasing": "Purchasing",
       "sales": "Sales",
-      "reports": "Reports"
+      "reports": "Reports",
+      "hr": "HR"
     },
     "tasks": {
       "title": "What do you want to do?",

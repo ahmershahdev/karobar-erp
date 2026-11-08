@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import Any
 
 from django.db import IntegrityError, transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 
 from apps.accounts.models import User
 from apps.core.payroll import Breakdown, Component, PayrollError, breakdown, value
@@ -69,6 +69,9 @@ class DeductionsTooLargeError(HrError):
 save_department = inventory.save_master
 delete_department = inventory.delete_master
 delete_employee = inventory.delete_master
+# Cleared from former employees after a while (see retention.py), so the audit log, which is
+# never cleared, must not hold a copy.
+PRIVATE_FIELDS = ("national_id", "bank_account")
 
 
 @dataclass(frozen=True)
@@ -203,12 +206,26 @@ def delete_contract(actor: User, contract: Contract) -> None:
     inventory.delete_master(actor, contract)
 
 
-def current_contract(employee: Employee, on: date) -> Contract | None:
+def _running_on(on: date) -> QuerySet[Contract]:
     return (
-        Contract.objects.filter(employee=employee, starts_on__lte=on)
+        Contract.objects.filter(starts_on__lte=on)
         .filter(Q(ends_on__isnull=True) | Q(ends_on__gte=on))
         .select_related("structure")
-        .first()
+    )
+
+
+def current_contract(employee: Employee, on: date) -> Contract | None:
+    # A list of employees prefetches this (see with_current_contract) instead of asking each.
+    prefetched: list[Contract] | None = getattr(employee, "current_contracts", None)
+    if prefetched is not None:
+        return prefetched[0] if prefetched else None
+    return _running_on(on).filter(employee=employee).first()
+
+
+def with_current_contract(employees: QuerySet[Employee], on: date) -> QuerySet[Employee]:
+    """Load everyone's contract for the day in one query, for current_contract to read."""
+    return employees.prefetch_related(
+        Prefetch("contracts", queryset=_running_on(on), to_attr="current_contracts")
     )
 
 
@@ -233,5 +250,5 @@ def save_employee(actor: User, employee: Employee, values: dict[str, Any]) -> Em
             running = contracts.filter(Q(ends_on__isnull=True) | Q(ends_on__gt=left_on))
             for contract in running:
                 inventory.save_master(actor, contract, {"ends_on": left_on})
-    saved: Employee = inventory.save_master(actor, employee, values)
+    saved: Employee = inventory.save_master(actor, employee, values, private=PRIVATE_FIELDS)
     return saved

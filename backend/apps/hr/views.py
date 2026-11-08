@@ -1,6 +1,7 @@
 from typing import Any, cast
 
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
@@ -160,7 +161,7 @@ class EmployeeListView(HrView, generics.ListCreateAPIView[Employee]):
     serializer_class = EmployeeSerializer
 
     def get_queryset(self) -> QuerySet[Employee]:
-        query = _employees()
+        query = services.with_current_contract(_employees(), timezone.localdate())
         params = self.request.query_params
         if term := params.get("q", "").strip()[:80]:
             query = query.filter(

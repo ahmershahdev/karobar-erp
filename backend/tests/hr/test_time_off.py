@@ -163,6 +163,16 @@ def test_more_than_a_year_of_leave_is_refused(boss: Member) -> None:
     )
 
 
+def test_leave_over_new_year_is_asked_for_once_per_year(boss: Member) -> None:
+    worker = person(boss)
+    kind = leave_type(boss)
+    over = ask(boss, worker, kind, "2026-12-28", "2027-01-05")
+    assert over.status_code == 400
+    assert "two requests" in str(over.json())
+    assert ask(boss, worker, kind, "2026-12-28", "2026-12-31").status_code == 201
+    assert ask(boss, worker, kind, "2027-01-01", "2027-01-05").status_code == 201
+
+
 def test_approving_keeps_to_the_yearly_allowance(boss: Member) -> None:
     worker, kind = person(boss), leave_type(boss, days="3")
     first = ask(boss, worker, kind, "2026-11-02", "2026-11-03").json()["id"]
