@@ -240,6 +240,9 @@ written as numbers. Files start with a UTF-8 byte order mark so Excel keeps Urdu
 - Dependencies are pinned to exact versions; Dependabot proposes updates; CI runs CodeQL and
   `npm audit`. A new dependency needs a reason in its pull request.
 
+## Employee records
+
+HR screens and `/api/hr/` follow the `hr` module permission like every other module, and another business's employees answer 404. An employee record can hold a national identity number (CNIC or Emirates ID) and a bank account, because payroll tax and salary transfers need them. They are optional, shown only to people with HR rights, never sent to the business chat, and never printed on anything but what payroll will need later. Employees who have had a contract are marked as left instead of deleted, so payroll history keeps pointing at them; deciding how long to keep a former employee's identity number is an open question for launch.
 ## Bill pictures
 
 The only file uploads are the logo and the signature picture on the Bill design screen (`/api/sales/bill-settings/logo/` and `/signature/`), open to people with update rights on members. Each file goes through these checks in order (`apps/sales/billing.clean_image`), and fails as one plain message:

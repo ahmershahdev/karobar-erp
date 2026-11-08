@@ -181,6 +181,16 @@ export function WorkspaceLayout({ me }: { me: Me }) {
       icon: item.icon ?? item.path,
       show: can(membership, 'purchasing', 'view'),
     })),
+    ...[
+      { path: 'employees', label: t('hr.employees'), icon: 'members' },
+      { path: 'departments', label: t('hr.departments'), icon: 'chart' },
+      { path: 'salary-structures', label: t('hr.structures'), icon: 'payments' },
+    ].map((item) => ({
+      to: `${base}/hr/${item.path}`,
+      label: item.label,
+      icon: item.icon,
+      show: can(membership, 'hr', 'view'),
+    })),
   ];
 
   return (

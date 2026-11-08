@@ -38,6 +38,9 @@ SCREEN_KEYS = (
     "workspace.members",
     "workspace.roles",
     "workspace.audit",
+    "hr.employees",
+    "hr.departments",
+    "hr.structures",
     "bill.title",
 )
 
@@ -77,6 +80,9 @@ SCREENS: dict[str, tuple[str, ...]] = {
         "Members",
         "Roles",
         "Audit log",
+        "Employees",
+        "Departments",
+        "Salary structures",
         "Bill design",
     ),
     "ur": (
@@ -114,6 +120,9 @@ SCREENS: dict[str, tuple[str, ...]] = {
         "اراکین",
         "کردار",
         "آڈٹ لاگ",
+        "ملازمین",
+        "شعبے",
+        "تنخواہ کے ڈھانچے",
         "بل کا ڈیزائن",
     ),
     "ar": (
@@ -151,6 +160,9 @@ SCREENS: dict[str, tuple[str, ...]] = {
         "الأعضاء",
         "الأدوار",
         "سجل التدقيق",
+        "الموظفون",
+        "الأقسام",
+        "هياكل الرواتب",
         "تصميم الفاتورة",
     ),
 }

@@ -53,6 +53,7 @@ import {
   SuppliersPage,
 } from '../features/purchasing/pages';
 import { AccountPage } from '../features/workspace/AccountPage';
+import { DepartmentsPage, EmployeesPage, SalaryStructuresPage } from '../features/hr/pages';
 import { BillDesignPage } from '../features/workspace/BillDesignPage';
 import { WorkspaceLayout } from '../features/workspace/WorkspaceLayout';
 import {
@@ -192,6 +193,9 @@ export default function AppRoutes() {
         <Route path="purchasing/receipts" element={<ReceiptsPage />} />
         <Route path="purchasing/bills" element={<BillsPage />} />
         <Route path="purchasing/payments" element={<PaymentsPage />} />
+        <Route path="hr/employees" element={<EmployeesPage />} />
+        <Route path="hr/departments" element={<DepartmentsPage />} />
+        <Route path="hr/salary-structures" element={<SalaryStructuresPage />} />
       </Route>
       <Route path="*" element={<RequireUser>{(me) => <WorkspaceLayout me={me} />}</RequireUser>} />
     </Routes>

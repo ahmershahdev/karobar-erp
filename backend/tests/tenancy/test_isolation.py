@@ -20,6 +20,8 @@ from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
 from apps.assistant import drafts
 from apps.assistant import services as assistant
+from apps.hr import services as hr
+from apps.hr.models import Contract, Department, Employee, SalaryStructure
 from apps.inventory import services as inventory
 from apps.inventory.models import (
     Batch,
@@ -415,6 +417,71 @@ def _automation(member: Member) -> tuple[str, int]:
 
 
 tenant_endpoint("api/automation/")(_automation)
+
+
+def _department(member: Member) -> Department:
+    department: Department = Department.objects.get_or_create(
+        code="D-P", defaults={"name": "Private"}
+    )[0]
+    return department
+
+
+def _structure(member: Member) -> SalaryStructure:
+    found = SalaryStructure.objects.filter(name="Private").first()
+    return found or hr.save_structure(
+        member.user, {"name": "Private"}, [hr.ComponentInput("Rent", "earning", None, Decimal(10))]
+    )
+
+
+def _employee(member: Member) -> Employee:
+    found: Employee | None = Employee.objects.filter(code="E-P").first()
+    if found is None:
+        found = Employee.objects.create(
+            code="E-P",
+            full_name="Private",
+            joined_on=timezone.localdate(),
+            department=_department(member),
+        )
+    return found
+
+
+def _contract(member: Member) -> Contract:
+    found = Contract.objects.filter(employee=_employee(member)).first()
+    return found or hr.save_contract(
+        member.user,
+        {
+            "employee": _employee(member),
+            "structure": _structure(member),
+            "starts_on": timezone.localdate(),
+            "basic_salary": Decimal(1000),
+        },
+    )
+
+
+tenant_endpoint("api/hr/departments/")(lambda m: ("/api/hr/departments/", _department(m).pk))
+tenant_endpoint("api/hr/departments/<int:pk>/")(
+    lambda m: (f"/api/hr/departments/{_department(m).pk}/", _department(m).pk)
+)
+tenant_endpoint("api/hr/salary-structures/")(
+    lambda m: ("/api/hr/salary-structures/", _structure(m).pk)
+)
+tenant_endpoint("api/hr/salary-structures/<int:pk>/")(
+    lambda m: (f"/api/hr/salary-structures/{_structure(m).pk}/", _structure(m).pk)
+)
+tenant_endpoint("api/hr/salary-structures/<int:pk>/preview/")(
+    lambda m: (
+        f"/api/hr/salary-structures/{_structure(m).pk}/preview/?basic=100",
+        _structure(m).pk,
+    )
+)
+tenant_endpoint("api/hr/employees/")(lambda m: ("/api/hr/employees/", _employee(m).pk))
+tenant_endpoint("api/hr/employees/<int:pk>/")(
+    lambda m: (f"/api/hr/employees/{_employee(m).pk}/", _employee(m).pk)
+)
+tenant_endpoint("api/hr/contracts/")(lambda m: ("/api/hr/contracts/", _contract(m).pk))
+tenant_endpoint("api/hr/contracts/<int:pk>/")(
+    lambda m: (f"/api/hr/contracts/{_contract(m).pk}/", _contract(m).pk)
+)
 
 
 def _bill_settings(member: Member) -> tuple[str, int]:

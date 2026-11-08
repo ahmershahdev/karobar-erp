@@ -979,6 +979,464 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/hr/contracts/:
+    get:
+      operationId: hr_contracts_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: employee
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContractList'
+          description: ''
+    post:
+      operationId: hr_contracts_create
+      parameters:
+      - in: query
+        name: employee
+        schema:
+          type: integer
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contract'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+          description: ''
+  /api/hr/contracts/{id}/:
+    get:
+      operationId: hr_contracts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+          description: ''
+    patch:
+      operationId: hr_contracts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContract'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+          description: ''
+    delete:
+      operationId: hr_contracts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/departments/:
+    get:
+      operationId: hr_departments_list
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Department'
+          description: ''
+    post:
+      operationId: hr_departments_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Department'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+  /api/hr/departments/{id}/:
+    get:
+      operationId: hr_departments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+    patch:
+      operationId: hr_departments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDepartment'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+    delete:
+      operationId: hr_departments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/employees/:
+    get:
+      operationId: hr_employees_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - left
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmployeeList'
+          description: ''
+    post:
+      operationId: hr_employees_create
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - left
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+  /api/hr/employees/{id}/:
+    get:
+      operationId: hr_employees_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+    patch:
+      operationId: hr_employees_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmployee'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+    delete:
+      operationId: hr_employees_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/salary-structures/:
+    get:
+      operationId: hr_salary_structures_list
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    post:
+      operationId: hr_salary_structures_create
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryStructure'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+  /api/hr/salary-structures/{id}/:
+    get:
+      operationId: hr_salary_structures_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    put:
+      operationId: hr_salary_structures_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryStructure'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    delete:
+      operationId: hr_salary_structures_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/hr/salary-structures/{id}/preview/:
+    get:
+      operationId: hr_salary_structures_preview_retrieve
+      description: What a month comes to under this structure for a given basic, before
+        income tax.
+      parameters:
+      - in: query
+        name: basic
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - hr
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pay'
+          description: ''
   /api/inventory/alerts/:
     get:
       operationId: inventory_alerts_retrieve
@@ -4904,6 +5362,70 @@ components:
         * `no_warehouse` - no_warehouse
         * `too_many` - too_many
         * `not_allowed` - not_allowed
+    ComponentKindEnum:
+      enum:
+      - earning
+      - deduction
+      type: string
+      description: |-
+        * `earning` - Earning
+        * `deduction` - Deduction
+    Contract:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: integer
+        employee_name:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/ContractKindEnum'
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        structure:
+          type: integer
+        structure_name:
+          type: string
+          readOnly: true
+        basic_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        note:
+          type: string
+          maxLength: 255
+        pay:
+          allOf:
+          - $ref: '#/components/schemas/Pay'
+          nullable: true
+          readOnly: true
+      required:
+      - basic_salary
+      - employee
+      - employee_name
+      - id
+      - pay
+      - starts_on
+      - structure
+      - structure_name
+    ContractKindEnum:
+      enum:
+      - permanent
+      - fixed_term
+      - probation
+      type: string
+      description: |-
+        * `permanent` - Permanent
+        * `fixed_term` - Fixed Term
+        * `probation` - Probation
     CounterPaperEnum:
       enum:
       - a4
@@ -5029,6 +5551,33 @@ components:
       - status
       - tax
       - total
+    CurrentContract:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/ContractKindEnum'
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        structure_name:
+          type: string
+          readOnly: true
+        basic_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - basic_salary
+      - id
+      - starts_on
+      - structure_name
     Customer:
       type: object
       properties:
@@ -5210,6 +5759,24 @@ components:
       required:
       - amount
       - date
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - code
+      - id
+      - name
     Email:
       type: object
       description: Fields every protected form accepts; mixed into the form serializers.
@@ -5242,6 +5809,63 @@ components:
       required:
       - current_password
       - email
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        full_name:
+          type: string
+          maxLength: 150
+        job_title:
+          type: string
+          maxLength: 100
+        department:
+          type: integer
+          nullable: true
+        department_name:
+          type: string
+          readOnly: true
+          nullable: true
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        national_id:
+          type: string
+          maxLength: 30
+        bank_account:
+          type: string
+          maxLength: 50
+        joined_on:
+          type: string
+          format: date
+        left_on:
+          type: string
+          format: date
+          nullable: true
+        current_contract:
+          allOf:
+          - $ref: '#/components/schemas/CurrentContract'
+          nullable: true
+          readOnly: true
+      required:
+      - code
+      - current_contract
+      - department_name
+      - full_name
+      - id
+      - joined_on
     FiscalPeriod:
       type: object
       properties:
@@ -6040,6 +6664,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Bill'
+    PaginatedContractList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contract'
     PaginatedCreditNoteList:
       type: object
       required:
@@ -6097,6 +6740,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CustomerReceipt'
+    PaginatedEmployeeList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
     PaginatedGoodsReceiptList:
       type: object
       required:
@@ -6476,6 +7138,43 @@ components:
         name:
           type: string
           maxLength: 80
+    PatchedContract:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: integer
+        employee_name:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/ContractKindEnum'
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        structure:
+          type: integer
+        structure_name:
+          type: string
+          readOnly: true
+        basic_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        note:
+          type: string
+          maxLength: 255
+        pay:
+          allOf:
+          - $ref: '#/components/schemas/Pay'
+          nullable: true
+          readOnly: true
     PatchedCustomer:
       type: object
       properties:
@@ -6521,6 +7220,70 @@ components:
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
           nullable: true
+    PatchedDepartment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+    PatchedEmployee:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        full_name:
+          type: string
+          maxLength: 150
+        job_title:
+          type: string
+          maxLength: 100
+        department:
+          type: integer
+          nullable: true
+        department_name:
+          type: string
+          readOnly: true
+          nullable: true
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        national_id:
+          type: string
+          maxLength: 30
+        bank_account:
+          type: string
+          maxLength: 50
+        joined_on:
+          type: string
+          format: date
+        left_on:
+          type: string
+          format: date
+          nullable: true
+        current_contract:
+          allOf:
+          - $ref: '#/components/schemas/CurrentContract'
+          nullable: true
+          readOnly: true
     PatchedMember:
       type: object
       properties:
@@ -6708,6 +7471,54 @@ components:
           maxLength: 100
         is_active:
           type: boolean
+    Pay:
+      type: object
+      description: What one month comes to under a structure, before income tax.
+      properties:
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayLine'
+        gross:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        taxable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - deductions
+      - gross
+      - lines
+      - net
+      - taxable
+    PayLine:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        taxable:
+          type: boolean
+      required:
+      - amount
+      - kind
+      - name
+      - taxable
     PosWarehouse:
       type: object
       properties:
@@ -7071,6 +7882,51 @@ components:
         * `reset` - Reset
         * `draft` - Draft
         * `done` - Done
+    SalaryComponent:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        kind:
+          $ref: '#/components/schemas/ComponentKindEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        taxable:
+          type: boolean
+      required:
+      - kind
+      - name
+    SalaryStructure:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        note:
+          type: string
+          maxLength: 255
+        is_active:
+          type: boolean
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalaryComponent'
+      required:
+      - components
+      - id
+      - name
     SaleRequest:
       type: object
       properties:

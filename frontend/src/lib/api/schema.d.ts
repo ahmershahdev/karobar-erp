@@ -620,6 +620,151 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/hr/contracts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_contracts_list"];
+        put?: never;
+        post: operations["hr_contracts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/contracts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_contracts_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["hr_contracts_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["hr_contracts_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/departments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_departments_list"];
+        put?: never;
+        post: operations["hr_departments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/departments/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_departments_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["hr_departments_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["hr_departments_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/employees/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_employees_list"];
+        put?: never;
+        post: operations["hr_employees_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/employees/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_employees_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["hr_employees_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["hr_employees_partial_update"];
+        trace?: never;
+    };
+    "/api/hr/salary-structures/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_salary_structures_list"];
+        put?: never;
+        post: operations["hr_salary_structures_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/salary-structures/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["hr_salary_structures_retrieve"];
+        put: operations["hr_salary_structures_update"];
+        post?: never;
+        delete: operations["hr_salary_structures_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hr/salary-structures/{id}/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What a month comes to under this structure for a given basic, before income tax. */
+        get: operations["hr_salary_structures_preview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/inventory/alerts/": {
         parameters: {
             query?: never;
@@ -2280,6 +2425,35 @@ export interface components {
          */
         CodeEnum: "unclear" | "not_found" | "ambiguous" | "no_warehouse" | "too_many" | "not_allowed";
         /**
+         * @description * `earning` - Earning
+         *     * `deduction` - Deduction
+         * @enum {string}
+         */
+        ComponentKindEnum: "earning" | "deduction";
+        Contract: {
+            readonly id: number;
+            employee: number;
+            readonly employee_name: string;
+            kind?: components["schemas"]["ContractKindEnum"];
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on?: string | null;
+            structure: number;
+            readonly structure_name: string;
+            /** Format: decimal */
+            basic_salary: string;
+            note?: string;
+            readonly pay: components["schemas"]["Pay"] | null;
+        };
+        /**
+         * @description * `permanent` - Permanent
+         *     * `fixed_term` - Fixed Term
+         *     * `probation` - Probation
+         * @enum {string}
+         */
+        ContractKindEnum: "permanent" | "fixed_term" | "probation";
+        /**
          * @description * `a4` - A4
          *     * `receipt` - Receipt
          * @enum {string}
@@ -2321,6 +2495,17 @@ export interface components {
             readonly created_by: string;
             /** Format: date-time */
             readonly posted_at: string | null;
+        };
+        CurrentContract: {
+            readonly id: number;
+            kind?: components["schemas"]["ContractKindEnum"];
+            /** Format: date */
+            starts_on: string;
+            /** Format: date */
+            ends_on?: string | null;
+            readonly structure_name: string;
+            /** Format: decimal */
+            basic_salary: string;
         };
         Customer: {
             readonly id: number;
@@ -2385,6 +2570,12 @@ export interface components {
             /** Format: decimal */
             amount: string;
         };
+        Department: {
+            readonly id: number;
+            code: string;
+            name: string;
+            is_active?: boolean;
+        };
         /** @description Fields every protected form accepts; mixed into the form serializers. */
         Email: {
             website?: string;
@@ -2397,6 +2588,23 @@ export interface components {
             /** Format: email */
             email: string;
             current_password: string;
+        };
+        Employee: {
+            readonly id: number;
+            code: string;
+            full_name: string;
+            job_title?: string;
+            department?: number | null;
+            readonly department_name: string | null;
+            phone?: string;
+            email?: string;
+            national_id?: string;
+            bank_account?: string;
+            /** Format: date */
+            joined_on: string;
+            /** Format: date */
+            left_on?: string | null;
+            readonly current_contract: components["schemas"]["CurrentContract"] | null;
         };
         FiscalPeriod: {
             readonly id: number;
@@ -2697,6 +2905,19 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Bill"][];
         };
+        PaginatedContractList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Contract"][];
+        };
         PaginatedCreditNoteList: {
             /**
              * Format: uri
@@ -2735,6 +2956,19 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["CustomerReceipt"][];
+        };
+        PaginatedEmployeeList: {
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cD00ODY%3D"
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+             */
+            previous?: string | null;
+            results: components["schemas"]["Employee"][];
         };
         PaginatedGoodsReceiptList: {
             /**
@@ -2953,6 +3187,22 @@ export interface components {
             readonly id?: number;
             name?: string;
         };
+        PatchedContract: {
+            readonly id?: number;
+            employee?: number;
+            readonly employee_name?: string;
+            kind?: components["schemas"]["ContractKindEnum"];
+            /** Format: date */
+            starts_on?: string;
+            /** Format: date */
+            ends_on?: string | null;
+            structure?: number;
+            readonly structure_name?: string;
+            /** Format: decimal */
+            basic_salary?: string;
+            note?: string;
+            readonly pay?: components["schemas"]["Pay"] | null;
+        };
         PatchedCustomer: {
             readonly id?: number;
             code?: string;
@@ -2967,6 +3217,29 @@ export interface components {
             is_active?: boolean;
             /** Format: decimal */
             readonly balance?: string | null;
+        };
+        PatchedDepartment: {
+            readonly id?: number;
+            code?: string;
+            name?: string;
+            is_active?: boolean;
+        };
+        PatchedEmployee: {
+            readonly id?: number;
+            code?: string;
+            full_name?: string;
+            job_title?: string;
+            department?: number | null;
+            readonly department_name?: string | null;
+            phone?: string;
+            email?: string;
+            national_id?: string;
+            bank_account?: string;
+            /** Format: date */
+            joined_on?: string;
+            /** Format: date */
+            left_on?: string | null;
+            readonly current_contract?: components["schemas"]["CurrentContract"] | null;
         };
         PatchedMember: {
             readonly id?: number;
@@ -3045,6 +3318,25 @@ export interface components {
             code?: string;
             name?: string;
             is_active?: boolean;
+        };
+        /** @description What one month comes to under a structure, before income tax. */
+        Pay: {
+            lines: components["schemas"]["PayLine"][];
+            /** Format: decimal */
+            gross: string;
+            /** Format: decimal */
+            deductions: string;
+            /** Format: decimal */
+            net: string;
+            /** Format: decimal */
+            taxable: string;
+        };
+        PayLine: {
+            name: string;
+            kind: string;
+            /** Format: decimal */
+            amount: string;
+            taxable: boolean;
         };
         PosWarehouse: {
             readonly id: number;
@@ -3182,6 +3474,22 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "user" | "assistant" | "reset" | "draft" | "done";
+        SalaryComponent: {
+            name: string;
+            kind: components["schemas"]["ComponentKindEnum"];
+            /** Format: decimal */
+            amount?: string | null;
+            /** Format: decimal */
+            percent?: string | null;
+            taxable?: boolean;
+        };
+        SalaryStructure: {
+            readonly id: number;
+            name: string;
+            note?: string;
+            is_active?: boolean;
+            components: components["schemas"]["SalaryComponent"][];
+        };
         SaleRequest: {
             lines: components["schemas"]["CartLine"][];
             method: components["schemas"]["MethodEnum"];
@@ -4617,6 +4925,479 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    hr_contracts_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                employee?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedContractList"];
+                };
+            };
+        };
+    };
+    hr_contracts_create: {
+        parameters: {
+            query?: {
+                employee?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Contract"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contract"];
+                };
+            };
+        };
+    };
+    hr_contracts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contract"];
+                };
+            };
+        };
+    };
+    hr_contracts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_contracts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContract"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contract"];
+                };
+            };
+        };
+    };
+    hr_departments_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Department"][];
+                };
+            };
+        };
+    };
+    hr_departments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Department"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Department"];
+                };
+            };
+        };
+    };
+    hr_departments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Department"];
+                };
+            };
+        };
+    };
+    hr_departments_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_departments_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDepartment"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Department"];
+                };
+            };
+        };
+    };
+    hr_employees_list: {
+        parameters: {
+            query?: {
+                /** @description The pagination cursor value. */
+                cursor?: string;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                q?: string;
+                status?: "active" | "left";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedEmployeeList"];
+                };
+            };
+        };
+    };
+    hr_employees_create: {
+        parameters: {
+            query?: {
+                q?: string;
+                status?: "active" | "left";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Employee"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_employees_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_employees_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_employees_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEmployee"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    hr_salary_structures_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryStructure"][];
+                };
+            };
+        };
+    };
+    hr_salary_structures_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryStructure"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryStructure"];
+                };
+            };
+        };
+    };
+    hr_salary_structures_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryStructure"];
+                };
+            };
+        };
+    };
+    hr_salary_structures_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryStructure"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryStructure"];
+                };
+            };
+        };
+    };
+    hr_salary_structures_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    hr_salary_structures_preview_retrieve: {
+        parameters: {
+            query: {
+                basic: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Pay"];
                 };
             };
         };
