@@ -21,7 +21,16 @@ from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEnt
 from apps.assistant import drafts
 from apps.assistant import services as assistant
 from apps.hr import services as hr
-from apps.hr.models import Contract, Department, Employee, SalaryStructure
+from apps.hr import time_off
+from apps.hr.models import (
+    Contract,
+    Department,
+    Employee,
+    Holiday,
+    LeaveRequest,
+    LeaveType,
+    SalaryStructure,
+)
 from apps.inventory import services as inventory
 from apps.inventory.models import (
     Batch,
@@ -67,6 +76,7 @@ USER_LEVEL = {
     "api/accounts/delete/",
     "api/assistant/ask/",
     "api/assistant/reset/",
+    "api/hr/holidays/fill/",
     "api/accounts/verify-email/resend/",
     "api/tenants/",
     "api/invitations/accept/",
@@ -478,6 +488,62 @@ tenant_endpoint("api/hr/employees/")(lambda m: ("/api/hr/employees/", _employee(
 tenant_endpoint("api/hr/employees/<int:pk>/")(
     lambda m: (f"/api/hr/employees/{_employee(m).pk}/", _employee(m).pk)
 )
+
+
+def _holiday(member: Member) -> Holiday:
+    holiday: Holiday = Holiday.objects.get_or_create(
+        on=timezone.localdate(), defaults={"name": "Private"}
+    )[0]
+    return holiday
+
+
+def _leave_type(member: Member) -> LeaveType:
+    kind: LeaveType = LeaveType.objects.get_or_create(
+        name="Private", defaults={"days_per_year": 0}
+    )[0]
+    return kind
+
+
+def _leave(member: Member) -> LeaveRequest:
+    found: LeaveRequest | None = LeaveRequest.objects.filter(employee=_employee(member)).first()
+    if found is None:
+        found = LeaveRequest.objects.create(
+            employee=_employee(member),
+            leave_type=_leave_type(member),
+            starts_on=timezone.localdate(),
+            ends_on=timezone.localdate(),
+            days=Decimal(1),
+        )
+    return found
+
+
+def _hr_settings(member: Member) -> tuple[str, int]:
+    time_off.save_settings(member.user, {"weekend": [4, 5]})
+    return "/api/hr/settings/", 0
+
+
+def _attendance(member: Member) -> tuple[str, int]:
+    _employee(member)
+    return f"/api/hr/attendance/?date={timezone.localdate()}", _employee(member).pk
+
+
+tenant_endpoint("api/hr/settings/")(_hr_settings)
+tenant_endpoint("api/hr/holidays/")(lambda m: ("/api/hr/holidays/", _holiday(m).pk))
+tenant_endpoint("api/hr/holidays/<int:pk>/")(
+    lambda m: (f"/api/hr/holidays/{_holiday(m).pk}/", _holiday(m).pk)
+)
+tenant_endpoint("api/hr/leave-types/")(lambda m: ("/api/hr/leave-types/", _leave_type(m).pk))
+tenant_endpoint("api/hr/leave-types/<int:pk>/")(
+    lambda m: (f"/api/hr/leave-types/{_leave_type(m).pk}/", _leave_type(m).pk)
+)
+tenant_endpoint("api/hr/leave/")(lambda m: ("/api/hr/leave/", _leave(m).pk))
+tenant_endpoint("api/hr/leave/<int:pk>/")(
+    lambda m: (f"/api/hr/leave/{_leave(m).pk}/", _leave(m).pk)
+)
+tenant_endpoint("api/hr/leave/balances/")(
+    lambda m: (f"/api/hr/leave/balances/?employee={_employee(m).pk}", _employee(m).pk)
+)
+tenant_endpoint("api/hr/attendance/")(_attendance)
 tenant_endpoint("api/hr/contracts/")(lambda m: ("/api/hr/contracts/", _contract(m).pk))
 tenant_endpoint("api/hr/contracts/<int:pk>/")(
     lambda m: (f"/api/hr/contracts/{_contract(m).pk}/", _contract(m).pk)
@@ -589,6 +655,8 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/accounting/entries/<int:pk>/post/": lambda m: (
         f"/api/accounting/entries/{_draft(m)}/post/"
     ),
+    "api/hr/leave/<int:pk>/approve/": lambda m: f"/api/hr/leave/{_leave(m).pk}/approve/",
+    "api/hr/leave/<int:pk>/reject/": lambda m: f"/api/hr/leave/{_leave(m).pk}/reject/",
     "api/assistant/drafts/<int:pk>/confirm/": lambda m: (
         f"/api/assistant/drafts/{_chat_draft(m)}/confirm/"
     ),
@@ -695,46 +763,75 @@ def test_other_tenants_rows_are_invisible(
     assert mine.status_code == 200
 
     theirs = outsider.client().get(url)
-    if route in ("api/sales/bill-settings/logo/", "api/sales/bill-settings/signature/"):
-        # The owner has a picture; another business has none, so there is nothing to show it.
-        assert theirs.status_code == 404
-        return
-    if "<" in route:
+    special = SPECIAL_CHECKS.get(route)
+    if special is not None:
+        special(mine, theirs, row_id)
+    elif "<" in route:
         assert theirs.status_code == 404
         for method in ("patch", "delete"):
             assert getattr(outsider.client(), method)(url, {}, format="json").status_code in (
                 404,
                 405,
             )
+    elif route.startswith("api/reports/"):
+        # The owner sold something worth 5.00; none of it may reach another business's report.
+        assert theirs.status_code == 200
+        assert mine.json() != theirs.json()
+        assert '"5.00"' not in theirs.content.decode()
     else:
         assert theirs.status_code == 200
-        body = theirs.json()
-        if route.startswith("api/reports/"):
-            # The owner sold something worth 5.00; none of it may reach another business's report.
-            assert mine.json() != body
-            assert '"5.00"' not in theirs.content.decode()
-            return
-        if route == "api/assistant/check/":
-            assert mine.json()["count"] == 1
-            assert body["count"] == 0
-            return
-        if route == "api/sales/bill-settings/":
-            assert mine.json()["address"] == "Private Street"
-            assert body["address"] == ""
-            return
-        if route == "api/automation/":
-            # The owner turned theirs off; that must not reach another business.
-            assert mine.json() == {"daily_summary": False}
-            assert body == {"daily_summary": True}
-            return
-        if isinstance(body, dict) and "total_value" in body:
-            assert body == {"total_value": "0.00", "lines": 0}
-            return
-        if isinstance(body, dict) and "low_stock" in body:
-            rows = [{"id": row["product"]} for row in body["low_stock"]]
-        else:
-            rows = body if isinstance(body, list) else body.get("results", body.get("rows"))
-        assert row_id not in [row["id"] for row in rows]
+        assert row_id not in _row_ids(theirs.json())
+
+
+def _row_ids(body: Any) -> list[int]:
+    if isinstance(body, dict) and "low_stock" in body:
+        return [row["product"] for row in body["low_stock"]]
+    rows = body if isinstance(body, list) else body.get("results", body.get("rows"))
+    return [row["id"] for row in rows]
+
+
+def _not_found(mine: Any, theirs: Any, row_id: int) -> None:
+    # The owner's row exists; for another business there is no such thing to show.
+    assert theirs.status_code == 404
+
+
+def _same_shape(field: str, owners: Any, others: Any) -> Callable[[Any, Any, int], None]:
+    """A one-per-business setting: the owner's change must not show for anyone else."""
+
+    def check(mine: Any, theirs: Any, row_id: int) -> None:
+        assert theirs.status_code == 200
+        assert mine.json()[field] == owners
+        assert theirs.json()[field] == others
+
+    return check
+
+
+def _no_stock_value(mine: Any, theirs: Any, row_id: int) -> None:
+    assert theirs.json() == {"total_value": "0.00", "lines": 0}
+
+
+def _attendance_rows(mine: Any, theirs: Any, row_id: int) -> None:
+    assert theirs.status_code == 200
+    assert row_id not in [person["employee"] for person in theirs.json()["people"]]
+
+
+def _automation_check(mine: Any, theirs: Any, row_id: int) -> None:
+    # The owner turned theirs off; that must not reach another business.
+    assert mine.json() == {"daily_summary": False}
+    assert theirs.json() == {"daily_summary": True}
+
+
+SPECIAL_CHECKS: dict[str, Callable[[Any, Any, int], None]] = {
+    "api/hr/leave/balances/": _not_found,
+    "api/sales/bill-settings/logo/": _not_found,
+    "api/sales/bill-settings/signature/": _not_found,
+    "api/assistant/check/": _same_shape("count", 1, 0),
+    "api/hr/settings/": _same_shape("weekend", [4, 5], [6]),
+    "api/sales/bill-settings/": _same_shape("address", "Private Street", ""),
+    "api/hr/attendance/": _attendance_rows,
+    "api/automation/": _automation_check,
+    "api/inventory/stock-value/": _no_stock_value,
+}
 
 
 @pytest.mark.django_db

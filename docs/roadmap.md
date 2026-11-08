@@ -63,8 +63,8 @@ in CI, and seed data.
 
 ## M6. HR and payroll (target 2027-04-11)
 
-- [ ] Employees, departments, contracts and salary structures
-- [ ] Attendance and leave on working days (weekends and public holidays from the `holidays` library)
+- [ ] Employees, departments, contracts and salary structures (in review: #44)
+- [ ] Attendance and leave on working days (weekends and public holidays from the `holidays` library) (in review: #45)
 - [ ] Monthly payroll: earnings, deductions, income tax from slabs stored as data per tax year
 - [ ] Payslips as PDF; payroll posts its journal entry
 

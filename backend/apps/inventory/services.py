@@ -123,8 +123,17 @@ class LineInput:
 # Master data
 
 
+def _shown(value: Any) -> str | None:
+    """What the audit row keeps of a private value: that there is one, never the value."""
+    return "kept" if value else None
+
+
 def _save(
-    actor: User, instance: models.Model, values: dict[str, Any], fields: tuple[str, ...]
+    actor: User,
+    instance: models.Model,
+    values: dict[str, Any],
+    fields: tuple[str, ...],
+    private: tuple[str, ...] = (),
 ) -> Any:
     creating = instance.pk is None
     before = {f: getattr(instance, f, None) for f in fields}
@@ -141,16 +150,22 @@ def _save(
         for k in fields
         if creating or before[k] != after[k]
     }
+    # Audit rows are never cleared, so a private field records only that it changed.
+    for k in private:
+        if k in changes:
+            changes[k] = [_shown(changes[k][0]), _shown(changes[k][1])]
     audit.record(Action.CREATE if creating else Action.UPDATE, instance, actor, changes)
     return instance
 
 
 @transaction.atomic
-def save_master(actor: User, instance: models.Model, values: dict[str, Any]) -> Any:
+def save_master(
+    actor: User, instance: models.Model, values: dict[str, Any], private: tuple[str, ...] = ()
+) -> Any:
     fields = tuple(
         f.attname for f in instance._meta.concrete_fields if f.attname not in ("id", "tenant_id")
     )
-    return _save(actor, instance, values, fields)
+    return _save(actor, instance, values, fields, private)
 
 
 @transaction.atomic
