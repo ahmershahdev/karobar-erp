@@ -1689,6 +1689,7 @@
     },
     "atLeast": "at least {{floor}}",
     "insuredFromShort": "first insured from {{date}}",
-    "gulfRatesHint": "No rates ship for the Gulf: no official text could be read. Enter each one from your GOSI or GPSSA statement, with its source. Mark the pay parts that count (for GOSI, basic and housing) on the Salary structures screen."
+    "gulfRatesHint": "No rates ship for the Gulf: no official text could be read. Enter each one from your GOSI or GPSSA statement, with its source. Mark the pay parts that count (for GOSI, basic and housing) on the Salary structures screen.",
+    "noGulfRates": "No rates yet. Payroll charges no social insurance until you add them."
   }
 }

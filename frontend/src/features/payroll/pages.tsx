@@ -1043,9 +1043,25 @@ function basisOf(rate: Rate): Basis {
 }
 
 function RateForm({ rate, onDone }: { rate?: Rate; onDone: () => void }) {
+  // Wait for the business's country, so the form starts with that country's schemes.
+  const country = useCountry().data?.holiday_country;
+  if (!country) {
+    return null;
+  }
+  return <CountryRateForm country={country} rate={rate} onDone={onDone} />;
+}
+
+function CountryRateForm({
+  country,
+  rate,
+  onDone,
+}: {
+  country: string;
+  rate?: Rate | undefined;
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const save = useTenantAction(CONTRIBUTION_KEYS);
-  const country = useCountry().data?.holiday_country ?? 'PK';
   const schemes = SCHEMES[country] ?? SCHEMES.PK ?? [];
   const pakistan = country === 'PK';
   const empty = {
@@ -1307,6 +1323,7 @@ function RatesPanel() {
   const remove = useTenantAction(CONTRIBUTION_KEYS);
   const [editing, setEditing] = useState<number | null>(null);
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
+  const pakistan = (useCountry().data?.holiday_country ?? 'PK') === 'PK';
   const rates = useQuery({
     queryKey: [membership.tenant_id, 'payroll-contribution-rates'],
     queryFn: () => unwrap(api.GET('/api/payroll/contribution-rates/')),
@@ -1314,7 +1331,10 @@ function RatesPanel() {
   return (
     <Panel title={t('payroll.ratesTitle')}>
       <div className="space-y-4">
-        {rates.data?.length === 0 && <p className="text-muted">{t('payroll.noRates')}</p>}
+        {!pakistan && <Hint>{t('payroll.gulfRatesHint')}</Hint>}
+        {rates.data?.length === 0 && (
+          <p className="text-muted">{t(pakistan ? 'payroll.noRates' : 'payroll.noGulfRates')}</p>
+        )}
         {!!rates.data?.length && (
           <ul className="divide-y divide-line">
             {rates.data.map((rate: Rate) =>
@@ -1391,11 +1411,6 @@ export function ContributionsPage() {
         title={t('payroll.contributionsTitle')}
         subtitle={t('payroll.contributionsBody')}
       />
-      {!pakistan && (
-        <Panel title={t('payroll.ratesTitle')}>
-          <Hint>{t('payroll.gulfRatesHint')}</Hint>
-        </Panel>
-      )}
       {pakistan && can(membership, 'payroll', 'create') && (
         <Panel title={t('payroll.addFigures')}>
           <div className="space-y-4">
