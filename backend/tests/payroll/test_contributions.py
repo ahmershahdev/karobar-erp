@@ -362,3 +362,27 @@ def test_rates_and_wages_change_as_whole_rows(boss: Member) -> None:  # noqa: F8
     body = {"source": "Only this"}
     assert client.patch(f"/api/payroll/minimum-wages/{wage_row.pk}/", body).status_code == 405
     assert client.patch(f"/api/payroll/contribution-rates/{rate_row.pk}/", body).status_code == 405
+
+
+def test_a_whole_row_change_resets_what_it_leaves_out(boss: Member) -> None:  # noqa: F811
+    row = eobi("ICT")
+    body = {
+        "scheme": "social_security",
+        "starts_on": "2026-07-01",
+        "employer_percent": "6",
+        "employee_percent": "0",
+        "source": "Corrected",
+    }
+    reply = boss.client().put(f"/api/payroll/contribution-rates/{row.pk}/", body, format="json")
+    assert reply.status_code == 200, reply.content
+    assert (reply.json()["province"], reply.json()["on_minimum_wage"]) == ("", False)
+
+
+def test_someone_who_may_change_can_correct_a_row(boss: Member) -> None:  # noqa: F811
+    row = wage("PB", "40000")
+    joined = create_membership(role=create_role(permissions={"payroll": ["view", "update"]}))
+    editor = Member(user=joined.user, tenant=boss.tenant, membership=joined).client()
+    body = {"province": "PB", "starts_on": "2026-07-01", "amount": "40500", "source": "Fixed"}
+    reply = editor.put(f"/api/payroll/minimum-wages/{row.pk}/", body, format="json")
+    assert reply.status_code == 200, reply.content
+    assert editor.delete(f"/api/payroll/minimum-wages/{row.pk}/").status_code == 403

@@ -348,7 +348,12 @@ class ContributionRateDetailView(
         self, serializer: ContributionRateSerializer
     ) -> None:
         row = cast(ContributionRate, serializer.instance)
-        values = {"wage_cap": None, "province": "", **serializer.validated_data}
+        values = {
+            "wage_cap": None,
+            "province": "",
+            "on_minimum_wage": False,
+            **serializer.validated_data,
+        }
         serializer.instance = run(contributions.save, actor(self.request), row, values)
 
     def perform_destroy(self, instance: ContributionRate) -> None:
