@@ -11,7 +11,7 @@ from apps.assistant.models import ChatMessage
 from apps.purchasing.models import Supplier
 from apps.sales import services as sales
 from apps.tenancy.context import tenant_context
-from tests.assistant.conftest import staff_in
+from tests.assistant.conftest import answered, staff_in
 from tests.conftest import Member
 from tests.sales.test_sales import Seller, make_seller
 
@@ -36,8 +36,10 @@ def names(member: Member) -> set[str]:
 def test_a_lookup_result_reaches_the_model_and_the_answer_is_kept(seller: Seller) -> None:
     replies = [look("look_up_product", "soap"), "You have 20 soap at 150 each."]
     with patch.object(services, "complete", side_effect=replies) as complete:
-        reply = seller.shop.member.client().post(
-            "/api/assistant/ask/", {"message": "How much soap?"}, format="json"
+        reply = answered(
+            seller.shop.member.client().post(
+                "/api/assistant/ask/", {"message": "How much soap?"}, format="json"
+            )
         )
     assert reply.json()["content"] == "You have 20 soap at 150 each."
     sent = complete.call_args_list[1].args[0]
@@ -60,8 +62,10 @@ def test_a_lookup_can_lead_to_a_draft(seller: Seller) -> None:
         json.dumps({"customer": "C1", "items": [{"product": "SOAP-1", "quantity": 2}]}),
     )
     with patch.object(services, "complete", side_effect=[look("look_up_customer", "C1"), draft]):
-        reply = seller.shop.member.client().post(
-            "/api/assistant/ask/", {"message": "Bill Kiryana 2 soap"}, format="json"
+        reply = answered(
+            seller.shop.member.client().post(
+                "/api/assistant/ask/", {"message": "Bill Kiryana 2 soap"}, format="json"
+            )
         )
     assert reply.json()["role"] == "draft"
     assert reply.json()["card"]["total"] == "300.00"
@@ -138,8 +142,10 @@ def test_another_business_is_never_looked_up(seller: Seller) -> None:
 def test_lookups_stop_after_a_few_and_the_last_turn_must_answer(seller: Seller) -> None:
     replies = [look("look_up_product", "soap")] * services.MAX_LOOKUPS + ["Done looking."]
     with patch.object(services, "complete", side_effect=replies) as complete:
-        reply = seller.shop.member.client().post(
-            "/api/assistant/ask/", {"message": "Stock?"}, format="json"
+        reply = answered(
+            seller.shop.member.client().post(
+                "/api/assistant/ask/", {"message": "Stock?"}, format="json"
+            )
         )
     assert reply.json()["content"] == "Done looking."
     last_tools = complete.call_args_list[-1].args[1]
@@ -149,33 +155,37 @@ def test_lookups_stop_after_a_few_and_the_last_turn_must_answer(seller: Seller) 
 def test_a_model_that_keeps_looking_gets_a_calm_message(seller: Seller) -> None:
     replies = [look("look_up_product", "soap")] * (services.MAX_LOOKUPS + 1)
     with patch.object(services, "complete", side_effect=replies):
-        reply = seller.shop.member.client().post(
-            "/api/assistant/ask/", {"message": "Stock?"}, format="json"
+        reply = answered(
+            seller.shop.member.client().post(
+                "/api/assistant/ask/", {"message": "Stock?"}, format="json"
+            )
         )
     assert reply.status_code == 503
 
 
 def test_an_answer_out_of_time_is_a_calm_message(seller: Seller) -> None:
-    clock = iter([0.0, 0.0, 24.0])
+    clock = iter([0.0, 0.0, 44.0])
     with (
         patch("apps.assistant.services.time.monotonic", side_effect=lambda: next(clock)),
         patch.object(services, "complete", return_value=look("look_up_product", "soap")),
     ):
-        reply = seller.shop.member.client().post(
-            "/api/assistant/ask/", {"message": "Stock?"}, format="json"
+        reply = answered(
+            seller.shop.member.client().post(
+                "/api/assistant/ask/", {"message": "Stock?"}, format="json"
+            )
         )
     assert reply.status_code == 503
 
 
 def test_each_call_gets_only_the_time_left(seller: Seller) -> None:
-    clock = iter([0.0, 0.0, 12.0])
+    clock = iter([0.0, 0.0, 30.0])
     replies = [look("look_up_product", "soap"), "ok"]
     with (
         patch("apps.assistant.services.time.monotonic", side_effect=lambda: next(clock)),
         patch.object(services, "complete", side_effect=replies) as complete,
     ):
         seller.shop.member.client().post("/api/assistant/ask/", {"message": "?"}, format="json")
-    assert [call.args[2] for call in complete.call_args_list] == [20, 13]
+    assert [call.args[2] for call in complete.call_args_list] == [20, 15]
 
 
 def test_the_tool_call_id_is_read_from_groq(seller: Seller) -> None:

@@ -24,11 +24,12 @@ Last updated: 2026-11-09. Update at the end of every work session.
 
 ## Next session
 
+- In review: `feat/chat-celery`. Chat answers are worked out by a Celery worker and the screen polls a job, so a slow Groq reply no longer holds a web worker. The first of the pre-launch items (see the launch order in the maintainer's plan: pre-launch items, seed data, all docs, then Playwright tests and deploy).
+
 1. Merge `feat/gulf-insurance` after review and a check in the browser. Then the WPS salary file, then M7. #56 (EOBI) has still not been tried in the browser.
 2. Find the official EOBI contribution text (the amendment to section 9 of the EOBI Act 1976, or an EOBI circular) and the provincial social security rates and ceilings; add them to `apps/payroll/data/contributions.json` only with that source.
 3. The tax year 2028 slabs (from 1 July 2027) need adding once the Finance Act 2027 is out; payroll for July 2027 will refuse to run until a table covers it.
 4. Gulf payroll later and separately: no salary tax, but GOSI or the UAE pension for nationals, end-of-service gratuity and the WPS salary file. Pakistan EOBI and provincial social security after the payroll run.
-5. Before switching the chat on in production: move each answer to a Celery job the screen polls, so a slow Groq reply or lookup can't hold a web worker. This is also the fix CodeRabbit asked for on #41 about bounding slow lookups.
 6. Demand forecasting: a Django app run nightly by Celery, using statsmodels with a simple fallback for thin sales history.
 
 ## Decisions taken on 2026-11-07 and 2026-11-08
@@ -44,7 +45,6 @@ Last updated: 2026-11-09. Update at the end of every work session.
 - A Facebook sign-up keeps its link when the address is confirmed by email, because that is how a real Facebook user confirms. Someone who claims another person's address and gets them to click the link would keep an account on it. Decide how Facebook accounts should be confirmed.
 - Reports that read all history stay slow at 1 million lines, on MySQL with its default 128 MB buffer pool: balance sheet and all-time trial balance about 4.7s, cash flow about 7s, dashboard about 4.4s. Each joins every line to its entry. A larger buffer pool should help, which was not measured; the real fix is keeping running balances per account or copying the date onto the line.
 - Chat messages can never be deleted through the app, which is what makes them tamper-evident. Decide how long to keep them before launch.
-- Before switching the chat on in production: each question holds a web worker while it builds the figures and waits up to 25 seconds for Groq and lookups, and the Dockerfile runs 3 workers, so three people chatting at once could stall the whole API. Moving the call to Celery with polling is the planned fix (step 5 above).
 - Someone who loses a permission keeps the figures in their old chat replies, and those replies still go to Groq as history. The maintainer accepted this on #34 for now; fixing it needs each reply tagged with what it was allowed to include.
 - The chat check can't notice the newest messages being deleted in the database. Catching that needs the latest signature and count stored outside the chat table. Decide if it matters.
 - The home page warning after a failed refresh says the server could not be reached, not that the figures on screen may be out of date. The maintainer left it that way on #32; revisit it if shopkeepers misread old figures.

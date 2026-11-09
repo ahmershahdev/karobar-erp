@@ -809,6 +809,8 @@ paths:
   /api/assistant/ask/:
     post:
       operationId: assistant_ask_create
+      description: Save the question and hand the answer to a worker. The screen polls
+        the job.
       tags:
       - assistant
       requestBody:
@@ -820,11 +822,11 @@ paths:
       security:
       - cookieAuth: []
       responses:
-        '200':
+        '202':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChatMessage'
+                $ref: '#/components/schemas/ChatJob'
           description: ''
   /api/assistant/check/:
     get:
@@ -859,6 +861,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatMessage'
+          description: ''
+  /api/assistant/jobs/{id}/:
+    get:
+      operationId: assistant_jobs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - assistant
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatJob'
           description: ''
   /api/assistant/messages/:
     get:
@@ -6628,6 +6650,37 @@ components:
       - count
       - enabled
       - ok
+    ChatJob:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ChatJobStatusEnum'
+        question:
+          $ref: '#/components/schemas/ChatMessage'
+        answer:
+          allOf:
+          - $ref: '#/components/schemas/ChatMessage'
+          nullable: true
+        error:
+          type: string
+      required:
+      - answer
+      - error
+      - id
+      - question
+      - status
+    ChatJobStatusEnum:
+      enum:
+      - waiting
+      - done
+      - failed
+      type: string
+      description: |-
+        * `waiting` - Waiting
+        * `done` - Done
+        * `failed` - Failed
     ChatMessage:
       type: object
       properties:

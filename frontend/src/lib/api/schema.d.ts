@@ -485,6 +485,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Save the question and hand the answer to a worker. The screen polls the job. */
         post: operations["assistant_ask_create"];
         delete?: never;
         options?: never;
@@ -518,6 +519,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["assistant_drafts_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assistant/jobs/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["assistant_jobs_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3005,6 +3022,20 @@ export interface components {
             count: number;
             broken_at: number | null;
         };
+        ChatJob: {
+            id: number;
+            status: components["schemas"]["ChatJobStatusEnum"];
+            question: components["schemas"]["ChatMessage"];
+            answer: components["schemas"]["ChatMessage"] | null;
+            error: string;
+        };
+        /**
+         * @description * `waiting` - Waiting
+         *     * `done` - Done
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        ChatJobStatusEnum: "waiting" | "done" | "failed";
         ChatMessage: {
             readonly id: number;
             role: components["schemas"]["RoleEnum"];
@@ -5805,12 +5836,12 @@ export interface operations {
             };
         };
         responses: {
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ChatMessage"];
+                    "application/json": components["schemas"]["ChatJob"];
                 };
             };
         };
@@ -5851,6 +5882,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatMessage"];
+                };
+            };
+        };
+    };
+    assistant_jobs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatJob"];
                 };
             };
         };

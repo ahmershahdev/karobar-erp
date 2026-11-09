@@ -12,7 +12,7 @@ from apps.purchasing.models import PurchaseOrder, Supplier
 from apps.sales.models import Invoice, SalesOrder
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import AuditEvent
-from tests.assistant.conftest import staff_in
+from tests.assistant.conftest import answered, staff_in
 from tests.conftest import Member
 from tests.sales.test_sales import Seller, make_seller
 
@@ -30,7 +30,7 @@ def calls(tool: str, **arguments: Any) -> Any:
 
 
 def ask(member: Member, text: str = "Make a bill") -> Any:
-    return member.client().post("/api/assistant/ask/", {"message": text}, format="json")
+    return answered(member.client().post("/api/assistant/ask/", {"message": text}, format="json"))
 
 
 def soap_bill(quantity: Any = 4, **extra: Any) -> Any:
