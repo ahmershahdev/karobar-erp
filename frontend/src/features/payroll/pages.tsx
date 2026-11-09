@@ -927,12 +927,22 @@ function provinceName(code: string | undefined, t: (key: string) => string): str
   return code ? t(`hr.provinces.${code}`) : t('payroll.everywhere');
 }
 
-function SourceField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+function SourceField({
+  value,
+  onChange,
+  gulf = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  gulf?: boolean;
+}) {
   const { t } = useTranslation();
   return (
     <Field
-      label={t('payroll.source')}
-      placeholder={t('payroll.contributionSourcePlaceholder')}
+      label={t('payroll.figureSource')}
+      placeholder={t(
+        gulf ? 'payroll.gulfSourcePlaceholder' : 'payroll.contributionSourcePlaceholder',
+      )}
       hint={t('payroll.sourceHint')}
       required
       maxLength={500}
@@ -1226,7 +1236,7 @@ function CountryRateForm({
           />
         )}
       </div>
-      <SourceField value={form.source} onChange={(source) => set({ source })} />
+      <SourceField value={form.source} onChange={(source) => set({ source })} gulf={!pakistan} />
       {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={save.isPending}>

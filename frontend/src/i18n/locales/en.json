@@ -1622,7 +1622,7 @@
     "onMinimumWageShort": "on the minimum wage",
     "onPayShort": "on pay",
     "upTo": "up to {{cap}}",
-    "employerShare": "Employer’s EOBI and social security: {{amount}}. This is paid on top of pay.",
+    "employerShare": "Employer’s social insurance: {{amount}}. This is paid on top of pay.",
     "contributionSourcePlaceholder": "Notification number and date, or the EOBI circular",
     "addFigures": "Add figures",
     "filledFigures": "Figures added: {{added}}.",
@@ -1690,6 +1690,8 @@
     "atLeast": "at least {{floor}}",
     "insuredFromShort": "first insured from {{date}}",
     "gulfRatesHint": "No rates ship for the Gulf: no official text could be read. Enter each one from your GOSI or GPSSA statement, with its source. Mark the pay parts that count (for GOSI, basic and housing) on the Salary structures screen.",
-    "noGulfRates": "No rates yet. Payroll charges no social insurance until you add them."
+    "noGulfRates": "No rates yet. Payroll charges no social insurance until you add them.",
+    "figureSource": "Where the figure comes from",
+    "gulfSourcePlaceholder": "Your GOSI or GPSSA statement, with its date"
   }
 }
