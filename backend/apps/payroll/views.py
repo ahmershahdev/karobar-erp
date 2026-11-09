@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from django.db.models import Count, QuerySet
 from django.http import HttpResponse
+from django.utils.http import content_disposition_header
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
@@ -20,7 +21,7 @@ from apps.platform.csv_export import csv_response
 from apps.sales import documents as printing
 from apps.tenancy.permissions import HasModulePermission, membership_of
 
-from . import contributions, documents, gratuity, openings, payments, runs, services
+from . import contributions, documents, gratuity, openings, payments, runs, services, wps
 from .models import (
     ContributionRate,
     GratuityRule,
@@ -279,6 +280,28 @@ class TransferListView(PayrollView, generics.GenericAPIView[PayrollRun]):
             payments.TRANSFER_HEADER,
             payments.transfer_rows(found),
         )
+
+
+class WpsFileView(PayrollView, generics.GenericAPIView[PayrollRun]):
+    """The UAE WPS salary file (SIF). Like the transfer list it carries account numbers and
+    labour card IDs, so it needs HR view rights as well as payroll ones."""
+
+    def get_queryset(self) -> QuerySet[PayrollRun]:
+        return PayrollRun.objects.all()
+
+    @extend_schema(responses={(200, "text/plain"): str})
+    def get(self, request: Request, pk: int) -> HttpResponse:
+        found: PayrollRun = self.get_object()
+        membership = membership_of(request)
+        role = membership.role
+        if not membership.is_owner and (
+            role is None or "view" not in role.permissions.get("hr", [])
+        ):
+            raise PermissionDenied
+        name, text = run(wps.salary_file, found)
+        response = HttpResponse(text, content_type="text/plain; charset=us-ascii")
+        response["Content-Disposition"] = content_disposition_header(True, name) or "attachment"
+        return response
 
 
 class PayrollRunReverseView(PayrollView, generics.GenericAPIView[PayrollRun]):

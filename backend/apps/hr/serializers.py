@@ -154,6 +154,8 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "email",
             "national_id",
             "bank_account",
+            "wps_person_id",
+            "wps_agent_code",
             "joined_on",
             "left_on",
             "province",
@@ -174,8 +176,22 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "email": {"required": False},
             "national_id": {"required": False},
             "bank_account": {"required": False},
+            "wps_person_id": {"required": False},
+            "wps_agent_code": {"required": False},
             "left_on": {"required": False, "allow_null": True},
         }
+
+    def validate_wps_person_id(self, value: str) -> str:
+        code = value.strip()
+        if code and not (code.isascii() and code.isalnum()):
+            raise serializers.ValidationError("Use the letters and digits on the labour card.")
+        return code
+
+    def validate_wps_agent_code(self, value: str) -> str:
+        code = value.strip()
+        if code and not (code.isascii() and code.isdigit() and len(code) == 9):
+            raise serializers.ValidationError("A routing code is 9 digits.")
+        return code
 
     def validate_nationality(self, value: str) -> str:
         code = value.strip().upper()

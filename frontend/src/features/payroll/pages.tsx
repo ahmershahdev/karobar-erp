@@ -116,7 +116,15 @@ function Payslips({ run }: { run: RunDetail }) {
 
 // Paying a posted month
 
-function TransferListButton({ id, month }: { id: number; month: string }) {
+function DownloadButton({
+  path,
+  fallbackName,
+  label,
+}: {
+  path: string;
+  fallbackName: string;
+  label: string;
+}) {
   const { t } = useTranslation();
   const { membership } = useWorkspace();
   const [problem, setProblem] = useState('');
@@ -129,7 +137,7 @@ function TransferListButton({ id, month }: { id: number; month: string }) {
         onClick={() => {
           setBusy(true);
           setProblem('');
-          void fetch(`${env.apiBaseUrl}/api/payroll/runs/${id}/transfer-list/`, {
+          void fetch(`${env.apiBaseUrl}${path}`, {
             credentials: 'same-origin',
             headers: { 'X-Tenant': membership.tenant_id },
           })
@@ -140,7 +148,11 @@ function TransferListButton({ id, month }: { id: number; month: string }) {
               const url = URL.createObjectURL(await response.blob());
               const link = document.createElement('a');
               link.href = url;
-              link.download = `salaries-${month.slice(0, 7)}.csv`;
+              // The server names the WPS file after the employer and the moment it was made.
+              const named = /filename="([^"]+)"/.exec(
+                response.headers.get('Content-Disposition') ?? '',
+              );
+              link.download = named?.[1] ?? fallbackName;
               link.click();
               window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
             })
@@ -150,7 +162,7 @@ function TransferListButton({ id, month }: { id: number; month: string }) {
             .finally(() => setBusy(false));
         }}
       >
-        {t('payroll.transferList')}
+        {label}
       </Button>
       {problem && <Alert tone="error">{problem}</Alert>}
     </div>
@@ -273,6 +285,7 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
   const { t, i18n } = useTranslation();
   const { membership } = useWorkspace();
   const action = useTenantAction(KEYS);
+  const uae = useCountry().data?.holiday_country === 'AE';
   // A key, not the text, so the message follows the language if it changes.
   const [notice, setNotice] = useState<'' | 'postedNow' | 'changed'>('');
   const run = useQuery({
@@ -342,7 +355,20 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
         {detail.status === 'posted' && (
           <div className="flex flex-wrap items-start gap-3">
             {can(membership, 'hr', 'view') && (
-              <TransferListButton id={detail.id} month={detail.month} />
+              <>
+                <DownloadButton
+                  path={`/api/payroll/runs/${detail.id}/transfer-list/`}
+                  fallbackName={`salaries-${detail.month.slice(0, 7)}.csv`}
+                  label={t('payroll.transferList')}
+                />
+                {uae && (
+                  <DownloadButton
+                    path={`/api/payroll/runs/${detail.id}/wps-file/`}
+                    fallbackName={`wps-${detail.month.slice(0, 7)}.SIF`}
+                    label={t('payroll.wpsFile')}
+                  />
+                )}
+              </>
             )}
           </div>
         )}

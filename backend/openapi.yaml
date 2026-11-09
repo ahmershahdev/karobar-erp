@@ -3435,6 +3435,29 @@ paths:
               schema:
                 type: string
           description: ''
+  /api/payroll/runs/{id}/wps-file/:
+    get:
+      operationId: payroll_runs_wps_file_retrieve
+      description: |-
+        The UAE WPS salary file (SIF). Like the transfer list it carries account numbers and
+        labour card IDs, so it needs HR view rights as well as payroll ones.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: ''
   /api/payroll/tax-tables/:
     get:
       operationId: payroll_tax_tables_list
@@ -7300,6 +7323,12 @@ components:
         bank_account:
           type: string
           maxLength: 50
+        wps_person_id:
+          type: string
+          maxLength: 14
+        wps_agent_code:
+          type: string
+          maxLength: 9
         joined_on:
           type: string
           format: date
@@ -7733,6 +7762,12 @@ components:
           oneOf:
           - $ref: '#/components/schemas/ProvinceEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        wps_employer_id:
+          type: string
+          maxLength: 13
+        wps_bank_code:
+          type: string
+          maxLength: 9
       required:
       - holiday_country
       - weekend
@@ -9146,6 +9181,12 @@ components:
         bank_account:
           type: string
           maxLength: 50
+        wps_person_id:
+          type: string
+          maxLength: 14
+        wps_agent_code:
+          type: string
+          maxLength: 9
         joined_on:
           type: string
           format: date
@@ -9208,6 +9249,12 @@ components:
           oneOf:
           - $ref: '#/components/schemas/ProvinceEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        wps_employer_id:
+          type: string
+          maxLength: 13
+        wps_bank_code:
+          type: string
+          maxLength: 9
     PatchedLeaveType:
       type: object
       properties:

@@ -28,6 +28,7 @@ from apps.hr.models import (
     Department,
     Employee,
     Holiday,
+    HrSettings,
     LeaveRequest,
     LeaveType,
     SalaryStructure,
@@ -670,6 +671,27 @@ tenant_endpoint("api/payroll/opening-pay/")(
 )
 tenant_endpoint("api/payroll/opening-pay/<int:pk>/")(
     lambda m: (f"/api/payroll/opening-pay/{_opening_pay(m).pk}/", _opening_pay(m).pk)
+)
+
+
+def _wps_run(member: Member) -> PayrollRun:
+    """A posted month of a business turned to the UAE, with everything the salary file needs."""
+    found = _payroll(member, post=True)
+    HrSettings.objects.update_or_create(
+        defaults={
+            "holiday_country": "AE",
+            "wps_employer_id": "965625",
+            "wps_bank_code": "302620122",
+        }
+    )
+    Employee.objects.filter(code="E-P").update(
+        wps_person_id="12345678", wps_agent_code="703420114", bank_account="AE0203"
+    )
+    return found
+
+
+tenant_endpoint("api/payroll/runs/<int:pk>/wps-file/")(
+    lambda m: (f"/api/payroll/runs/{_wps_run(m).pk}/wps-file/", 0)
 )
 tenant_endpoint("api/payroll/runs/<int:pk>/transfer-list/")(
     lambda m: (f"/api/payroll/runs/{_payroll(m, post=True).pk}/transfer-list/", 0)
