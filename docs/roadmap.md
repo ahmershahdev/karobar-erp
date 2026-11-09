@@ -72,8 +72,8 @@ in CI, and seed data.
 - [x] Cancelling approved leave, giving the days back (#51)
 - [x] Pakistan EOBI and provincial social security as dated data with sources; only officially notified minimum wages ship (#56)
 - [x] Gulf end-of-service gratuity: UAE Article 51 and Saudi Articles 84 and 85 as data, a monthly provision and the payout on leaving (#57)
-- [x] Gulf social insurance: GOSI and the UAE pension for nationals by nationality and first-insured date, rates entered by the business (in review)
-- [ ] The WPS salary file
+- [x] Gulf social insurance: GOSI and the UAE pension for nationals by nationality and first-insured date, rates entered by the business (#58)
+- [x] The UAE WPS salary file (SIF) from a posted month; Saudi Arabia waits for a current Mudad or bank template (in review)
 
 ## M7. Docs and launch (target 2027-06-13)
 

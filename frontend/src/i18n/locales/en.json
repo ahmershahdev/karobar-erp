@@ -1506,7 +1506,15 @@
     "nationalityHint": "In the UAE, nationals get a pension instead of end-of-service gratuity.",
     "insurable": "Counts for GOSI or pension",
     "insuredSince": "First insured on",
-    "insuredSinceHint": "The day they were first registered for social insurance. GOSI rates differ for people first insured from 3 July 2024. Empty means the day they joined."
+    "insuredSinceHint": "The day they were first registered for social insurance. GOSI rates differ for people first insured from 3 July 2024. Empty means the day they joined.",
+    "wpsPersonId": "Labour card person ID",
+    "wpsPersonIdHint": "The 14-digit person ID on the labour card, for the WPS salary file.",
+    "wpsAgentCode": "Bank routing code",
+    "wpsAgentCodeHint": "The 9-digit WPS routing code of the bank or exchange house that holds their account.",
+    "wpsEmployerId": "MOL establishment ID",
+    "wpsEmployerIdHint": "Your 13-digit employer ID from MOHRE, for the WPS salary file.",
+    "wpsBankCode": "Your bank’s routing code",
+    "wpsBankCodeHint": "The 9-digit WPS routing code of the bank that pays the salaries."
   },
   "payroll": {
     "title": "Payroll",
@@ -1692,6 +1700,7 @@
     "gulfRatesHint": "No rates ship for the Gulf: no official text could be read. Enter each one from your GOSI or GPSSA statement, with its source. Mark the pay parts that count (for GOSI, basic and housing) on the Salary structures screen.",
     "noGulfRates": "No rates yet. Payroll charges no social insurance until you add them.",
     "figureSource": "Where the figure comes from",
-    "gulfSourcePlaceholder": "Your GOSI or GPSSA statement, with its date"
+    "gulfSourcePlaceholder": "Your GOSI or GPSSA statement, with its date",
+    "wpsFile": "Download WPS salary file (SIF)"
   }
 }

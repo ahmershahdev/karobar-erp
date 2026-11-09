@@ -491,6 +491,8 @@ const EMPTY = {
   email: '',
   national_id: '',
   bank_account: '',
+  wps_person_id: '',
+  wps_agent_code: '',
   joined_on: today(),
   left_on: '',
   province: '',
@@ -511,6 +513,8 @@ function fromEmployee(employee: Employee): EmployeeForm {
     email: employee.email ?? '',
     national_id: employee.national_id ?? '',
     bank_account: employee.bank_account ?? '',
+    wps_person_id: employee.wps_person_id ?? '',
+    wps_agent_code: employee.wps_agent_code ?? '',
     joined_on: employee.joined_on,
     left_on: employee.left_on ?? '',
     province: employee.province ?? '',
@@ -534,7 +538,8 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
   const departments = useDepartments();
   const save = useTenantAction(KEYS);
   // Province, EOBI and provincial social security are Pakistan's; Gulf businesses don't see them.
-  const pakistan = useCountry() === 'PK';
+  const country = useCountry();
+  const pakistan = country === 'PK';
   const [form, setForm] = useState<EmployeeForm>(() => (employee ? fromEmployee(employee) : EMPTY));
   const set = (patch: Partial<EmployeeForm>) => setForm({ ...form, ...patch });
   const { province, ...rest } = form;
@@ -652,6 +657,23 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
               </option>
             ))}
           </Select>
+          {country === 'AE' && (
+            <>
+              <Field
+                label={t('hr.wpsPersonId')}
+                hint={t('hr.wpsPersonIdHint')}
+                maxLength={14}
+                {...field('wps_person_id')}
+              />
+              <Field
+                label={t('hr.wpsAgentCode')}
+                hint={t('hr.wpsAgentCodeHint')}
+                inputMode="numeric"
+                maxLength={9}
+                {...field('wps_agent_code')}
+              />
+            </>
+          )}
           {!pakistan && (
             <Field
               label={t('hr.insuredSince')}

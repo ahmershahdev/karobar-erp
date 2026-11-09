@@ -97,6 +97,10 @@ class Employee(TenantOwnedModel):
     national_id = models.CharField(max_length=30, blank=True)
     # Where the salary is paid, for the bank transfer list.
     bank_account = models.CharField(max_length=50, blank=True)
+    # For the UAE salary file (WPS): the person ID on the labour card, and the 9-digit routing
+    # code of the bank or exchange house that holds the account.
+    wps_person_id = models.CharField(max_length=14, blank=True)
+    wps_agent_code = models.CharField(max_length=9, blank=True)
     joined_on = models.DateField()
     # Set when someone leaves. Employees are never deleted once they have a contract, because
     # payslips and journal entries refer to them.
@@ -178,6 +182,10 @@ class HrSettings(TenantOwnedModel):
     # How long after the end of the tax year someone left in their national ID is kept. Six is
     # the shortest allowed: tax records must be kept that long.
     id_retention_years = models.PositiveSmallIntegerField(default=6)
+    # For the UAE salary file (WPS): the business's 13-digit MOL establishment ID and its bank's
+    # 9-digit routing code.
+    wps_employer_id = models.CharField(max_length=13, blank=True)
+    wps_bank_code = models.CharField(max_length=9, blank=True)
     # The province a new employee starts in.
     default_province = models.CharField(max_length=3, choices=Province.choices, blank=True)
 

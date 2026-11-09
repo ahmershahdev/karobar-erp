@@ -49,6 +49,8 @@ def test_settings_start_with_a_sunday_weekend_in_pakistan(boss: Member) -> None:
         "holiday_country": "PK",
         "id_retention_years": 6,
         "default_province": "",
+        "wps_employer_id": "",
+        "wps_bank_code": "",
     }
 
 

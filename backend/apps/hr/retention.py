@@ -38,9 +38,12 @@ def clear_former_employees(today: date) -> int:
         if person.bank_account and today > left_on + timedelta(days=BANK_ACCOUNT_DAYS):
             cleared["bank_account"] = ["kept", None]
             person.bank_account = ""
-        if person.national_id and today > _years_after(tax_year_end(left_on), years):
-            cleared["national_id"] = ["kept", None]
-            person.national_id = ""
+        if today > _years_after(tax_year_end(left_on), years):
+            # The labour card's person ID is an identity number too, kept as long.
+            for field in ("national_id", "wps_person_id"):
+                if getattr(person, field):
+                    cleared[field] = ["kept", None]
+                    setattr(person, field, "")
         if cleared:
             person.save(update_fields=list(cleared))
             # No user made this change; the audit row says what went, never the value itself.
