@@ -1501,7 +1501,9 @@
       "BA": "Balochistan",
       "AJK": "Azad Jammu and Kashmir",
       "GB": "Gilgit-Baltistan"
-    }
+    },
+    "nationality": "Nationality",
+    "nationalityHint": "In the UAE, nationals get a pension instead of end-of-service gratuity."
   },
   "payroll": {
     "title": "Payroll",
@@ -1616,6 +1618,51 @@
     "employerShare": "Employer’s EOBI and social security: {{amount}}. This is paid on top of pay.",
     "contributionSourcePlaceholder": "Notification number and date, or the EOBI circular",
     "addFigures": "Add figures",
-    "filledFigures": "Figures added: {{added}}."
+    "filledFigures": "Figures added: {{added}}.",
+    "gratuityTitle": "End-of-service gratuity",
+    "gratuityAccrued": "Built up so far, by the last posted month: {{amount}}.",
+    "gratuityPaid": "Paid {{amount}} on {{date}} from {{account}}. Entry {{number}}.",
+    "gratuityDue": "This person has left. Their gratuity is due.",
+    "gratuityIfEnded": "If the business ended the work, or the contract ran out: {{amount}}",
+    "gratuityIfResigned": "If they resigned: {{amount}}",
+    "gratuityDueHint": "Worked out on {{days}} days of service. Pay it within 14 days of the last day in the UAE.",
+    "gratuityReason": "Why the work ended",
+    "reasonEnded": "Ended by the business, or the contract ran out",
+    "reasonResigned": "They resigned",
+    "gratuityPay": "Pay gratuity",
+    "gratuityChange": "End-of-service gratuity built up this month: {{amount}}. It is a cost now and owed when people leave.",
+    "endOfServiceTitle": "End of service",
+    "endOfServiceBody": "How the end-of-service gratuity is worked out in the UAE and Saudi Arabia.",
+    "endOfServiceFillHint": "The button adds the rule for your country, read from its labour law: UAE Article 51, or Saudi Articles 84 and 85. Check it against the law, and change it if the law changes.",
+    "endOfServiceFill": "Add the rule from the law",
+    "noRules": "No rules yet. Payroll in the UAE and Saudi Arabia needs one.",
+    "rule": {
+      "new": "New rule",
+      "country": "Country",
+      "wage": "Counted on",
+      "basic": "Basic wage only",
+      "full": "Full wage, with allowances",
+      "first_years": "First years",
+      "first_days": "Days of wage a year, first years",
+      "later_days": "Days of wage a year after that",
+      "month_days": "Days in a month",
+      "min_years": "Years before anything is due",
+      "cap_months": "Most it can be, in months of wage",
+      "excludes_nationals": "Nationals of this country get none",
+      "excludes_unpaid_days": "Unpaid days are left out of the service",
+      "resignation": "Share on resignation",
+      "resignationHint": "Leave empty if resigning changes nothing. Each row gives the share once service reaches its years.",
+      "bandYears": "From years of service",
+      "bandShare": "Share, such as 1/3",
+      "bandAfter": "Only after, not at",
+      "addBand": "Add a share",
+      "summary": "{{firstDays}} days of wage a year for the first {{firstYears}} years, then {{laterDays}} days a year,",
+      "onBasic": "on the basic wage.",
+      "onFull": "on the full wage.",
+      "minSummary": "Nothing is due before {{years}} years.",
+      "capSummary": "Never more than {{months}} months of wage.",
+      "bandSummary": "On resignation from {{years}} years: {{share}} of it.",
+      "bandSummaryAfter": "On resignation after {{years}} years: {{share}} of it."
+    }
   }
 }

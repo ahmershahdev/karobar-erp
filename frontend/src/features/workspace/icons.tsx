@@ -46,6 +46,7 @@ const PATHS: Record<string, ReactNode> = {
   orders: <path d="M9 4h6v3H9zM7 5.5H5v15.5h14V5.5h-2M8.5 12h7M8.5 16h7" />,
   receipts: <path d="m12 8 8 3.5v7L12 22l-8-3.5v-7zM12 2v7M9 6l3 3 3-3" />,
   bills: <path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h7" />,
+  gift: <path d="M4 11h16v10H4zM3 7h18v4H3zM12 7v14M12 7c-1.5-3-5-3-5 0M12 7c1.5-3 5-3 5 0" />,
   shield: <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6zM9 12l2 2 4-4" />,
   payments: (
     <>

@@ -9,8 +9,11 @@ from apps.hr.models import Employee
 from apps.hr.time_off import COUNTRIES
 from apps.inventory.serializers import scoped
 
+from .gratuity import GRATUITY_COUNTRIES
 from .models import (
     ContributionRate,
+    GratuityPayout,
+    GratuityRule,
     MinimumWage,
     OpeningPay,
     PayrollRun,
@@ -20,6 +23,7 @@ from .models import (
 )
 
 MAX_SLABS = 20
+MAX_BANDS = 10
 
 
 def _money() -> serializers.DecimalField:
@@ -95,6 +99,8 @@ class PayslipSerializer(serializers.ModelSerializer[Payslip]):
             "contributions",
             "employee_contributions",
             "employer_contributions",
+            "gratuity_accrued",
+            "gratuity_change",
         )
         read_only_fields = fields
 
@@ -145,6 +151,7 @@ class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
             "net",
             "employee_contributions",
             "employer_contributions",
+            "gratuity_change",
             "tax_table_name",
             "entry_number",
             "worked_out_at",
@@ -247,3 +254,87 @@ class ContributionRateSerializer(serializers.ModelSerializer[ContributionRate]):
             "source",
         )
         extra_kwargs = {"province": {"required": False}, "on_minimum_wage": {"required": False}}
+
+
+class ResignationBandSerializer(serializers.Serializer[Any]):
+    years = serializers.DecimalField(max_digits=5, decimal_places=2, min_value=Decimal(0))
+    # A fraction such as "1/3", so a third stays exactly a third.
+    share = serializers.RegexField(r"^\d{1,3}/\d{1,3}$")
+    after = serializers.BooleanField(default=False)
+
+
+class GratuityRuleSerializer(serializers.ModelSerializer[GratuityRule]):
+    country = serializers.ChoiceField(choices=sorted(GRATUITY_COUNTRIES))
+    resignation = ResignationBandSerializer(many=True, required=False)
+
+    class Meta:
+        model = GratuityRule
+        fields = (
+            "id",
+            "country",
+            "starts_on",
+            "first_years",
+            "first_days",
+            "later_days",
+            "month_days",
+            "min_years",
+            "cap_months",
+            "wage",
+            "excludes_nationals",
+            "excludes_unpaid_days",
+            "resignation",
+            "source",
+        )
+        extra_kwargs = {
+            "month_days": {"required": False},
+            "min_years": {"required": False},
+            "cap_months": {"required": False, "allow_null": True},
+            "excludes_nationals": {"required": False},
+            "excludes_unpaid_days": {"required": False},
+        }
+
+    def validate_resignation(self, bands: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if len(bands) > MAX_BANDS:
+            raise serializers.ValidationError(f"Give at most {MAX_BANDS} bands.")
+        return [{**b, "years": str(b["years"])} for b in bands]
+
+
+class GratuityPayoutSerializer(serializers.ModelSerializer[GratuityPayout]):
+    paid_from = scoped(Account)
+    paid_from_name = serializers.CharField(source="paid_from.name", read_only=True)
+    entry_number = serializers.CharField(source="entry.number", read_only=True)
+
+    class Meta:
+        model = GratuityPayout
+        fields = (
+            "id",
+            "reason",
+            "service_days",
+            "wage",
+            "full",
+            "share",
+            "amount",
+            "provision",
+            "paid_on",
+            "paid_from",
+            "paid_from_name",
+            "entry_number",
+        )
+        read_only_fields = (
+            "service_days",
+            "wage",
+            "full",
+            "share",
+            "amount",
+            "provision",
+        )
+
+
+class GratuityQuoteSerializer(serializers.Serializer[Any]):
+    # Built up so far: the provision on the latest posted payslip.
+    accrued = serializers.DecimalField(max_digits=18, decimal_places=2)
+    # Only for someone who left and isn't paid yet: what each reason would pay.
+    service_days = serializers.IntegerField(allow_null=True)
+    if_ended = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
+    if_resigned = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
+    payout = GratuityPayoutSerializer(allow_null=True)

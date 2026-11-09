@@ -1,0 +1,38 @@
+{
+  "AE": [
+    {
+      "starts_on": "2022-02-02",
+      "first_years": "5",
+      "first_days": "21",
+      "later_days": "30",
+      "month_days": "30",
+      "min_years": "1",
+      "cap_months": "24",
+      "wage": "basic",
+      "excludes_nationals": true,
+      "excludes_unpaid_days": true,
+      "resignation": [],
+      "source": "Federal Decree-Law No. 33 of 2021 Regarding the Regulation of Employment Relationships, Article 51 (in force from 2 February 2022, Article 74): 21 days' basic wage for each of the first five years and 30 days for each year after, for a foreign worker with a year or more of continuous service; parts of a year in proportion; unpaid days of absence left out; at most two years' wage; nationals under the pensions law instead. Read from the English text at https://faolex.fao.org/docs/pdf/uae217212E.pdf, which says it is not an official translation; the Arabic text governs. A day's wage is taken as a thirtieth of the monthly wage."
+    }
+  ],
+  "SA": [
+    {
+      "starts_on": "2005-09-27",
+      "first_years": "5",
+      "first_days": "15",
+      "later_days": "30",
+      "month_days": "30",
+      "min_years": "0",
+      "cap_months": null,
+      "wage": "full",
+      "excludes_nationals": false,
+      "excludes_unpaid_days": false,
+      "resignation": [
+        { "years": "2", "share": "1/3", "after": false },
+        { "years": "5", "share": "2/3", "after": true },
+        { "years": "10", "share": "1/1", "after": false }
+      ],
+      "source": "Labor Law, Royal Decree No. M/51 of 23/8/1426 H (27 September 2005), Article 84: half a month's wage for each of the first five years and a month's wage for each year after, on the last wage (Article 2: the actual wage, basic plus allowances), parts of a year in proportion. Article 85: on resignation a third after two to five years, two thirds after more than five and under ten, the whole after ten or more. Read from the English translation at https://www.wipo.int/wipolex/en/text/498399, which is for guidance only; the Arabic text governs. Not checked against the amendments of Royal Decree M/44 of 1446 H."
+    }
+  ]
+}

@@ -14,7 +14,8 @@ import { formatMoney } from '../../lib/money';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
 import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
-import { PROVINCES } from './provinces';
+import { GratuityPanel } from '../payroll/pages';
+import { NATIONALITIES, PROVINCES } from './provinces';
 
 type Employee = components['schemas']['Employee'];
 type Structure = components['schemas']['SalaryStructure'];
@@ -462,6 +463,7 @@ const EMPTY = {
   joined_on: today(),
   left_on: '',
   province: '',
+  nationality: '',
   pays_eobi: false,
   pays_social_security: false,
 };
@@ -480,13 +482,22 @@ function fromEmployee(employee: Employee): EmployeeForm {
     joined_on: employee.joined_on,
     left_on: employee.left_on ?? '',
     province: employee.province ?? '',
+    nationality: employee.nationality ?? '',
     pays_eobi: employee.pays_eobi ?? false,
     pays_social_security: employee.pays_social_security ?? false,
   };
 }
 
+function countryName(code: string, locale: string | undefined): string {
+  try {
+    return new Intl.DisplayNames(locale ? [locale] : [], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDone: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const departments = useDepartments();
   const save = useTenantAction(KEYS);
   const [form, setForm] = useState<EmployeeForm>(() => (employee ? fromEmployee(employee) : EMPTY));
@@ -593,6 +604,18 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
             hint={t('hr.leftOnHint')}
             {...field('left_on')}
           />
+          <Select
+            label={t('hr.nationality')}
+            hint={t('hr.nationalityHint')}
+            {...field('nationality')}
+          >
+            <option value="">-</option>
+            {NATIONALITIES.map((code) => (
+              <option key={code} value={code}>
+                {countryName(code, i18n.resolvedLanguage)}
+              </option>
+            ))}
+          </Select>
           <Select label={t('hr.province')} hint={t('hr.provinceHint')} {...field('province')}>
             <option value="">-</option>
             {PROVINCES.map((code) => (
@@ -829,6 +852,9 @@ export function EmployeesPage() {
         )
       )}
       {viewing && <ContractsPanel key={viewing.id} employee={viewing} />}
+      {viewing && can(membership, 'payroll', 'view') && (
+        <GratuityPanel key={`g${viewing.id}`} employee={viewing.id} />
+      )}
       <Panel title={t('hr.employees')}>
         <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
           <Field

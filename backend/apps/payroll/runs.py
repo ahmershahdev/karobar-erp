@@ -19,7 +19,7 @@ share is stored beside it and booked as a cost.
 import calendar
 import json
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, cast
@@ -42,7 +42,16 @@ from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
 from .contributions import Book, Contribution
-from .models import OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
+from .gratuity import (
+    GRATUITY_COUNTRIES,
+    NoRuleError,
+    accrued_before,
+    applies,
+    built_up,
+    unpaid_before,
+)
+from .gratuity import rule_for as gratuity_rule_for
+from .models import GratuityPayout, OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
 from .services import (
     TAX_YEAR_STARTS,
     PayrollError,
@@ -103,6 +112,13 @@ class PaidError(PayrollError):
     )
 
 
+class GratuityPaidError(PayrollError):
+    message = (
+        "Someone in this month was paid their end-of-service gratuity, which counted this "
+        "month, so it can't be undone."
+    )
+
+
 class PayTooLowError(PayrollError):
     message = (
         "For these people, deductions and tax come to more than the pay this month. Check their "
@@ -121,6 +137,8 @@ class Figures:
     projected_income: Decimal
     year_tax: Decimal
     contributions: tuple[Contribution, ...] = ()
+    gratuity_accrued: Decimal = ZERO
+    gratuity_change: Decimal = ZERO
 
     @property
     def net(self) -> Decimal:
@@ -326,14 +344,49 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
         raise PayTooLowError(*too_low)
     if not figures:
         raise NobodyToPayError
-    return table, figures
+    return table, _with_gratuity(first_day, country, contracts, figures)
+
+
+def _with_gratuity(
+    first_day: date, country: str, contracts: dict[int, list[Contract]], figures: list[Figures]
+) -> list[Figures]:
+    """Each person's end-of-service gratuity built up by the month's end, or by the day they
+    left, and how much that grew since the last posted month."""
+    if country not in GRATUITY_COUNTRIES:
+        return figures
+    row = gratuity_rule_for(country, first_day)
+    if row is None:
+        raise NoRuleError
+    end = month_end(first_day)
+    unpaid = unpaid_before(first_day)
+    before = accrued_before(first_day)
+    updated: list[Figures] = []
+    for f in figures:
+        person = f.employee
+        if not applies(row, person, country):
+            updated.append(f)
+            continue
+        until = min(end, person.left_on or end)
+        # The contract in force at the month's end; contracts come ordered by start.
+        contract = contracts[person.pk][-1]
+        days_off = unpaid.get(person.pk, ZERO) + f.unpaid_days
+        _, _, result = built_up(row, person, contract, until, days_off)
+        change = result.full - before.get(person.pk, ZERO)
+        updated.append(replace(f, gratuity_accrued=result.full, gratuity_change=change))
+    return updated
 
 
 def _check_order(run: PayrollRun, posting_it: bool) -> None:
-    first = TAX_YEAR_STARTS.get(settings_for().holiday_country)
-    if first is None:
+    """Salary tax counts the earlier months of its tax year, and the gratuity provision the
+    month before, so those months are posted in order."""
+    country = settings_for().holiday_country
+    first = TAX_YEAR_STARTS.get(country)
+    if first is not None:
+        start, end = tax_year(run.month, first)
+    elif country in GRATUITY_COUNTRIES:
+        start, end = date.min, date.max
+    else:
         return
-    start, end = tax_year(run.month, first)
     same_year = PayrollRun.objects.filter(month__range=(start, end)).exclude(pk=run.pk)
     if same_year.filter(month__gt=run.month, status=PayrollRun.Status.POSTED).exists():
         raise LaterPostedError
@@ -370,6 +423,8 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
                 contributions=[c.as_json() for c in f.contributions],
                 employee_contributions=f.employee_contributions,
                 employer_contributions=f.employer_contributions,
+                gratuity_accrued=f.gratuity_accrued,
+                gratuity_change=f.gratuity_change,
             )
             for f in figures
         ]
@@ -381,6 +436,7 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
     run.net = sum((f.net for f in figures), ZERO)
     run.employee_contributions = sum((f.employee_contributions for f in figures), ZERO)
     run.employer_contributions = sum((f.employer_contributions for f in figures), ZERO)
+    run.gratuity_change = sum((f.gratuity_change for f in figures), ZERO)
     run.save()
 
 
@@ -445,6 +501,7 @@ def post(actor: User, run: PayrollRun) -> bool:
                 f.projected_income,
                 f.year_tax,
                 f.employer_contributions,
+                f.gratuity_accrued,
                 [c.as_json() for c in f.contributions],
                 _lines(f.pay),
             )
@@ -462,6 +519,7 @@ def post(actor: User, run: PayrollRun) -> bool:
                 "projected_income",
                 "year_tax",
                 "employer_contributions",
+                "gratuity_accrued",
                 "contributions",
                 "lines",
             )
@@ -477,6 +535,7 @@ def post(actor: User, run: PayrollRun) -> bool:
         locked.tax,
         locked.employee_contributions,
         locked.employer_contributions,
+        locked.gratuity_change,
     )
     entry = accounting.post_rule_lines(
         actor,
@@ -520,6 +579,8 @@ def reverse(actor: User, run: PayrollRun, reason: str = "") -> PayrollRun:
         raise NotPostedError
     if SalaryPayment.objects.filter(run=locked).exists():
         raise PaidError
+    if GratuityPayout.objects.filter(employee__payslips__run=locked).exists():
+        raise GratuityPaidError
     _check_order(locked, posting_it=False)
     # Posting always sets the entry, so a posted run has one.
     entry = cast(JournalEntry, locked.entry)

@@ -156,6 +156,7 @@ def payroll(
     tax: Decimal,
     employee_share: Decimal = ZERO,
     employer_share: Decimal = ZERO,
+    gratuity_change: Decimal = ZERO,
 ) -> list[Line]:
     """A month's salaries, owed but not yet paid.
 
@@ -168,6 +169,10 @@ def payroll(
     Dr salaries (gross); Dr employer contributions (employer_share); Cr withholding tax payable
     (tax); Cr payroll deductions payable (deductions); Cr contributions payable (employee_share +
     employer_share); Cr salaries payable (gross - deductions - employee_share - tax).
+
+    In the Gulf, the end-of-service gratuity built up in the month is a cost now and owed when
+    the person leaves: Dr end-of-service benefits, Cr end-of-service provision, by
+    `gratuity_change`. It can be negative (a lower wage, unpaid days), which runs the other way.
     """
     _non_negative(
         gross=gross,
@@ -179,9 +184,12 @@ def payroll(
     net = gross - deductions - employee_share - tax
     if quantize_money(net) < 0:
         raise ValueError("tax and deductions cannot be more than the gross pay")
+    up, down = max(gratuity_change, ZERO), max(-gratuity_change, ZERO)
     return _lines(
         ("salaries", gross, ZERO),
         ("employer_contributions", employer_share, ZERO),
+        ("gratuity_expense", up, down),
+        ("gratuity_provision", down, up),
         ("withholding_payable", ZERO, tax),
         ("payroll_deductions", ZERO, deductions),
         ("contributions_payable", ZERO, employee_share + employer_share),
@@ -196,6 +204,23 @@ def salary_payment(amount: Decimal, out_of: str = "bank") -> list[Line]:
     """
     _non_negative(amount=amount)
     return _lines(("salaries_payable", amount, ZERO), (out_of, ZERO, amount))
+
+
+def gratuity_payout(amount: Decimal, provision: Decimal, out_of: str = "bank") -> list[Line]:
+    """Paying someone's end-of-service gratuity when they leave. The provision built up month by
+    month is used up; the award can be more (Dr the rest to the expense) or less, as when someone
+    resigns early in Saudi Arabia (Cr the difference back to the expense).
+
+    Dr end-of-service provision (provision); Dr or Cr end-of-service benefits (the difference);
+    Cr cash or bank (amount).
+    """
+    _non_negative(amount=amount, provision=provision)
+    difference = amount - provision
+    return _lines(
+        ("gratuity_provision", provision, ZERO),
+        ("gratuity_expense", max(difference, ZERO), max(-difference, ZERO)),
+        (out_of, ZERO, amount),
+    )
 
 
 def reversal(lines: Sequence[Line]) -> list[Line]:

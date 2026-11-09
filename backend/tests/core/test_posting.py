@@ -171,6 +171,36 @@ def test_a_payroll_owes_eobi_and_social_security_for_both_shares() -> None:
         posting.payroll(D("1000"), D("0"), D("0"), employer_share=D("-1"))
 
 
+def test_a_payroll_books_the_gratuity_built_up_either_way() -> None:
+    up = posting.payroll(D("10000"), D("0"), D("0"), gratuity_change=D("583.33"))
+    assert up == [
+        Line("salaries", D("10000.00"), D("0.00")),
+        Line("gratuity_expense", D("583.33"), D("0.00")),
+        Line("gratuity_provision", D("0.00"), D("583.33")),
+        Line("salaries_payable", D("0.00"), D("10000.00")),
+    ]
+    down = posting.payroll(D("10000"), D("0"), D("0"), gratuity_change=D("-50"))
+    assert down[1:3] == [
+        Line("gratuity_expense", D("0.00"), D("50.00")),
+        Line("gratuity_provision", D("50.00"), D("0.00")),
+    ]
+
+
+def test_a_gratuity_payout_uses_up_the_provision() -> None:
+    assert posting.gratuity_payout(D("21000"), D("20500"), out_of="paid_from") == [
+        Line("gratuity_provision", D("20500.00"), D("0.00")),
+        Line("gratuity_expense", D("500.00"), D("0.00")),
+        Line("paid_from", D("0.00"), D("21000.00")),
+    ]
+    assert posting.gratuity_payout(D("4500"), D("13500")) == [
+        Line("gratuity_provision", D("13500.00"), D("0.00")),
+        Line("gratuity_expense", D("0.00"), D("9000.00")),
+        Line("bank", D("0.00"), D("4500.00")),
+    ]
+    with pytest.raises(ValueError, match="negative"):
+        posting.gratuity_payout(D("-1"), D("0"))
+
+
 def test_a_payroll_with_no_tax_has_no_tax_line() -> None:
     accounts = [line.account for line in posting.payroll(D("30000"), D("0"), D("0"))]
     assert accounts == ["salaries", "salaries_payable"]

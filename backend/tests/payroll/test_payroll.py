@@ -20,7 +20,7 @@ from apps.hr.models import (
     LeaveType,
     SalaryComponent,
 )
-from apps.payroll import documents, services
+from apps.payroll import documents, gratuity, services
 from apps.payroll.models import PayrollRun, Payslip, TaxTable
 from apps.sales.documents import PdfUnavailableError
 from apps.tenancy.context import tenant_context
@@ -341,6 +341,7 @@ def test_with_no_slabs_for_the_year_nothing_is_worked_out(boss: Member) -> None:
 def test_a_country_without_salary_tax_needs_no_slabs(boss: Member) -> None:
     TaxTable.objects.all().delete()
     HrSettings.objects.create(holiday_country="AE", weekend=[5, 6])
+    gratuity.fill_official(boss.user)
     contract(boss, person(), "150000")
     slip = only_payslip(work_out(boss))
     assert (slip["tax"], slip["net"], slip["year_tax"]) == ("0.00", "150000.00", "0.00")
@@ -527,6 +528,7 @@ def test_a_payslip_shows_the_pay_and_how_the_tax_was_reached(boss: Member) -> No
 def test_a_payslip_with_unpaid_days_and_no_tax_says_so(boss: Member) -> None:
     TaxTable.objects.all().delete()
     HrSettings.objects.create(holiday_country="SA", weekend=[4, 5])
+    gratuity.fill_official(boss.user)
     worker = person()
     contract(boss, worker, "31000")
     Attendance.objects.create(

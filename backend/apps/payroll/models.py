@@ -85,6 +85,8 @@ class PayrollRun(TenantOwnedModel):
     # is a cost on top of the pay.
     employee_contributions = money_field(default=0)
     employer_contributions = money_field(default=0)
+    # The change in everyone's end-of-service provision this month, booked with the pay.
+    gratuity_change = money_field(default=0)
     entry = models.OneToOneField(
         JournalEntry, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
     )
@@ -141,6 +143,10 @@ class Payslip(TenantOwnedModel):
     contributions = models.JSONField(default=list)
     employee_contributions = money_field(default=0)
     employer_contributions = money_field(default=0)
+    # The end-of-service gratuity built up by the end of this month, as if the person left
+    # then with the full award, and how much that grew this month.
+    gratuity_accrued = money_field(default=0)
+    gratuity_change = money_field(default=0)
 
     class Meta(TenantOwnedModel.Meta):
         ordering = ["run_id", "employee__code"]
@@ -274,3 +280,83 @@ class ContributionRate(TenantOwnedModel):
 
     def __str__(self) -> str:
         return f"{self.scheme} {self.province or 'all'} {self.starts_on}"
+
+
+class GratuityRule(TenantOwnedModel):
+    """How one country's end-of-service gratuity is worked out from a day on, with the law it is
+    read from. It holds until a later rule for the same country replaces it. Payouts and payslips
+    keep the figures they came to, so a change here never rewrites them."""
+
+    class Wage(models.TextChoices):
+        # The UAE counts the basic wage only (Article 51); Saudi Arabia the actual wage, basic
+        # plus allowances (Labor Law Article 2).
+        BASIC = "basic"
+        FULL = "full"
+
+    country = models.CharField(max_length=2)
+    starts_on = models.DateField()
+    first_years = models.DecimalField(max_digits=5, decimal_places=2)
+    first_days = models.DecimalField(max_digits=6, decimal_places=2)
+    later_days = models.DecimalField(max_digits=6, decimal_places=2)
+    month_days = models.DecimalField(max_digits=5, decimal_places=2, default=30)
+    min_years = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    cap_months = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    wage = models.CharField(max_length=5, choices=Wage.choices)
+    # The UAE leaves out its own nationals: their end of service is a pension.
+    excludes_nationals = models.BooleanField(default=False)
+    # The UAE leaves unpaid days of absence out of the service (Article 51(4)).
+    excludes_unpaid_days = models.BooleanField(default=False)
+    # [{"years": "2", "share": "1/3", "after": false}, ...], lowest first; empty when resigning
+    # changes nothing. Shares are fractions so a third stays exactly a third.
+    resignation = models.JSONField(default=list, blank=True)
+    source = models.CharField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["country", "-starts_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "country", "starts_on"], name="uniq_gratuity_rule_start"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.country} {self.starts_on}"
+
+
+class GratuityPayout(TenantOwnedModel):
+    """The end-of-service gratuity paid to someone who left, once. It uses up the provision
+    their payslips built up; any difference is booked to the expense."""
+
+    class Reason(models.TextChoices):
+        # Ended by the business, or the contract simply came to its end: the full award.
+        ENDED = "ended"
+        RESIGNED = "resigned"
+
+    employee = models.OneToOneField(Employee, on_delete=models.PROTECT, related_name="gratuity")
+    rule = models.ForeignKey(GratuityRule, on_delete=models.PROTECT, related_name="+")
+    reason = models.CharField(max_length=10, choices=Reason.choices)
+    service_days = models.PositiveIntegerField()
+    wage = money_field()
+    full = money_field()
+    share = models.DecimalField(max_digits=7, decimal_places=6)
+    amount = money_field()
+    provision = money_field()
+    paid_on = models.DateField()
+    paid_from = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="+")
+    entry = models.OneToOneField(JournalEntry, on_delete=models.PROTECT, related_name="+")
+    paid_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["-paid_on", "-id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(amount__gte=0, provision__gte=0), name="gratuity_payout_not_negative"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.employee_id} {self.amount}"
