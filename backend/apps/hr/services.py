@@ -71,7 +71,7 @@ delete_department = inventory.delete_master
 delete_employee = inventory.delete_master
 # Cleared from former employees after a while (see retention.py), so the audit log, which is
 # never cleared, must not hold a copy.
-PRIVATE_FIELDS = ("national_id", "bank_account")
+PRIVATE_FIELDS = ("national_id", "bank_account", "wps_person_id")
 
 
 @dataclass(frozen=True)

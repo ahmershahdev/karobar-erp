@@ -53,6 +53,7 @@ urlpatterns = [
         views.PayrollRunReverseView.as_view(),
         name="payroll-run-reverse",
     ),
+    path("runs/<int:pk>/wps-file/", views.WpsFileView.as_view(), name="payroll-run-wps-file"),
     path(
         "runs/<int:pk>/transfer-list/",
         views.TransferListView.as_view(),

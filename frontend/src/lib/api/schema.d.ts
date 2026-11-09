@@ -1658,6 +1658,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/runs/{id}/wps-file/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The UAE WPS salary file (SIF). Like the transfer list it carries account numbers and
+         *     labour card IDs, so it needs HR view rights as well as payroll ones.
+         */
+        get: operations["payroll_runs_wps_file_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payroll/tax-tables/": {
         parameters: {
             query?: never;
@@ -3294,6 +3314,8 @@ export interface components {
             email?: string;
             national_id?: string;
             bank_account?: string;
+            wps_person_id?: string;
+            wps_agent_code?: string;
             /** Format: date */
             joined_on: string;
             /** Format: date */
@@ -3449,6 +3471,8 @@ export interface components {
             holiday_country: components["schemas"]["CountryEnum"];
             id_retention_years?: number;
             default_province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            wps_employer_id?: string;
+            wps_bank_code?: string;
         };
         Invitation: {
             readonly id: number;
@@ -4093,6 +4117,8 @@ export interface components {
             email?: string;
             national_id?: string;
             bank_account?: string;
+            wps_person_id?: string;
+            wps_agent_code?: string;
             /** Format: date */
             joined_on?: string;
             /** Format: date */
@@ -4117,6 +4143,8 @@ export interface components {
             holiday_country?: components["schemas"]["CountryEnum"];
             id_retention_years?: number;
             default_province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            wps_employer_id?: string;
+            wps_bank_code?: string;
         };
         PatchedLeaveType: {
             readonly id?: number;
@@ -8637,6 +8665,27 @@ export interface operations {
                 };
                 content: {
                     "text/csv": string;
+                };
+            };
+        };
+    };
+    payroll_runs_wps_file_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
                 };
             };
         };

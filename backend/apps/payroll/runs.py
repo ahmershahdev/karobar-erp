@@ -392,6 +392,28 @@ def _with_gratuity(
     return updated
 
 
+def _periods(month: date, figures: list[Figures]) -> dict[int, tuple[date, date]]:
+    """For each person, the first and last day of the month their contracts paid, inside the
+    days they were employed, kept on the payslip. A gap between two contracts in one month
+    can't be shown: the WPS file has one line per person, so it gives the whole span."""
+    end = month_end(month)
+    spans: dict[int, tuple[date, date]] = {}
+    people = {f.employee.pk: f.employee for f in figures}
+    for contract in Contract.objects.filter(employee__in=people, starts_on__lte=end).filter(
+        Q(ends_on__isnull=True) | Q(ends_on__gte=month)
+    ):
+        person = people[contract.employee_id]
+        first = max(month, contract.starts_on, person.joined_on)
+        last = min(end, contract.ends_on or end, person.left_on or end)
+        if last < first:
+            continue
+        known = spans.get(person.pk)
+        spans[person.pk] = (min(first, known[0]), max(last, known[1])) if known else (first, last)
+    for pk, person in people.items():
+        spans.setdefault(pk, (max(month, person.joined_on), min(end, person.left_on or end)))
+    return spans
+
+
 def _check_order(run: PayrollRun, posting_it: bool) -> None:
     """Salary tax counts the earlier months of its tax year, and the gratuity provision the
     month before, so those months are posted in order."""
@@ -419,6 +441,7 @@ def _lines(pay: Breakdown) -> list[dict[str, Any]]:
 
 def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> None:
     run.payslips.all().delete()
+    periods = _periods(run.month, figures)
     Payslip.objects.bulk_create(
         [
             Payslip(
@@ -441,6 +464,8 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
                 employer_contributions=f.employer_contributions,
                 gratuity_accrued=f.gratuity_accrued,
                 gratuity_change=f.gratuity_change,
+                starts_on=periods[f.employee.pk][0],
+                ends_on=periods[f.employee.pk][1],
             )
             for f in figures
         ]
@@ -506,6 +531,7 @@ def post(actor: User, run: PayrollRun) -> bool:
         raise UndoneError
     _check_order(locked, posting_it=True)
     table, figures = work_out_figures(locked.month)
+    periods = _periods(locked.month, figures)
     fresh = _fingerprint(
         [
             (
@@ -518,6 +544,7 @@ def post(actor: User, run: PayrollRun) -> bool:
                 f.year_tax,
                 f.employer_contributions,
                 f.gratuity_accrued,
+                *periods[f.employee.pk],
                 f.gratuity_change,
                 [c.as_json() for c in f.contributions],
                 _lines(f.pay),
@@ -537,6 +564,8 @@ def post(actor: User, run: PayrollRun) -> bool:
                 "year_tax",
                 "employer_contributions",
                 "gratuity_accrued",
+                "starts_on",
+                "ends_on",
                 "gratuity_change",
                 "contributions",
                 "lines",

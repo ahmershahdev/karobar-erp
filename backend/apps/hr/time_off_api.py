@@ -30,11 +30,32 @@ class HrSettingsSerializer(serializers.ModelSerializer[HrSettings]):
 
     class Meta:
         model = HrSettings
-        fields = ("weekend", "holiday_country", "id_retention_years", "default_province")
+        fields = (
+            "weekend",
+            "holiday_country",
+            "id_retention_years",
+            "default_province",
+            "wps_employer_id",
+            "wps_bank_code",
+        )
         extra_kwargs = {
             "id_retention_years": {"min_value": 6, "max_value": 50},
             "default_province": {"required": False},
+            "wps_employer_id": {"required": False},
+            "wps_bank_code": {"required": False},
         }
+
+    def validate_wps_employer_id(self, value: str) -> str:
+        code = value.strip()
+        if code and not (code.isascii() and code.isdigit()):
+            raise serializers.ValidationError("The MOL establishment ID is digits only.")
+        return code
+
+    def validate_wps_bank_code(self, value: str) -> str:
+        code = value.strip()
+        if code and not (code.isascii() and code.isdigit() and len(code) == 9):
+            raise serializers.ValidationError("A routing code is 9 digits.")
+        return code
 
 
 class HolidaySerializer(serializers.ModelSerializer[Holiday]):

@@ -536,6 +536,8 @@ function WeekSettings({ settings }: { settings: Settings }) {
   const [country, setCountry] = useState(settings.holiday_country);
   const [years, setYears] = useState(String(settings.id_retention_years ?? 6));
   const [province, setProvince] = useState<string>(settings.default_province ?? '');
+  const [employerId, setEmployerId] = useState(settings.wps_employer_id ?? '');
+  const [bankCode, setBankCode] = useState(settings.wps_bank_code ?? '');
   const editable = can(membership, 'hr', 'update');
   return (
     <Panel title={t('hr.workWeek')}>
@@ -548,6 +550,8 @@ function WeekSettings({ settings }: { settings: Settings }) {
             holiday_country: country,
             id_retention_years: Number(years),
             default_province: province,
+            wps_employer_id: employerId,
+            wps_bank_code: bankCode,
           } as never;
           save.mutate(() => unwrap(api.PATCH('/api/hr/settings/', { body })));
         }}
@@ -598,19 +602,41 @@ function WeekSettings({ settings }: { settings: Settings }) {
               value={years}
               onChange={(e) => setYears(e.target.value)}
             />
-            <Select
-              label={t('hr.defaultProvince')}
-              hint={t('hr.defaultProvinceHint')}
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-            >
-              <option value="">-</option>
-              {PROVINCES.map((code) => (
-                <option key={code} value={code}>
-                  {t(`hr.provinces.${code}`)}
-                </option>
-              ))}
-            </Select>
+            {country === 'PK' && (
+              <Select
+                label={t('hr.defaultProvince')}
+                hint={t('hr.defaultProvinceHint')}
+                value={province}
+                onChange={(e) => setProvince(e.target.value)}
+              >
+                <option value="">-</option>
+                {PROVINCES.map((code) => (
+                  <option key={code} value={code}>
+                    {t(`hr.provinces.${code}`)}
+                  </option>
+                ))}
+              </Select>
+            )}
+            {country === 'AE' && (
+              <>
+                <Field
+                  label={t('hr.wpsEmployerId')}
+                  hint={t('hr.wpsEmployerIdHint')}
+                  inputMode="numeric"
+                  maxLength={13}
+                  value={employerId}
+                  onChange={(e) => setEmployerId(e.target.value)}
+                />
+                <Field
+                  label={t('hr.wpsBankCode')}
+                  hint={t('hr.wpsBankCodeHint')}
+                  inputMode="numeric"
+                  maxLength={9}
+                  value={bankCode}
+                  onChange={(e) => setBankCode(e.target.value)}
+                />
+              </>
+            )}
           </div>
         </fieldset>
         {save.isError && (
