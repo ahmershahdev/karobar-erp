@@ -104,6 +104,15 @@ def share(month: Breakdown, paid_days: Decimal, month_days: int) -> Breakdown:
     return _totals(lines)
 
 
+def with_deductions(pay: Breakdown, extra: Sequence[tuple[str, Decimal]]) -> Breakdown:
+    """The same pay with more deductions after its own lines, such as the staff's share of EOBI.
+    They are not taxable earnings, so the taxable pay stays as it was."""
+    if any(amount < 0 for _, amount in extra):
+        raise PayrollError("a deduction can't be negative")
+    lines = [*pay.lines, *(Line(name, DEDUCTION, quantize_money(a), False) for name, a in extra)]
+    return _totals(lines)
+
+
 def combine(parts: Sequence[Breakdown]) -> Breakdown:
     """One payslip from several pieces of a month, such as the days before and after a raise.
     Lines with the same name, kind and tax treatment are added together, in first-seen order."""

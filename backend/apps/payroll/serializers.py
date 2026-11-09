@@ -9,7 +9,15 @@ from apps.hr.models import Employee
 from apps.hr.time_off import COUNTRIES
 from apps.inventory.serializers import scoped
 
-from .models import OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
+from .models import (
+    ContributionRate,
+    MinimumWage,
+    OpeningPay,
+    PayrollRun,
+    Payslip,
+    SalaryPayment,
+    TaxTable,
+)
 
 MAX_SLABS = 20
 
@@ -51,10 +59,20 @@ class PayslipLineSerializer(serializers.Serializer[Any]):
     taxable = serializers.BooleanField()
 
 
+class PayslipContributionSerializer(serializers.Serializer[Any]):
+    scheme = serializers.CharField()
+    base = serializers.DecimalField(max_digits=18, decimal_places=2)
+    employer_percent = serializers.DecimalField(max_digits=5, decimal_places=2)
+    employee_percent = serializers.DecimalField(max_digits=5, decimal_places=2)
+    employer = serializers.DecimalField(max_digits=18, decimal_places=2)
+    employee = serializers.DecimalField(max_digits=18, decimal_places=2)
+
+
 class PayslipSerializer(serializers.ModelSerializer[Payslip]):
     employee_code = serializers.CharField(source="employee.code", read_only=True)
     employee_name = serializers.CharField(source="employee.full_name", read_only=True)
     lines = PayslipLineSerializer(many=True, read_only=True)
+    contributions = PayslipContributionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Payslip
@@ -74,6 +92,9 @@ class PayslipSerializer(serializers.ModelSerializer[Payslip]):
             "net",
             "projected_income",
             "year_tax",
+            "contributions",
+            "employee_contributions",
+            "employer_contributions",
         )
         read_only_fields = fields
 
@@ -122,6 +143,8 @@ class PayrollRunSerializer(serializers.ModelSerializer[PayrollRun]):
             "deductions",
             "tax",
             "net",
+            "employee_contributions",
+            "employer_contributions",
             "tax_table_name",
             "entry_number",
             "worked_out_at",
@@ -185,3 +208,42 @@ class OpeningPaySerializer(serializers.ModelSerializer[OpeningPay]):
 
 class PayrollReverseSerializer(serializers.Serializer[Any]):
     reason = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+
+class MinimumWageSerializer(serializers.ModelSerializer[MinimumWage]):
+    amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=Decimal("0.01"))
+
+    class Meta:
+        model = MinimumWage
+        fields = ("id", "province", "starts_on", "amount", "source")
+
+
+class ContributionRateSerializer(serializers.ModelSerializer[ContributionRate]):
+    employer_percent = serializers.DecimalField(
+        max_digits=5, decimal_places=2, min_value=Decimal(0), max_value=Decimal(100)
+    )
+    employee_percent = serializers.DecimalField(
+        max_digits=5, decimal_places=2, min_value=Decimal(0), max_value=Decimal(100)
+    )
+    wage_cap = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = ContributionRate
+        fields = (
+            "id",
+            "scheme",
+            "province",
+            "starts_on",
+            "employer_percent",
+            "employee_percent",
+            "on_minimum_wage",
+            "wage_cap",
+            "source",
+        )
+        extra_kwargs = {"province": {"required": False}, "on_minimum_wage": {"required": False}}

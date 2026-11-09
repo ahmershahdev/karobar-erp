@@ -10,6 +10,10 @@ withheld (apps/core/salary_tax.py). That only adds up if the months are posted i
 month can't be posted while an earlier one of its tax year is still a draft, and can't be worked
 out once a later one is posted. Tax paid through another employer earlier in the year isn't
 known here; the person settles that in their return.
+
+EOBI and social security come from the rates and minimum wages in force on the first of the
+month (contributions.py). The staff's share is a deduction line on the payslip; the business's
+share is stored beside it and booked as a cost.
 """
 
 import calendar
@@ -37,6 +41,7 @@ from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
+from .contributions import Book, Contribution
 from .models import OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
 from .services import (
     TAX_YEAR_STARTS,
@@ -115,10 +120,19 @@ class Figures:
     tax: Decimal
     projected_income: Decimal
     year_tax: Decimal
+    contributions: tuple[Contribution, ...] = ()
 
     @property
     def net(self) -> Decimal:
         return self.pay.net - self.tax
+
+    @property
+    def employee_contributions(self) -> Decimal:
+        return sum((c.share.employee for c in self.contributions), ZERO)
+
+    @property
+    def employer_contributions(self) -> Decimal:
+        return sum((c.share.employer for c in self.contributions), ZERO)
 
 
 def month_end(month: date) -> date:
@@ -262,6 +276,7 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
     month = _Month(first_day, end, end.day, set(settings.weekend), holidays)
 
     people, contracts, leave, marks = _month_records(first_day, end)
+    book = Book(first_day)
     earlier: dict[int, dict[str, Any]] = {}
     slabs: list[Slab] = []
     left = 1
@@ -286,6 +301,11 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
         if worked is None:
             continue
         pay, paid_days, unpaid_days = worked
+        try:
+            pay, owed = book.deduct(person, pay)
+        except PayMathError:
+            too_low.append(person.code)
+            continue
         tax = projected = due = ZERO
         if table is not None:
             before = earlier.get(person.pk, {})
@@ -297,8 +317,11 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
             too_low.append(person.code)
             continue
         figures.append(
-            Figures(person, pay, month.days, paid_days, unpaid_days, tax, projected, due)
+            Figures(
+                person, pay, month.days, paid_days, unpaid_days, tax, projected, due, tuple(owed)
+            )
         )
+    book.check()
     if too_low:
         raise PayTooLowError(*too_low)
     if not figures:
@@ -344,6 +367,9 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
                 net=f.net,
                 projected_income=f.projected_income,
                 year_tax=f.year_tax,
+                contributions=[c.as_json() for c in f.contributions],
+                employee_contributions=f.employee_contributions,
+                employer_contributions=f.employer_contributions,
             )
             for f in figures
         ]
@@ -353,6 +379,8 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
     run.deductions = sum((f.pay.deductions for f in figures), ZERO)
     run.tax = sum((f.tax for f in figures), ZERO)
     run.net = sum((f.net for f in figures), ZERO)
+    run.employee_contributions = sum((f.employee_contributions for f in figures), ZERO)
+    run.employer_contributions = sum((f.employer_contributions for f in figures), ZERO)
     run.save()
 
 
@@ -383,9 +411,12 @@ def work_out(actor: User, month: date) -> PayrollRun:
 
 
 def _fingerprint(rows: list[tuple[Any, ...]]) -> list[tuple[Any, ...]]:
-    # The lines go in as text, so a renamed or reworded part counts as a change even when the
-    # totals are the same; the payslip prints the lines.
-    return sorted((*row[:-1], json.dumps(row[-1], sort_keys=True)) for row in rows)
+    # The lines and contributions go in as text, so a renamed or reworded part counts as a
+    # change even when the totals are the same; the payslip prints them.
+    return sorted(
+        tuple(json.dumps(v, sort_keys=True) if isinstance(v, list) else v for v in row)
+        for row in rows
+    )
 
 
 @transaction.atomic
@@ -413,6 +444,8 @@ def post(actor: User, run: PayrollRun) -> bool:
                 f.paid_days,
                 f.projected_income,
                 f.year_tax,
+                f.employer_contributions,
+                [c.as_json() for c in f.contributions],
                 _lines(f.pay),
             )
             for f in figures
@@ -428,6 +461,8 @@ def post(actor: User, run: PayrollRun) -> bool:
                 "paid_days",
                 "projected_income",
                 "year_tax",
+                "employer_contributions",
+                "contributions",
                 "lines",
             )
         )
@@ -436,7 +471,13 @@ def post(actor: User, run: PayrollRun) -> bool:
         _store(locked, table, figures)
         audit.record(Action.UPDATE, locked, actor, {"worked_out_again": [None, _totals(locked)]})
         return False
-    lines = posting.payroll(locked.gross, locked.deductions, locked.tax)
+    lines = posting.payroll(
+        locked.gross,
+        locked.deductions - locked.employee_contributions,
+        locked.tax,
+        locked.employee_contributions,
+        locked.employer_contributions,
+    )
     entry = accounting.post_rule_lines(
         actor,
         month_end(locked.month),

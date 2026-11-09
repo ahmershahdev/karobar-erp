@@ -19,7 +19,7 @@ from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
-from .models import Contract, Employee, SalaryComponent, SalaryStructure
+from .models import Contract, Employee, HrSettings, SalaryComponent, SalaryStructure
 
 Action = AuditEvent.Action
 MAX_COMPONENTS = 30
@@ -238,6 +238,9 @@ def save_employee(actor: User, employee: Employee, values: dict[str, Any]) -> Em
         # Work from the locked row: saving an older copy would undo a change made meanwhile,
         # such as a leaving day.
         employee = lock_rows(Employee.objects.filter(pk=employee.pk))[0]
+    else:
+        settings = HrSettings.objects.first()
+        values = {"province": settings.default_province if settings else "", **values}
     left_on = values.get("left_on", employee.left_on)
     joined_on = values.get("joined_on", employee.joined_on)
     if employee.pk is not None:

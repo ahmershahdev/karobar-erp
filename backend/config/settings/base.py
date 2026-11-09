@@ -199,6 +199,8 @@ SPECTACULAR_SETTINGS = {
         "AttendanceStatusEnum": "apps.hr.models.Attendance.Status",
         "CountryEnum": "apps.hr.time_off.COUNTRIES",
         "PayrollStatusEnum": "apps.payroll.models.PayrollRun.Status",
+        "ProvinceEnum": "apps.hr.models.Province",
+        "ContributionSchemeEnum": "apps.payroll.models.ContributionRate.Scheme",
         "StatusEnum": "apps.accounting.models.JournalEntry.Status",
     },
 }

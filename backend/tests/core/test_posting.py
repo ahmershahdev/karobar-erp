@@ -151,6 +151,26 @@ def test_a_payroll_owes_tax_deductions_and_net_pay() -> None:
     ]
 
 
+def test_a_payroll_owes_eobi_and_social_security_for_both_shares() -> None:
+    lines = posting.payroll(
+        gross=D("100000"),
+        deductions=D("1000"),
+        tax=D("6000"),
+        employee_share=D("407"),
+        employer_share=D("4615"),
+    )
+    assert lines == [
+        Line("salaries", D("100000.00"), D("0.00")),
+        Line("employer_contributions", D("4615.00"), D("0.00")),
+        Line("withholding_payable", D("0.00"), D("6000.00")),
+        Line("payroll_deductions", D("0.00"), D("1000.00")),
+        Line("contributions_payable", D("0.00"), D("5022.00")),
+        Line("salaries_payable", D("0.00"), D("92593.00")),
+    ]
+    with pytest.raises(ValueError, match="negative"):
+        posting.payroll(D("1000"), D("0"), D("0"), employer_share=D("-1"))
+
+
 def test_a_payroll_with_no_tax_has_no_tax_line() -> None:
     accounts = [line.account for line in posting.payroll(D("30000"), D("0"), D("0"))]
     assert accounts == ["salaries", "salaries_payable"]

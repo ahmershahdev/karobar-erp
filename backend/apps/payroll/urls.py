@@ -6,6 +6,27 @@ urlpatterns = [
     path("tax-tables/", views.TaxTableListView.as_view(), name="payroll-tax-tables"),
     path("tax-tables/fill/", views.TaxTableFillView.as_view(), name="payroll-tax-tables-fill"),
     path("tax-tables/<int:pk>/", views.TaxTableDetailView.as_view(), name="payroll-tax-table"),
+    path("minimum-wages/", views.MinimumWageListView.as_view(), name="payroll-minimum-wages"),
+    path(
+        "minimum-wages/<int:pk>/",
+        views.MinimumWageDetailView.as_view(),
+        name="payroll-minimum-wage",
+    ),
+    path(
+        "contribution-rates/",
+        views.ContributionRateListView.as_view(),
+        name="payroll-contribution-rates",
+    ),
+    path(
+        "contribution-rates/<int:pk>/",
+        views.ContributionRateDetailView.as_view(),
+        name="payroll-contribution-rate",
+    ),
+    path(
+        "contributions/fill/",
+        views.ContributionsFillView.as_view(),
+        name="payroll-contributions-fill",
+    ),
     path("runs/", views.PayrollRunListView.as_view(), name="payroll-runs"),
     path("runs/<int:pk>/", views.PayrollRunDetailView.as_view(), name="payroll-run"),
     path("runs/<int:pk>/post/", views.PayrollRunPostView.as_view(), name="payroll-run-post"),

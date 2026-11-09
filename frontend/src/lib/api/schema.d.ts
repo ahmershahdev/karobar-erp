@@ -1329,6 +1329,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/contribution-rates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_contribution_rates_list"];
+        put?: never;
+        post: operations["payroll_contribution_rates_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/contribution-rates/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_contribution_rates_retrieve"];
+        put: operations["payroll_contribution_rates_update"];
+        post?: never;
+        delete: operations["payroll_contribution_rates_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/contributions/fill/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payroll_contributions_fill_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/minimum-wages/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_minimum_wages_list"];
+        put?: never;
+        post: operations["payroll_minimum_wages_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/minimum-wages/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_minimum_wages_retrieve"];
+        put: operations["payroll_minimum_wages_update"];
+        post?: never;
+        delete: operations["payroll_minimum_wages_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payroll/opening-pay/": {
         parameters: {
             query?: never;
@@ -2756,6 +2836,8 @@ export interface components {
             link: string;
             whatsapp: string;
         };
+        /** @enum {unknown} */
+        BlankEnum: "";
         CancelLeave: {
             /** Format: date */
             back_on?: string | null;
@@ -2887,6 +2969,27 @@ export interface components {
          * @enum {string}
          */
         ContractKindEnum: "permanent" | "fixed_term" | "probation";
+        ContributionRate: {
+            readonly id: number;
+            scheme: components["schemas"]["ContributionSchemeEnum"];
+            province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            /** Format: date */
+            starts_on: string;
+            /** Format: decimal */
+            employer_percent: string;
+            /** Format: decimal */
+            employee_percent: string;
+            on_minimum_wage?: boolean;
+            /** Format: decimal */
+            wage_cap?: string | null;
+            source: string;
+        };
+        /**
+         * @description * `eobi` - Eobi
+         *     * `social_security` - Social Security
+         * @enum {string}
+         */
+        ContributionSchemeEnum: "eobi" | "social_security";
         /**
          * @description * `a4` - A4
          *     * `receipt` - Receipt
@@ -3066,6 +3169,9 @@ export interface components {
             joined_on: string;
             /** Format: date */
             left_on?: string | null;
+            province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            pays_eobi?: boolean;
+            pays_social_security?: boolean;
             readonly current_contract: components["schemas"]["CurrentContract"] | null;
         };
         Fill: {
@@ -3149,6 +3255,7 @@ export interface components {
             weekend: number[];
             holiday_country: components["schemas"]["CountryEnum"];
             id_retention_years?: number;
+            default_province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
         };
         Invitation: {
             readonly id: number;
@@ -3371,6 +3478,15 @@ export interface components {
          * @enum {string}
          */
         MethodEnum: "cash" | "card";
+        MinimumWage: {
+            readonly id: number;
+            province: components["schemas"]["ProvinceEnum"];
+            /** Format: date */
+            starts_on: string;
+            /** Format: decimal */
+            amount: string;
+            source: string;
+        };
         OpenTill: {
             warehouse: number;
             /**
@@ -3788,6 +3904,9 @@ export interface components {
             joined_on?: string;
             /** Format: date */
             left_on?: string | null;
+            province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            pays_eobi?: boolean;
+            pays_social_security?: boolean;
             readonly current_contract?: components["schemas"]["CurrentContract"] | null;
         };
         PatchedHoliday: {
@@ -3801,6 +3920,7 @@ export interface components {
             weekend?: number[];
             holiday_country?: components["schemas"]["CountryEnum"];
             id_retention_years?: number;
+            default_province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
         };
         PatchedLeaveType: {
             readonly id?: number;
@@ -3936,6 +4056,10 @@ export interface components {
             readonly tax: string;
             /** Format: decimal */
             readonly net: string;
+            /** Format: decimal */
+            readonly employee_contributions: string;
+            /** Format: decimal */
+            readonly employer_contributions: string;
             readonly tax_table_name: string | null;
             readonly entry_number: string | null;
             /** Format: date-time */
@@ -3963,6 +4087,10 @@ export interface components {
             readonly tax: string;
             /** Format: decimal */
             readonly net: string;
+            /** Format: decimal */
+            readonly employee_contributions: string;
+            /** Format: decimal */
+            readonly employer_contributions: string;
             readonly tax_table_name: string | null;
             readonly entry_number: string | null;
             /** Format: date-time */
@@ -4008,6 +4136,24 @@ export interface components {
             readonly projected_income: string;
             /** Format: decimal */
             readonly year_tax: string;
+            readonly contributions: components["schemas"]["PayslipContribution"][];
+            /** Format: decimal */
+            readonly employee_contributions: string;
+            /** Format: decimal */
+            readonly employer_contributions: string;
+        };
+        PayslipContribution: {
+            scheme: string;
+            /** Format: decimal */
+            base: string;
+            /** Format: decimal */
+            employer_percent: string;
+            /** Format: decimal */
+            employee_percent: string;
+            /** Format: decimal */
+            employer: string;
+            /** Format: decimal */
+            employee: string;
         };
         PayslipLine: {
             name: string;
@@ -4058,6 +4204,17 @@ export interface components {
             /** Format: decimal */
             net_profit: string;
         };
+        /**
+         * @description * `ICT` - Islamabad Capital Territory
+         *     * `PB` - Punjab
+         *     * `SD` - Sindh
+         *     * `KP` - Khyber Pakhtunkhwa
+         *     * `BA` - Balochistan
+         *     * `AJK` - Azad Jammu and Kashmir
+         *     * `GB` - Gilgit-Baltistan
+         * @enum {string}
+         */
+        ProvinceEnum: "ICT" | "PB" | "SD" | "KP" | "BA" | "AJK" | "GB";
         PurchaseOrder: {
             readonly id: number;
             readonly number: string | null;
@@ -7545,6 +7702,241 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Member"];
                 };
+            };
+        };
+    };
+    payroll_contribution_rates_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionRate"][];
+                };
+            };
+        };
+    };
+    payroll_contribution_rates_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionRate"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionRate"];
+                };
+            };
+        };
+    };
+    payroll_contribution_rates_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionRate"];
+                };
+            };
+        };
+    };
+    payroll_contribution_rates_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionRate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionRate"];
+                };
+            };
+        };
+    };
+    payroll_contribution_rates_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    payroll_contributions_fill_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TablesFilled"];
+                };
+            };
+        };
+    };
+    payroll_minimum_wages_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MinimumWage"][];
+                };
+            };
+        };
+    };
+    payroll_minimum_wages_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MinimumWage"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MinimumWage"];
+                };
+            };
+        };
+    };
+    payroll_minimum_wages_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MinimumWage"];
+                };
+            };
+        };
+    };
+    payroll_minimum_wages_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MinimumWage"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MinimumWage"];
+                };
+            };
+        };
+    };
+    payroll_minimum_wages_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

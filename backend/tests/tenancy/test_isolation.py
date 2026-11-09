@@ -45,7 +45,14 @@ from apps.inventory.models import (
 from apps.payroll import openings as payroll_openings
 from apps.payroll import runs as payroll
 from apps.payroll import services as payroll_tax
-from apps.payroll.models import OpeningPay, PayrollRun, Payslip, TaxTable
+from apps.payroll.models import (
+    ContributionRate,
+    MinimumWage,
+    OpeningPay,
+    PayrollRun,
+    Payslip,
+    TaxTable,
+)
 from apps.pos import services as pos
 from apps.pos.models import PosSession
 from apps.purchasing import services as purchasing
@@ -83,6 +90,7 @@ USER_LEVEL = {
     "api/assistant/reset/",
     "api/hr/holidays/fill/",
     "api/payroll/tax-tables/fill/",
+    "api/payroll/contributions/fill/",
     "api/accounts/verify-email/resend/",
     "api/tenants/",
     "api/invitations/accept/",
@@ -589,6 +597,27 @@ def _payslip(member: Member) -> Payslip:
     found: Payslip = Payslip.objects.get(run=_payroll(member, post=True))
     return found
 
+
+def _minimum_wage(member: Member) -> int:
+    row: MinimumWage = MinimumWage.objects.create(
+        province="PB", starts_on=timezone.localdate(), amount=Decimal(1), source="Invented"
+    )
+    return row.pk
+
+
+def _contribution_rate(member: Member) -> int:
+    row: ContributionRate = ContributionRate.objects.create(
+        scheme="eobi",
+        starts_on=timezone.localdate(),
+        employer_percent=Decimal(1),
+        employee_percent=Decimal(0),
+        source="Invented",
+    )
+    return row.pk
+
+
+_register("payroll/minimum-wages", _minimum_wage)
+_register("payroll/contribution-rates", _contribution_rate)
 
 tenant_endpoint("api/payroll/tax-tables/")(
     lambda m: ("/api/payroll/tax-tables/", _tax_table(m).pk)

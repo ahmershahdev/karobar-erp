@@ -13,6 +13,7 @@ import { can } from '../../lib/api/types';
 import { today } from '../../lib/dates';
 import { formatMoney } from '../../lib/money';
 import { env } from '../../lib/env';
+import { PROVINCES } from '../hr/provinces';
 import { postable, useAccounts } from '../purchasing/pages';
 import { PrintButton } from '../sales/ledgers';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
@@ -301,6 +302,13 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
           </p>
         )}
         <Payslips run={detail} />
+        {Number(detail.employer_contributions) > 0 && (
+          <p className="text-sm text-muted">
+            {t('payroll.employerShare', {
+              amount: formatMoney(detail.employer_contributions, i18n.resolvedLanguage),
+            })}
+          </p>
+        )}
         {notice && !(notice === 'postedNow' && detail.status === 'reversed') && (
           <Alert tone={notice === 'postedNow' ? 'success' : 'notice'}>
             {t(`payroll.${notice}`)}
@@ -895,6 +903,436 @@ export function TaxSlabsPage() {
       {tables.data?.map((table) => (
         <TableCard key={table.id} table={table} />
       ))}
+    </>
+  );
+}
+
+// EOBI and social security
+
+type Wage = components['schemas']['MinimumWage'];
+type Rate = components['schemas']['ContributionRate'];
+
+const CONTRIBUTION_KEYS = ['payroll-minimum-wages', 'payroll-contribution-rates'];
+
+function provinceName(code: string | undefined, t: (key: string) => string): string {
+  return code ? t(`hr.provinces.${code}`) : t('payroll.everywhere');
+}
+
+function SourceField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { t } = useTranslation();
+  return (
+    <Field
+      label={t('payroll.source')}
+      placeholder={t('payroll.contributionSourcePlaceholder')}
+      hint={t('payroll.sourceHint')}
+      required
+      maxLength={500}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+function WageForm({ wage, onDone }: { wage?: Wage; onDone: () => void }) {
+  const { t } = useTranslation();
+  const save = useTenantAction(CONTRIBUTION_KEYS);
+  const empty = {
+    province: wage?.province ?? '',
+    starts_on: wage?.starts_on ?? '',
+    amount: wage?.amount ?? '',
+    source: wage?.source ?? '',
+  };
+  const [form, setForm] = useState(empty);
+  const set = (patch: Partial<typeof empty>) => setForm({ ...form, ...patch });
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const body = form as never;
+        save.mutate(
+          () =>
+            wage
+              ? unwrap(
+                  api.PUT('/api/payroll/minimum-wages/{id}/', {
+                    params: { path: { id: wage.id } },
+                    body,
+                  }),
+                )
+              : unwrap(api.POST('/api/payroll/minimum-wages/', { body })),
+          {
+            onSuccess: () => {
+              setForm(empty);
+              onDone();
+            },
+          },
+        );
+      }}
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <Select
+          label={t('payroll.province')}
+          required
+          value={form.province}
+          onChange={(e) => set({ province: e.target.value })}
+        >
+          <option value="">-</option>
+          {PROVINCES.map((code) => (
+            <option key={code} value={code}>
+              {t(`hr.provinces.${code}`)}
+            </option>
+          ))}
+        </Select>
+        <Field
+          label={t('payroll.from')}
+          type="date"
+          required
+          value={form.starts_on}
+          onChange={(e) => set({ starts_on: e.target.value })}
+        />
+        <Field
+          label={t('payroll.monthlyWage')}
+          type="number"
+          required
+          min="0.01"
+          step="0.01"
+          inputMode="decimal"
+          placeholder="40000"
+          value={form.amount}
+          onChange={(e) => set({ amount: e.target.value })}
+        />
+      </div>
+      <SourceField value={form.source} onChange={(source) => set({ source })} />
+      {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit" disabled={save.isPending}>
+          {wage ? t('hr.save') : t('payroll.addWage')}
+        </Button>
+        {wage && (
+          <Button variant="ghost" onClick={onDone}>
+            {t('workspace.cancel')}
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+function RateForm({ rate, onDone }: { rate?: Rate; onDone: () => void }) {
+  const { t } = useTranslation();
+  const save = useTenantAction(CONTRIBUTION_KEYS);
+  const empty = {
+    scheme: rate?.scheme ?? 'eobi',
+    province: rate?.province ?? '',
+    starts_on: rate?.starts_on ?? '',
+    employer_percent: rate?.employer_percent ?? '',
+    employee_percent: rate?.employee_percent ?? '',
+    on_minimum_wage: rate?.on_minimum_wage ?? true,
+    wage_cap: rate?.wage_cap ?? '',
+    source: rate?.source ?? '',
+  };
+  const [form, setForm] = useState(empty);
+  const set = (patch: Partial<typeof empty>) => setForm({ ...form, ...patch });
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const body = {
+          ...form,
+          wage_cap: form.on_minimum_wage || !form.wage_cap ? null : form.wage_cap,
+        } as never;
+        save.mutate(
+          () =>
+            rate
+              ? unwrap(
+                  api.PUT('/api/payroll/contribution-rates/{id}/', {
+                    params: { path: { id: rate.id } },
+                    body,
+                  }),
+                )
+              : unwrap(api.POST('/api/payroll/contribution-rates/', { body })),
+          {
+            onSuccess: () => {
+              setForm(empty);
+              onDone();
+            },
+          },
+        );
+      }}
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <Select
+          label={t('payroll.scheme')}
+          value={form.scheme}
+          onChange={(e) =>
+            set({
+              scheme: e.target.value as Rate['scheme'],
+              on_minimum_wage: e.target.value === 'eobi',
+            })
+          }
+        >
+          <option value="eobi">{t('payroll.schemes.eobi')}</option>
+          <option value="social_security">{t('payroll.schemes.social_security')}</option>
+        </Select>
+        <Select
+          label={t('payroll.province')}
+          value={form.province}
+          onChange={(e) => set({ province: e.target.value as NonNullable<Rate['province']> })}
+        >
+          <option value="">{t('payroll.everywhere')}</option>
+          {PROVINCES.map((code) => (
+            <option key={code} value={code}>
+              {t(`hr.provinces.${code}`)}
+            </option>
+          ))}
+        </Select>
+        <Field
+          label={t('payroll.from')}
+          type="date"
+          required
+          value={form.starts_on}
+          onChange={(e) => set({ starts_on: e.target.value })}
+        />
+        <Field
+          label={t('payroll.employerPercent')}
+          type="number"
+          required
+          min="0"
+          max="100"
+          step="0.01"
+          inputMode="decimal"
+          value={form.employer_percent}
+          onChange={(e) => set({ employer_percent: e.target.value })}
+        />
+        <Field
+          label={t('payroll.employeePercent')}
+          type="number"
+          required
+          min="0"
+          max="100"
+          step="0.01"
+          inputMode="decimal"
+          value={form.employee_percent}
+          onChange={(e) => set({ employee_percent: e.target.value })}
+        />
+        <Select
+          label={t('payroll.workedOn')}
+          value={form.on_minimum_wage ? 'wage' : 'pay'}
+          onChange={(e) => set({ on_minimum_wage: e.target.value === 'wage' })}
+        >
+          <option value="wage">{t('payroll.onMinimumWage')}</option>
+          <option value="pay">{t('payroll.onPay')}</option>
+        </Select>
+        {!form.on_minimum_wage && (
+          <Field
+            label={t('payroll.wageCap')}
+            hint={t('payroll.wageCapHint')}
+            type="number"
+            min="0.01"
+            step="0.01"
+            inputMode="decimal"
+            value={form.wage_cap}
+            onChange={(e) => set({ wage_cap: e.target.value })}
+          />
+        )}
+      </div>
+      <SourceField value={form.source} onChange={(source) => set({ source })} />
+      {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit" disabled={save.isPending}>
+          {rate ? t('hr.save') : t('payroll.addRate')}
+        </Button>
+        {rate && (
+          <Button variant="ghost" onClick={onDone}>
+            {t('workspace.cancel')}
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+function RowActions({ onEdit, onRemove }: { onEdit: () => void; onRemove: () => void }) {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  return (
+    <div className="flex flex-wrap gap-2">
+      {can(membership, 'payroll', 'update') && (
+        <Button variant="ghost" onClick={onEdit}>
+          {t('payroll.editTable')}
+        </Button>
+      )}
+      {can(membership, 'payroll', 'delete') && (
+        <ConfirmButton onConfirm={onRemove}>{t('workspace.remove')}</ConfirmButton>
+      )}
+    </div>
+  );
+}
+
+function MinimumWagesPanel() {
+  const { t, i18n } = useTranslation();
+  const { membership } = useWorkspace();
+  const remove = useTenantAction(CONTRIBUTION_KEYS);
+  const [editing, setEditing] = useState<number | null>(null);
+  const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
+  const wages = useQuery({
+    queryKey: [membership.tenant_id, 'payroll-minimum-wages'],
+    queryFn: () => unwrap(api.GET('/api/payroll/minimum-wages/')),
+  });
+  return (
+    <Panel title={t('payroll.minimumWages')}>
+      <div className="space-y-4">
+        {wages.data?.length === 0 && <p className="text-muted">{t('payroll.noWages')}</p>}
+        {!!wages.data?.length && (
+          <ul className="divide-y divide-line">
+            {wages.data.map((wage: Wage) =>
+              editing === wage.id ? (
+                <li key={wage.id} className="py-3">
+                  <WageForm wage={wage} onDone={() => setEditing(null)} />
+                </li>
+              ) : (
+                <li key={wage.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium">{provinceName(wage.province, t)}</span>{' '}
+                    <span className="tabular-nums">{money(wage.amount)}</span>
+                    <span className="block text-sm text-muted">
+                      {t('payroll.from')} <span className="tabular-nums">{wage.starts_on}</span>
+                      {' · '}
+                      {wage.source}
+                    </span>
+                  </span>
+                  <RowActions
+                    onEdit={() => setEditing(wage.id)}
+                    onRemove={() =>
+                      remove.mutate(() =>
+                        unwrap(
+                          api.DELETE('/api/payroll/minimum-wages/{id}/', {
+                            params: { path: { id: wage.id } },
+                          }),
+                        ),
+                      )
+                    }
+                  />
+                </li>
+              ),
+            )}
+          </ul>
+        )}
+        {remove.isError && (
+          <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
+        )}
+        {can(membership, 'payroll', 'create') && <WageForm onDone={() => undefined} />}
+      </div>
+    </Panel>
+  );
+}
+
+function RatesPanel() {
+  const { t, i18n } = useTranslation();
+  const { membership } = useWorkspace();
+  const remove = useTenantAction(CONTRIBUTION_KEYS);
+  const [editing, setEditing] = useState<number | null>(null);
+  const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
+  const rates = useQuery({
+    queryKey: [membership.tenant_id, 'payroll-contribution-rates'],
+    queryFn: () => unwrap(api.GET('/api/payroll/contribution-rates/')),
+  });
+  return (
+    <Panel title={t('payroll.ratesTitle')}>
+      <div className="space-y-4">
+        {rates.data?.length === 0 && <p className="text-muted">{t('payroll.noRates')}</p>}
+        {!!rates.data?.length && (
+          <ul className="divide-y divide-line">
+            {rates.data.map((rate: Rate) =>
+              editing === rate.id ? (
+                <li key={rate.id} className="py-3">
+                  <RateForm rate={rate} onDone={() => setEditing(null)} />
+                </li>
+              ) : (
+                <li key={rate.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium">
+                      {t(`payroll.schemes.${rate.scheme}`)} · {provinceName(rate.province, t)}
+                    </span>
+                    <span className="block">
+                      {t('payroll.rateFigures', {
+                        employer: Number(rate.employer_percent),
+                        employee: Number(rate.employee_percent),
+                      })}{' '}
+                      {rate.on_minimum_wage
+                        ? t('payroll.onMinimumWageShort')
+                        : t('payroll.onPayShort')}
+                      {rate.wage_cap && ` ${t('payroll.upTo', { cap: money(rate.wage_cap) })}`}
+                    </span>
+                    <span className="block text-sm text-muted">
+                      {t('payroll.from')} <span className="tabular-nums">{rate.starts_on}</span>
+                      {' · '}
+                      {rate.source}
+                    </span>
+                  </span>
+                  <RowActions
+                    onEdit={() => setEditing(rate.id)}
+                    onRemove={() =>
+                      remove.mutate(() =>
+                        unwrap(
+                          api.DELETE('/api/payroll/contribution-rates/{id}/', {
+                            params: { path: { id: rate.id } },
+                          }),
+                        ),
+                      )
+                    }
+                  />
+                </li>
+              ),
+            )}
+          </ul>
+        )}
+        {remove.isError && (
+          <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
+        )}
+        {can(membership, 'payroll', 'create') && <RateForm onDone={() => undefined} />}
+      </div>
+    </Panel>
+  );
+}
+
+export function ContributionsPage() {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const fill = useTenantAction(CONTRIBUTION_KEYS);
+  const [added, setAdded] = useState<number | null>(null);
+  return (
+    <>
+      <PageTitle
+        title={t('payroll.contributionsTitle')}
+        subtitle={t('payroll.contributionsBody')}
+      />
+      {can(membership, 'payroll', 'create') && (
+        <Panel title={t('payroll.addFigures')}>
+          <div className="space-y-4">
+            <Hint>{t('payroll.contributionsFillHint')}</Hint>
+            <Button
+              disabled={fill.isPending}
+              onClick={() =>
+                fill.mutate(() => unwrap(api.POST('/api/payroll/contributions/fill/')), {
+                  onSuccess: (result) => setAdded((result as { added: number }).added),
+                })
+              }
+            >
+              {t('payroll.contributionsFill')}
+            </Button>
+            {added !== null && (
+              <Alert tone="success">{t('payroll.filledFigures', { added })}</Alert>
+            )}
+            {fill.isError && (
+              <Alert tone="error">{errorText(fill.error, t('signIn.unavailable'))}</Alert>
+            )}
+          </div>
+        </Panel>
+      )}
+      <RatesPanel />
+      <MinimumWagesPanel />
     </>
   );
 }

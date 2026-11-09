@@ -2,7 +2,15 @@ from decimal import Decimal
 
 import pytest
 
-from apps.core.payroll import Component, PayrollError, breakdown, combine, share, value
+from apps.core.payroll import (
+    Component,
+    PayrollError,
+    breakdown,
+    combine,
+    share,
+    value,
+    with_deductions,
+)
 
 D = Decimal
 
@@ -121,3 +129,18 @@ def test_combining_nothing_is_an_empty_payslip() -> None:
     empty = combine([])
     assert empty.lines == []
     assert empty.gross == D(0)
+
+
+def test_extra_deductions_lower_net_but_not_taxable_pay() -> None:
+    pay = with_deductions(
+        breakdown(D("50000"), []), [("EOBI", D("407")), ("Social security", D(0))]
+    )
+    assert [(line.name, line.kind, line.taxable) for line in pay.lines[1:]] == [
+        ("EOBI", "deduction", False),
+        ("Social security", "deduction", False),
+    ]
+    assert (pay.deductions, pay.net, pay.taxable) == (D("407.00"), D("49593.00"), D("50000.00"))
+    with pytest.raises(PayrollError):
+        with_deductions(pay, [("EOBI", D("-1"))])
+    with pytest.raises(PayrollError):
+        with_deductions(breakdown(D("100"), []), [("EOBI", D("407"))])
