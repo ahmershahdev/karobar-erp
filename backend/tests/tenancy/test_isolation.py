@@ -47,6 +47,7 @@ from apps.payroll import runs as payroll
 from apps.payroll import services as payroll_tax
 from apps.payroll.models import (
     ContributionRate,
+    GratuityRule,
     MinimumWage,
     OpeningPay,
     PayrollRun,
@@ -91,6 +92,7 @@ USER_LEVEL = {
     "api/hr/holidays/fill/",
     "api/payroll/tax-tables/fill/",
     "api/payroll/contributions/fill/",
+    "api/payroll/gratuity-rules/fill/",
     "api/accounts/verify-email/resend/",
     "api/tenants/",
     "api/invitations/accept/",
@@ -619,6 +621,25 @@ def _contribution_rate(member: Member) -> int:
 _register("payroll/minimum-wages", _minimum_wage)
 _register("payroll/contribution-rates", _contribution_rate)
 
+
+def _gratuity_rule(member: Member) -> int:
+    row: GratuityRule = GratuityRule.objects.create(
+        country="AE",
+        starts_on=timezone.localdate(),
+        first_years=Decimal(5),
+        first_days=Decimal(21),
+        later_days=Decimal(30),
+        wage="basic",
+        source="Invented",
+    )
+    return row.pk
+
+
+_register("payroll/gratuity-rules", _gratuity_rule)
+tenant_endpoint("api/payroll/employees/<int:pk>/gratuity/")(
+    lambda m: (f"/api/payroll/employees/{_employee(m).pk}/gratuity/", _employee(m).pk)
+)
+
 tenant_endpoint("api/payroll/tax-tables/")(
     lambda m: ("/api/payroll/tax-tables/", _tax_table(m).pk)
 )
@@ -769,6 +790,9 @@ TENANT_ACTIONS: dict[str, Callable[[Member], str]] = {
     "api/payroll/runs/<int:pk>/post/": lambda m: f"/api/payroll/runs/{_payroll(m).pk}/post/",
     "api/payroll/runs/<int:pk>/reverse/": lambda m: (
         f"/api/payroll/runs/{_payroll(m, post=True).pk}/reverse/"
+    ),
+    "api/payroll/employees/<int:pk>/gratuity/pay/": lambda m: (
+        f"/api/payroll/employees/{_employee(m).pk}/gratuity/pay/"
     ),
     "api/payroll/runs/<int:pk>/pay/": lambda m: (
         f"/api/payroll/runs/{_payroll(m, post=True).pk}/pay/"

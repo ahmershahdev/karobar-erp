@@ -70,8 +70,10 @@ in CI, and seed data.
 - [x] Paying salaries: book the payment from bank or cash against salaries payable, with a bank transfer list (#49)
 - [x] Undoing a posted payroll by a reversal, refused once its salaries are paid (#50)
 - [x] Cancelling approved leave, giving the days back (#51)
-- [x] Pakistan EOBI and provincial social security as dated data with sources; only officially notified minimum wages ship (in review)
-- [ ] Gulf payroll: GOSI and the UAE pension for nationals, end-of-service gratuity and the WPS salary file
+- [x] Pakistan EOBI and provincial social security as dated data with sources; only officially notified minimum wages ship (#56)
+- [x] Gulf end-of-service gratuity: UAE Article 51 and Saudi Articles 84 and 85 as data, a monthly provision and the payout on leaving (in review)
+- [ ] Gulf social insurance: GOSI and the UAE pension for nationals, rates entered by the business
+- [ ] The WPS salary file
 
 ## M7. Docs and launch (target 2027-06-13)
 

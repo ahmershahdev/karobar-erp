@@ -2916,6 +2916,163 @@ paths:
               schema:
                 $ref: '#/components/schemas/TablesFilled'
           description: ''
+  /api/payroll/employees/{id}/gratuity/:
+    get:
+      operationId: payroll_employees_gratuity_retrieve
+      description: What someone's gratuity has built up to, and for a leaver what
+        it would pay or did.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GratuityQuote'
+          description: ''
+  /api/payroll/employees/{id}/gratuity/pay/:
+    post:
+      operationId: payroll_employees_gratuity_pay_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GratuityPayout'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GratuityPayout'
+          description: ''
+  /api/payroll/gratuity-rules/:
+    get:
+      operationId: payroll_gratuity_rules_list
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GratuityRule'
+          description: ''
+    post:
+      operationId: payroll_gratuity_rules_create
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GratuityRule'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GratuityRule'
+          description: ''
+  /api/payroll/gratuity-rules/{id}/:
+    get:
+      operationId: payroll_gratuity_rules_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GratuityRule'
+          description: ''
+    put:
+      operationId: payroll_gratuity_rules_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GratuityRule'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GratuityRule'
+          description: ''
+    delete:
+      operationId: payroll_gratuity_rules_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/payroll/gratuity-rules/fill/:
+    post:
+      operationId: payroll_gratuity_rules_fill_create
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TablesFilled'
+          description: ''
   /api/payroll/minimum-wages/:
     get:
       operationId: payroll_minimum_wages_list
@@ -7123,6 +7280,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/ProvinceEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        nationality:
+          type: string
+          maxLength: 2
         pays_eobi:
           type: boolean
         pays_social_security:
@@ -7292,6 +7452,167 @@ components:
       - supplier
       - supplier_name
       - warehouse
+    GratuityPayout:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        reason:
+          $ref: '#/components/schemas/ReasonEnum'
+        service_days:
+          type: integer
+          readOnly: true
+        wage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        full:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        share:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,6})?$
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        provision:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        paid_on:
+          type: string
+          format: date
+        paid_from:
+          type: integer
+        paid_from_name:
+          type: string
+          readOnly: true
+        entry_number:
+          type: string
+          readOnly: true
+      required:
+      - amount
+      - entry_number
+      - full
+      - id
+      - paid_from
+      - paid_from_name
+      - paid_on
+      - provision
+      - reason
+      - service_days
+      - share
+      - wage
+    GratuityQuote:
+      type: object
+      properties:
+        accrued:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        service_days:
+          type: integer
+          nullable: true
+        if_ended:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        if_resigned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        payout:
+          allOf:
+          - $ref: '#/components/schemas/GratuityPayout'
+          nullable: true
+        left_on:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - accrued
+      - if_ended
+      - if_resigned
+      - left_on
+      - payout
+      - service_days
+    GratuityRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        country:
+          $ref: '#/components/schemas/GratuityRuleCountryEnum'
+        starts_on:
+          type: string
+          format: date
+        first_years:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        first_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        later_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        month_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        min_years:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        cap_months:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+          nullable: true
+        wage:
+          $ref: '#/components/schemas/WageEnum'
+        excludes_nationals:
+          type: boolean
+        excludes_unpaid_days:
+          type: boolean
+        resignation:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResignationBand'
+        source:
+          type: string
+          maxLength: 1000
+      required:
+      - country
+      - first_days
+      - first_years
+      - id
+      - later_days
+      - source
+      - starts_on
+      - wage
+    GratuityRuleCountryEnum:
+      enum:
+      - AE
+      - SA
+      type: string
+      description: |-
+        * `AE` - AE
+        * `SA` - SA
     Health:
       type: object
       properties:
@@ -8801,6 +9122,9 @@ components:
           oneOf:
           - $ref: '#/components/schemas/ProvinceEnum'
           - $ref: '#/components/schemas/BlankEnum'
+        nationality:
+          type: string
+          maxLength: 2
         pays_eobi:
           type: boolean
         pays_social_security:
@@ -9178,6 +9502,11 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        gratuity_change:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         tax_table_name:
           type: string
           readOnly: true
@@ -9217,6 +9546,7 @@ components:
       - employee_contributions
       - employer_contributions
       - entry_number
+      - gratuity_change
       - gross
       - id
       - month
@@ -9283,6 +9613,11 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        gratuity_change:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         tax_table_name:
           type: string
           readOnly: true
@@ -9327,6 +9662,7 @@ components:
       - employee_contributions
       - employer_contributions
       - entry_number
+      - gratuity_change
       - gross
       - id
       - month
@@ -9436,6 +9772,16 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        gratuity_accrued:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        gratuity_change:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
       required:
       - contributions
       - deductions
@@ -9444,6 +9790,8 @@ components:
       - employee_contributions
       - employee_name
       - employer_contributions
+      - gratuity_accrued
+      - gratuity_change
       - gross
       - id
       - lines
@@ -9697,6 +10045,14 @@ components:
       - supplier_name
       - total
       - warehouse
+    ReasonEnum:
+      enum:
+      - ended
+      - resigned
+      type: string
+      description: |-
+        * `ended` - Ended
+        * `resigned` - Resigned
     ReceiptAllocation:
       type: object
       properties:
@@ -9853,6 +10209,22 @@ components:
       required:
       - lines
       - total
+    ResignationBand:
+      type: object
+      properties:
+        years:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        share:
+          type: string
+          pattern: ^\d{1,3}/\d{1,3}$
+        after:
+          type: boolean
+          default: false
+      required:
+      - share
+      - years
     Reverse:
       type: object
       properties:
@@ -10927,6 +11299,14 @@ components:
       description: |-
         * `average` - average
         * `fifo` - fifo
+    WageEnum:
+      enum:
+      - basic
+      - full
+      type: string
+      description: |-
+        * `basic` - Basic
+        * `full` - Full
     Warehouse:
       type: object
       properties:

@@ -27,6 +27,23 @@ urlpatterns = [
         views.ContributionsFillView.as_view(),
         name="payroll-contributions-fill",
     ),
+    path("gratuity-rules/", views.GratuityRuleListView.as_view(), name="payroll-gratuity-rules"),
+    path(
+        "gratuity-rules/<int:pk>/",
+        views.GratuityRuleDetailView.as_view(),
+        name="payroll-gratuity-rule",
+    ),
+    path("gratuity-rules/fill/", views.GratuityFillView.as_view(), name="payroll-gratuity-fill"),
+    path(
+        "employees/<int:pk>/gratuity/",
+        views.EmployeeGratuityView.as_view(),
+        name="payroll-employee-gratuity",
+    ),
+    path(
+        "employees/<int:pk>/gratuity/pay/",
+        views.EmployeeGratuityPayView.as_view(),
+        name="payroll-employee-gratuity-pay",
+    ),
     path("runs/", views.PayrollRunListView.as_view(), name="payroll-runs"),
     path("runs/<int:pk>/", views.PayrollRunDetailView.as_view(), name="payroll-run"),
     path("runs/<int:pk>/post/", views.PayrollRunPostView.as_view(), name="payroll-run-post"),

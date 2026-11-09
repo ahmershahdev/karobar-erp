@@ -156,12 +156,14 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "joined_on",
             "left_on",
             "province",
+            "nationality",
             "pays_eobi",
             "pays_social_security",
             "current_contract",
         )
         extra_kwargs = {
             "province": {"required": False},
+            "nationality": {"required": False},
             "pays_eobi": {"required": False},
             "pays_social_security": {"required": False},
             "job_title": {"required": False},
@@ -171,6 +173,12 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "bank_account": {"required": False},
             "left_on": {"required": False, "allow_null": True},
         }
+
+    def validate_nationality(self, value: str) -> str:
+        code = value.strip().upper()
+        if code and not (len(code) == 2 and code.isascii() and code.isalpha()):
+            raise serializers.ValidationError("Use the two-letter country code, such as AE.")
+        return code
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         joined = attrs.get("joined_on", getattr(self.instance, "joined_on", None))

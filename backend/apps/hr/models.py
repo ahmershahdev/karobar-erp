@@ -99,6 +99,9 @@ class Employee(TenantOwnedModel):
     # payslips and journal entries refer to them.
     left_on = models.DateField(null=True, blank=True)
     province = models.CharField(max_length=3, choices=Province.choices, blank=True)
+    # Two-letter country code. The UAE pays its nationals' end of service through the pension
+    # law instead of gratuity, and Gulf social insurance depends on it too.
+    nationality = models.CharField(max_length=2, blank=True)
     # Off until the business says so: EOBI covers businesses with five or more staff and stops
     # at pension age, and provincial social security has its own wage limit. Neither can be
     # judged from the records kept here.

@@ -1,12 +1,13 @@
 from collections.abc import Callable
 from datetime import date
+from decimal import Decimal
 from typing import Any, cast
 
 from django.db.models import Count, QuerySet
 from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
-from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,14 +15,26 @@ from rest_framework.views import APIView
 from apps.accounting.services import AccountingError
 from apps.accounts.models import User
 from apps.core.salary_tax import Slab
+from apps.hr.models import Employee
 from apps.platform.csv_export import csv_response
 from apps.sales import documents as printing
 from apps.tenancy.permissions import HasModulePermission, membership_of
 
-from . import contributions, documents, openings, payments, runs, services
-from .models import ContributionRate, MinimumWage, OpeningPay, PayrollRun, Payslip, TaxTable
+from . import contributions, documents, gratuity, openings, payments, runs, services
+from .models import (
+    ContributionRate,
+    GratuityRule,
+    MinimumWage,
+    OpeningPay,
+    PayrollRun,
+    Payslip,
+    TaxTable,
+)
 from .serializers import (
     ContributionRateSerializer,
+    GratuityPayoutSerializer,
+    GratuityQuoteSerializer,
+    GratuityRuleSerializer,
     MinimumWageSerializer,
     OpeningPaySerializer,
     PayrollReverseSerializer,
@@ -107,7 +120,8 @@ def _runs() -> QuerySet[PayrollRun]:
     runs_with_people: QuerySet[PayrollRun] = PayrollRun.objects.select_related(
         "tax_table", "entry", "reversal", "payment__paid_from", "payment__entry"
     ).annotate(people=Count("payslips"))
-    return runs_with_people
+    # Newest month first. Said here, because the grouped count drops the model's ordering.
+    return runs_with_people.order_by("-month", "-id")
 
 
 class PayrollRunListView(PayrollView, generics.ListAPIView[PayrollRun]):
@@ -367,3 +381,81 @@ class ContributionsFillView(PayrollView):
     def post(self, request: Request) -> Response:
         added = run(contributions.fill_official, actor(request))
         return Response(TablesFilledSerializer({"added": added}).data)
+
+
+# End-of-service gratuity
+
+
+class GratuityRuleListView(PayrollView, generics.ListCreateAPIView[GratuityRule]):
+    serializer_class = GratuityRuleSerializer
+    pagination_class = None
+
+    def get_queryset(self) -> QuerySet[GratuityRule]:
+        return GratuityRule.objects.all()
+
+    def perform_create(self, serializer: GratuityRuleSerializer) -> None:  # type: ignore[override]
+        serializer.instance = run(
+            gratuity.save_rule, actor(self.request), GratuityRule(), serializer.validated_data
+        )
+
+
+class GratuityRuleDetailView(PayrollView, generics.RetrieveUpdateDestroyAPIView[GratuityRule]):
+    serializer_class = GratuityRuleSerializer
+    # Whole rules only: a change that leaves out the cap or the bands clears them.
+    http_method_names = ["get", "put", "delete", "head", "options"]
+
+    def get_queryset(self) -> QuerySet[GratuityRule]:
+        return GratuityRule.objects.all()
+
+    def perform_update(self, serializer: GratuityRuleSerializer) -> None:  # type: ignore[override]
+        row = cast(GratuityRule, serializer.instance)
+        values = {
+            "cap_months": None,
+            "resignation": [],
+            "month_days": Decimal(30),
+            "min_years": Decimal(0),
+            "excludes_nationals": False,
+            "excludes_unpaid_days": False,
+            **serializer.validated_data,
+        }
+        serializer.instance = run(gratuity.save_rule, actor(self.request), row, values)
+
+    def perform_destroy(self, instance: GratuityRule) -> None:
+        run(gratuity.delete_rule, actor(self.request), instance)
+
+
+class GratuityFillView(PayrollView):
+    required_action = "create"
+
+    @extend_schema(request=None, responses=TablesFilledSerializer)
+    def post(self, request: Request) -> Response:
+        added = run(gratuity.fill_official, actor(request))
+        return Response(TablesFilledSerializer({"added": added}).data)
+
+
+def _person(pk: int) -> Employee:
+    found: Employee | None = Employee.objects.filter(pk=pk).first()
+    if found is None:
+        raise NotFound
+    return found
+
+
+class EmployeeGratuityView(PayrollView):
+    """What someone's gratuity has built up to, and for a leaver what it would pay or did."""
+
+    @extend_schema(responses=GratuityQuoteSerializer)
+    def get(self, request: Request, pk: int) -> Response:
+        quote = run(gratuity.quote, _person(pk))
+        return Response(GratuityQuoteSerializer(quote).data)
+
+
+class EmployeeGratuityPayView(PayrollView):
+    required_action = "post"
+
+    @extend_schema(request=GratuityPayoutSerializer, responses={201: GratuityPayoutSerializer})
+    def post(self, request: Request, pk: int) -> Response:
+        person = _person(pk)
+        body = GratuityPayoutSerializer(data=request.data, context={"request": request})
+        body.is_valid(raise_exception=True)
+        payout = run(gratuity.settle, actor(request), person, body.validated_data)
+        return Response(GratuityPayoutSerializer(payout).data, status=201)

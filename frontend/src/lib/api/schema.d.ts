@@ -1377,6 +1377,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payroll/employees/{id}/gratuity/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What someone's gratuity has built up to, and for a leaver what it would pay or did. */
+        get: operations["payroll_employees_gratuity_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/employees/{id}/gratuity/pay/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payroll_employees_gratuity_pay_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/gratuity-rules/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_gratuity_rules_list"];
+        put?: never;
+        post: operations["payroll_gratuity_rules_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/gratuity-rules/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["payroll_gratuity_rules_retrieve"];
+        put: operations["payroll_gratuity_rules_update"];
+        post?: never;
+        delete: operations["payroll_gratuity_rules_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payroll/gratuity-rules/fill/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["payroll_gratuity_rules_fill_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payroll/minimum-wages/": {
         parameters: {
             query?: never;
@@ -3170,6 +3251,7 @@ export interface components {
             /** Format: date */
             left_on?: string | null;
             province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            nationality?: string;
             pays_eobi?: boolean;
             pays_social_security?: boolean;
             readonly current_contract: components["schemas"]["CurrentContract"] | null;
@@ -3226,6 +3308,67 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        GratuityPayout: {
+            readonly id: number;
+            reason: components["schemas"]["ReasonEnum"];
+            readonly service_days: number;
+            /** Format: decimal */
+            readonly wage: string;
+            /** Format: decimal */
+            readonly full: string;
+            /** Format: decimal */
+            readonly share: string;
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: decimal */
+            readonly provision: string;
+            /** Format: date */
+            paid_on: string;
+            paid_from: number;
+            readonly paid_from_name: string;
+            readonly entry_number: string;
+        };
+        GratuityQuote: {
+            /** Format: decimal */
+            accrued: string;
+            service_days: number | null;
+            /** Format: decimal */
+            if_ended: string | null;
+            /** Format: decimal */
+            if_resigned: string | null;
+            payout: components["schemas"]["GratuityPayout"] | null;
+            /** Format: date */
+            left_on: string | null;
+        };
+        GratuityRule: {
+            readonly id: number;
+            country: components["schemas"]["GratuityRuleCountryEnum"];
+            /** Format: date */
+            starts_on: string;
+            /** Format: decimal */
+            first_years: string;
+            /** Format: decimal */
+            first_days: string;
+            /** Format: decimal */
+            later_days: string;
+            /** Format: decimal */
+            month_days?: string;
+            /** Format: decimal */
+            min_years?: string;
+            /** Format: decimal */
+            cap_months?: string | null;
+            wage: components["schemas"]["WageEnum"];
+            excludes_nationals?: boolean;
+            excludes_unpaid_days?: boolean;
+            resignation?: components["schemas"]["ResignationBand"][];
+            source: string;
+        };
+        /**
+         * @description * `AE` - AE
+         *     * `SA` - SA
+         * @enum {string}
+         */
+        GratuityRuleCountryEnum: "AE" | "SA";
         Health: {
             status: string;
         };
@@ -3905,6 +4048,7 @@ export interface components {
             /** Format: date */
             left_on?: string | null;
             province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
+            nationality?: string;
             pays_eobi?: boolean;
             pays_social_security?: boolean;
             readonly current_contract?: components["schemas"]["CurrentContract"] | null;
@@ -4060,6 +4204,8 @@ export interface components {
             readonly employee_contributions: string;
             /** Format: decimal */
             readonly employer_contributions: string;
+            /** Format: decimal */
+            readonly gratuity_change: string;
             readonly tax_table_name: string | null;
             readonly entry_number: string | null;
             /** Format: date-time */
@@ -4091,6 +4237,8 @@ export interface components {
             readonly employee_contributions: string;
             /** Format: decimal */
             readonly employer_contributions: string;
+            /** Format: decimal */
+            readonly gratuity_change: string;
             readonly tax_table_name: string | null;
             readonly entry_number: string | null;
             /** Format: date-time */
@@ -4141,6 +4289,10 @@ export interface components {
             readonly employee_contributions: string;
             /** Format: decimal */
             readonly employer_contributions: string;
+            /** Format: decimal */
+            readonly gratuity_accrued: string;
+            /** Format: decimal */
+            readonly gratuity_change: string;
         };
         PayslipContribution: {
             scheme: string;
@@ -4235,6 +4387,12 @@ export interface components {
             /** Format: date-time */
             readonly posted_at: string | null;
         };
+        /**
+         * @description * `ended` - Ended
+         *     * `resigned` - Resigned
+         * @enum {string}
+         */
+        ReasonEnum: "ended" | "resigned";
         ReceiptAllocation: {
             readonly id: number;
             invoice: number;
@@ -4291,6 +4449,13 @@ export interface components {
             lines: components["schemas"]["ReportLine"][];
             /** Format: decimal */
             total: string;
+        };
+        ResignationBand: {
+            /** Format: decimal */
+            years: string;
+            share: string;
+            /** @default false */
+            after: boolean;
         };
         Reverse: {
             /** Format: date */
@@ -4689,6 +4854,12 @@ export interface components {
          * @enum {string}
          */
         ValuationMethodEnum: "average" | "fifo";
+        /**
+         * @description * `basic` - Basic
+         *     * `full` - Full
+         * @enum {string}
+         */
+        WageEnum: "basic" | "full";
         Warehouse: {
             readonly id: number;
             code: string;
@@ -7814,6 +7985,179 @@ export interface operations {
         };
     };
     payroll_contributions_fill_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TablesFilled"];
+                };
+            };
+        };
+    };
+    payroll_employees_gratuity_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GratuityQuote"];
+                };
+            };
+        };
+    };
+    payroll_employees_gratuity_pay_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GratuityPayout"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GratuityPayout"];
+                };
+            };
+        };
+    };
+    payroll_gratuity_rules_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GratuityRule"][];
+                };
+            };
+        };
+    };
+    payroll_gratuity_rules_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GratuityRule"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GratuityRule"];
+                };
+            };
+        };
+    };
+    payroll_gratuity_rules_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GratuityRule"];
+                };
+            };
+        };
+    };
+    payroll_gratuity_rules_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GratuityRule"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GratuityRule"];
+                };
+            };
+        };
+    };
+    payroll_gratuity_rules_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    payroll_gratuity_rules_fill_create: {
         parameters: {
             query?: never;
             header?: never;

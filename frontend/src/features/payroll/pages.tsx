@@ -13,7 +13,7 @@ import { can } from '../../lib/api/types';
 import { today } from '../../lib/dates';
 import { formatMoney } from '../../lib/money';
 import { env } from '../../lib/env';
-import { PROVINCES } from '../hr/provinces';
+import { GRATUITY_COUNTRIES, PROVINCES } from '../hr/provinces';
 import { postable, useAccounts } from '../purchasing/pages';
 import { PrintButton } from '../sales/ledgers';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
@@ -302,6 +302,13 @@ function RunPanel({ id, onRemoved }: { id: number; onRemoved: () => void }) {
           </p>
         )}
         <Payslips run={detail} />
+        {Number(detail.gratuity_change) !== 0 && (
+          <p className="text-sm text-muted">
+            {t('payroll.gratuityChange', {
+              amount: formatMoney(detail.gratuity_change, i18n.resolvedLanguage),
+            })}
+          </p>
+        )}
         {Number(detail.employer_contributions) > 0 && (
           <p className="text-sm text-muted">
             {t('payroll.employerShare', {
@@ -529,6 +536,8 @@ export function PayrollPage() {
   const save = useTenantAction(KEYS);
   const [month, setMonth] = useState(thisMonth());
   const [open, setOpen] = useState<number | null>(null);
+  // Pay before Karobar feeds Pakistan's salary tax; the Gulf has none.
+  const taxed = (useCountry().data?.holiday_country ?? 'PK') === 'PK';
   const runs = useQuery({
     queryKey: [membership.tenant_id, 'payroll-runs'],
     queryFn: () => unwrap(api.GET('/api/payroll/runs/')),
@@ -582,7 +591,7 @@ export function PayrollPage() {
           )}
         </Panel>
       )}
-      {can(membership, 'payroll', 'create') && can(membership, 'hr', 'view') && month && (
+      {taxed && can(membership, 'payroll', 'create') && can(membership, 'hr', 'view') && month && (
         <OpeningPayPanel month={`${month}-01`} />
       )}
       {open !== null && <RunPanel key={open} id={open} onRemoved={() => setOpen(null)} />}
@@ -1333,6 +1342,477 @@ export function ContributionsPage() {
       )}
       <RatesPanel />
       <MinimumWagesPanel />
+    </>
+  );
+}
+
+// End-of-service gratuity
+
+type GratuityRule = components['schemas']['GratuityRule'];
+type Band = { key: number; years: string; share: string; after: boolean };
+
+const GRATUITY_KEYS = ['payroll-gratuity-rules', 'payroll-gratuity'];
+
+function useCountry() {
+  const { membership } = useWorkspace();
+  return useQuery({
+    queryKey: [membership.tenant_id, 'hr-settings'],
+    queryFn: () => unwrap(api.GET('/api/hr/settings/')),
+  });
+}
+
+export function GratuityPanel({ employee }: { employee: number }) {
+  const { t, i18n } = useTranslation();
+  const { membership } = useWorkspace();
+  const pay = useTenantAction([...GRATUITY_KEYS, 'hr-employees']);
+  const accounts = useAccounts();
+  const settings = useCountry();
+  const [reason, setReason] = useState<'ended' | 'resigned'>('ended');
+  const [paidOn, setPaidOn] = useState(today);
+  const [paidFrom, setPaidFrom] = useState('');
+  const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
+  const gulf = GRATUITY_COUNTRIES.includes(settings.data?.holiday_country ?? '');
+  const [dateTouched, setDateTouched] = useState(false);
+  const quote = useQuery({
+    queryKey: [membership.tenant_id, 'payroll-gratuity', employee],
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/payroll/employees/{id}/gratuity/', { params: { path: { id: employee } } }),
+      ),
+    enabled: gulf,
+  });
+  if (!gulf || !quote.data) {
+    return null;
+  }
+  const data = quote.data;
+  // It can't be paid before the person left, so start the date no earlier than that.
+  const leftOn = data.left_on ?? '';
+  const shownPaidOn = !dateTouched && leftOn > paidOn ? leftOn : paidOn;
+  return (
+    <Panel title={t('payroll.gratuityTitle')}>
+      <div className="space-y-4">
+        <p>{t('payroll.gratuityAccrued', { amount: money(data.accrued) })}</p>
+        {data.payout && (
+          <Alert tone="success">
+            {t('payroll.gratuityPaid', {
+              amount: money(data.payout.amount),
+              date: data.payout.paid_on,
+              account: data.payout.paid_from_name,
+              number: data.payout.entry_number,
+            })}
+          </Alert>
+        )}
+        {!data.payout && data.if_ended !== null && (
+          <div className="space-y-4 rounded-xl bg-surface p-4">
+            <p className="font-medium">{t('payroll.gratuityDue')}</p>
+            <ul className="space-y-1">
+              <li>{t('payroll.gratuityIfEnded', { amount: money(data.if_ended) })}</li>
+              <li>{t('payroll.gratuityIfResigned', { amount: money(data.if_resigned ?? '0') })}</li>
+            </ul>
+            <Hint>
+              {t('payroll.gratuityDueHint', { days: data.service_days })}
+              {settings.data?.holiday_country === 'AE' && ` ${t('payroll.gratuityDueUae')}`}
+            </Hint>
+            {can(membership, 'payroll', 'post') && (
+              <form
+                className="space-y-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const body = {
+                    reason,
+                    paid_on: shownPaidOn,
+                    paid_from: Number(paidFrom),
+                  } as never;
+                  pay.mutate(() =>
+                    unwrap(
+                      api.POST('/api/payroll/employees/{id}/gratuity/pay/', {
+                        params: { path: { id: employee } },
+                        body,
+                      }),
+                    ),
+                  );
+                }}
+              >
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Select
+                    label={t('payroll.gratuityReason')}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value as 'ended' | 'resigned')}
+                  >
+                    <option value="ended">{t('payroll.reasonEnded')}</option>
+                    <option value="resigned">{t('payroll.reasonResigned')}</option>
+                  </Select>
+                  <Field
+                    label={t('payroll.paidOn')}
+                    type="date"
+                    required
+                    value={shownPaidOn}
+                    onChange={(e) => {
+                      setDateTouched(true);
+                      setPaidOn(e.target.value);
+                    }}
+                  />
+                  <Select
+                    label={t('payroll.paidFrom')}
+                    required
+                    value={paidFrom}
+                    onChange={(e) => setPaidFrom(e.target.value)}
+                  >
+                    <option value="">-</option>
+                    {postable(accounts.data, 'asset').map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.code} {account.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                {accounts.isError && <Alert tone="error">{t('payroll.noAccounts')}</Alert>}
+                {pay.isError && (
+                  <Alert tone="error">{errorText(pay.error, t('signIn.unavailable'))}</Alert>
+                )}
+                <Button type="submit" disabled={pay.isPending}>
+                  {t('payroll.gratuityPay')}
+                </Button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+function RuleForm({ rule, onDone }: { rule?: GratuityRule; onDone: () => void }) {
+  const { t } = useTranslation();
+  const save = useTenantAction(GRATUITY_KEYS);
+  const settings = useCountry();
+  const [form, setForm] = useState({
+    country: rule?.country ?? (settings.data?.holiday_country === 'SA' ? 'SA' : 'AE'),
+    starts_on: rule?.starts_on ?? '',
+    first_years: rule?.first_years ?? '5',
+    first_days: rule?.first_days ?? '',
+    later_days: rule?.later_days ?? '',
+    month_days: rule?.month_days ?? '30',
+    min_years: rule?.min_years ?? '0',
+    cap_months: rule?.cap_months ?? '',
+    wage: rule?.wage ?? 'basic',
+    excludes_nationals: rule?.excludes_nationals ?? false,
+    excludes_unpaid_days: rule?.excludes_unpaid_days ?? false,
+    source: rule?.source ?? '',
+  });
+  const [bands, setBands] = useState<Band[]>(
+    (rule?.resignation ?? []).map((band, key) => ({
+      key,
+      years: band.years,
+      share: band.share,
+      after: band.after,
+    })),
+  );
+  const set = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
+  const setBand = (key: number, patch: Partial<Band>) =>
+    setBands(bands.map((band) => (band.key === key ? { ...band, ...patch } : band)));
+  const number = (
+    key: 'first_years' | 'first_days' | 'later_days' | 'month_days' | 'min_years',
+  ) => (
+    <Field
+      label={t(`payroll.rule.${key}`)}
+      type="number"
+      required
+      min="0"
+      step="0.01"
+      inputMode="decimal"
+      value={form[key]}
+      onChange={(e) => set({ [key]: e.target.value })}
+    />
+  );
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const body = {
+          ...form,
+          cap_months: form.cap_months || null,
+          resignation: bands.map(({ years, share, after }) => ({ years, share, after })),
+        } as never;
+        save.mutate(
+          () =>
+            rule
+              ? unwrap(
+                  api.PUT('/api/payroll/gratuity-rules/{id}/', {
+                    params: { path: { id: rule.id } },
+                    body,
+                  }),
+                )
+              : unwrap(api.POST('/api/payroll/gratuity-rules/', { body })),
+          { onSuccess: onDone },
+        );
+      }}
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <Select
+          label={t('payroll.rule.country')}
+          value={form.country}
+          onChange={(e) => set({ country: e.target.value as GratuityRule['country'] })}
+        >
+          <option value="AE">{t('hr.countries.AE')}</option>
+          <option value="SA">{t('hr.countries.SA')}</option>
+        </Select>
+        <Field
+          label={t('payroll.from')}
+          type="date"
+          required
+          value={form.starts_on}
+          onChange={(e) => set({ starts_on: e.target.value })}
+        />
+        <Select
+          label={t('payroll.rule.wage')}
+          value={form.wage}
+          onChange={(e) => set({ wage: e.target.value as GratuityRule['wage'] })}
+        >
+          <option value="basic">{t('payroll.rule.basic')}</option>
+          <option value="full">{t('payroll.rule.full')}</option>
+        </Select>
+        {number('first_years')}
+        {number('first_days')}
+        {number('later_days')}
+        {number('month_days')}
+        {number('min_years')}
+        <Field
+          label={t('payroll.rule.cap_months')}
+          hint={t('payroll.wageCapHint')}
+          type="number"
+          min="0.01"
+          step="0.01"
+          inputMode="decimal"
+          value={form.cap_months}
+          onChange={(e) => set({ cap_months: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        {(['excludes_nationals', 'excludes_unpaid_days'] as const).map((key) => (
+          <label
+            key={key}
+            className="flex min-h-11 items-center gap-3 rounded-xl border border-line px-3 focus-within:ring-2 focus-within:ring-azure"
+          >
+            <input
+              type="checkbox"
+              className="size-5"
+              checked={form[key]}
+              onChange={(e) => set({ [key]: e.target.checked })}
+            />
+            {t(`payroll.rule.${key}`)}
+          </label>
+        ))}
+      </div>
+      <div className="space-y-3">
+        <p className="label">{t('payroll.rule.resignation')}</p>
+        <Hint>{t('payroll.rule.resignationHint')}</Hint>
+        {bands.map((band) => (
+          <div key={band.key} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+            <Field
+              label={t('payroll.rule.bandYears')}
+              type="number"
+              required
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={band.years}
+              onChange={(e) => setBand(band.key, { years: e.target.value })}
+            />
+            <Field
+              label={t('payroll.rule.bandShare')}
+              required
+              pattern="\d{1,3}/\d{1,3}"
+              placeholder="1/3"
+              value={band.share}
+              onChange={(e) => setBand(band.key, { share: e.target.value })}
+            />
+            <label className="flex min-h-11 items-center gap-2">
+              <input
+                type="checkbox"
+                className="size-5"
+                checked={band.after}
+                onChange={(e) => setBand(band.key, { after: e.target.checked })}
+              />
+              {t('payroll.rule.bandAfter')}
+            </label>
+            <Button
+              variant="ghost"
+              onClick={() => setBands(bands.filter((item) => item.key !== band.key))}
+            >
+              {t('workspace.remove')}
+            </Button>
+          </div>
+        ))}
+        <Button
+          variant="ghost"
+          disabled={bands.length >= 10}
+          onClick={() =>
+            setBands([
+              ...bands,
+              {
+                key: Math.max(0, ...bands.map((band) => band.key)) + 1,
+                years: '',
+                share: '',
+                after: false,
+              },
+            ])
+          }
+        >
+          {t('payroll.rule.addBand')}
+        </Button>
+      </div>
+      <Field
+        label={t('payroll.source')}
+        placeholder={t('payroll.sourcePlaceholder')}
+        hint={t('payroll.sourceHint')}
+        required
+        maxLength={1000}
+        value={form.source}
+        onChange={(e) => set({ source: e.target.value })}
+      />
+      {save.isError && <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>}
+      <div className="flex flex-wrap gap-3">
+        <Button type="submit" disabled={save.isPending}>
+          {t('payroll.saveTable')}
+        </Button>
+        <Button variant="ghost" onClick={onDone}>
+          {t('workspace.cancel')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function whole(share: string): boolean {
+  const [top, bottom] = share.split('/');
+  return top !== undefined && top === bottom;
+}
+
+function RuleCard({ rule }: { rule: GratuityRule }) {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const remove = useTenantAction(GRATUITY_KEYS);
+  const [editing, setEditing] = useState(false);
+  const title = `${t(`hr.countries.${rule.country}`)} · ${t('payroll.from')} ${rule.starts_on}`;
+  if (editing) {
+    return (
+      <Panel title={title}>
+        <RuleForm rule={rule} onDone={() => setEditing(false)} />
+      </Panel>
+    );
+  }
+  return (
+    <Panel title={title}>
+      <div className="space-y-3">
+        <p>
+          {t('payroll.rule.summary', {
+            firstDays: Number(rule.first_days),
+            firstYears: Number(rule.first_years),
+            laterDays: Number(rule.later_days),
+          })}{' '}
+          {rule.wage === 'basic' ? t('payroll.rule.onBasic') : t('payroll.rule.onFull')}
+        </p>
+        <ul className="list-disc space-y-1 ps-5 text-sm text-muted">
+          {Number(rule.min_years) > 0 && (
+            <li>{t('payroll.rule.minSummary', { years: Number(rule.min_years) })}</li>
+          )}
+          {rule.cap_months && (
+            <li>{t('payroll.rule.capSummary', { months: Number(rule.cap_months) })}</li>
+          )}
+          {rule.excludes_nationals && <li>{t('payroll.rule.excludes_nationals')}</li>}
+          {rule.excludes_unpaid_days && <li>{t('payroll.rule.excludes_unpaid_days')}</li>}
+          {(rule.resignation ?? []).map((band) => (
+            <li key={`${band.years}${band.share}`}>
+              {t(band.after ? 'payroll.rule.bandSummaryAfter' : 'payroll.rule.bandSummary', {
+                years: Number(band.years),
+                share: whole(band.share) ? t('payroll.rule.all') : band.share,
+              })}
+            </li>
+          ))}
+        </ul>
+        <p className="text-sm text-muted">{rule.source}</p>
+        {remove.isError && (
+          <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
+        )}
+        <div className="flex flex-wrap gap-3">
+          {can(membership, 'payroll', 'update') && (
+            <Button variant="ghost" onClick={() => setEditing(true)}>
+              {t('payroll.editTable')}
+            </Button>
+          )}
+          {can(membership, 'payroll', 'delete') && (
+            <ConfirmButton
+              onConfirm={() =>
+                remove.mutate(() =>
+                  unwrap(
+                    api.DELETE('/api/payroll/gratuity-rules/{id}/', {
+                      params: { path: { id: rule.id } },
+                    }),
+                  ),
+                )
+              }
+            >
+              {t('workspace.remove')}
+            </ConfirmButton>
+          )}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+export function EndOfServicePage() {
+  const { t } = useTranslation();
+  const { membership } = useWorkspace();
+  const fill = useTenantAction(GRATUITY_KEYS);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState<number | null>(null);
+  const rules = useQuery({
+    queryKey: [membership.tenant_id, 'payroll-gratuity-rules'],
+    queryFn: () => unwrap(api.GET('/api/payroll/gratuity-rules/')),
+  });
+  return (
+    <>
+      <PageTitle title={t('payroll.endOfServiceTitle')} subtitle={t('payroll.endOfServiceBody')} />
+      {can(membership, 'payroll', 'create') && (
+        <Panel title={t('payroll.addFigures')}>
+          <div className="space-y-4">
+            <Hint>{t('payroll.endOfServiceFillHint')}</Hint>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                disabled={fill.isPending}
+                onClick={() =>
+                  fill.mutate(() => unwrap(api.POST('/api/payroll/gratuity-rules/fill/')), {
+                    onSuccess: (result) => setAdded((result as { added: number }).added),
+                  })
+                }
+              >
+                {t('payroll.endOfServiceFill')}
+              </Button>
+              <Button variant="ghost" onClick={() => setAdding(true)}>
+                {t('payroll.rule.new')}
+              </Button>
+            </div>
+            {added !== null && (
+              <Alert tone="success">{t('payroll.filledFigures', { added })}</Alert>
+            )}
+            {fill.isError && (
+              <Alert tone="error">{errorText(fill.error, t('signIn.unavailable'))}</Alert>
+            )}
+            {adding && <RuleForm onDone={() => setAdding(false)} />}
+          </div>
+        </Panel>
+      )}
+      {rules.data?.length === 0 && (
+        <Panel title={t('payroll.endOfServiceTitle')}>
+          <p className="text-muted">{t('payroll.noRules')}</p>
+        </Panel>
+      )}
+      {rules.data?.map((rule) => (
+        <RuleCard key={rule.id} rule={rule} />
+      ))}
     </>
   );
 }
