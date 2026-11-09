@@ -353,3 +353,12 @@ def test_older_businesses_get_contribution_accounts(boss: Member) -> None:  # no
     cost = Account.objects.get(role="employer_contributions")
     assert (owed.code, owed.parent.code if owed.parent else None) == ("2181", "2100")
     assert (cost.code, cost.parent.code if cost.parent else None) == ("6150", "6000")
+
+
+def test_rates_and_wages_change_as_whole_rows(boss: Member) -> None:  # noqa: F811
+    wage_row = wage("PB", "40000")
+    rate_row = eobi()
+    client = boss.client()
+    body = {"source": "Only this"}
+    assert client.patch(f"/api/payroll/minimum-wages/{wage_row.pk}/", body).status_code == 405
+    assert client.patch(f"/api/payroll/contribution-rates/{rate_row.pk}/", body).status_code == 405

@@ -302,13 +302,11 @@ class MinimumWageListView(PayrollView, generics.ListCreateAPIView[MinimumWage]):
 
 class MinimumWageDetailView(PayrollView, generics.RetrieveUpdateDestroyAPIView[MinimumWage]):
     serializer_class = MinimumWageSerializer
+    # Whole rows only, like the screen sends them.
+    http_method_names = ["get", "put", "delete", "head", "options"]
 
     def get_queryset(self) -> QuerySet[MinimumWage]:
         return MinimumWage.objects.all()
-
-    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        kwargs["partial"] = False
-        return super().update(request, *args, **kwargs)
 
     def perform_update(self, serializer: MinimumWageSerializer) -> None:  # type: ignore[override]
         row = cast(MinimumWage, serializer.instance)
@@ -339,13 +337,12 @@ class ContributionRateDetailView(
     PayrollView, generics.RetrieveUpdateDestroyAPIView[ContributionRate]
 ):
     serializer_class = ContributionRateSerializer
+    # Whole rows only: an update without a ceiling or province clears it, which a partial
+    # update would do by accident.
+    http_method_names = ["get", "put", "delete", "head", "options"]
 
     def get_queryset(self) -> QuerySet[ContributionRate]:
         return ContributionRate.objects.all()
-
-    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        kwargs["partial"] = False
-        return super().update(request, *args, **kwargs)
 
     def perform_update(  # type: ignore[override]
         self, serializer: ContributionRateSerializer

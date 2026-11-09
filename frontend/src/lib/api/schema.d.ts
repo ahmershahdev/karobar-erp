@@ -1358,7 +1358,7 @@ export interface paths {
         delete: operations["payroll_contribution_rates_destroy"];
         options?: never;
         head?: never;
-        patch: operations["payroll_contribution_rates_partial_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/payroll/contributions/fill/": {
@@ -1406,7 +1406,7 @@ export interface paths {
         delete: operations["payroll_minimum_wages_destroy"];
         options?: never;
         head?: never;
-        patch: operations["payroll_minimum_wages_partial_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/payroll/opening-pay/": {
@@ -3868,21 +3868,6 @@ export interface components {
             note?: string;
             readonly pay?: components["schemas"]["Pay"] | null;
         };
-        PatchedContributionRate: {
-            readonly id?: number;
-            scheme?: components["schemas"]["ContributionSchemeEnum"];
-            province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
-            /** Format: date */
-            starts_on?: string;
-            /** Format: decimal */
-            employer_percent?: string;
-            /** Format: decimal */
-            employee_percent?: string;
-            on_minimum_wage?: boolean;
-            /** Format: decimal */
-            wage_cap?: string | null;
-            source?: string;
-        };
         PatchedCustomer: {
             readonly id?: number;
             code?: string;
@@ -3955,15 +3940,6 @@ export interface components {
             readonly is_owner?: boolean;
             /** Format: date-time */
             readonly created_at?: string;
-        };
-        PatchedMinimumWage: {
-            readonly id?: number;
-            province?: components["schemas"]["ProvinceEnum"];
-            /** Format: date */
-            starts_on?: string;
-            /** Format: decimal */
-            amount?: string;
-            source?: string;
         };
         PatchedPeriodState: {
             closed?: boolean;
@@ -7837,31 +7813,6 @@ export interface operations {
             };
         };
     };
-    payroll_contribution_rates_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedContributionRate"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContributionRate"];
-                };
-            };
-        };
-    };
     payroll_contributions_fill_create: {
         parameters: {
             query?: never;
@@ -7986,31 +7937,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    payroll_minimum_wages_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedMinimumWage"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MinimumWage"];
-                };
             };
         };
     };

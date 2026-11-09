@@ -2887,30 +2887,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ContributionRate'
           description: ''
-    patch:
-      operationId: payroll_contribution_rates_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - payroll
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedContributionRate'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContributionRate'
-          description: ''
     delete:
       operationId: payroll_contribution_rates_destroy
       parameters:
@@ -3011,30 +2987,6 @@ paths:
             schema:
               $ref: '#/components/schemas/MinimumWage'
         required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MinimumWage'
-          description: ''
-    patch:
-      operationId: payroll_minimum_wages_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - payroll
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedMinimumWage'
       security:
       - cookieAuth: []
       responses:
@@ -8741,39 +8693,6 @@ components:
           - $ref: '#/components/schemas/Pay'
           nullable: true
           readOnly: true
-    PatchedContributionRate:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        scheme:
-          $ref: '#/components/schemas/ContributionSchemeEnum'
-        province:
-          oneOf:
-          - $ref: '#/components/schemas/ProvinceEnum'
-          - $ref: '#/components/schemas/BlankEnum'
-        starts_on:
-          type: string
-          format: date
-        employer_percent:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
-        employee_percent:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
-        on_minimum_wage:
-          type: boolean
-        wage_cap:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
-          nullable: true
-        source:
-          type: string
-          maxLength: 500
     PatchedCustomer:
       type: object
       properties:
@@ -8970,24 +8889,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    PatchedMinimumWage:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        province:
-          $ref: '#/components/schemas/ProvinceEnum'
-        starts_on:
-          type: string
-          format: date
-        amount:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
-        source:
-          type: string
-          maxLength: 500
     PatchedPeriodState:
       type: object
       properties:
