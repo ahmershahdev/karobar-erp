@@ -71,6 +71,12 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
   verified. Facebook doesn't promise that, so a Facebook sign-in for an email that already has
   an account is refused (`email_in_use`) instead of linked: otherwise anyone who added a
   victim's address to a Facebook account could take over the Karobar account.
+- **Facebook is off at launch** (`FACEBOOK_SIGN_IN=false`, even with an app id). A new account
+  made through Facebook starts with an unconfirmed email, and confirming it proves who holds the
+  inbox, not who holds the Facebook account: someone who put a victim's address on their own
+  Facebook could sign up, wait for the victim to click the confirmation, and keep signing in.
+  Before it is switched on, confirming such an account must drop the Facebook link, and Facebook
+  must be linked only from My account while signed in, which proves both at once.
 - `next` is only followed when it is a path under `/app` or `/accept-invite` with no `//` or
   backslash.
 - Disabled users can't sign in through a provider.

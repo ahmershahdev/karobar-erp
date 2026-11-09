@@ -131,6 +131,7 @@ def providers(settings: SettingsWrapper) -> None:
     settings.SITE_URL = "https://erp.example.test"
     settings.GOOGLE_OAUTH_CLIENT_ID = "gid"
     settings.GOOGLE_OAUTH_CLIENT_SECRET = "gsecret"
+    settings.FACEBOOK_SIGN_IN = True
     settings.FACEBOOK_APP_ID = "fid"
     settings.FACEBOOK_APP_SECRET = "fsecret"
 
@@ -321,6 +322,15 @@ def test_callbacks_need_the_state_from_this_browser(
     back = cancelled.get(f"/api/accounts/oauth/google/callback/?state={state}")
     assert back["Location"].endswith("error=oauth_failed")
     assert not User.objects.exists()
+
+
+def test_facebook_is_off_unless_switched_on(settings: SettingsWrapper) -> None:
+    settings.FACEBOOK_SIGN_IN = False
+    settings.FACEBOOK_APP_ID = "fid"
+    settings.FACEBOOK_APP_SECRET = "fsecret"
+    assert "facebook" not in APIClient().get("/api/accounts/config/").json()["oauth_providers"]
+    back = APIClient().get("/api/accounts/oauth/facebook/start/")
+    assert back["Location"].endswith("error=provider_unavailable")
 
 
 def test_unconfigured_or_unknown_providers_bounce_back(settings: SettingsWrapper) -> None:
