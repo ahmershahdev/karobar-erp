@@ -44,7 +44,12 @@ def ask(member: Member, worker: Employee, kind: int, starts: str, ends: str) -> 
 
 def test_settings_start_with_a_sunday_weekend_in_pakistan(boss: Member) -> None:
     body = boss.client().get("/api/hr/settings/").json()
-    assert body == {"weekend": [6], "holiday_country": "PK", "id_retention_years": 6}
+    assert body == {
+        "weekend": [6],
+        "holiday_country": "PK",
+        "id_retention_years": 6,
+        "default_province": "",
+    }
 
 
 def test_settings_are_saved_and_audited(boss: Member) -> None:

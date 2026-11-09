@@ -67,6 +67,19 @@ class SalaryComponent(TenantOwnedModel):
         return self.name
 
 
+class Province(models.TextChoices):
+    """Where in Pakistan someone works. Minimum wages and social security are set per province,
+    so this picks which figures apply."""
+
+    ICT = "ICT", "Islamabad Capital Territory"
+    PUNJAB = "PB", "Punjab"
+    SINDH = "SD", "Sindh"
+    KP = "KP", "Khyber Pakhtunkhwa"
+    BALOCHISTAN = "BA", "Balochistan"
+    AJK = "AJK", "Azad Jammu and Kashmir"
+    GB = "GB", "Gilgit-Baltistan"
+
+
 class Employee(TenantOwnedModel):
     code = models.CharField(max_length=20)
     full_name = models.CharField(max_length=150)
@@ -85,6 +98,12 @@ class Employee(TenantOwnedModel):
     # Set when someone leaves. Employees are never deleted once they have a contract, because
     # payslips and journal entries refer to them.
     left_on = models.DateField(null=True, blank=True)
+    province = models.CharField(max_length=3, choices=Province.choices, blank=True)
+    # Off until the business says so: EOBI covers businesses with five or more staff and stops
+    # at pension age, and provincial social security has its own wage limit. Neither can be
+    # judged from the records kept here.
+    pays_eobi = models.BooleanField(default=False)
+    pays_social_security = models.BooleanField(default=False)
 
     class Meta(TenantOwnedModel.Meta):
         ordering = ["full_name"]
@@ -150,6 +169,8 @@ class HrSettings(TenantOwnedModel):
     # How long after the end of the tax year someone left in their national ID is kept. Six is
     # the shortest allowed: tax records must be kept that long.
     id_retention_years = models.PositiveSmallIntegerField(default=6)
+    # The province a new employee starts in.
+    default_province = models.CharField(max_length=3, choices=Province.choices, blank=True)
 
     class Meta(TenantOwnedModel.Meta):
         constraints = [

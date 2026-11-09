@@ -18,9 +18,11 @@ from apps.platform.csv_export import csv_response
 from apps.sales import documents as printing
 from apps.tenancy.permissions import HasModulePermission, membership_of
 
-from . import documents, openings, payments, runs, services
-from .models import OpeningPay, PayrollRun, Payslip, TaxTable
+from . import contributions, documents, openings, payments, runs, services
+from .models import ContributionRate, MinimumWage, OpeningPay, PayrollRun, Payslip, TaxTable
 from .serializers import (
+    ContributionRateSerializer,
+    MinimumWageSerializer,
     OpeningPaySerializer,
     PayrollReverseSerializer,
     PayrollRunDetailSerializer,
@@ -280,3 +282,86 @@ class PayrollRunReverseView(PayrollView, generics.GenericAPIView[PayrollRun]):
         body.is_valid(raise_exception=True)
         run(runs.reverse, actor(request), target, body.validated_data.get("reason", ""))
         return Response(PayrollRunDetailSerializer(_detail(pk)).data)
+
+
+# EOBI and social security
+
+
+class MinimumWageListView(PayrollView, generics.ListCreateAPIView[MinimumWage]):
+    serializer_class = MinimumWageSerializer
+    pagination_class = None
+
+    def get_queryset(self) -> QuerySet[MinimumWage]:
+        return MinimumWage.objects.all()
+
+    def perform_create(self, serializer: MinimumWageSerializer) -> None:  # type: ignore[override]
+        serializer.instance = run(
+            contributions.save, actor(self.request), MinimumWage(), serializer.validated_data
+        )
+
+
+class MinimumWageDetailView(PayrollView, generics.RetrieveUpdateDestroyAPIView[MinimumWage]):
+    serializer_class = MinimumWageSerializer
+
+    def get_queryset(self) -> QuerySet[MinimumWage]:
+        return MinimumWage.objects.all()
+
+    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        kwargs["partial"] = False
+        return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer: MinimumWageSerializer) -> None:  # type: ignore[override]
+        row = cast(MinimumWage, serializer.instance)
+        serializer.instance = run(
+            contributions.save, actor(self.request), row, serializer.validated_data
+        )
+
+    def perform_destroy(self, instance: MinimumWage) -> None:
+        run(contributions.delete, actor(self.request), instance)
+
+
+class ContributionRateListView(PayrollView, generics.ListCreateAPIView[ContributionRate]):
+    serializer_class = ContributionRateSerializer
+    pagination_class = None
+
+    def get_queryset(self) -> QuerySet[ContributionRate]:
+        return ContributionRate.objects.all()
+
+    def perform_create(  # type: ignore[override]
+        self, serializer: ContributionRateSerializer
+    ) -> None:
+        serializer.instance = run(
+            contributions.save, actor(self.request), ContributionRate(), serializer.validated_data
+        )
+
+
+class ContributionRateDetailView(
+    PayrollView, generics.RetrieveUpdateDestroyAPIView[ContributionRate]
+):
+    serializer_class = ContributionRateSerializer
+
+    def get_queryset(self) -> QuerySet[ContributionRate]:
+        return ContributionRate.objects.all()
+
+    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        kwargs["partial"] = False
+        return super().update(request, *args, **kwargs)
+
+    def perform_update(  # type: ignore[override]
+        self, serializer: ContributionRateSerializer
+    ) -> None:
+        row = cast(ContributionRate, serializer.instance)
+        values = {"wage_cap": None, "province": "", **serializer.validated_data}
+        serializer.instance = run(contributions.save, actor(self.request), row, values)
+
+    def perform_destroy(self, instance: ContributionRate) -> None:
+        run(contributions.delete, actor(self.request), instance)
+
+
+class ContributionsFillView(PayrollView):
+    required_action = "create"
+
+    @extend_schema(request=None, responses=TablesFilledSerializer)
+    def post(self, request: Request) -> Response:
+        added = run(contributions.fill_official, actor(request))
+        return Response(TablesFilledSerializer({"added": added}).data)

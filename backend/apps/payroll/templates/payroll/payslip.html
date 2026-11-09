@@ -43,6 +43,17 @@
     <div class="totals">
       <div class="grand"><span>{{ labels.net }} ({{ currency }})</span><span class="num">{{ net }}</span></div>
     </div>
+    {% if contributions %}
+      <table class="lines">
+        <thead><tr><th>{{ labels.contributions }}</th><th class="num">{{ labels.base }}</th><th class="num">{{ labels.your_share }}</th><th class="num">{{ labels.employer_share }}</th></tr></thead>
+        <tbody>
+          {% for row in contributions %}
+            <tr><td>{{ row.name }}</td><td class="num">{{ row.base }}</td><td class="num">{{ row.employee }}</td><td class="num">{{ row.employer }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted">{{ labels.employer_note }}</p>
+    {% endif %}
     {% if projected %}
       <p class="muted">{{ labels.projected }}: <span class="num">{{ projected }}</span>. {{ labels.year_tax }}: <span class="num">{{ year_tax }}</span>.</p>
     {% endif %}

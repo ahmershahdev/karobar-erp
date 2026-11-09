@@ -2807,6 +2807,258 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
           description: ''
+  /api/payroll/contribution-rates/:
+    get:
+      operationId: payroll_contribution_rates_list
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContributionRate'
+          description: ''
+    post:
+      operationId: payroll_contribution_rates_create
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionRate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionRate'
+          description: ''
+  /api/payroll/contribution-rates/{id}/:
+    get:
+      operationId: payroll_contribution_rates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionRate'
+          description: ''
+    put:
+      operationId: payroll_contribution_rates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContributionRate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionRate'
+          description: ''
+    patch:
+      operationId: payroll_contribution_rates_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContributionRate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContributionRate'
+          description: ''
+    delete:
+      operationId: payroll_contribution_rates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/payroll/contributions/fill/:
+    post:
+      operationId: payroll_contributions_fill_create
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TablesFilled'
+          description: ''
+  /api/payroll/minimum-wages/:
+    get:
+      operationId: payroll_minimum_wages_list
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MinimumWage'
+          description: ''
+    post:
+      operationId: payroll_minimum_wages_create
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MinimumWage'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumWage'
+          description: ''
+  /api/payroll/minimum-wages/{id}/:
+    get:
+      operationId: payroll_minimum_wages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumWage'
+          description: ''
+    put:
+      operationId: payroll_minimum_wages_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MinimumWage'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumWage'
+          description: ''
+    patch:
+      operationId: payroll_minimum_wages_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMinimumWage'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumWage'
+          description: ''
+    delete:
+      operationId: payroll_minimum_wages_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - payroll
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/payroll/opening-pay/:
     get:
       operationId: payroll_opening_pay_list
@@ -6066,6 +6318,9 @@ components:
       required:
       - link
       - whatsapp
+    BlankEnum:
+      enum:
+      - ''
     CancelLeave:
       type: object
       properties:
@@ -6370,6 +6625,54 @@ components:
         * `permanent` - Permanent
         * `fixed_term` - Fixed Term
         * `probation` - Probation
+    ContributionRate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        scheme:
+          $ref: '#/components/schemas/ContributionSchemeEnum'
+        province:
+          oneOf:
+          - $ref: '#/components/schemas/ProvinceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        starts_on:
+          type: string
+          format: date
+        employer_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        employee_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        on_minimum_wage:
+          type: boolean
+        wage_cap:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        source:
+          type: string
+          maxLength: 500
+      required:
+      - employee_percent
+      - employer_percent
+      - id
+      - scheme
+      - source
+      - starts_on
+    ContributionSchemeEnum:
+      enum:
+      - eobi
+      - social_security
+      type: string
+      description: |-
+        * `eobi` - Eobi
+        * `social_security` - Social Security
     CounterPaperEnum:
       enum:
       - a4
@@ -6864,6 +7167,14 @@ components:
           type: string
           format: date
           nullable: true
+        province:
+          oneOf:
+          - $ref: '#/components/schemas/ProvinceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        pays_eobi:
+          type: boolean
+        pays_social_security:
+          type: boolean
         current_contract:
           allOf:
           - $ref: '#/components/schemas/CurrentContract'
@@ -7110,6 +7421,10 @@ components:
           type: integer
           maximum: 50
           minimum: 6
+        default_province:
+          oneOf:
+          - $ref: '#/components/schemas/ProvinceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
       required:
       - holiday_country
       - weekend
@@ -7718,6 +8033,30 @@ components:
       description: |-
         * `cash` - Cash
         * `card` - Card
+    MinimumWage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        province:
+          $ref: '#/components/schemas/ProvinceEnum'
+        starts_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        source:
+          type: string
+          maxLength: 500
+      required:
+      - amount
+      - id
+      - province
+      - source
+      - starts_on
     OpenTill:
       type: object
       properties:
@@ -8402,6 +8741,39 @@ components:
           - $ref: '#/components/schemas/Pay'
           nullable: true
           readOnly: true
+    PatchedContributionRate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        scheme:
+          $ref: '#/components/schemas/ContributionSchemeEnum'
+        province:
+          oneOf:
+          - $ref: '#/components/schemas/ProvinceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        starts_on:
+          type: string
+          format: date
+        employer_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        employee_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        on_minimum_wage:
+          type: boolean
+        wage_cap:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        source:
+          type: string
+          maxLength: 500
     PatchedCustomer:
       type: object
       properties:
@@ -8506,6 +8878,14 @@ components:
           type: string
           format: date
           nullable: true
+        province:
+          oneOf:
+          - $ref: '#/components/schemas/ProvinceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        pays_eobi:
+          type: boolean
+        pays_social_security:
+          type: boolean
         current_contract:
           allOf:
           - $ref: '#/components/schemas/CurrentContract'
@@ -8542,6 +8922,10 @@ components:
           type: integer
           maximum: 50
           minimum: 6
+        default_province:
+          oneOf:
+          - $ref: '#/components/schemas/ProvinceEnum'
+          - $ref: '#/components/schemas/BlankEnum'
     PatchedLeaveType:
       type: object
       properties:
@@ -8586,6 +8970,24 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedMinimumWage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        province:
+          $ref: '#/components/schemas/ProvinceEnum'
+        starts_on:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        source:
+          type: string
+          maxLength: 500
     PatchedPeriodState:
       type: object
       properties:
@@ -8865,6 +9267,16 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        employee_contributions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        employer_contributions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         tax_table_name:
           type: string
           readOnly: true
@@ -8901,6 +9313,8 @@ components:
           readOnly: true
       required:
       - deductions
+      - employee_contributions
+      - employer_contributions
       - entry_number
       - gross
       - id
@@ -8958,6 +9372,16 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        employee_contributions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        employer_contributions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
         tax_table_name:
           type: string
           readOnly: true
@@ -8999,6 +9423,8 @@ components:
           readOnly: true
       required:
       - deductions
+      - employee_contributions
+      - employer_contributions
       - entry_number
       - gross
       - id
@@ -9094,11 +9520,29 @@ components:
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
           readOnly: true
+        contributions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayslipContribution'
+          readOnly: true
+        employee_contributions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
+        employer_contributions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          readOnly: true
       required:
+      - contributions
       - deductions
       - employee
       - employee_code
+      - employee_contributions
       - employee_name
+      - employer_contributions
       - gross
       - id
       - lines
@@ -9110,6 +9554,38 @@ components:
       - taxable
       - unpaid_days
       - year_tax
+    PayslipContribution:
+      type: object
+      properties:
+        scheme:
+          type: string
+        base:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        employer_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        employee_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        employer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+        employee:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+      required:
+      - base
+      - employee
+      - employee_percent
+      - employer
+      - employer_percent
+      - scheme
     PayslipLine:
       type: object
       properties:
@@ -9242,6 +9718,24 @@ components:
       - gross_profit
       - income
       - net_profit
+    ProvinceEnum:
+      enum:
+      - ICT
+      - PB
+      - SD
+      - KP
+      - BA
+      - AJK
+      - GB
+      type: string
+      description: |-
+        * `ICT` - Islamabad Capital Territory
+        * `PB` - Punjab
+        * `SD` - Sindh
+        * `KP` - Khyber Pakhtunkhwa
+        * `BA` - Balochistan
+        * `AJK` - Azad Jammu and Kashmir
+        * `GB` - Gilgit-Baltistan
     PurchaseOrder:
       type: object
       properties:

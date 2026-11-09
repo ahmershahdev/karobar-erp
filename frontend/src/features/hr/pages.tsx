@@ -14,6 +14,7 @@ import { formatMoney } from '../../lib/money';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
 import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
+import { PROVINCES } from './provinces';
 
 type Employee = components['schemas']['Employee'];
 type Structure = components['schemas']['SalaryStructure'];
@@ -460,6 +461,9 @@ const EMPTY = {
   bank_account: '',
   joined_on: today(),
   left_on: '',
+  province: '',
+  pays_eobi: false,
+  pays_social_security: false,
 };
 type EmployeeForm = typeof EMPTY;
 
@@ -475,6 +479,9 @@ function fromEmployee(employee: Employee): EmployeeForm {
     bank_account: employee.bank_account ?? '',
     joined_on: employee.joined_on,
     left_on: employee.left_on ?? '',
+    province: employee.province ?? '',
+    pays_eobi: employee.pays_eobi ?? false,
+    pays_social_security: employee.pays_social_security ?? false,
   };
 }
 
@@ -484,12 +491,18 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
   const save = useTenantAction(KEYS);
   const [form, setForm] = useState<EmployeeForm>(() => (employee ? fromEmployee(employee) : EMPTY));
   const set = (patch: Partial<EmployeeForm>) => setForm({ ...form, ...patch });
+  const { province, ...rest } = form;
   const body = {
-    ...form,
+    ...rest,
+    // Left out for a new person with no choice, so they start in the business's default.
+    ...(province || employee ? { province } : {}),
     department: form.department ? Number(form.department) : null,
     left_on: form.left_on || null,
   } as never;
-  const field = (key: keyof EmployeeForm, extra: Record<string, unknown> = {}) => ({
+  const field = (
+    key: Exclude<keyof EmployeeForm, 'pays_eobi' | 'pays_social_security'>,
+    extra: Record<string, unknown> = {},
+  ) => ({
     value: form[key],
     onChange: (e: { target: { value: string } }) => set({ [key]: e.target.value }),
     ...extra,
@@ -580,6 +593,31 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
             hint={t('hr.leftOnHint')}
             {...field('left_on')}
           />
+          <Select label={t('hr.province')} hint={t('hr.provinceHint')} {...field('province')}>
+            <option value="">-</option>
+            {PROVINCES.map((code) => (
+              <option key={code} value={code}>
+                {t(`hr.provinces.${code}`)}
+              </option>
+            ))}
+          </Select>
+          <div className="space-y-2">
+            {(['pays_eobi', 'pays_social_security'] as const).map((key) => (
+              <label
+                key={key}
+                className="flex min-h-11 items-center gap-3 rounded-xl border border-line px-3 focus-within:ring-2 focus-within:ring-azure"
+              >
+                <input
+                  type="checkbox"
+                  className="size-5"
+                  checked={form[key]}
+                  onChange={(e) => set({ [key]: e.target.checked })}
+                />
+                {t(key === 'pays_eobi' ? 'hr.paysEobi' : 'hr.paysSocialSecurity')}
+              </label>
+            ))}
+            <Hint>{t('hr.contributionsHint')}</Hint>
+          </div>
         </div>
         {save.isError && (
           <Alert tone="error">{errorText(save.error, t('signIn.unavailable'))}</Alert>

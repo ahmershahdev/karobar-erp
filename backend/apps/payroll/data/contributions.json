@@ -1,0 +1,17 @@
+{
+  "minimum_wages": [
+    {
+      "province": "ICT",
+      "starts_on": "2026-07-01",
+      "amount": "40700",
+      "source": "Chief Commissioner ICT, Directorate of Industries and Labour Welfare, Notification No. ADLW 8(20)-ICT/2024-934 of 19 August 2026 under section 4 of the Minimum Wages Ordinance 1961: adult unskilled workers Rs. 40,700 a month from 1 July 2026. Copy read at https://efp.org.pk/wp-content/uploads/2026/08/ICT-Minimum-Wage-2026-27.pdf"
+    },
+    {
+      "province": "SD",
+      "starts_on": "2026-07-01",
+      "amount": "43000",
+      "source": "Government of Sindh, Labour and Human Resources Department, Notification No. SO(L-II)/13-3/2016-II of 17 August 2026 under section 6(1)(a) of the Sindh Minimum Wages Act 2015: unskilled adult, juvenile and adolescent workers Rs. 43,000 a month from 1 July 2026. Copy read at https://efp.org.pk/wp-content/uploads/2026/08/SindhWageNotification2026.pdf"
+    }
+  ],
+  "rates": []
+}

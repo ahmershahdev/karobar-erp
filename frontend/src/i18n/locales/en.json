@@ -1485,7 +1485,23 @@
     "backOn": "Came back on",
     "backOnHint": "Leave empty to cancel all of it.",
     "cancelAllConfirm": "The whole leave is cancelled and its days go back to the yearly allowance.",
-    "cancelSomeConfirm": "The leave ends the day before they came back. The days from then go back to the yearly allowance."
+    "cancelSomeConfirm": "The leave ends the day before they came back. The days from then go back to the yearly allowance.",
+    "province": "Works in",
+    "provinceHint": "Minimum wage and social security follow the province.",
+    "paysEobi": "Pays EOBI",
+    "paysSocialSecurity": "Pays provincial social security",
+    "contributionsHint": "Tick these only for people registered with EOBI or the social security institution.",
+    "defaultProvince": "Province for new employees",
+    "defaultProvinceHint": "New employees start here. You can change it for each person.",
+    "provinces": {
+      "ICT": "Islamabad Capital Territory",
+      "PB": "Punjab",
+      "SD": "Sindh",
+      "KP": "Khyber Pakhtunkhwa",
+      "BA": "Balochistan",
+      "AJK": "Azad Jammu and Kashmir",
+      "GB": "Gilgit-Baltistan"
+    }
   },
   "payroll": {
     "title": "Payroll",
@@ -1566,6 +1582,40 @@
     "undoReason": "Why",
     "undoReasonPlaceholder": "Wrong basic salary for one person",
     "undo": "Undo payroll",
-    "undoConfirm": "This reverses the month's journal entry. The payslips stay as history, marked undone."
+    "undoConfirm": "This reverses the month's journal entry. The payslips stay as history, marked undone.",
+    "contributionsTitle": "EOBI and social security",
+    "contributionsBody": "The rates and minimum wages payroll uses for EOBI and provincial social security.",
+    "contributionsFillHint": "The button adds only minimum wages copied from an official notification: Islamabad and Sindh from July 2026. Enter the EOBI percentages, other minimum wages and social security rates from your own challan or notification.",
+    "contributionsFill": "Add notified minimum wages",
+    "minimumWages": "Minimum wages",
+    "noWages": "No minimum wages yet.",
+    "ratesTitle": "Contribution rates",
+    "noRates": "No rates yet. Payroll works out EOBI and social security only once you add them.",
+    "province": "Province",
+    "everywhere": "All provinces",
+    "scheme": "Scheme",
+    "schemes": {
+      "eobi": "EOBI",
+      "social_security": "Social security"
+    },
+    "from": "From",
+    "monthlyWage": "Minimum wage a month",
+    "employerPercent": "Employer %",
+    "employeePercent": "Employee %",
+    "workedOn": "Worked out on",
+    "onMinimumWage": "The minimum wage",
+    "onPay": "Pay, up to a ceiling",
+    "wageCap": "Ceiling",
+    "wageCapHint": "Leave empty for no ceiling.",
+    "addWage": "Add minimum wage",
+    "addRate": "Add rate",
+    "rateFigures": "{{employer}}% employer, {{employee}}% employee",
+    "onMinimumWageShort": "on the minimum wage",
+    "onPayShort": "on pay",
+    "upTo": "up to {{cap}}",
+    "employerShare": "Employer’s EOBI and social security: {{amount}}. This is paid on top of pay.",
+    "contributionSourcePlaceholder": "Notification number and date, or the EOBI circular",
+    "addFigures": "Add figures",
+    "filledFigures": "Figures added: {{added}}."
   }
 }

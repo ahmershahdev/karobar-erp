@@ -30,8 +30,11 @@ class HrSettingsSerializer(serializers.ModelSerializer[HrSettings]):
 
     class Meta:
         model = HrSettings
-        fields = ("weekend", "holiday_country", "id_retention_years")
-        extra_kwargs = {"id_retention_years": {"min_value": 6, "max_value": 50}}
+        fields = ("weekend", "holiday_country", "id_retention_years", "default_province")
+        extra_kwargs = {
+            "id_retention_years": {"min_value": 6, "max_value": 50},
+            "default_province": {"required": False},
+        }
 
 
 class HolidaySerializer(serializers.ModelSerializer[Holiday]):

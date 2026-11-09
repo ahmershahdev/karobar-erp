@@ -87,8 +87,10 @@ def settings_for() -> HrSettings:
 def save_settings(actor: User, data: dict[str, Any]) -> HrSettings:
     target = HrSettings.objects.select_for_update().first() or HrSettings()
     created = target.pk is None
-    fields = ("weekend", "holiday_country", "id_retention_years")
+    fields = ("weekend", "holiday_country", "id_retention_years", "default_province")
     before = {f: getattr(target, f) for f in fields}
+    if "default_province" in data:
+        target.default_province = data["default_province"]
     if "weekend" in data:
         weekend = sorted(set(data["weekend"]))
         if any(not isinstance(d, int) or not 0 <= d <= 6 for d in weekend) or len(weekend) == 7:

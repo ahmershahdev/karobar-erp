@@ -155,9 +155,15 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "bank_account",
             "joined_on",
             "left_on",
+            "province",
+            "pays_eobi",
+            "pays_social_security",
             "current_contract",
         )
         extra_kwargs = {
+            "province": {"required": False},
+            "pays_eobi": {"required": False},
+            "pays_social_security": {"required": False},
             "job_title": {"required": False},
             "phone": {"required": False},
             "email": {"required": False},

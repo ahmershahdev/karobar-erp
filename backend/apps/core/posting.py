@@ -150,24 +150,41 @@ def stock_out(cost: Decimal, contra: str) -> list[Line]:
     return _lines((contra, cost, ZERO), ("inventory", ZERO, cost))
 
 
-def payroll(gross: Decimal, deductions: Decimal, tax: Decimal) -> list[Line]:
+def payroll(
+    gross: Decimal,
+    deductions: Decimal,
+    tax: Decimal,
+    employee_share: Decimal = ZERO,
+    employer_share: Decimal = ZERO,
+) -> list[Line]:
     """A month's salaries, owed but not yet paid.
 
-    The business's cost is the gross pay. What it keeps back is owed to others: income tax to the
-    tax office, other deductions (provident fund, loan repayments) to whoever they are for. The
-    rest is owed to the staff until the salaries are paid.
+    The business's cost is the gross pay plus its own share of EOBI and social security. What it
+    keeps back is owed to others: income tax to the tax office, the staff's share of EOBI and
+    social security to those institutions along with the business's share, other deductions
+    (provident fund, loan repayments) to whoever they are for. The rest is owed to the staff until
+    the salaries are paid. `deductions` excludes the staff's contribution share.
 
-    Dr salaries (gross); Cr withholding tax payable (tax); Cr payroll deductions payable
-    (deductions); Cr salaries payable (gross - deductions - tax).
+    Dr salaries (gross); Dr employer contributions (employer_share); Cr withholding tax payable
+    (tax); Cr payroll deductions payable (deductions); Cr contributions payable (employee_share +
+    employer_share); Cr salaries payable (gross - deductions - employee_share - tax).
     """
-    _non_negative(gross=gross, deductions=deductions, tax=tax)
-    net = gross - deductions - tax
+    _non_negative(
+        gross=gross,
+        deductions=deductions,
+        tax=tax,
+        employee_share=employee_share,
+        employer_share=employer_share,
+    )
+    net = gross - deductions - employee_share - tax
     if quantize_money(net) < 0:
         raise ValueError("tax and deductions cannot be more than the gross pay")
     return _lines(
         ("salaries", gross, ZERO),
+        ("employer_contributions", employer_share, ZERO),
         ("withholding_payable", ZERO, tax),
         ("payroll_deductions", ZERO, deductions),
+        ("contributions_payable", ZERO, employee_share + employer_share),
         ("salaries_payable", ZERO, net),
     )
 

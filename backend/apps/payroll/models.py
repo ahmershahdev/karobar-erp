@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import F, Q
 
 from apps.accounting.models import Account, JournalEntry
-from apps.hr.models import Employee
+from apps.hr.models import Employee, Province
 from apps.inventory.models import money_field
 from apps.tenancy.models import TenantOwnedModel
 
@@ -81,6 +81,10 @@ class PayrollRun(TenantOwnedModel):
     deductions = money_field(default=0)
     tax = money_field(default=0)
     net = money_field(default=0)
+    # EOBI and social security. The staff's share is part of `deductions`; the business's share
+    # is a cost on top of the pay.
+    employee_contributions = money_field(default=0)
+    employer_contributions = money_field(default=0)
     entry = models.OneToOneField(
         JournalEntry, on_delete=models.PROTECT, null=True, blank=True, related_name="+"
     )
@@ -131,6 +135,12 @@ class Payslip(TenantOwnedModel):
     # the tax on it.
     projected_income = money_field(default=0)
     year_tax = money_field(default=0)
+    # [{"scheme": "eobi", "base": "40700.00", "employer_percent": "5.00",
+    #   "employee_percent": "1.00", "employer": "2035.00", "employee": "407.00"}]
+    # The staff's share is also a deduction line; the business's share is not on the pay.
+    contributions = models.JSONField(default=list)
+    employee_contributions = money_field(default=0)
+    employer_contributions = money_field(default=0)
 
     class Meta(TenantOwnedModel.Meta):
         ordering = ["run_id", "employee__code"]
@@ -195,3 +205,72 @@ class SalaryPayment(TenantOwnedModel):
 
     def __str__(self) -> str:
         return f"{self.run_id} {self.amount}"
+
+
+class MinimumWage(TenantOwnedModel):
+    """A province's monthly minimum wage from the day a notification fixes it. It holds until a
+    later one replaces it, as the notifications do: they say from when, never until when."""
+
+    province = models.CharField(max_length=3, choices=Province.choices)
+    starts_on = models.DateField()
+    amount = money_field()
+    source = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["province", "-starts_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "province", "starts_on"], name="uniq_minimum_wage_start"
+            ),
+            models.CheckConstraint(condition=Q(amount__gt=0), name="minimum_wage_positive"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.province} {self.starts_on} {self.amount}"
+
+
+class ContributionRate(TenantOwnedModel):
+    """What EOBI or social security takes from a day on, in one province or (no province) all
+    of them. Like minimum wages, a rate holds until a later one replaces it. Payslips copy the
+    figures they used, so changing a rate later never rewrites a posted month."""
+
+    class Scheme(models.TextChoices):
+        EOBI = "eobi"
+        SOCIAL_SECURITY = "social_security"
+
+    scheme = models.CharField(max_length=20, choices=Scheme.choices)
+    province = models.CharField(max_length=3, choices=Province.choices, blank=True)
+    starts_on = models.DateField()
+    employer_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    employee_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    # True: worked out on the province's minimum wage. False: on the month's pay, up to the cap.
+    on_minimum_wage = models.BooleanField(default=False)
+    wage_cap = money_field(null=True, blank=True)
+    source = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["scheme", "province", "-starts_on"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tenant", "scheme", "province", "starts_on"],
+                name="uniq_contribution_rate_start",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    employer_percent__gte=0,
+                    employer_percent__lte=100,
+                    employee_percent__gte=0,
+                    employee_percent__lte=100,
+                ),
+                name="contribution_rate_in_range",
+            ),
+            models.CheckConstraint(
+                condition=Q(wage_cap__isnull=True) | Q(wage_cap__gt=0, on_minimum_wage=False),
+                name="contribution_cap_on_pay_only",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.scheme} {self.province or 'all'} {self.starts_on}"

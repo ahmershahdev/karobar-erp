@@ -13,6 +13,7 @@ import { today } from '../../lib/dates';
 import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
 import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
+import { PROVINCES } from './provinces';
 
 type Settings = components['schemas']['HrSettings'];
 type DayEntry = components['schemas']['DayEntry'];
@@ -534,6 +535,7 @@ function WeekSettings({ settings }: { settings: Settings }) {
   const [weekend, setWeekend] = useState<number[]>(settings.weekend);
   const [country, setCountry] = useState(settings.holiday_country);
   const [years, setYears] = useState(String(settings.id_retention_years ?? 6));
+  const [province, setProvince] = useState<string>(settings.default_province ?? '');
   const editable = can(membership, 'hr', 'update');
   return (
     <Panel title={t('hr.workWeek')}>
@@ -545,6 +547,7 @@ function WeekSettings({ settings }: { settings: Settings }) {
             weekend,
             holiday_country: country,
             id_retention_years: Number(years),
+            default_province: province,
           } as never;
           save.mutate(() => unwrap(api.PATCH('/api/hr/settings/', { body })));
         }}
@@ -595,6 +598,19 @@ function WeekSettings({ settings }: { settings: Settings }) {
               value={years}
               onChange={(e) => setYears(e.target.value)}
             />
+            <Select
+              label={t('hr.defaultProvince')}
+              hint={t('hr.defaultProvinceHint')}
+              value={province}
+              onChange={(e) => setProvince(e.target.value)}
+            >
+              <option value="">-</option>
+              {PROVINCES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`hr.provinces.${code}`)}
+                </option>
+              ))}
+            </Select>
           </div>
         </fieldset>
         {save.isError && (

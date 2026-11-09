@@ -198,6 +198,7 @@ export function WorkspaceLayout({ me }: { me: Me }) {
     ...[
       { path: 'payroll', label: t('payroll.title'), icon: 'ledger' },
       { path: 'tax-slabs', label: t('payroll.slabsTitle'), icon: 'bills' },
+      { path: 'contributions', label: t('payroll.contributionsTitle'), icon: 'shield' },
     ].map((item) => ({
       to: `${base}/hr/${item.path}`,
       label: item.label,
