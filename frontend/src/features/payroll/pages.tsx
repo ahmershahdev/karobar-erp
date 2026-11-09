@@ -1200,7 +1200,7 @@ function CountryRateForm({
         >
           {pakistan && <option value="wage">{t('payroll.onMinimumWage')}</option>}
           <option value="pay">{t('payroll.onPay')}</option>
-          <option value="insurable">{t('payroll.onInsurable')}</option>
+          {!pakistan && <option value="insurable">{t('payroll.onInsurable')}</option>}
         </Select>
         {!onWage && (
           <>

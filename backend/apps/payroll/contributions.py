@@ -49,8 +49,8 @@ GULF_SCHEMES: dict[str, list[str]] = {
 
 class BadRateError(PayrollError):
     message = (
-        "Check the rate: percentages are 0 to 100, a ceiling is more than zero, and a rate on "
-        "the minimum wage has no ceiling."
+        "Check the rate: percentages are 0 to 100, a ceiling and a floor are more than zero, "
+        "the floor isn't above the ceiling, and a rate on the minimum wage has neither."
     )
 
 
@@ -123,6 +123,19 @@ def save(
         setattr(row, key, value)
     if isinstance(row, ContributionRate):
         _check(row)
+        # The unique index can't catch this one: MySQL lets rows with no first-insured date
+        # repeat. Under the business lock, so two saves can't both pass.
+        same = ContributionRate.objects.filter(
+            scheme=row.scheme,
+            province=row.province,
+            applies_to=row.applies_to,
+            first_insured_from=row.first_insured_from,
+            starts_on=row.starts_on,
+        )
+        if row.pk is not None:
+            same = same.exclude(pk=row.pk)
+        if same.exists():
+            raise DuplicateError
     try:
         with transaction.atomic():
             row.save()

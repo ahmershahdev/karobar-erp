@@ -170,3 +170,23 @@ def test_a_pay_part_can_count_for_social_insurance(boss: Member) -> None:  # noq
     parts = {c["name"]: c["insurable"] for c in reply.json()["components"]}
     assert parts == {"Housing": True, "Transport": False}
     assert SalaryComponent.objects.get(name="Housing").insurable
+
+
+def test_a_rate_without_a_first_insured_date_cant_be_entered_twice(boss: Member) -> None:  # noqa: F811
+    body = {
+        "scheme": "gosi_hazards",
+        "starts_on": "2026-07-01",
+        "employer_percent": "2",
+        "employee_percent": "0",
+        "source": "GOSI statement",
+    }
+    client = boss.client()
+    first = client.post("/api/payroll/contribution-rates/", body, format="json")
+    assert first.status_code == 201
+    again = client.post(
+        "/api/payroll/contribution-rates/", {**body, "employer_percent": "3"}, format="json"
+    )
+    assert "already one starting" in again.json()["detail"]
+    pk = first.json()["id"]
+    same = client.put(f"/api/payroll/contribution-rates/{pk}/", body, format="json")
+    assert same.status_code == 200
