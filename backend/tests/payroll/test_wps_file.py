@@ -161,3 +161,17 @@ def test_a_draft_without_its_period_is_refreshed_before_posting(boss: Member) ->
     assert post(boss, draft).json()["posted"] is False
     slip = Payslip.objects.get(run_id=draft)
     assert (slip.starts_on, slip.ends_on) == (date(2026, 7, 16), date(2026, 7, 31))
+
+
+def test_the_period_follows_the_contract_not_only_the_joining_day(boss: Member) -> None:  # noqa: F811
+    uae(boss)
+    someone = person(
+        "E1",
+        joined=date(2026, 7, 1),
+        wps_person_id="1",
+        wps_agent_code="703420114",
+        bank_account="AE1",
+    )
+    contract(boss, someone, "10000", starts=date(2026, 7, 11))
+    edr = download(boss, posted(boss)).content.decode().split("\r\n")[0]
+    assert ",2026-07-11,2026-07-31,21," in edr
