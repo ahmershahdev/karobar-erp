@@ -41,7 +41,7 @@ from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
 
-from .contributions import Book, Contribution
+from .contributions import Book, Contribution, insurable_wage
 from .gratuity import (
     GRATUITY_COUNTRIES,
     NoRuleError,
@@ -302,7 +302,7 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
     month = _Month(first_day, end, end.day, set(settings.weekend), holidays)
 
     people, contracts, leave, marks = _month_records(first_day, end)
-    book = Book(first_day)
+    book = Book(first_day, country)
     earlier: dict[int, dict[str, Any]] = {}
     slabs: list[Slab] = []
     left = 1
@@ -328,7 +328,7 @@ def work_out_figures(first_day: date) -> tuple[TaxTable | None, list[Figures]]:
             continue
         pay, paid_days, unpaid_days = worked
         try:
-            pay, owed = book.deduct(person, pay)
+            pay, owed = book.deduct(person, pay, insurable_wage(contracts[person.pk][-1]))
         except PayMathError:
             too_low.append(person.code)
             continue

@@ -89,6 +89,7 @@ def _component_inputs(data: dict[str, Any]) -> list[services.ComponentInput]:
             row.get("amount"),
             row.get("percent"),
             row.get("taxable", True),
+            row.get("insurable", False),
         )
         for row in data.get("components", [])
     ]

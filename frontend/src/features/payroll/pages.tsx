@@ -1027,29 +1027,58 @@ function WageForm({ wage, onDone }: { wage?: Wage; onDone: () => void }) {
   );
 }
 
+const SCHEMES: Record<string, Rate['scheme'][]> = {
+  PK: ['eobi', 'social_security'],
+  SA: ['gosi_annuities', 'gosi_saned', 'gosi_hazards'],
+  AE: ['gpssa'],
+};
+
+type Basis = 'wage' | 'pay' | 'insurable';
+
+function basisOf(rate: Rate): Basis {
+  if (rate.on_minimum_wage) {
+    return 'wage';
+  }
+  return rate.on_insurable ? 'insurable' : 'pay';
+}
+
 function RateForm({ rate, onDone }: { rate?: Rate; onDone: () => void }) {
   const { t } = useTranslation();
   const save = useTenantAction(CONTRIBUTION_KEYS);
+  const country = useCountry().data?.holiday_country ?? 'PK';
+  const schemes = SCHEMES[country] ?? SCHEMES.PK ?? [];
+  const pakistan = country === 'PK';
   const empty = {
-    scheme: rate?.scheme ?? 'eobi',
+    scheme: rate?.scheme ?? schemes[0] ?? 'eobi',
     province: rate?.province ?? '',
     starts_on: rate?.starts_on ?? '',
     employer_percent: rate?.employer_percent ?? '',
     employee_percent: rate?.employee_percent ?? '',
-    on_minimum_wage: rate?.on_minimum_wage ?? true,
+    basis: rate ? basisOf(rate) : pakistan ? 'wage' : 'insurable',
     wage_cap: rate?.wage_cap ?? '',
+    wage_floor: rate?.wage_floor ?? '',
+    applies_to: rate?.applies_to ?? 'all',
+    first_insured_from: rate?.first_insured_from ?? '',
     source: rate?.source ?? '',
   };
-  const [form, setForm] = useState(empty);
-  const set = (patch: Partial<typeof empty>) => setForm({ ...form, ...patch });
+  const [form, setForm] = useState<typeof empty & { basis: Basis }>(
+    empty as typeof empty & { basis: Basis },
+  );
+  const set = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
+  const onWage = form.basis === 'wage';
   return (
     <form
       className="space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
+        const { basis, ...rest } = form;
         const body = {
-          ...form,
-          wage_cap: form.on_minimum_wage || !form.wage_cap ? null : form.wage_cap,
+          ...rest,
+          on_minimum_wage: basis === 'wage',
+          on_insurable: basis === 'insurable',
+          wage_cap: onWage || !form.wage_cap ? null : form.wage_cap,
+          wage_floor: onWage || !form.wage_floor ? null : form.wage_floor,
+          first_insured_from: form.first_insured_from || null,
         } as never;
         save.mutate(
           () =>
@@ -1074,28 +1103,41 @@ function RateForm({ rate, onDone }: { rate?: Rate; onDone: () => void }) {
         <Select
           label={t('payroll.scheme')}
           value={form.scheme}
-          onChange={(e) =>
-            set({
-              scheme: e.target.value as Rate['scheme'],
-              on_minimum_wage: e.target.value === 'eobi',
-            })
-          }
+          onChange={(e) => {
+            const scheme = e.target.value as Rate['scheme'];
+            set({ scheme, ...(pakistan ? { basis: scheme === 'eobi' ? 'wage' : 'pay' } : {}) });
+          }}
         >
-          <option value="eobi">{t('payroll.schemes.eobi')}</option>
-          <option value="social_security">{t('payroll.schemes.social_security')}</option>
-        </Select>
-        <Select
-          label={t('payroll.province')}
-          value={form.province}
-          onChange={(e) => set({ province: e.target.value as NonNullable<Rate['province']> })}
-        >
-          <option value="">{t('payroll.everywhere')}</option>
-          {PROVINCES.map((code) => (
-            <option key={code} value={code}>
-              {t(`hr.provinces.${code}`)}
+          {schemes.map((scheme) => (
+            <option key={scheme} value={scheme}>
+              {t(`payroll.schemes.${scheme}`)}
             </option>
           ))}
         </Select>
+        {pakistan ? (
+          <Select
+            label={t('payroll.province')}
+            value={form.province}
+            onChange={(e) => set({ province: e.target.value as NonNullable<Rate['province']> })}
+          >
+            <option value="">{t('payroll.everywhere')}</option>
+            {PROVINCES.map((code) => (
+              <option key={code} value={code}>
+                {t(`hr.provinces.${code}`)}
+              </option>
+            ))}
+          </Select>
+        ) : (
+          <Select
+            label={t('payroll.appliesTo')}
+            value={form.applies_to}
+            onChange={(e) => set({ applies_to: e.target.value as NonNullable<Rate['applies_to']> })}
+          >
+            <option value="all">{t('payroll.appliesAll')}</option>
+            <option value="nationals">{t('payroll.appliesNationals')}</option>
+            <option value="others">{t('payroll.appliesOthers')}</option>
+          </Select>
+        )}
         <Field
           label={t('payroll.from')}
           type="date"
@@ -1127,22 +1169,44 @@ function RateForm({ rate, onDone }: { rate?: Rate; onDone: () => void }) {
         />
         <Select
           label={t('payroll.workedOn')}
-          value={form.on_minimum_wage ? 'wage' : 'pay'}
-          onChange={(e) => set({ on_minimum_wage: e.target.value === 'wage' })}
+          value={form.basis}
+          onChange={(e) => set({ basis: e.target.value as Basis })}
         >
-          <option value="wage">{t('payroll.onMinimumWage')}</option>
+          {pakistan && <option value="wage">{t('payroll.onMinimumWage')}</option>}
           <option value="pay">{t('payroll.onPay')}</option>
+          <option value="insurable">{t('payroll.onInsurable')}</option>
         </Select>
-        {!form.on_minimum_wage && (
+        {!onWage && (
+          <>
+            <Field
+              label={t('payroll.wageCap')}
+              hint={t('payroll.wageCapHint')}
+              type="number"
+              min="0.01"
+              step="0.01"
+              inputMode="decimal"
+              value={form.wage_cap}
+              onChange={(e) => set({ wage_cap: e.target.value })}
+            />
+            <Field
+              label={t('payroll.wageFloor')}
+              hint={t('payroll.wageFloorHint')}
+              type="number"
+              min="0.01"
+              step="0.01"
+              inputMode="decimal"
+              value={form.wage_floor}
+              onChange={(e) => set({ wage_floor: e.target.value })}
+            />
+          </>
+        )}
+        {!pakistan && (
           <Field
-            label={t('payroll.wageCap')}
-            hint={t('payroll.wageCapHint')}
-            type="number"
-            min="0.01"
-            step="0.01"
-            inputMode="decimal"
-            value={form.wage_cap}
-            onChange={(e) => set({ wage_cap: e.target.value })}
+            label={t('payroll.firstInsuredFrom')}
+            hint={t('payroll.firstInsuredFromHint')}
+            type="date"
+            value={form.first_insured_from}
+            onChange={(e) => set({ first_insured_from: e.target.value })}
           />
         )}
       </div>
@@ -1262,18 +1326,27 @@ function RatesPanel() {
                 <li key={rate.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
                   <span className="min-w-0 flex-1">
                     <span className="font-medium">
-                      {t(`payroll.schemes.${rate.scheme}`)} · {provinceName(rate.province, t)}
+                      {t(`payroll.schemes.${rate.scheme}`)}
+                      {rate.province ? ` · ${provinceName(rate.province, t)}` : ''}
                     </span>
                     <span className="block">
                       {t('payroll.rateFigures', {
                         employer: Number(rate.employer_percent),
                         employee: Number(rate.employee_percent),
                       })}{' '}
-                      {rate.on_minimum_wage
-                        ? t('payroll.onMinimumWageShort')
-                        : t('payroll.onPayShort')}
+                      {t(`payroll.basisShort.${basisOf(rate)}`)}
                       {rate.wage_cap && ` ${t('payroll.upTo', { cap: money(rate.wage_cap) })}`}
+                      {rate.wage_floor &&
+                        ` ${t('payroll.atLeast', { floor: money(rate.wage_floor) })}`}
                     </span>
+                    {(rate.applies_to !== 'all' || rate.first_insured_from) && (
+                      <span className="block text-sm">
+                        {rate.applies_to === 'nationals' && t('payroll.appliesNationals')}
+                        {rate.applies_to === 'others' && t('payroll.appliesOthers')}
+                        {rate.first_insured_from &&
+                          ` ${t('payroll.insuredFromShort', { date: rate.first_insured_from })}`}
+                      </span>
+                    )}
                     <span className="block text-sm text-muted">
                       {t('payroll.from')} <span className="tabular-nums">{rate.starts_on}</span>
                       {' · '}
@@ -1309,6 +1382,7 @@ function RatesPanel() {
 export function ContributionsPage() {
   const { t } = useTranslation();
   const { membership } = useWorkspace();
+  const pakistan = (useCountry().data?.holiday_country ?? 'PK') === 'PK';
   const fill = useTenantAction(CONTRIBUTION_KEYS);
   const [added, setAdded] = useState<number | null>(null);
   return (
@@ -1317,7 +1391,12 @@ export function ContributionsPage() {
         title={t('payroll.contributionsTitle')}
         subtitle={t('payroll.contributionsBody')}
       />
-      {can(membership, 'payroll', 'create') && (
+      {!pakistan && (
+        <Panel title={t('payroll.ratesTitle')}>
+          <Hint>{t('payroll.gulfRatesHint')}</Hint>
+        </Panel>
+      )}
+      {pakistan && can(membership, 'payroll', 'create') && (
         <Panel title={t('payroll.addFigures')}>
           <div className="space-y-4">
             <Hint>{t('payroll.contributionsFillHint')}</Hint>
@@ -1341,7 +1420,7 @@ export function ContributionsPage() {
         </Panel>
       )}
       <RatesPanel />
-      <MinimumWagesPanel />
+      {pakistan && <MinimumWagesPanel />}
     </>
   );
 }

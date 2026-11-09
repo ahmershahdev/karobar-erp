@@ -239,6 +239,13 @@ class ContributionRateSerializer(serializers.ModelSerializer[ContributionRate]):
         required=False,
         allow_null=True,
     )
+    wage_floor = serializers.DecimalField(
+        max_digits=18,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = ContributionRate
@@ -250,10 +257,20 @@ class ContributionRateSerializer(serializers.ModelSerializer[ContributionRate]):
             "employer_percent",
             "employee_percent",
             "on_minimum_wage",
+            "on_insurable",
             "wage_cap",
+            "wage_floor",
+            "applies_to",
+            "first_insured_from",
             "source",
         )
-        extra_kwargs = {"province": {"required": False}, "on_minimum_wage": {"required": False}}
+        extra_kwargs = {
+            "province": {"required": False},
+            "on_minimum_wage": {"required": False},
+            "on_insurable": {"required": False},
+            "applies_to": {"required": False},
+            "first_insured_from": {"required": False, "allow_null": True},
+        }
 
 
 class ResignationBandSerializer(serializers.Serializer[Any]):

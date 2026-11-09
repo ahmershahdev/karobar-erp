@@ -244,6 +244,17 @@ class ContributionRate(TenantOwnedModel):
     class Scheme(models.TextChoices):
         EOBI = "eobi"
         SOCIAL_SECURITY = "social_security"
+        GOSI_ANNUITIES = "gosi_annuities"
+        GOSI_SANED = "gosi_saned"
+        GOSI_HAZARDS = "gosi_hazards"
+        GPSSA = "gpssa"
+
+    class AppliesTo(models.TextChoices):
+        ALL = "all"
+        # Measured against the business's country: Saudis for GOSI annuities, Emiratis for
+        # the UAE pension.
+        NATIONALS = "nationals"
+        OTHERS = "others"
 
     scheme = models.CharField(max_length=20, choices=Scheme.choices)
     province = models.CharField(max_length=3, choices=Province.choices, blank=True)
@@ -252,7 +263,14 @@ class ContributionRate(TenantOwnedModel):
     employee_percent = models.DecimalField(max_digits=5, decimal_places=2)
     # True: worked out on the province's minimum wage. False: on the month's pay, up to the cap.
     on_minimum_wage = models.BooleanField(default=False)
+    # True: on the basic salary and the pay parts marked as counting for social insurance, for a
+    # full month. False: on the month's whole pay.
+    on_insurable = models.BooleanField(default=False)
     wage_cap = money_field(null=True, blank=True)
+    wage_floor = money_field(null=True, blank=True)
+    applies_to = models.CharField(max_length=10, choices=AppliesTo.choices, default=AppliesTo.ALL)
+    # Only for people first insured on or after this day, as GOSI's new system is.
+    first_insured_from = models.DateField(null=True, blank=True)
     source = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -260,8 +278,15 @@ class ContributionRate(TenantOwnedModel):
         ordering = ["scheme", "province", "-starts_on"]
         constraints = [
             models.UniqueConstraint(
-                fields=["tenant", "scheme", "province", "starts_on"],
-                name="uniq_contribution_rate_start",
+                fields=[
+                    "tenant",
+                    "scheme",
+                    "province",
+                    "applies_to",
+                    "first_insured_from",
+                    "starts_on",
+                ],
+                name="uniq_contribution_rate_group_start",
             ),
             models.CheckConstraint(
                 condition=Q(
@@ -275,6 +300,10 @@ class ContributionRate(TenantOwnedModel):
             models.CheckConstraint(
                 condition=Q(wage_cap__isnull=True) | Q(wage_cap__gt=0, on_minimum_wage=False),
                 name="contribution_cap_on_pay_only",
+            ),
+            models.CheckConstraint(
+                condition=Q(wage_floor__isnull=True) | Q(wage_floor__gt=0, on_minimum_wage=False),
+                name="contribution_floor_on_pay_only",
             ),
         ]
 

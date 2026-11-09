@@ -1503,7 +1503,10 @@
       "GB": "Gilgit-Baltistan"
     },
     "nationality": "Nationality",
-    "nationalityHint": "In the UAE, nationals get a pension instead of end-of-service gratuity."
+    "nationalityHint": "In the UAE, nationals get a pension instead of end-of-service gratuity.",
+    "insurable": "Counts for GOSI or pension",
+    "insuredSince": "First insured on",
+    "insuredSinceHint": "The day they were first registered for social insurance. GOSI rates differ for people first insured from 3 July 2024. Empty means the day they joined."
   },
   "payroll": {
     "title": "Payroll",
@@ -1585,8 +1588,8 @@
     "undoReasonPlaceholder": "Wrong basic salary for one person",
     "undo": "Undo payroll",
     "undoConfirm": "This reverses the month's journal entry. The payslips stay as history, marked undone.",
-    "contributionsTitle": "EOBI and social security",
-    "contributionsBody": "The rates and minimum wages payroll uses for EOBI and provincial social security.",
+    "contributionsTitle": "Social insurance",
+    "contributionsBody": "The rates payroll uses for EOBI and provincial social security in Pakistan, GOSI in Saudi Arabia and the pension for UAE nationals.",
     "contributionsFillHint": "The button adds only minimum wages copied from an official notification: Islamabad and Sindh from July 2026. Enter the EOBI percentages, other minimum wages and social security rates from your own challan or notification.",
     "contributionsFill": "Add notified minimum wages",
     "minimumWages": "Minimum wages",
@@ -1598,7 +1601,11 @@
     "scheme": "Scheme",
     "schemes": {
       "eobi": "EOBI",
-      "social_security": "Social security"
+      "social_security": "Social security",
+      "gosi_annuities": "GOSI annuities",
+      "gosi_saned": "GOSI SANED",
+      "gosi_hazards": "GOSI occupational hazards",
+      "gpssa": "Pension (GPSSA)"
     },
     "from": "From",
     "monthlyWage": "Minimum wage a month",
@@ -1665,6 +1672,23 @@
       "bandSummaryAfter": "On resignation after {{years}} years: {{share}} of it.",
       "all": "all"
     },
-    "gratuityDueUae": "In the UAE, pay it within 14 days of the last day."
+    "gratuityDueUae": "In the UAE, pay it within 14 days of the last day.",
+    "appliesTo": "Who pays",
+    "appliesAll": "Everyone",
+    "appliesNationals": "Nationals only",
+    "appliesOthers": "Everyone but nationals",
+    "onInsurable": "Basic and the parts marked for social insurance",
+    "wageFloor": "Floor",
+    "wageFloorHint": "The least it is worked out on. Leave empty for none.",
+    "firstInsuredFrom": "Only for people first insured from",
+    "firstInsuredFromHint": "For GOSI’s new system, enter 3 July 2024. Leave empty for everyone.",
+    "basisShort": {
+      "wage": "on the minimum wage",
+      "pay": "on pay",
+      "insurable": "on the insurable wage"
+    },
+    "atLeast": "at least {{floor}}",
+    "insuredFromShort": "first insured from {{date}}",
+    "gulfRatesHint": "No rates ship for the Gulf: no official text could be read. Enter each one from your GOSI or GPSSA statement, with its source. Mark the pay parts that count (for GOSI, basic and housing) on the Salary structures screen."
   }
 }

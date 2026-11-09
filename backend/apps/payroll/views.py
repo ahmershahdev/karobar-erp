@@ -366,6 +366,10 @@ class ContributionRateDetailView(
             "wage_cap": None,
             "province": "",
             "on_minimum_wage": False,
+            "on_insurable": False,
+            "wage_floor": None,
+            "applies_to": ContributionRate.AppliesTo.ALL,
+            "first_insured_from": None,
             **serializer.validated_data,
         }
         serializer.instance = run(contributions.save, actor(self.request), row, values)
