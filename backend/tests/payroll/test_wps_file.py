@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from apps.hr import retention
-from apps.hr.models import Employee, HrSettings
+from apps.hr.models import Attendance, Employee, HrSettings
 from apps.payroll import gratuity
 from apps.payroll.models import TaxTable
 from tests.conftest import Member
@@ -130,3 +130,12 @@ def test_the_labour_card_id_is_cleared_with_the_national_id(boss: Member) -> Non
     retention.clear_former_employees(date(2034, 7, 1))
     leaver.refresh_from_db()
     assert (leaver.national_id, leaver.wps_person_id) == ("", "")
+
+
+def test_a_half_day_absent_is_counted_not_dropped(boss: Member) -> None:  # noqa: F811
+    uae(boss)
+    someone = worker()
+    contract(boss, someone, "10000", starts=date(2026, 7, 16))
+    Attendance.objects.create(employee=someone, on=date(2026, 7, 20), status="half_day")
+    edr = download(boss, posted(boss)).content.decode().split("\r\n")[0]
+    assert edr.endswith(",1")

@@ -6,6 +6,7 @@ is what the bank sends out.
 """
 
 from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.utils import timezone
 
@@ -69,7 +70,9 @@ def salary_file(run: PayrollRun, made: datetime | None = None) -> tuple[str, str
                 max(run.month, person.joined_on),
                 min(end, person.left_on or end),
                 slip.net,
-                unpaid_days=int(slip.unpaid_days),
+                # The SIF counts whole days of leave without pay; a half day absent rounds
+                # up, so 1.5 shows as 2 rather than disappearing.
+                unpaid_days=int(slip.unpaid_days.quantize(Decimal(1), rounding=ROUND_HALF_UP)),
             )
         )
     if missing:
