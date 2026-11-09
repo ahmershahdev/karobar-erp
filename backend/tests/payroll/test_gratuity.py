@@ -372,3 +372,20 @@ def test_an_undone_earlier_month_refreshes_a_later_draft(boss: Member) -> None: 
     reply = post(boss, august["id"]).json()
     assert reply["posted"] is False
     assert D(reply["run"]["gratuity_change"]) > D(august["gratuity_change"])
+
+
+def test_a_rule_from_mid_month_counts_for_whoever_is_there_on_it(boss: Member) -> None:  # noqa: F811
+    gulf(boss, "SA")
+    GratuityRule.objects.filter(country="SA").update(starts_on=date(2026, 7, 15))
+    stays = person("E1", joined=date(2025, 1, 1))
+    goes = person("E2", joined=date(2025, 1, 1))
+    contract(boss, stays, "10000", starts=date(2025, 1, 1))
+    contract(boss, goes, "10000", starts=date(2025, 1, 1))
+    leave(goes, date(2026, 7, 10))
+    reply = work_out(boss)
+    # E2 left before any rule began, so the month stops rather than guess.
+    assert "End of service screen" in reply.json()["detail"]
+    leave(goes, date(2026, 7, 20))
+    slips = {s["employee_code"]: s for s in work_out(boss).json()["payslips"]}
+    assert D(slips["E1"]["gratuity_accrued"]) > 0
+    assert D(slips["E2"]["gratuity_accrued"]) > 0

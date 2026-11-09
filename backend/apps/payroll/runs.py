@@ -51,7 +51,15 @@ from .gratuity import (
     unpaid_before,
 )
 from .gratuity import rule_for as gratuity_rule_for
-from .models import GratuityPayout, OpeningPay, PayrollRun, Payslip, SalaryPayment, TaxTable
+from .models import (
+    GratuityPayout,
+    GratuityRule,
+    OpeningPay,
+    PayrollRun,
+    Payslip,
+    SalaryPayment,
+    TaxTable,
+)
 from .services import (
     TAX_YEAR_STARTS,
     PayrollError,
@@ -354,19 +362,24 @@ def _with_gratuity(
     left, and how much that grew since the last posted month."""
     if country not in GRATUITY_COUNTRIES:
         return figures
-    row = gratuity_rule_for(country, first_day)
-    if row is None:
-        raise NoRuleError
     end = month_end(first_day)
     unpaid = unpaid_before(first_day)
     before = accrued_before(first_day)
+    # The rule in force on each person's own date, the month's end or the day they left, so a
+    # rule that starts mid-month counts for whoever is still there on it. Few distinct dates.
+    rules: dict[date, GratuityRule | None] = {}
     updated: list[Figures] = []
     for f in figures:
         person = f.employee
+        until = min(end, person.left_on or end)
+        if until not in rules:
+            rules[until] = gratuity_rule_for(country, until)
+        row = rules[until]
+        if row is None:
+            raise NoRuleError
         if not applies(row, person, country):
             updated.append(f)
             continue
-        until = min(end, person.left_on or end)
         # The contract in force at the month's end; contracts come ordered by start.
         contract = contracts[person.pk][-1]
         days_off = unpaid.get(person.pk, ZERO) + f.unpaid_days
