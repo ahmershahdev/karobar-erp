@@ -51,6 +51,9 @@ class SalaryComponent(TenantOwnedModel):
     amount = money_field(null=True, blank=True)
     percent = percent_field()
     taxable = models.BooleanField(default=True)
+    # Whether Gulf social insurance counts this part: GOSI counts basic plus housing, the UAE
+    # pension the contract's basic salary and the allowances its law lists.
+    insurable = models.BooleanField(default=False)
     position = models.PositiveSmallIntegerField(default=0)
 
     class Meta(TenantOwnedModel.Meta):
@@ -106,6 +109,9 @@ class Employee(TenantOwnedModel):
     # at pension age, and provincial social security has its own wage limit. Neither can be
     # judged from the records kept here.
     pays_eobi = models.BooleanField(default=False)
+    # The day the person was first registered for social insurance anywhere. Saudi GOSI
+    # charges people first insured from 3 July 2024 under its new system, at other rates.
+    insured_since = models.DateField(null=True, blank=True)
     pays_social_security = models.BooleanField(default=False)
 
     class Meta(TenantOwnedModel.Meta):

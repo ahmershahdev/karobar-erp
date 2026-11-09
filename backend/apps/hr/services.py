@@ -81,6 +81,7 @@ class ComponentInput:
     amount: Decimal | None
     percent: Decimal | None
     taxable: bool = True
+    insurable: bool = False
 
 
 def _check(rows: list[ComponentInput]) -> None:
@@ -128,6 +129,7 @@ def save_structure(
             amount=row.amount,
             percent=row.percent,
             taxable=row.taxable,
+            insurable=row.insurable,
             position=index,
         )
         for index, row in enumerate(components)

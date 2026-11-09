@@ -15,7 +15,7 @@ import { errorText, useTenantAction, useWorkspace } from '../workspace/hooks';
 import { NUM, NUM_TH, TABLE, TD, TH } from '../workspace/table';
 import { PageTitle, Panel } from '../workspace/ui';
 import { GratuityPanel } from '../payroll/pages';
-import { NATIONALITIES, PROVINCES } from './provinces';
+import { GRATUITY_COUNTRIES, NATIONALITIES, PROVINCES } from './provinces';
 
 type Employee = components['schemas']['Employee'];
 type Structure = components['schemas']['SalaryStructure'];
@@ -174,6 +174,19 @@ export function DepartmentsPage() {
 
 // Salary structures
 
+function useCountry(): string {
+  const { membership } = useWorkspace();
+  const settings = useQuery({
+    queryKey: [membership.tenant_id, 'hr-settings'],
+    queryFn: () => unwrap(api.GET('/api/hr/settings/')),
+  });
+  return settings.data?.holiday_country ?? 'PK';
+}
+
+function useGulf(): boolean {
+  return GRATUITY_COUNTRIES.includes(useCountry());
+}
+
 interface PartRow {
   key: number;
   name: string;
@@ -181,6 +194,7 @@ interface PartRow {
   how: 'percent' | 'amount';
   value: string;
   taxable: boolean;
+  insurable: boolean;
 }
 
 function toRows(structure: Structure | null): PartRow[] {
@@ -191,6 +205,7 @@ function toRows(structure: Structure | null): PartRow[] {
     how: part.percent != null ? 'percent' : 'amount',
     value: part.percent ?? part.amount ?? '',
     taxable: part.taxable ?? true,
+    insurable: part.insurable ?? false,
   }));
 }
 
@@ -203,6 +218,7 @@ function StructureEditor({
 }) {
   const { t } = useTranslation();
   const save = useTenantAction(KEYS);
+  const gulf = useGulf();
   const [name, setName] = useState(structure?.name ?? '');
   const [rows, setRows] = useState<PartRow[]>(() => toRows(structure));
   const [basic, setBasic] = useState('50000');
@@ -216,6 +232,7 @@ function StructureEditor({
       amount: row.how === 'amount' ? row.value : null,
       percent: row.how === 'percent' ? row.value : null,
       taxable: row.taxable,
+      insurable: row.insurable,
     })),
   } as never;
   const preview = useQuery({
@@ -310,15 +327,28 @@ function StructureEditor({
                 onChange={(e) => update(row.key, { value: e.target.value })}
                 className="min-h-11 rounded-xl border border-line bg-canvas px-3"
               />
-              <label className="flex min-h-11 items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="size-5"
-                  checked={row.taxable}
-                  onChange={(e) => update(row.key, { taxable: e.target.checked })}
-                />
-                {t('hr.taxable')}
-              </label>
+              <div className="flex flex-wrap gap-x-4">
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="size-5"
+                    checked={row.taxable}
+                    onChange={(e) => update(row.key, { taxable: e.target.checked })}
+                  />
+                  {t('hr.taxable')}
+                </label>
+                {gulf && row.kind === 'earning' && (
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="size-5"
+                      checked={row.insurable}
+                      onChange={(e) => update(row.key, { insurable: e.target.checked })}
+                    />
+                    {t('hr.insurable')}
+                  </label>
+                )}
+              </div>
               <Button
                 variant="ghost"
                 onClick={() => setRows(rows.filter((item) => item.key !== row.key))}
@@ -339,6 +369,7 @@ function StructureEditor({
                   how: 'percent',
                   value: '',
                   taxable: true,
+                  insurable: false,
                 },
               ])
             }
@@ -464,6 +495,7 @@ const EMPTY = {
   left_on: '',
   province: '',
   nationality: '',
+  insured_since: '',
   pays_eobi: false,
   pays_social_security: false,
 };
@@ -483,6 +515,7 @@ function fromEmployee(employee: Employee): EmployeeForm {
     left_on: employee.left_on ?? '',
     province: employee.province ?? '',
     nationality: employee.nationality ?? '',
+    insured_since: employee.insured_since ?? '',
     pays_eobi: employee.pays_eobi ?? false,
     pays_social_security: employee.pays_social_security ?? false,
   };
@@ -500,13 +533,8 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
   const { t, i18n } = useTranslation();
   const departments = useDepartments();
   const save = useTenantAction(KEYS);
-  const { membership } = useWorkspace();
-  const settings = useQuery({
-    queryKey: [membership.tenant_id, 'hr-settings'],
-    queryFn: () => unwrap(api.GET('/api/hr/settings/')),
-  });
   // Province, EOBI and provincial social security are Pakistan's; Gulf businesses don't see them.
-  const pakistan = (settings.data?.holiday_country ?? 'PK') === 'PK';
+  const pakistan = useCountry() === 'PK';
   const [form, setForm] = useState<EmployeeForm>(() => (employee ? fromEmployee(employee) : EMPTY));
   const set = (patch: Partial<EmployeeForm>) => setForm({ ...form, ...patch });
   const { province, ...rest } = form;
@@ -516,6 +544,7 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
     ...(province || employee ? { province } : {}),
     department: form.department ? Number(form.department) : null,
     left_on: form.left_on || null,
+    insured_since: form.insured_since || null,
   } as never;
   const field = (
     key: Exclude<keyof EmployeeForm, 'pays_eobi' | 'pays_social_security'>,
@@ -623,6 +652,14 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
               </option>
             ))}
           </Select>
+          {!pakistan && (
+            <Field
+              label={t('hr.insuredSince')}
+              type="date"
+              hint={t('hr.insuredSinceHint')}
+              {...field('insured_since')}
+            />
+          )}
           {pakistan && (
             <Select label={t('hr.province')} hint={t('hr.provinceHint')} {...field('province')}>
               <option value="">-</option>

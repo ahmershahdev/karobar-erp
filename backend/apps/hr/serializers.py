@@ -29,11 +29,12 @@ class DepartmentSerializer(serializers.ModelSerializer[Department]):
 class SalaryComponentSerializer(serializers.ModelSerializer[SalaryComponent]):
     class Meta:
         model = SalaryComponent
-        fields = ("name", "kind", "amount", "percent", "taxable")
+        fields = ("name", "kind", "amount", "percent", "taxable", "insurable")
         extra_kwargs = {
             "amount": {"required": False, "allow_null": True, "min_value": Decimal(0)},
             "percent": PERCENT,
             "taxable": {"required": False},
+            "insurable": {"required": False},
         }
 
 
@@ -157,6 +158,7 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "left_on",
             "province",
             "nationality",
+            "insured_since",
             "pays_eobi",
             "pays_social_security",
             "current_contract",
@@ -164,6 +166,7 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
         extra_kwargs = {
             "province": {"required": False},
             "nationality": {"required": False},
+            "insured_since": {"required": False, "allow_null": True},
             "pays_eobi": {"required": False},
             "pays_social_security": {"required": False},
             "job_title": {"required": False},

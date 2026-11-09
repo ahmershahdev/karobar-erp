@@ -27,6 +27,8 @@ class Rate:
     # True: the base is the minimum wage. False: the base is the month's pay, up to `cap`.
     on_minimum_wage: bool
     cap: Decimal | None = None
+    # The least the base can be, as GOSI counts at least a minimum contributory wage.
+    floor: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -42,8 +44,12 @@ def check_rate(rate: Rate) -> None:
             raise ContributionError("a contribution rate is between 0 and 100")
     if rate.cap is not None and rate.cap <= 0:
         raise ContributionError("a ceiling on pay is more than zero")
-    if rate.on_minimum_wage and rate.cap is not None:
-        raise ContributionError("a rate on the minimum wage has no ceiling")
+    if rate.floor is not None and rate.floor <= 0:
+        raise ContributionError("a floor on pay is more than zero")
+    if rate.floor is not None and rate.cap is not None and rate.floor > rate.cap:
+        raise ContributionError("a floor can't be above the ceiling")
+    if rate.on_minimum_wage and (rate.cap is not None or rate.floor is not None):
+        raise ContributionError("a rate on the minimum wage has no ceiling or floor")
 
 
 def contribution(rate: Rate, pay: Decimal, minimum_wage: Decimal | None) -> Share:
@@ -61,6 +67,8 @@ def contribution(rate: Rate, pay: Decimal, minimum_wage: Decimal | None) -> Shar
         base = minimum_wage
     else:
         base = pay if rate.cap is None else min(pay, rate.cap)
+        if rate.floor is not None:
+            base = max(base, rate.floor)
     base = quantize_money(base)
     return Share(
         base,

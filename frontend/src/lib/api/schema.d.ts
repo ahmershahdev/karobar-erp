@@ -2790,6 +2790,13 @@ export interface components {
             amount: string;
         };
         /**
+         * @description * `all` - All
+         *     * `nationals` - Nationals
+         *     * `others` - Others
+         * @enum {string}
+         */
+        AppliesToEnum: "all" | "nationals" | "others";
+        /**
          * @description * `present` - Present
          *     * `absent` - Absent
          *     * `half_day` - Half Day
@@ -3061,16 +3068,26 @@ export interface components {
             /** Format: decimal */
             employee_percent: string;
             on_minimum_wage?: boolean;
+            on_insurable?: boolean;
             /** Format: decimal */
             wage_cap?: string | null;
+            /** Format: decimal */
+            wage_floor?: string | null;
+            applies_to?: components["schemas"]["AppliesToEnum"];
+            /** Format: date */
+            first_insured_from?: string | null;
             source: string;
         };
         /**
          * @description * `eobi` - Eobi
          *     * `social_security` - Social Security
+         *     * `gosi_annuities` - Gosi Annuities
+         *     * `gosi_saned` - Gosi Saned
+         *     * `gosi_hazards` - Gosi Hazards
+         *     * `gpssa` - Gpssa
          * @enum {string}
          */
-        ContributionSchemeEnum: "eobi" | "social_security";
+        ContributionSchemeEnum: "eobi" | "social_security" | "gosi_annuities" | "gosi_saned" | "gosi_hazards" | "gpssa";
         /**
          * @description * `a4` - A4
          *     * `receipt` - Receipt
@@ -3252,6 +3269,8 @@ export interface components {
             left_on?: string | null;
             province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
             nationality?: string;
+            /** Format: date */
+            insured_since?: string | null;
             pays_eobi?: boolean;
             pays_social_security?: boolean;
             readonly current_contract: components["schemas"]["CurrentContract"] | null;
@@ -4049,6 +4068,8 @@ export interface components {
             left_on?: string | null;
             province?: components["schemas"]["ProvinceEnum"] | components["schemas"]["BlankEnum"];
             nationality?: string;
+            /** Format: date */
+            insured_since?: string | null;
             pays_eobi?: boolean;
             pays_social_security?: boolean;
             readonly current_contract?: components["schemas"]["CurrentContract"] | null;
@@ -4486,6 +4507,7 @@ export interface components {
             /** Format: decimal */
             percent?: string | null;
             taxable?: boolean;
+            insurable?: boolean;
         };
         SalaryPayment: {
             readonly id: number;

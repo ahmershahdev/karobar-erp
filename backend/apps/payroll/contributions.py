@@ -17,8 +17,9 @@ from django.db import IntegrityError, transaction
 
 from apps.accounts.models import User
 from apps.core.contributions import ContributionError, Rate, Share, check_rate, contribution
-from apps.core.payroll import Breakdown, with_deductions
-from apps.hr.models import Employee, Province
+from apps.core.payroll import Breakdown, Component, with_deductions
+from apps.core.payroll import value as part_value
+from apps.hr.models import Contract, Employee, Province, SalaryComponent
 from apps.platform.locking import lock_rows
 from apps.tenancy import audit
 from apps.tenancy.models import AuditEvent
@@ -30,13 +31,26 @@ Action = AuditEvent.Action
 OFFICIAL = Path(__file__).parent / "data" / "contributions.json"
 Scheme = ContributionRate.Scheme
 # The payslip line each scheme's staff share shows as.
-LINE_NAMES: dict[str, str] = {Scheme.EOBI: "EOBI", Scheme.SOCIAL_SECURITY: "Social security"}
+AppliesTo = ContributionRate.AppliesTo
+LINE_NAMES: dict[str, str] = {
+    Scheme.EOBI: "EOBI",
+    Scheme.SOCIAL_SECURITY: "Social security",
+    Scheme.GOSI_ANNUITIES: "GOSI annuities",
+    Scheme.GOSI_SANED: "GOSI SANED",
+    Scheme.GOSI_HAZARDS: "GOSI occupational hazards",
+    Scheme.GPSSA: "Pension (GPSSA)",
+}
+# The schemes each Gulf country's payroll owes, by nationality instead of a switch per person.
+GULF_SCHEMES: dict[str, list[str]] = {
+    "SA": [Scheme.GOSI_ANNUITIES, Scheme.GOSI_SANED, Scheme.GOSI_HAZARDS],
+    "AE": [Scheme.GPSSA],
+}
 
 
 class BadRateError(PayrollError):
     message = (
-        "Check the rate: percentages are 0 to 100, a ceiling is more than zero, and a rate on "
-        "the minimum wage has no ceiling."
+        "Check the rate: percentages are 0 to 100, a ceiling and a floor are more than zero, "
+        "the floor isn't above the ceiling, and a rate on the minimum wage has neither."
     )
 
 
@@ -65,7 +79,13 @@ def _check(rate: ContributionRate) -> None:
 
 
 def _rate(row: ContributionRate) -> Rate:
-    return Rate(row.employer_percent, row.employee_percent, row.on_minimum_wage, row.wage_cap)
+    return Rate(
+        row.employer_percent,
+        row.employee_percent,
+        row.on_minimum_wage,
+        row.wage_cap,
+        row.wage_floor,
+    )
 
 
 def _fields(row: ContributionRate | MinimumWage) -> dict[str, str]:
@@ -79,7 +99,11 @@ def _fields(row: ContributionRate | MinimumWage) -> dict[str, str]:
             "employer_percent",
             "employee_percent",
             "on_minimum_wage",
+            "on_insurable",
             "wage_cap",
+            "wage_floor",
+            "applies_to",
+            "first_insured_from",
             "source",
         ]
     )
@@ -99,6 +123,19 @@ def save(
         setattr(row, key, value)
     if isinstance(row, ContributionRate):
         _check(row)
+        # The unique index can't catch this one: MySQL lets rows with no first-insured date
+        # repeat. Under the business lock, so two saves can't both pass.
+        same = ContributionRate.objects.filter(
+            scheme=row.scheme,
+            province=row.province,
+            applies_to=row.applies_to,
+            first_insured_from=row.first_insured_from,
+            starts_on=row.starts_on,
+        )
+        if row.pk is not None:
+            same = same.exclude(pk=row.pk)
+        if same.exists():
+            raise DuplicateError
     try:
         with transaction.atomic():
             row.save()
@@ -169,26 +206,97 @@ class Contribution:
         }
 
 
-class Book:
-    """The rates and minimum wages for one month, read once for everyone on the payroll."""
+@dataclass(frozen=True)
+class _Row:
+    scheme: str
+    province: str
+    applies_to: str
+    first_insured_from: date | None
+    on_insurable: bool
+    rate: Rate
 
-    def __init__(self, first_day: date) -> None:
-        self.rates: dict[tuple[str, str], Rate] = {}
+
+def insurable_wage(contract: Contract) -> Decimal:
+    """A full month of the basic salary and the earnings marked as counting for social
+    insurance. GOSI and the UAE pension charge on this registered wage, whatever the days."""
+    total = contract.basic_salary
+    for part in contract.structure.components.all():
+        if part.kind == SalaryComponent.Kind.EARNING and part.insurable:
+            item = Component(part.name, part.kind, part.amount, part.percent, part.taxable)
+            total += part_value(item, contract.basic_salary)
+    return Decimal(total)
+
+
+class Book:
+    """The rates and minimum wages for one month, read once for everyone on the payroll.
+
+    Pakistan's schemes go by each person's two switches and province. The Gulf's go by
+    nationality against the business's country, and for GOSI by when the person was first
+    insured; a Gulf scheme with no rate entered is simply not charged.
+    """
+
+    def __init__(self, first_day: date, country: str = "PK") -> None:
+        self.country = country
+        latest: dict[tuple[str, str, str, date | None], _Row] = {}
         for row in ContributionRate.objects.filter(starts_on__lte=first_day).order_by("starts_on"):
-            # Ordered by start, so the latest rate for each scheme and province wins.
-            self.rates[(row.scheme, row.province)] = _rate(row)
+            # Ordered by start, so the latest rate of each group wins.
+            key = (row.scheme, row.province, row.applies_to, row.first_insured_from)
+            latest[key] = _Row(
+                row.scheme,
+                row.province,
+                row.applies_to,
+                row.first_insured_from,
+                row.on_insurable,
+                _rate(row),
+            )
+        self.rows = list(latest.values())
         self.wages: dict[str, Decimal] = {}
         for wage in MinimumWage.objects.filter(starts_on__lte=first_day).order_by("starts_on"):
             self.wages[wage.province] = wage.amount
         self.missing: set[str] = set()
         self.no_province: list[str] = []
 
-    def _rate_for(self, scheme: str, province: str) -> Rate | None:
-        return self.rates.get((scheme, province)) or self.rates.get((scheme, ""))
+    def _best(self, scheme: str, person: Employee, province: str = "") -> _Row | None:
+        national = person.nationality == self.country
+        insured = person.insured_since or person.joined_on
+        matches = [
+            row
+            for row in self.rows
+            if row.scheme == scheme
+            and row.province in ("", province)
+            and row.applies_to
+            in (AppliesTo.ALL, AppliesTo.NATIONALS if national else AppliesTo.OTHERS)
+            and (row.first_insured_from is None or insured >= row.first_insured_from)
+        ]
+        if not matches:
+            return None
+        # The most particular one wins: its own province, then its own group, then the latest
+        # first-insured date that still covers the person.
+        return max(
+            matches,
+            key=lambda row: (
+                row.province == province,
+                row.applies_to != AppliesTo.ALL,
+                row.first_insured_from or date.min,
+            ),
+        )
 
-    def for_person(self, person: Employee, pay: Decimal) -> list[Contribution]:
+    def _share(self, row: _Row, pay: Decimal, insurable: Decimal, wage: Decimal | None) -> Share:
+        return contribution(row.rate, insurable if row.on_insurable else pay, wage)
+
+    def for_person(
+        self, person: Employee, pay: Decimal, insurable: Decimal | None = None
+    ) -> list[Contribution]:
         """What the person and the business owe this month. Gaps are collected rather than
         raised, so one message can name every missing figure; call `check` afterwards."""
+        base = pay if insurable is None else insurable
+        if self.country in GULF_SCHEMES:
+            found: list[Contribution] = []
+            for scheme in GULF_SCHEMES[self.country]:
+                row = self._best(scheme, person)
+                if row is not None:
+                    found.append(Contribution(scheme, row.rate, self._share(row, pay, base, None)))
+            return found
         schemes = [
             scheme
             for scheme, on in (
@@ -203,23 +311,25 @@ class Book:
             self.no_province.append(person.code)
             return []
         place = Province(person.province).label
-        found: list[Contribution] = []
+        owed: list[Contribution] = []
         for scheme in schemes:
-            rate = self._rate_for(scheme, person.province)
-            if rate is None:
+            row = self._best(scheme, person, person.province)
+            if row is None:
                 self.missing.add(f"{LINE_NAMES[scheme]} rate in {place}")
                 continue
             wage = self.wages.get(person.province)
-            if rate.on_minimum_wage and wage is None:
+            if row.rate.on_minimum_wage and wage is None:
                 self.missing.add(f"minimum wage in {place}")
                 continue
-            found.append(Contribution(scheme, rate, contribution(rate, pay, wage)))
-        return found
+            owed.append(Contribution(scheme, row.rate, self._share(row, pay, base, wage)))
+        return owed
 
-    def deduct(self, person: Employee, pay: Breakdown) -> tuple[Breakdown, list[Contribution]]:
+    def deduct(
+        self, person: Employee, pay: Breakdown, insurable: Decimal | None = None
+    ) -> tuple[Breakdown, list[Contribution]]:
         """The pay with the person's share taken off as deduction lines, and what is owed.
         Raises the pay maths error when the share leaves less than nothing."""
-        owed = self.for_person(person, pay.gross)
+        owed = self.for_person(person, pay.gross, insurable)
         shares = [(LINE_NAMES[c.scheme], c.share.employee) for c in owed if c.share.employee]
         return with_deductions(pay, shares), owed
 

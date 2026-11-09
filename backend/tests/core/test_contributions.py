@@ -28,6 +28,13 @@ def test_on_pay_without_a_ceiling() -> None:
     assert contribution(rate, D("12345.67"), None).employer == D("802.47")
 
 
+def test_on_pay_with_a_floor_and_a_ceiling() -> None:
+    rate = Rate(D(9), D(9), on_minimum_wage=False, cap=D(45000), floor=D(1500))
+    assert contribution(rate, D(1000), None).base == D("1500.00")
+    assert contribution(rate, D(20000), None).base == D("20000.00")
+    assert contribution(rate, D(90000), None).base == D("45000.00")
+
+
 def test_minimum_wage_is_needed() -> None:
     rate = Rate(D(5), D(1), on_minimum_wage=True)
     with pytest.raises(ContributionError):
@@ -48,6 +55,9 @@ def test_negative_pay_is_refused() -> None:
         Rate(D(0), D(101), on_minimum_wage=False),
         Rate(D(6), D(0), on_minimum_wage=False, cap=D(0)),
         Rate(D(5), D(1), on_minimum_wage=True, cap=D(40000)),
+        Rate(D(5), D(1), on_minimum_wage=True, floor=D(1000)),
+        Rate(D(9), D(9), on_minimum_wage=False, floor=D(0)),
+        Rate(D(9), D(9), on_minimum_wage=False, cap=D(1000), floor=D(2000)),
     ],
 )
 def test_bad_rates(rate: Rate) -> None:

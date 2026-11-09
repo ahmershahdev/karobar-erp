@@ -6067,6 +6067,16 @@ components:
       - bill
       - bill_number
       - id
+    AppliesToEnum:
+      enum:
+      - all
+      - nationals
+      - others
+      type: string
+      description: |-
+        * `all` - All
+        * `nationals` - Nationals
+        * `others` - Others
     AttendanceStatusEnum:
       enum:
       - present
@@ -6759,10 +6769,23 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
         on_minimum_wage:
           type: boolean
+        on_insurable:
+          type: boolean
         wage_cap:
           type: string
           format: decimal
           pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        wage_floor:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        applies_to:
+          $ref: '#/components/schemas/AppliesToEnum'
+        first_insured_from:
+          type: string
+          format: date
           nullable: true
         source:
           type: string
@@ -6778,10 +6801,18 @@ components:
       enum:
       - eobi
       - social_security
+      - gosi_annuities
+      - gosi_saned
+      - gosi_hazards
+      - gpssa
       type: string
       description: |-
         * `eobi` - Eobi
         * `social_security` - Social Security
+        * `gosi_annuities` - Gosi Annuities
+        * `gosi_saned` - Gosi Saned
+        * `gosi_hazards` - Gosi Hazards
+        * `gpssa` - Gpssa
     CounterPaperEnum:
       enum:
       - a4
@@ -7283,6 +7314,10 @@ components:
         nationality:
           type: string
           maxLength: 2
+        insured_since:
+          type: string
+          format: date
+          nullable: true
         pays_eobi:
           type: boolean
         pays_social_security:
@@ -9125,6 +9160,10 @@ components:
         nationality:
           type: string
           maxLength: 2
+        insured_since:
+          type: string
+          format: date
+          nullable: true
         pays_eobi:
           type: boolean
         pays_social_security:
@@ -10287,6 +10326,8 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
         taxable:
+          type: boolean
+        insurable:
           type: boolean
       required:
       - kind
