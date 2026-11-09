@@ -7,7 +7,7 @@ import pytest
 from apps.hr import retention
 from apps.hr.models import Attendance, Employee, HrSettings
 from apps.payroll import gratuity
-from apps.payroll.models import TaxTable
+from apps.payroll.models import Payslip, TaxTable
 from tests.conftest import Member
 from tests.factories import create_membership, create_role
 from tests.payroll.test_payroll import boss, contract, person, post, work_out  # noqa: F401
@@ -151,3 +151,13 @@ def test_a_later_edit_to_the_dates_does_not_change_the_file(boss: Member) -> Non
     )
     edr = download(boss, run_id).content.decode().split("\r\n")[0]
     assert ",2026-07-16,2026-07-31,16," in edr
+
+
+def test_a_draft_without_its_period_is_refreshed_before_posting(boss: Member) -> None:  # noqa: F811
+    uae(boss)
+    contract(boss, worker(), "10000", starts=date(2026, 7, 16))
+    draft = work_out(boss).json()["id"]
+    Payslip.objects.filter(run_id=draft).update(starts_on=None, ends_on=None)
+    assert post(boss, draft).json()["posted"] is False
+    slip = Payslip.objects.get(run_id=draft)
+    assert (slip.starts_on, slip.ends_on) == (date(2026, 7, 16), date(2026, 7, 31))

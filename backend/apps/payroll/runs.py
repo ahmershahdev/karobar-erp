@@ -392,6 +392,12 @@ def _with_gratuity(
     return updated
 
 
+def _period(month: date, person: Employee) -> tuple[date, date]:
+    """The days of the month the person was employed, kept on the payslip."""
+    end = month_end(month)
+    return max(month, person.joined_on), min(end, person.left_on or end)
+
+
 def _check_order(run: PayrollRun, posting_it: bool) -> None:
     """Salary tax counts the earlier months of its tax year, and the gratuity provision the
     month before, so those months are posted in order."""
@@ -441,8 +447,8 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
                 employer_contributions=f.employer_contributions,
                 gratuity_accrued=f.gratuity_accrued,
                 gratuity_change=f.gratuity_change,
-                starts_on=max(run.month, f.employee.joined_on),
-                ends_on=min(month_end(run.month), f.employee.left_on or month_end(run.month)),
+                starts_on=_period(run.month, f.employee)[0],
+                ends_on=_period(run.month, f.employee)[1],
             )
             for f in figures
         ]
@@ -520,6 +526,7 @@ def post(actor: User, run: PayrollRun) -> bool:
                 f.year_tax,
                 f.employer_contributions,
                 f.gratuity_accrued,
+                *_period(locked.month, f.employee),
                 f.gratuity_change,
                 [c.as_json() for c in f.contributions],
                 _lines(f.pay),
@@ -539,6 +546,8 @@ def post(actor: User, run: PayrollRun) -> bool:
                 "year_tax",
                 "employer_contributions",
                 "gratuity_accrued",
+                "starts_on",
+                "ends_on",
                 "gratuity_change",
                 "contributions",
                 "lines",
