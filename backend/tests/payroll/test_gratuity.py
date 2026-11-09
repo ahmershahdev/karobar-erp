@@ -389,3 +389,21 @@ def test_a_rule_from_mid_month_counts_for_whoever_is_there_on_it(boss: Member) -
     slips = {s["employee_code"]: s for s in work_out(boss).json()["payslips"]}
     assert D(slips["E1"]["gratuity_accrued"]) > 0
     assert D(slips["E2"]["gratuity_accrued"]) > 0
+
+
+def test_someone_later_left_out_gives_the_provision_back(boss: Member) -> None:  # noqa: F811
+    gulf(boss)
+    worker = person(joined=date(2024, 1, 1))
+    contract(boss, worker, "10000", starts=date(2024, 1, 1))
+    post(boss, work_out(boss).json()["id"])
+    built = Payslip.objects.get(employee=worker).gratuity_accrued
+    assert built > 0
+    Employee.objects.filter(pk=worker.pk).update(nationality="AE")
+    august = work_out(boss, "2026-08-01").json()
+    slip = august["payslips"][0]
+    assert (slip["gratuity_accrued"], D(slip["gratuity_change"])) == ("0.00", -built)
+    post(boss, august["id"])
+    lines = JournalEntry.objects.filter(source_type="payroll_run").order_by("-id").first()
+    assert lines is not None
+    roles = {line.account.role: (line.debit, line.credit) for line in lines.lines.all()}
+    assert roles["gratuity_provision"] == (built, D("0.00"))

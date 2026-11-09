@@ -378,7 +378,10 @@ def _with_gratuity(
         if row is None:
             raise NoRuleError
         if not applies(row, person, country):
-            updated.append(f)
+            # Someone now left out, such as a worker recorded as a UAE national later, gets
+            # nothing, so what was set aside for them comes back.
+            earlier = before.get(person.pk, ZERO)
+            updated.append(replace(f, gratuity_accrued=ZERO, gratuity_change=-earlier))
             continue
         # The contract in force at the month's end; contracts come ordered by start.
         contract = contracts[person.pk][-1]
