@@ -143,6 +143,10 @@ class Payslip(TenantOwnedModel):
     contributions = models.JSONField(default=list)
     employee_contributions = money_field(default=0)
     employer_contributions = money_field(default=0)
+    # The days of the month the person was employed, as they stood when the month was worked
+    # out, so a later edit to the joining or leaving day can't change a posted payslip.
+    starts_on = models.DateField(null=True, blank=True)
+    ends_on = models.DateField(null=True, blank=True)
     # The end-of-service gratuity built up by the end of this month, as if the person left
     # then with the full award, and how much that grew this month.
     gratuity_accrued = money_field(default=0)

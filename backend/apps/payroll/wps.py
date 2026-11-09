@@ -67,8 +67,10 @@ def salary_file(run: PayrollRun, made: datetime | None = None) -> tuple[str, str
                 person.wps_person_id,
                 person.wps_agent_code,
                 person.bank_account.replace(" ", ""),
-                max(run.month, person.joined_on),
-                min(end, person.left_on or end),
+                # The period saved with the payslip; older payslips fall back to the record
+                # as it is now, kept inside the month.
+                slip.starts_on or min(max(run.month, person.joined_on), end),
+                slip.ends_on or max(min(end, person.left_on or end), run.month),
                 slip.net,
                 # The SIF counts whole days of leave without pay; a half day absent rounds
                 # up, so 1.5 shows as 2 rather than disappearing.

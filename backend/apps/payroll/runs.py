@@ -441,6 +441,8 @@ def _store(run: PayrollRun, table: TaxTable | None, figures: list[Figures]) -> N
                 employer_contributions=f.employer_contributions,
                 gratuity_accrued=f.gratuity_accrued,
                 gratuity_change=f.gratuity_change,
+                starts_on=max(run.month, f.employee.joined_on),
+                ends_on=min(month_end(run.month), f.employee.left_on or month_end(run.month)),
             )
             for f in figures
         ]

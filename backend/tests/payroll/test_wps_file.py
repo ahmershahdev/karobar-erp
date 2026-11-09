@@ -139,3 +139,15 @@ def test_a_half_day_absent_is_counted_not_dropped(boss: Member) -> None:  # noqa
     Attendance.objects.create(employee=someone, on=date(2026, 7, 20), status="half_day")
     edr = download(boss, posted(boss)).content.decode().split("\r\n")[0]
     assert edr.endswith(",1")
+
+
+def test_a_later_edit_to_the_dates_does_not_change_the_file(boss: Member) -> None:  # noqa: F811
+    uae(boss)
+    someone = worker()
+    contract(boss, someone, "10000", starts=date(2026, 7, 16))
+    run_id = posted(boss)
+    Employee.objects.filter(pk=someone.pk).update(
+        joined_on=date(2026, 1, 1), left_on=date(2026, 6, 30)
+    )
+    edr = download(boss, run_id).content.decode().split("\r\n")[0]
+    assert ",2026-07-16,2026-07-31,16," in edr
