@@ -299,7 +299,10 @@ def settle(actor: User, person: Employee, data: dict[str, Any]) -> GratuityPayou
     resigned = data["reason"] == GratuityPayout.Reason.RESIGNED
     unpaid = posted.aggregate(days=Sum("unpaid_days"))["days"] or ZERO
     days, wage, result = built_up(row, locked, contract, locked.left_on, unpaid, resigned)
-    provision = accrued_before(_after(last_month)).get(locked.pk, ZERO)
+    # The provision is the one booked by the month they left, never a later month's.
+    provision = (
+        posted.filter(run__month=last_month).values_list("gratuity_accrued", flat=True).first()
+    ) or ZERO
     entry = accounting.post_rule_lines(
         actor,
         paid_on,
@@ -332,11 +335,6 @@ def settle(actor: User, person: Employee, data: dict[str, Any]) -> GratuityPayou
     return payout
 
 
-def _after(month: date) -> date:
-    """The first day of the month after `month`."""
-    return date(month.year + month.month // 12, month.month % 12 + 1, 1)
-
-
 def quote(person: Employee) -> dict[str, Any]:
     """What the person's gratuity has built up to on their latest posted payslip, and for
     someone who left and isn't paid yet, what each reason for leaving would pay."""
@@ -349,6 +347,7 @@ def quote(person: Employee) -> dict[str, Any]:
         "if_ended": None,
         "if_resigned": None,
         "payout": payout,
+        "left_on": person.left_on,
     }
     if person.left_on is None or payout is not None:
         return found

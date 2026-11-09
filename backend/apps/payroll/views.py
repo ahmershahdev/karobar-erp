@@ -120,7 +120,8 @@ def _runs() -> QuerySet[PayrollRun]:
     runs_with_people: QuerySet[PayrollRun] = PayrollRun.objects.select_related(
         "tax_table", "entry", "reversal", "payment__paid_from", "payment__entry"
     ).annotate(people=Count("payslips"))
-    return runs_with_people
+    # Newest month first. Said here, because the grouped count drops the model's ordering.
+    return runs_with_people.order_by("-month", "-id")
 
 
 class PayrollRunListView(PayrollView, generics.ListAPIView[PayrollRun]):

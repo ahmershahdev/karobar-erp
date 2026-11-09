@@ -7536,10 +7536,15 @@ components:
           allOf:
           - $ref: '#/components/schemas/GratuityPayout'
           nullable: true
+        left_on:
+          type: string
+          format: date
+          nullable: true
       required:
       - accrued
       - if_ended
       - if_resigned
+      - left_on
       - payout
       - service_days
     GratuityRule:

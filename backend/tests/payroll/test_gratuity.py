@@ -236,6 +236,7 @@ def test_a_leaver_sees_what_each_reason_would_pay(boss: Member) -> None:  # noqa
     assert quote["if_resigned"] == str(award(rule, days, D(9000), resigned=True).amount)
     assert quote["accrued"] == quote["if_ended"]
     assert quote["payout"] is None
+    assert quote["left_on"] == "2026-08-15"
 
 
 def test_a_saudi_resignation_gives_back_part_of_the_provision(boss: Member) -> None:  # noqa: F811
@@ -336,3 +337,38 @@ def test_older_businesses_get_gratuity_accounts(boss: Member) -> None:  # noqa: 
     migration.add_roles(django_apps, None)
     assert Account.objects.get(role="gratuity_provision").code == "2190"
     assert Account.objects.get(role="gratuity_expense").code == "6160"
+
+
+def test_months_list_newest_first(boss: Member) -> None:  # noqa: F811
+    gulf(boss)
+    contract(boss, person(joined=date(2025, 1, 1)), "10000", starts=date(2025, 1, 1))
+    post(boss, work_out(boss).json()["id"])
+    work_out(boss, "2026-08-01")
+    months = [row["month"] for row in boss.client().get("/api/payroll/runs/").json()]
+    assert months == ["2026-08-01", "2026-07-01"]
+
+
+def test_nationality_is_a_two_letter_code(boss: Member) -> None:  # noqa: F811
+    client = boss.client()
+    body = {"code": "N1", "full_name": "Invented New", "joined_on": "2026-07-01"}
+    made = client.post("/api/hr/employees/", {**body, "nationality": " ae "}, format="json")
+    assert made.json()["nationality"] == "AE"
+    blank = client.post("/api/hr/employees/", {**body, "code": "N2"}, format="json")
+    assert blank.json()["nationality"] == ""
+    for wrong in ("ARE", "A1", "É1"):
+        bad = client.post(
+            "/api/hr/employees/", {**body, "code": "N3", "nationality": wrong}, format="json"
+        )
+        assert bad.status_code == 400
+
+
+def test_an_undone_earlier_month_refreshes_a_later_draft(boss: Member) -> None:  # noqa: F811
+    gulf(boss, "SA")
+    contract(boss, person(joined=date(2025, 1, 1)), "10000", starts=date(2025, 1, 1))
+    july = work_out(boss).json()["id"]
+    post(boss, july)
+    august = work_out(boss, "2026-08-01").json()
+    boss.client().post(f"/api/payroll/runs/{july}/reverse/", {}, format="json")
+    reply = post(boss, august["id"]).json()
+    assert reply["posted"] is False
+    assert D(reply["run"]["gratuity_change"]) > D(august["gratuity_change"])

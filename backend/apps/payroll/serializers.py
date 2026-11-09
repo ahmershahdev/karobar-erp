@@ -338,3 +338,4 @@ class GratuityQuoteSerializer(serializers.Serializer[Any]):
     if_ended = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
     if_resigned = serializers.DecimalField(max_digits=18, decimal_places=2, allow_null=True)
     payout = GratuityPayoutSerializer(allow_null=True)
+    left_on = serializers.DateField(allow_null=True)

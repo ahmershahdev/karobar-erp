@@ -502,6 +502,7 @@ def post(actor: User, run: PayrollRun) -> bool:
                 f.year_tax,
                 f.employer_contributions,
                 f.gratuity_accrued,
+                f.gratuity_change,
                 [c.as_json() for c in f.contributions],
                 _lines(f.pay),
             )
@@ -520,6 +521,7 @@ def post(actor: User, run: PayrollRun) -> bool:
                 "year_tax",
                 "employer_contributions",
                 "gratuity_accrued",
+                "gratuity_change",
                 "contributions",
                 "lines",
             )

@@ -500,6 +500,13 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
   const { t, i18n } = useTranslation();
   const departments = useDepartments();
   const save = useTenantAction(KEYS);
+  const { membership } = useWorkspace();
+  const settings = useQuery({
+    queryKey: [membership.tenant_id, 'hr-settings'],
+    queryFn: () => unwrap(api.GET('/api/hr/settings/')),
+  });
+  // Province, EOBI and provincial social security are Pakistan's; Gulf businesses don't see them.
+  const pakistan = (settings.data?.holiday_country ?? 'PK') === 'PK';
   const [form, setForm] = useState<EmployeeForm>(() => (employee ? fromEmployee(employee) : EMPTY));
   const set = (patch: Partial<EmployeeForm>) => setForm({ ...form, ...patch });
   const { province, ...rest } = form;
@@ -616,15 +623,17 @@ function EmployeeEditor({ employee, onDone }: { employee: Employee | null; onDon
               </option>
             ))}
           </Select>
-          <Select label={t('hr.province')} hint={t('hr.provinceHint')} {...field('province')}>
-            <option value="">-</option>
-            {PROVINCES.map((code) => (
-              <option key={code} value={code}>
-                {t(`hr.provinces.${code}`)}
-              </option>
-            ))}
-          </Select>
-          <div className="space-y-2">
+          {pakistan && (
+            <Select label={t('hr.province')} hint={t('hr.provinceHint')} {...field('province')}>
+              <option value="">-</option>
+              {PROVINCES.map((code) => (
+                <option key={code} value={code}>
+                  {t(`hr.provinces.${code}`)}
+                </option>
+              ))}
+            </Select>
+          )}
+          <div className={pakistan ? 'space-y-2' : 'hidden'}>
             {(['pays_eobi', 'pays_social_security'] as const).map((key) => (
               <label
                 key={key}

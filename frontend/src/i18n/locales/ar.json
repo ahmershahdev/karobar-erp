@@ -1621,7 +1621,7 @@
     "gratuityDue": "غادر هذا الشخص العمل. مكافأته مستحقة.",
     "gratuityIfEnded": "إذا أنهى صاحب العمل العمل أو انتهى العقد: {{amount}}",
     "gratuityIfResigned": "إذا استقال: {{amount}}",
-    "gratuityDueHint": "محسوبة على {{days}} يوما من الخدمة. في الإمارات تُدفع خلال 14 يوما من آخر يوم.",
+    "gratuityDueHint": "محسوبة على {{days}} يوما من الخدمة.",
     "gratuityReason": "سبب انتهاء العمل",
     "reasonEnded": "أنهاه صاحب العمل أو انتهى العقد",
     "reasonResigned": "استقال",
@@ -1658,7 +1658,9 @@
       "minSummary": "لا شيء مستحق قبل {{years}} سنة.",
       "capSummary": "لا تزيد أبدا عن أجر {{months}} شهرا.",
       "bandSummary": "عند الاستقالة من {{years}} سنوات: {{share}} منها.",
-      "bandSummaryAfter": "عند الاستقالة بعد {{years}} سنوات: {{share}} منها."
-    }
+      "bandSummaryAfter": "عند الاستقالة بعد {{years}} سنوات: {{share}} منها.",
+      "all": "كلها"
+    },
+    "gratuityDueUae": "في الإمارات تُدفع خلال 14 يوما من آخر يوم."
   }
 }

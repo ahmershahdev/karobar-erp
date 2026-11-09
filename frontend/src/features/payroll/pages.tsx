@@ -536,6 +536,8 @@ export function PayrollPage() {
   const save = useTenantAction(KEYS);
   const [month, setMonth] = useState(thisMonth());
   const [open, setOpen] = useState<number | null>(null);
+  // Pay before Karobar feeds Pakistan's salary tax; the Gulf has none.
+  const taxed = (useCountry().data?.holiday_country ?? 'PK') === 'PK';
   const runs = useQuery({
     queryKey: [membership.tenant_id, 'payroll-runs'],
     queryFn: () => unwrap(api.GET('/api/payroll/runs/')),
@@ -589,7 +591,7 @@ export function PayrollPage() {
           )}
         </Panel>
       )}
-      {can(membership, 'payroll', 'create') && can(membership, 'hr', 'view') && month && (
+      {taxed && can(membership, 'payroll', 'create') && can(membership, 'hr', 'view') && month && (
         <OpeningPayPanel month={`${month}-01`} />
       )}
       {open !== null && <RunPanel key={open} id={open} onRemoved={() => setOpen(null)} />}
@@ -1370,6 +1372,7 @@ export function GratuityPanel({ employee }: { employee: number }) {
   const [paidFrom, setPaidFrom] = useState('');
   const money = (value: string) => formatMoney(value, i18n.resolvedLanguage);
   const gulf = GRATUITY_COUNTRIES.includes(settings.data?.holiday_country ?? '');
+  const [dateTouched, setDateTouched] = useState(false);
   const quote = useQuery({
     queryKey: [membership.tenant_id, 'payroll-gratuity', employee],
     queryFn: () =>
@@ -1382,6 +1385,9 @@ export function GratuityPanel({ employee }: { employee: number }) {
     return null;
   }
   const data = quote.data;
+  // It can't be paid before the person left, so start the date no earlier than that.
+  const leftOn = data.left_on ?? '';
+  const shownPaidOn = !dateTouched && leftOn > paidOn ? leftOn : paidOn;
   return (
     <Panel title={t('payroll.gratuityTitle')}>
       <div className="space-y-4">
@@ -1403,13 +1409,20 @@ export function GratuityPanel({ employee }: { employee: number }) {
               <li>{t('payroll.gratuityIfEnded', { amount: money(data.if_ended) })}</li>
               <li>{t('payroll.gratuityIfResigned', { amount: money(data.if_resigned ?? '0') })}</li>
             </ul>
-            <Hint>{t('payroll.gratuityDueHint', { days: data.service_days })}</Hint>
+            <Hint>
+              {t('payroll.gratuityDueHint', { days: data.service_days })}
+              {settings.data?.holiday_country === 'AE' && ` ${t('payroll.gratuityDueUae')}`}
+            </Hint>
             {can(membership, 'payroll', 'post') && (
               <form
                 className="space-y-4"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  const body = { reason, paid_on: paidOn, paid_from: Number(paidFrom) } as never;
+                  const body = {
+                    reason,
+                    paid_on: shownPaidOn,
+                    paid_from: Number(paidFrom),
+                  } as never;
                   pay.mutate(() =>
                     unwrap(
                       api.POST('/api/payroll/employees/{id}/gratuity/pay/', {
@@ -1433,8 +1446,11 @@ export function GratuityPanel({ employee }: { employee: number }) {
                     label={t('payroll.paidOn')}
                     type="date"
                     required
-                    value={paidOn}
-                    onChange={(e) => setPaidOn(e.target.value)}
+                    value={shownPaidOn}
+                    onChange={(e) => {
+                      setDateTouched(true);
+                      setPaidOn(e.target.value);
+                    }}
                   />
                   <Select
                     label={t('payroll.paidFrom')}
@@ -1450,6 +1466,7 @@ export function GratuityPanel({ employee }: { employee: number }) {
                     ))}
                   </Select>
                 </div>
+                {accounts.isError && <Alert tone="error">{t('payroll.noAccounts')}</Alert>}
                 {pay.isError && (
                   <Alert tone="error">{errorText(pay.error, t('signIn.unavailable'))}</Alert>
                 )}
@@ -1470,7 +1487,7 @@ function RuleForm({ rule, onDone }: { rule?: GratuityRule; onDone: () => void })
   const save = useTenantAction(GRATUITY_KEYS);
   const settings = useCountry();
   const [form, setForm] = useState({
-    country: rule?.country ?? settings.data?.holiday_country ?? 'AE',
+    country: rule?.country ?? (settings.data?.holiday_country === 'SA' ? 'SA' : 'AE'),
     starts_on: rule?.starts_on ?? '',
     first_years: rule?.first_years ?? '5',
     first_days: rule?.first_days ?? '',
@@ -1668,6 +1685,11 @@ function RuleForm({ rule, onDone }: { rule?: GratuityRule; onDone: () => void })
   );
 }
 
+function whole(share: string): boolean {
+  const [top, bottom] = share.split('/');
+  return top !== undefined && top === bottom;
+}
+
 function RuleCard({ rule }: { rule: GratuityRule }) {
   const { t } = useTranslation();
   const { membership } = useWorkspace();
@@ -1705,7 +1727,7 @@ function RuleCard({ rule }: { rule: GratuityRule }) {
             <li key={`${band.years}${band.share}`}>
               {t(band.after ? 'payroll.rule.bandSummaryAfter' : 'payroll.rule.bandSummary', {
                 years: Number(band.years),
-                share: band.share,
+                share: whole(band.share) ? t('payroll.rule.all') : band.share,
               })}
             </li>
           ))}

@@ -1625,7 +1625,7 @@
     "gratuityDue": "This person has left. Their gratuity is due.",
     "gratuityIfEnded": "If the business ended the work, or the contract ran out: {{amount}}",
     "gratuityIfResigned": "If they resigned: {{amount}}",
-    "gratuityDueHint": "Worked out on {{days}} days of service. Pay it within 14 days of the last day in the UAE.",
+    "gratuityDueHint": "Worked out on {{days}} days of service.",
     "gratuityReason": "Why the work ended",
     "reasonEnded": "Ended by the business, or the contract ran out",
     "reasonResigned": "They resigned",
@@ -1662,7 +1662,9 @@
       "minSummary": "Nothing is due before {{years}} years.",
       "capSummary": "Never more than {{months}} months of wage.",
       "bandSummary": "On resignation from {{years}} years: {{share}} of it.",
-      "bandSummaryAfter": "On resignation after {{years}} years: {{share}} of it."
-    }
+      "bandSummaryAfter": "On resignation after {{years}} years: {{share}} of it.",
+      "all": "all"
+    },
+    "gratuityDueUae": "In the UAE, pay it within 14 days of the last day."
   }
 }

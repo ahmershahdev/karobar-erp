@@ -1625,7 +1625,7 @@
     "gratuityDue": "یہ شخص ملازمت چھوڑ چکا ہے۔ اس کی گریجویٹی واجب ہے۔",
     "gratuityIfEnded": "اگر کاروبار نے کام ختم کیا یا معاہدہ پورا ہوا: {{amount}}",
     "gratuityIfResigned": "اگر انہوں نے استعفیٰ دیا: {{amount}}",
-    "gratuityDueHint": "{{days}} دن کی ملازمت پر حساب۔ متحدہ عرب امارات میں آخری دن کے 14 دن کے اندر ادا کریں۔",
+    "gratuityDueHint": "{{days}} دن کی ملازمت پر حساب۔",
     "gratuityReason": "کام کیوں ختم ہوا",
     "reasonEnded": "کاروبار نے ختم کیا، یا معاہدہ پورا ہوا",
     "reasonResigned": "انہوں نے استعفیٰ دیا",
@@ -1662,7 +1662,9 @@
       "minSummary": "{{years}} سال سے پہلے کچھ واجب نہیں۔",
       "capSummary": "کبھی {{months}} مہینوں کی اجرت سے زیادہ نہیں۔",
       "bandSummary": "{{years}} سال سے استعفیٰ پر: اس کا {{share}}۔",
-      "bandSummaryAfter": "{{years}} سال کے بعد استعفیٰ پر: اس کا {{share}}۔"
-    }
+      "bandSummaryAfter": "{{years}} سال کے بعد استعفیٰ پر: اس کا {{share}}۔",
+      "all": "سارا"
+    },
+    "gratuityDueUae": "متحدہ عرب امارات میں آخری دن کے 14 دن کے اندر ادا کریں۔"
   }
 }

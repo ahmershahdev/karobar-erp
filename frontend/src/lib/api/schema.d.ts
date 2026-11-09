@@ -3337,6 +3337,8 @@ export interface components {
             /** Format: decimal */
             if_resigned: string | null;
             payout: components["schemas"]["GratuityPayout"] | null;
+            /** Format: date */
+            left_on: string | null;
         };
         GratuityRule: {
             readonly id: number;

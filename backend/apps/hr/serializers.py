@@ -174,6 +174,12 @@ class EmployeeSerializer(serializers.ModelSerializer[Employee]):
             "left_on": {"required": False, "allow_null": True},
         }
 
+    def validate_nationality(self, value: str) -> str:
+        code = value.strip().upper()
+        if code and not (len(code) == 2 and code.isascii() and code.isalpha()):
+            raise serializers.ValidationError("Use the two-letter country code, such as AE.")
+        return code
+
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         joined = attrs.get("joined_on", getattr(self.instance, "joined_on", None))
         left = attrs.get("left_on", getattr(self.instance, "left_on", None))
