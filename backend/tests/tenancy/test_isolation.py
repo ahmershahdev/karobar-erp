@@ -20,6 +20,7 @@ from apps.accounting import services as accounting
 from apps.accounting.models import Account, FiscalPeriod, FiscalYear, JournalEntry, TaxRate
 from apps.assistant import drafts
 from apps.assistant import services as assistant
+from apps.assistant.models import ChatJob
 from apps.core.salary_tax import Slab
 from apps.hr import services as hr
 from apps.hr import time_off
@@ -435,6 +436,15 @@ def _chat_draft(member: Member) -> int:
 
 
 tenant_endpoint("api/assistant/messages/")(_chat)
+
+
+def _chat_job(member: Member) -> tuple[str, int]:
+    question = assistant.record(member.user, "user", "Private")
+    job = ChatJob.objects.create(user=member.user, question=question)
+    return f"/api/assistant/jobs/{job.pk}/", job.pk
+
+
+tenant_endpoint("api/assistant/jobs/<int:pk>/")(_chat_job)
 tenant_endpoint("api/assistant/check/")(_chat_check)
 
 

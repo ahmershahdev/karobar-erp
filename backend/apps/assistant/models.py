@@ -39,3 +39,30 @@ class ChatMessage(TenantOwnedModel):
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         raise ValueError("chat messages are never deleted")
+
+
+class ChatJob(TenantOwnedModel):
+    """One answer being worked out by a Celery worker. The question is saved first and the
+    screen polls this row, so a slow reply from the model holds a worker, never a web request."""
+
+    class Status(models.TextChoices):
+        WAITING = "waiting"
+        DONE = "done"
+        FAILED = "failed"
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    question = models.OneToOneField(ChatMessage, on_delete=models.CASCADE, related_name="job")
+    language = models.CharField(max_length=5, default="en")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.WAITING)
+    answer = models.OneToOneField(
+        ChatMessage, on_delete=models.CASCADE, null=True, blank=True, related_name="+"
+    )
+    error = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta(TenantOwnedModel.Meta):
+        ordering = ["-id"]
+
+    def __str__(self) -> str:
+        return f"{self.status} {self.pk}"

@@ -29,11 +29,10 @@ from .models import ChatMessage
 from .screens import SCREENS
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-# Gunicorn and nginx both give up at 30 seconds, and the figures are read before this starts.
+# Answers are worked out by a Celery worker, not a web request, but someone is waiting on the
+# screen, so one call and the whole answer still have limits.
 GROQ_TIMEOUT_SECONDS = 20
-# All calls for one answer, lookups included, finish inside this, so the request stays under the
-# 30 seconds gunicorn and nginx allow.
-ANSWER_BUDGET_SECONDS = 25
+ANSWER_BUDGET_SECONDS = 45
 MAX_LOOKUPS = 3
 HISTORY = 12
 MAX_ANSWER_TOKENS = 700
@@ -280,26 +279,36 @@ def complete(
 
 
 def ask(user: User, membership: Membership, text: str, language: str = "en") -> ChatMessage:
+    """Save the question and answer it in one go. The web view saves the question and leaves
+    the answer to a Celery job instead (tasks.py); this is the same work, kept for the job."""
     if not settings.GROQ_API_KEY:
         raise NotConfiguredError
     question = record(user, ChatMessage.Role.USER, text)
-    recent = list(current(user).order_by("-id")[:HISTORY])
+    return answer(user, membership, question, language)
+
+
+def answer(
+    user: User, membership: Membership, question: ChatMessage, language: str = "en"
+) -> ChatMessage:
+    if not settings.GROQ_API_KEY:
+        raise NotConfiguredError
+    recent = list(current(user).filter(id__lte=question.pk).order_by("-id")[:HISTORY])
     history = [_for_model(row) for row in reversed(recent)]
     prompt = {"role": "system", "content": system_prompt(user, membership, language)}
     tools = drafts.tools(membership)
-    answer = _answer([prompt, *history], membership, tools)
-    if isinstance(answer, str):
-        return record(user, ChatMessage.Role.ASSISTANT, answer, answering=question)
+    reply = _answer([prompt, *history], membership, tools)
+    if isinstance(reply, str):
+        return record(user, ChatMessage.Role.ASSISTANT, reply, answering=question)
     # Only tools offered to this person count: a model can still name one it wasn't given.
     offered = {tool["function"]["name"] for tool in tools}
     card: dict[str, Any]
-    if answer.name not in offered:
+    if reply.name not in offered:
         card = {"problem": {"code": "not_allowed", "field": "", "name": "", "options": []}}
     else:
         try:
-            card = drafts.build(answer.name, answer.arguments)
+            card = drafts.build(reply.name, reply.arguments)
         except drafts.DraftProblemError as problem:
-            card = {"kind": drafts.BY_TOOL[answer.name], "problem": problem.data}
+            card = {"kind": drafts.BY_TOOL[reply.name], "problem": problem.data}
     content = json.dumps(card, ensure_ascii=False)
     return record(user, ChatMessage.Role.DRAFT, content, answering=question)
 

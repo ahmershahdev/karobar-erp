@@ -1,6 +1,9 @@
+import logging
+from datetime import timedelta
 from typing import Any, cast
 
 from django.conf import settings
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
@@ -11,11 +14,15 @@ from rest_framework.views import APIView
 from apps.accounts.models import User
 from apps.tenancy.permissions import IsTenantMember, membership_of
 
-from . import drafts, services
-from .models import ChatMessage
+from . import drafts, services, tasks
+from .models import ChatJob, ChatMessage
+
+logger = logging.getLogger(__name__)
 
 MAX_QUESTION = 2000
 SHOWN = 50
+# The worker's budget for an answer, with room for the queue.
+JOB_PATIENCE = timedelta(seconds=services.ANSWER_BUDGET_SECONDS + 75)
 
 
 class CardPartySerializer(serializers.Serializer[Any]):
@@ -83,6 +90,29 @@ class ChatCheckSerializer(serializers.Serializer[Any]):
     broken_at = serializers.IntegerField(allow_null=True)
 
 
+class ChatJobSerializer(serializers.Serializer[Any]):
+    id = serializers.IntegerField()
+    status = serializers.ChoiceField(choices=ChatJob.Status.choices)
+    question = ChatMessageSerializer()
+    answer = ChatMessageSerializer(allow_null=True)
+    error = serializers.CharField(allow_blank=True)
+
+
+def _job_data(job: ChatJob) -> dict[str, Any]:
+    status, error = job.status, job.error
+    # A worker that died or was never reached leaves the job waiting; after a while the
+    # screen hears that it failed instead of waiting forever.
+    if status == ChatJob.Status.WAITING and timezone.now() - job.created_at > JOB_PATIENCE:
+        status, error = ChatJob.Status.FAILED, services.AssistantError.message
+    return {
+        "id": job.pk,
+        "status": status,
+        "question": job.question,
+        "answer": job.answer,
+        "error": error,
+    }
+
+
 class AssistantUnavailable(APIException):
     status_code = 503
     default_detail = services.AssistantError.message
@@ -107,20 +137,50 @@ class ChatAskView(APIView):
     permission_classes = [IsTenantMember]
     throttle_scope = "assistant"
 
-    @extend_schema(request=ChatAskSerializer, responses=ChatMessageSerializer)
+    @extend_schema(request=ChatAskSerializer, responses={202: ChatJobSerializer})
     def post(self, request: Request) -> Response:
+        """Save the question and hand the answer to a worker. The screen polls the job."""
         body = ChatAskSerializer(data=request.data)
         body.is_valid(raise_exception=True)
+        if not settings.GROQ_API_KEY:
+            raise AssistantUnavailable(services.NotConfiguredError.message)
+        question = services.record(
+            actor(request), ChatMessage.Role.USER, body.validated_data["message"]
+        )
+        job = ChatJob.objects.create(
+            user=actor(request), question=question, language=body.validated_data["language"]
+        )
+        # Outside any transaction (ATOMIC_REQUESTS is off), so both rows are saved before the
+        # worker looks for them.
         try:
-            answer = services.ask(
-                actor(request),
-                membership_of(request),
-                body.validated_data["message"],
-                body.validated_data["language"],
+            tasks.answer_question.delay(job.pk)
+        except Exception:
+            # The queue can't be reached, so no worker will ever take this job. End it now
+            # with the calm message rather than leaving the screen waiting.
+            logger.exception("Could not queue chat job %s", job.pk)
+            ChatJob.objects.filter(pk=job.pk, status=ChatJob.Status.WAITING).update(
+                status=ChatJob.Status.FAILED,
+                error=services.AssistantError.message,
+                finished_at=timezone.now(),
             )
-        except services.AssistantError as exc:
-            raise AssistantUnavailable(type(exc).message) from exc
-        return Response(ChatMessageSerializer(answer).data)
+        job.refresh_from_db()
+        return Response(ChatJobSerializer(_job_data(job)).data, status=202)
+
+
+class ChatJobView(APIView):
+    permission_classes = [IsTenantMember]
+    throttle_scope = "tenancy"
+
+    @extend_schema(responses=ChatJobSerializer)
+    def get(self, request: Request, pk: int) -> Response:
+        job = (
+            ChatJob.objects.filter(pk=pk, user=actor(request))
+            .select_related("question__user", "answer__user")
+            .first()
+        )
+        if job is None:
+            raise NotFound
+        return Response(ChatJobSerializer(_job_data(job)).data)
 
 
 class ChatResetView(APIView):

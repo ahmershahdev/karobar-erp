@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any
@@ -6,12 +7,14 @@ from unittest.mock import patch
 
 import pytest
 from django.db import connection
+from django.utils import timezone
 from pytest_django.fixtures import Settings as SettingsWrapper
 
-from apps.assistant import services
-from apps.assistant.models import ChatMessage
+from apps.assistant import services, tasks
+from apps.assistant.models import ChatJob, ChatMessage
 from apps.platform.http import OutboundError
 from apps.tenancy.context import tenant_context
+from tests.assistant.conftest import answered
 from tests.conftest import Member, make_member
 from tests.factories import create_membership, create_role
 
@@ -41,7 +44,9 @@ def said(text: str) -> Any:
 
 def test_a_question_and_its_answer_are_both_signed(boss: Member) -> None:
     with said("Hello"):
-        reply = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+        reply = answered(
+            boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+        )
     assert reply.status_code == 200
     assert reply.json()["content"] == "Hello"
     assert len(reply.json()["signature"]) == 64
@@ -135,7 +140,9 @@ def test_only_a_short_history_is_sent(boss: Member) -> None:
 
 def test_a_failed_answer_is_a_calm_message(boss: Member) -> None:
     with patch.object(services, "post_json", side_effect=OutboundError("down")):
-        reply = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+        reply = answered(
+            boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+        )
     assert reply.status_code == 503
     assert "try again" in reply.json()["detail"]
 
@@ -169,7 +176,9 @@ def test_without_a_key_it_says_so(boss: Member, settings: SettingsWrapper) -> No
 
 
 def test_a_very_long_message_is_refused(boss: Member) -> None:
-    reply = boss.client().post("/api/assistant/ask/", {"message": "x" * 2001}, format="json")
+    reply = answered(
+        boss.client().post("/api/assistant/ask/", {"message": "x" * 2001}, format="json")
+    )
     assert reply.status_code == 400
 
 
@@ -256,7 +265,9 @@ def test_an_answer_finishing_after_a_new_chat_is_dropped(boss: Member) -> None:
         return "Answer to the old chat"
 
     with patch.object(services, "complete", side_effect=think):
-        reply = boss.client().post("/api/assistant/ask/", {"message": "Old"}, format="json")
+        reply = answered(
+            boss.client().post("/api/assistant/ask/", {"message": "Old"}, format="json")
+        )
     assert reply.status_code == 503
     assert "new chat" in reply.json()["detail"]
     assert not ChatMessage.objects.filter(role="assistant").exists()
@@ -266,8 +277,10 @@ def test_an_answer_finishing_after_a_new_chat_is_dropped(boss: Member) -> None:
 
 def test_screen_names_follow_the_language_the_app_is_shown_in(boss: Member) -> None:
     with said("Answer") as model:
-        reply = boss.client().post(
-            "/api/assistant/ask/", {"message": "Hi", "language": "ur"}, format="json"
+        reply = answered(
+            boss.client().post(
+                "/api/assistant/ask/", {"message": "Hi", "language": "ur"}, format="json"
+            )
         )
     assert reply.status_code == 200
     prompt = model.call_args.args[0][0]["content"]
@@ -282,7 +295,68 @@ def test_english_screen_names_are_the_default(boss: Member) -> None:
 
 
 def test_an_unknown_language_is_refused(boss: Member) -> None:
-    reply = boss.client().post(
-        "/api/assistant/ask/", {"message": "Hi", "language": "fr"}, format="json"
+    reply = answered(
+        boss.client().post(
+            "/api/assistant/ask/", {"message": "Hi", "language": "fr"}, format="json"
+        )
     )
     assert reply.status_code == 400
+
+
+def test_the_answer_waits_in_a_job_the_screen_polls(boss: Member) -> None:
+    with said("Hello"):
+        reply = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+    assert reply.status_code == 202
+    job = reply.json()
+    assert (job["status"], job["question"]["content"]) == ("done", "Hi")
+    polled = boss.client().get(f"/api/assistant/jobs/{job['id']}/").json()
+    assert polled["answer"]["content"] == "Hello"
+
+
+def test_someone_elses_job_is_not_found(boss: Member) -> None:
+    with said("Hello"):
+        job = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json").json()
+    other = create_membership(role=create_role(permissions={}))
+    stranger = Member(user=other.user, tenant=boss.tenant, membership=other)
+    assert stranger.client().get(f"/api/assistant/jobs/{job['id']}/").status_code == 404
+
+
+def test_a_job_no_worker_picked_up_gives_up(boss: Member) -> None:
+    question = services.record(boss.user, ChatMessage.Role.USER, "Hi")
+    job = ChatJob.objects.create(user=boss.user, question=question)
+    ChatJob.objects.filter(pk=job.pk).update(created_at=timezone.now() - timedelta(minutes=5))
+    polled = boss.client().get(f"/api/assistant/jobs/{job.pk}/").json()
+    assert polled["status"] == "failed"
+    assert "try again" in polled["error"]
+    fresh = ChatJob.objects.create(
+        user=boss.user, question=services.record(boss.user, ChatMessage.Role.USER, "Again")
+    )
+    assert boss.client().get(f"/api/assistant/jobs/{fresh.pk}/").json()["status"] == "waiting"
+
+
+def test_a_person_removed_before_the_answer_gets_none(boss: Member) -> None:
+    question = services.record(boss.user, ChatMessage.Role.USER, "Hi")
+    job = ChatJob.objects.create(user=boss.user, question=question)
+    type(boss.user).objects.filter(pk=boss.user.pk).update(is_active=False)
+    assert tasks.answer_question(job.pk) == "failed"
+    assert tasks.answer_question(job.pk) == "failed"
+    assert not ChatMessage.objects.filter(role="assistant").exists()
+
+
+def test_a_bug_while_answering_still_ends_the_job(boss: Member) -> None:
+    question = services.record(boss.user, ChatMessage.Role.USER, "Hi")
+    job = ChatJob.objects.create(user=boss.user, question=question)
+    with patch.object(services, "answer", side_effect=RuntimeError("bug")):
+        assert tasks.answer_question(job.pk) == "failed"
+    job.refresh_from_db()
+    assert "try again" in job.error
+
+
+def test_a_queue_that_cannot_be_reached_ends_the_job_calmly(boss: Member) -> None:
+    with patch.object(tasks.answer_question, "delay", side_effect=OSError("no broker")):
+        reply = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+    assert reply.status_code == 202
+    job = reply.json()
+    assert job["status"] == "failed"
+    assert "try again" in job["error"]
+    assert ChatJob.objects.get(pk=job["id"]).finished_at is not None

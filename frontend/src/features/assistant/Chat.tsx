@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api } from '../../lib/api/client';
-import { unwrap } from '../../lib/api/errors';
+import { ApiError, unwrap } from '../../lib/api/errors';
 import type { Membership } from '../../lib/api/types';
 import { ensureCsrf } from '../auth/session';
 import { errorText } from '../workspace/hooks';
@@ -12,6 +12,26 @@ import { DraftCard, DraftSaved } from './DraftCard';
 /** The business chat. Answers show as plain text, so nothing a model writes can run on the page. */
 // The chat names screens in the language the app is shown in.
 const LANGUAGES = ['en', 'ur', 'ar'] as const;
+
+type Job = Awaited<ReturnType<typeof fetchJob>>;
+
+const POLL_MS = 1500;
+// The server gives up on a job after about two minutes; the screen stops a little later.
+const POLL_LIMIT = 90;
+
+function fetchJob(id: number, headers: Record<string, string>) {
+  return unwrap(api.GET('/api/assistant/jobs/{id}/', { params: { path: { id } }, headers }));
+}
+
+async function waitFor(id: number, headers: Record<string, string>): Promise<Job> {
+  for (let tries = 0; tries < POLL_LIMIT; tries += 1) {
+    await new Promise((done) => window.setTimeout(done, POLL_MS));
+    const job = await fetchJob(id, headers);
+    if (job.status === 'done') return job;
+    if (job.status === 'failed') throw new ApiError(503, { detail: job.error });
+  }
+  throw new ApiError(503, {});
+}
 
 export function Chat({ membership }: { membership: Membership }) {
   const { t, i18n } = useTranslation();
@@ -41,7 +61,12 @@ export function Chat({ membership }: { membership: Membership }) {
       // Read before waiting: the person may switch business, and a message can't be taken back.
       const headers = { 'X-Tenant': membership.tenant_id };
       await ensureCsrf();
-      return unwrap(api.POST('/api/assistant/ask/', { body: { message, language }, headers }));
+      const job = await unwrap(
+        api.POST('/api/assistant/ask/', { body: { message, language }, headers }),
+      );
+      // The question is saved now; show it while a worker writes the answer.
+      void client.invalidateQueries({ queryKey: keys.messages });
+      return waitFor(job.id, headers);
     },
     onSettled: () =>
       Promise.all([
