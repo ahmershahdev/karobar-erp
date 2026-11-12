@@ -53,3 +53,9 @@ def test_a_signature_with_odd_characters_is_a_break_not_a_crash() -> None:
 
 def test_cutting_the_newest_records_off_is_not_noticed() -> None:
     assert first_break(KEY, chain("one", "two", "three")[:2]) is None
+
+
+def test_a_chain_can_start_after_records_cleared_on_purpose() -> None:
+    records = chain("one", "two", "three")
+    assert first_break(KEY, records[1:], previous=records[0][1]) is None
+    assert first_break(KEY, records[1:]) == 0

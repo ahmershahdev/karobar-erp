@@ -4,6 +4,7 @@ from typing import Any
 import environ
 from celery.schedules import crontab
 from csp.constants import NONCE, NONE, SELF
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -226,7 +227,17 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.hr.tasks.clear_former_employee_details",
         "schedule": crontab(hour=2, minute=20),
     },
+    "old-chats": {
+        "task": "apps.assistant.tasks.clear_old_chats",
+        "schedule": crontab(hour=2, minute=35),
+    },
 }
+
+# How long chat messages are kept before the nightly job removes them (maintainer's decision).
+CHAT_KEEP_DAYS: int = env.int("CHAT_KEEP_DAYS", default=90)
+if CHAT_KEEP_DAYS < 1:
+    # Zero or less would make the nightly job remove today's messages too.
+    raise ImproperlyConfigured("CHAT_KEEP_DAYS must be at least 1.")
 
 LANGUAGE_CODE = "en"
 LANGUAGES = [("en", "English"), ("ur", "Urdu"), ("ar", "Arabic")]

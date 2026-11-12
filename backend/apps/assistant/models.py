@@ -41,6 +41,26 @@ class ChatMessage(TenantOwnedModel):
         raise ValueError("chat messages are never deleted")
 
 
+class ChatChainStart(TenantOwnedModel):
+    """Where a person's chat chain starts after old messages were cleared: the last cleared
+    message's id and signature, which the first kept message follows. Signed itself, so moving
+    it to hide more messages, or removing it, fails the check."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    after_id = models.PositiveBigIntegerField()
+    previous = models.CharField(max_length=64)
+    cleared_at = models.DateTimeField()
+    signature = models.CharField(max_length=64)
+
+    class Meta(TenantOwnedModel.Meta):
+        constraints = [
+            models.UniqueConstraint(fields=["tenant", "user"], name="uniq_chat_chain_start")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id} after {self.after_id}"
+
+
 class ChatJob(TenantOwnedModel):
     """One answer being worked out by a Celery worker. The question is saved first and the
     screen polls this row, so a slow reply from the model holds a worker, never a web request."""
