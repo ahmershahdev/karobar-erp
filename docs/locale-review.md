@@ -17,7 +17,6 @@ Every key in English is present in Urdu and Arabic, with the same placeholders. 
   - `payroll.rule.capSummary`: `لا تزيد أبدًا عن أجر {{months}} شهرًا.`
   - `payroll.rule.bandSummary` and `bandSummaryAfter`: `... من {{years}} سنوات ...`
   - `footer.shipped`: `{{count}} من 7 مراحل منجزة`
-- **`chat.notice`**: `يحمل كل رسالة توقيعًا` should be `تحمل كل رسالة توقيعًا` (رسالة is feminine). It is fixed after the chat retention pull request (#62) merges, because that pull request changes the same text.
 - **`auth.recaptchaNotice`**: the parts join as `تنطبق سياسة الخصوصية و شروط الخدمة من Google.` The و stands apart from the next word because the parts are separate links. Check that it reads acceptably.
 - **`pos.less` and `pos.more`**: `واحد أقل` and `واحد أكثر`. Would `أنقص واحدًا` and `زد واحدًا` read better on a button?
 - **`account.deleteBody`** writes the app name in Latin letters (Karobar), while the rest of the file writes كاروبار.
