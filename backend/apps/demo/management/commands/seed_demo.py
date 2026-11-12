@@ -21,7 +21,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
-        days: int = options["days"] or settings.DEMO_DAYS
+        days: int = settings.DEMO_DAYS if options["days"] is None else options["days"]
         if not 7 <= days <= 400:
             raise CommandError("--days must be between 7 and 400.")
         kinds = [options["only"]] if options["only"] else None

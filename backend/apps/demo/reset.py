@@ -44,7 +44,9 @@ def reset(days: int, kinds: list[str] | None = None, today: date | None = None) 
     if not settings.DEMO_PASSWORD:
         raise NoPasswordError
     owner = demo_owner()
-    old = list(Tenant.objects.filter(pk__in=DemoBusiness.objects.values("tenant")))
+    # Only the kinds being made again are replaced; --only leaves the other business alone.
+    stale = DemoBusiness.objects.filter(kind__in=kinds) if kinds else DemoBusiness.objects.all()
+    old = list(Tenant.objects.filter(pk__in=stale.values("tenant")))
     lines = []
     for kind in kinds or list(data.PLANS):
         began = time.monotonic()
