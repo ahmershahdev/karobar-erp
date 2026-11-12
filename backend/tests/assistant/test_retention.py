@@ -1,12 +1,17 @@
+import importlib.util
 from datetime import timedelta
+from unittest.mock import patch
 
+import environ
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from apps.assistant import services, tasks
-from apps.assistant.models import ChatChainStart, ChatMessage
+from apps.assistant.models import ChatChainStart, ChatJob, ChatMessage
 from apps.core.chain import sign
-from tests.assistant.test_assistant import boss  # noqa: F401
+from config.settings import base
+from tests.assistant.test_assistant import boss, staff  # noqa: F401
 from tests.conftest import Member
 
 pytestmark = pytest.mark.django_db
@@ -79,3 +84,65 @@ def test_the_keep_time_is_a_setting(boss: Member, settings: object) -> None:  # 
     chat(boss)
     settings.CHAT_KEEP_DAYS = 365  # type: ignore[attr-defined]
     assert tasks.clear_old_chats() == 0
+
+
+def test_a_new_message_after_everything_was_cleared_still_checks(boss: Member) -> None:  # noqa: F811
+    written(boss, "Old", 200)
+    resign(boss)
+    assert tasks.clear_old_chats() == 1
+    services.record(boss.user, ChatMessage.Role.USER, "Hello again")
+    assert services.verify(boss.user) == {"ok": True, "count": 1, "broken_at": None}
+
+
+def test_a_newer_message_written_before_an_older_one_is_kept(boss: Member) -> None:  # noqa: F811
+    # A clock that went back: the lower id is newer than the cutoff, the higher one older.
+    written(boss, "Recent", 10)
+    written(boss, "Dated old", 200)
+    resign(boss)
+    assert tasks.clear_old_chats() == 0
+    assert services.mine(boss.user).count() == 2
+
+
+def test_only_messages_are_counted_not_their_jobs(boss: Member) -> None:  # noqa: F811
+    question = written(boss, "Old question", 200)
+    ChatJob.objects.create(user=boss.user, question=question)
+    resign(boss)
+    assert tasks.clear_old_chats() == 1
+    assert not ChatJob.objects.exists()
+
+
+def test_one_person_failing_does_not_stop_the_others(boss: Member) -> None:  # noqa: F811
+    chat(boss)
+    real = services.clear_before
+    seen: list[int] = []
+
+    def flaky(user: object, cutoff: object) -> int:
+        seen.append(user.pk)  # type: ignore[attr-defined]
+        if len(seen) == 1:
+            raise RuntimeError("boom")
+        return real(user, cutoff)  # type: ignore[arg-type]
+
+    other = staff(boss)
+    written(other, "Other old", 200)
+    with (
+        patch.object(services, "clear_before", side_effect=flaky),
+        pytest.raises(RuntimeError, match="not cleared"),
+    ):
+        tasks.clear_old_chats()
+    # The owner comes first and fails; the other person is still cleared.
+    assert seen == [boss.user.pk, other.user.pk]
+    assert services.mine(boss.user).count() == 4
+    assert not services.mine(other.user).exists()
+
+
+@pytest.mark.parametrize("days", ["0", "-1"])
+def test_a_keep_time_below_one_day_stops_the_server(
+    monkeypatch: pytest.MonkeyPatch, days: str
+) -> None:
+    monkeypatch.setenv("CHAT_KEEP_DAYS", days)
+    monkeypatch.setattr(environ.Env, "read_env", lambda *args, **kwargs: None)
+    spec = importlib.util.spec_from_file_location("fresh_base_settings", base.__file__)
+    assert spec is not None
+    assert spec.loader is not None
+    with pytest.raises(ImproperlyConfigured, match="CHAT_KEEP_DAYS"):
+        spec.loader.exec_module(importlib.util.module_from_spec(spec))

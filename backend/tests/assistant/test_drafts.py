@@ -1,11 +1,13 @@
 import json
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from django.utils import timezone
 
-from apps.assistant import drafts, services
+from apps.assistant import drafts, services, tasks
 from apps.assistant.models import ChatMessage
 from apps.inventory.models import Warehouse
 from apps.purchasing.models import PurchaseOrder, Supplier
@@ -13,6 +15,7 @@ from apps.sales.models import Invoice, SalesOrder
 from apps.tenancy.context import tenant_context
 from apps.tenancy.models import AuditEvent
 from tests.assistant.conftest import answered, staff_in
+from tests.assistant.test_retention import resign
 from tests.conftest import Member
 from tests.sales.test_sales import Seller, make_seller
 
@@ -374,3 +377,15 @@ def ask_id(seller: Seller) -> int:
     return int(
         ChatMessage.objects.filter(role="draft").order_by("-id").values_list("id", flat=True)[0]
     )
+
+
+def test_a_draft_kept_after_its_question_was_cleared_can_be_confirmed(seller: Seller) -> None:
+    with soap_bill():
+        pk = ask(owner(seller)).json()["id"]
+    old = timezone.now() - timedelta(days=200)
+    ChatMessage.all_tenants.filter(user=owner(seller).user, id__lt=pk).update(created_at=old)
+    resign(owner(seller))
+    assert tasks.clear_old_chats() >= 1
+    assert services.mine(owner(seller).user).order_by("id").first().pk == pk
+    assert confirm(owner(seller), pk).status_code == 200
+    assert Invoice.objects.count() == 1

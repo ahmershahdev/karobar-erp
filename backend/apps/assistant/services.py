@@ -99,6 +99,13 @@ def current(user: User) -> Any:
     return mine(user).filter(id__gt=Coalesce(Subquery(last), Value(0)))
 
 
+def _after_start(user: User) -> str:
+    """The signature the first kept message follows: the last cleared message's, once old
+    messages were cleared, or empty for a chain from its start."""
+    start = ChatChainStart.objects.filter(user=user).values_list("previous", flat=True).first()
+    return start or ""
+
+
 def reset(user: User) -> None:
     """Start a new chat. Messages can't be deleted, so a signed marker goes in the chain instead:
     the old ones stay checkable, and removing the marker to bring them back would be caught."""
@@ -118,7 +125,8 @@ def record(
         raise StartedOverError
     last = mine(user).order_by("-id").first()
     message = ChatMessage(user=user, role=role, content=content, created_at=timezone.now())
-    message.signature = sign(_key(), _fields(message), last.signature if last else "")
+    previous = last.signature if last else _after_start(user)
+    message.signature = sign(_key(), _fields(message), previous)
     message.save()
     return message
 
@@ -146,7 +154,7 @@ def confirm(request: Request, user: User, membership: Membership, pk: int) -> Ch
     # Checked before anything is read from it: a card edited in the database would otherwise
     # save values the person never saw. Only this row and the one before are needed.
     before = mine(user).filter(id__lt=card.pk).order_by("-id").first()
-    expected = sign(_key(), _fields(card), before.signature if before else "")
+    expected = sign(_key(), _fields(card), before.signature if before else _after_start(user))
     if not hmac.compare_digest(expected, card.signature):
         raise DraftChangedError
     draft = load(card)
@@ -197,7 +205,13 @@ def clear_before(user: User, cutoff: datetime) -> int:
     removing anything else is still caught. Returns how many messages went."""
     # The same lock record() takes, so no message is written into the chain meanwhile.
     lock_rows(Membership.objects.filter(user=user))
-    last = mine(user).filter(created_at__lt=cutoff).order_by("-id").first()
+    # Only the run of old messages from the start of the chain: a message dated after the
+    # cutoff stops it, so a clock that went back never takes a newer message with the old.
+    expired = mine(user).filter(created_at__lt=cutoff)
+    first_kept = mine(user).filter(created_at__gte=cutoff).order_by("id").values("id")[:1]
+    if first_kept:
+        expired = expired.filter(id__lt=first_kept[0]["id"])
+    last = expired.order_by("-id").first()
     if last is None:
         return 0
     start = ChatChainStart.objects.select_for_update().filter(user=user).first()
@@ -208,8 +222,9 @@ def clear_before(user: User, cutoff: datetime) -> int:
     start.signature = sign(_key(), _start_fields(start), start.previous)
     start.save()
     # A queryset delete, not the model's delete(), which refuses: this is the one way out.
-    removed, _ = ChatMessage.objects.filter(user=user, id__lte=last.pk).delete()
-    return int(removed)
+    # The total would also count the jobs that go with the messages.
+    _, removed = ChatMessage.objects.filter(user=user, id__lte=last.pk).delete()
+    return removed.get(ChatMessage._meta.label, 0)
 
 
 def facts(membership: Membership) -> dict[str, Any]:
