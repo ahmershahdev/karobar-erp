@@ -61,6 +61,10 @@ class AlreadyDoneError(Exception):
     pass
 
 
+class ChainBrokenError(Exception):
+    """The messages due to be cleared don't check out, so they are kept as evidence."""
+
+
 class DraftChangedError(Exception):
     """The card in the database no longer matches what was signed when it was shown."""
 
@@ -202,7 +206,8 @@ def verify(user: User) -> dict[str, Any]:
 def clear_before(user: User, cutoff: datetime) -> int:
     """Remove this person's messages older than `cutoff`, as chat is kept for a fixed time. The
     chain start moves to the last removed message, signed, so what is left still checks and
-    removing anything else is still caught. Returns how many messages went."""
+    removing anything else is still caught. Messages that fail the check are never cleared
+    (ChainBrokenError). Returns how many messages went."""
     # The same lock record() takes, so no message is written into the chain meanwhile.
     lock_rows(Membership.objects.filter(user=user))
     # Only the run of old messages from the start of the chain: a message dated after the
@@ -215,6 +220,17 @@ def clear_before(user: User, cutoff: datetime) -> int:
     if last is None:
         return 0
     start = ChatChainStart.objects.select_for_update().filter(user=user).first()
+    # Checked before anything goes: clearing changed or backdated messages and signing over
+    # them would wipe out the evidence, and could take a recent message with them.
+    previous = ""
+    if start is not None:
+        expected = sign(_key(), _start_fields(start), start.previous)
+        if not hmac.compare_digest(expected.encode(), start.signature.encode()):
+            raise ChainBrokenError
+        previous = start.previous
+    going = list(mine(user).filter(id__lte=last.pk).order_by("id"))
+    if first_break(_key(), [(_fields(row), row.signature) for row in going], previous) is not None:
+        raise ChainBrokenError
     start = start or ChatChainStart(user=user)
     start.after_id = last.pk
     start.previous = last.signature

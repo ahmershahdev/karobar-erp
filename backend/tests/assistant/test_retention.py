@@ -124,6 +124,7 @@ def test_one_person_failing_does_not_stop_the_others(boss: Member) -> None:  # n
 
     other = staff(boss)
     written(other, "Other old", 200)
+    resign(other)
     with (
         patch.object(services, "clear_before", side_effect=flaky),
         pytest.raises(RuntimeError, match="not cleared"),
@@ -146,3 +147,28 @@ def test_a_keep_time_below_one_day_stops_the_server(
     assert spec.loader is not None
     with pytest.raises(ImproperlyConfigured, match="CHAT_KEEP_DAYS"):
         spec.loader.exec_module(importlib.util.module_from_spec(spec))
+
+
+def test_a_backdated_message_is_not_cleared_and_stays_as_evidence(boss: Member) -> None:  # noqa: F811
+    first = services.record(boss.user, ChatMessage.Role.USER, "Recent one")
+    services.record(boss.user, ChatMessage.Role.USER, "Recent two")
+    # Someone without the key backdates a message to have it cleared.
+    old = timezone.now() - timedelta(days=200)
+    ChatMessage.all_tenants.filter(pk=first.pk).update(created_at=old)
+    with pytest.raises(services.ChainBrokenError):
+        services.clear_before(boss.user, timezone.now() - timedelta(days=90))
+    assert services.mine(boss.user).count() == 2
+    assert not ChatChainStart.objects.exists()
+    assert services.verify(boss.user)["ok"] is False
+
+
+def test_a_changed_start_stops_the_next_clear(boss: Member) -> None:  # noqa: F811
+    chat(boss)
+    tasks.clear_old_chats()
+    ChatChainStart.objects.update(cleared_at=timezone.now() - timedelta(days=1))
+    ChatMessage.all_tenants.filter(user=boss.user).update(
+        created_at=timezone.now() - timedelta(days=200)
+    )
+    with pytest.raises(services.ChainBrokenError):
+        services.clear_before(boss.user, timezone.now() - timedelta(days=90))
+    assert services.mine(boss.user).count() == 2
