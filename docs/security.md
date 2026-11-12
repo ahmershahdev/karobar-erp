@@ -118,6 +118,12 @@ library (`apps/platform/http.py`: https only, 8 second timeout, 256 KB cap, JSON
   "member removed", keep it, because the audit log is never edited. Decide before launch whether
   that needs a clean-up job for privacy rules.
 
+### The demo account
+
+A demo server (`DEMO_MODE=true`) shows one shared login on the sign-in page: `DEMO_EMAIL` and `DEMO_PASSWORD`, from the server's environment. Anyone can sign in with it, so `apps/demo/guard.py` refuses, for that account only, the requests that would change the account or reach outside the demo: changing its name, email or password, deleting it, creating a business, handing one over, inviting people or accepting an invitation, and asking the chat (each question is a paid Groq call). Reading stays open, and so does everything inside the demo businesses. No email is ever sent to the demo address (`apps/platform/mail.py`).
+
+A Celery job (`reset_demo`, 03:30) builds fresh demo businesses and then removes the old ones, so the demo is never empty and anything a visitor changed is gone by morning. It also sets the password back from `DEMO_PASSWORD`. Only businesses listed in `DemoBusiness` can be removed (`apps/demo/wipe.py`), so a real business can never be wiped, and neither the job nor `manage.py seed_demo` runs unless `DEMO_MODE` is on. A real installation leaves it off.
+
 ## Rate limiting and denial of service
 
 | Layer | Limit |

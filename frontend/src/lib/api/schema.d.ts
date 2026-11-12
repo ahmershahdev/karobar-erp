@@ -2855,6 +2855,7 @@ export interface components {
             recaptcha_v3_site_key: string;
             recaptcha_v2_site_key: string;
             oauth_providers: string[];
+            demo: components["schemas"]["DemoAccount"] | null;
         };
         Automation: {
             daily_summary: boolean;
@@ -3283,6 +3284,11 @@ export interface components {
             status: components["schemas"]["AttendanceStatusEnum"];
             /** @default  */
             note: string;
+        };
+        DemoAccount: {
+            /** Format: email */
+            email: string;
+            password: string;
         };
         Department: {
             readonly id: number;

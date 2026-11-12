@@ -1,3 +1,5 @@
+import i18n from '../../i18n';
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -10,6 +12,8 @@ export class ApiError extends Error {
 // DRF answers {"detail": "..."} or {"field": ["message", ...]}; show the first human message.
 function firstMessage(body: unknown): string | null {
   if (!body || typeof body !== 'object') return null;
+  // The shared demo account's refusals are shown in the reader's language.
+  if ((body as { code?: unknown }).code === 'demo_account') return i18n.t('auth.demo.blocked');
   for (const [key, value] of Object.entries(body)) {
     // A string `code` is our machine-readable error code; a field named code holds a list.
     if (key === 'request_id' || (key === 'code' && typeof value === 'string')) continue;

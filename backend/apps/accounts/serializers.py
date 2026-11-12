@@ -87,10 +87,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer[None]):
     password = serializers.CharField(max_length=128, trim_whitespace=False)
 
 
+class DemoAccountSerializer(serializers.Serializer[None]):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+
 class AuthConfigSerializer(serializers.Serializer[None]):
     recaptcha_v3_site_key = serializers.CharField(allow_blank=True)
     recaptcha_v2_site_key = serializers.CharField(allow_blank=True)
     oauth_providers = serializers.ListField(child=serializers.CharField())
+    # The shared demo login, shown on the sign-in page. Only set on a demo server.
+    demo = DemoAccountSerializer(allow_null=True)
 
 
 class AccountDeleteSerializer(serializers.Serializer[None]):

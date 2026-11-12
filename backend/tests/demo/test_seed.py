@@ -139,3 +139,19 @@ def test_the_command_replaces_the_demo_businesses(
     assert owner.check_password("an invented demo passphrase")
     assert owner.email_verified_at is not None
     assert "Removed 1 old demo business" in out.getvalue()
+
+
+def test_only_one_kind_leaves_the_other_demo_business(
+    settings: SettingsWrapper, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setitem(data.PLANS, "ae", light("ae"))
+    monkeypatch.setitem(data.PLANS, "pk", light("pk"))
+    settings.DEMO_MODE = True
+    settings.DEMO_PASSWORD = "an invented demo passphrase"
+    call_command("seed_demo", "--days", "7", stdout=StringIO())
+    pakistan = DemoBusiness.objects.get(kind="pk").tenant_id
+    call_command("seed_demo", "--days", "7", "--only", "ae", stdout=StringIO())
+    assert DemoBusiness.objects.get(kind="pk").tenant_id == pakistan
+    assert DemoBusiness.objects.filter(kind="ae").count() == 1
+    with pytest.raises(CommandError, match="between 7 and 400"):
+        call_command("seed_demo", "--days", "0")

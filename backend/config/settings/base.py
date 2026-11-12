@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.tenancy.middleware.TenantMiddleware",
+    "apps.demo.guard.DemoGuardMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -239,6 +240,13 @@ CELERY_BEAT_SCHEDULE = {
 DEMO_MODE: bool = env.bool("DEMO_MODE", default=False)
 DEMO_EMAIL: str = env("DEMO_EMAIL", default="demo@example.com")
 DEMO_PASSWORD: str = env("DEMO_PASSWORD", default="")
+DEMO_DAYS: int = env.int("DEMO_DAYS", default=365)
+if DEMO_MODE:
+    # The demo is put back every night, so visitors always find it as it was.
+    CELERY_BEAT_SCHEDULE["demo-reset"] = {
+        "task": "apps.demo.tasks.reset_demo",
+        "schedule": crontab(hour=3, minute=30),
+    }
 
 # How long chat messages are kept before the nightly job removes them (maintainer's decision).
 CHAT_KEEP_DAYS: int = env.int("CHAT_KEEP_DAYS", default=90)
