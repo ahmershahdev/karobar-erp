@@ -226,7 +226,14 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.hr.tasks.clear_former_employee_details",
         "schedule": crontab(hour=2, minute=20),
     },
+    "old-chats": {
+        "task": "apps.assistant.tasks.clear_old_chats",
+        "schedule": crontab(hour=2, minute=35),
+    },
 }
+
+# How long chat messages are kept before the nightly job removes them (maintainer's decision).
+CHAT_KEEP_DAYS: int = env.int("CHAT_KEEP_DAYS", default=90)
 
 LANGUAGE_CODE = "en"
 LANGUAGES = [("en", "English"), ("ur", "Urdu"), ("ar", "Arabic")]

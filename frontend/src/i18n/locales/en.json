@@ -1158,7 +1158,7 @@
     "open": "Ask Karobar",
     "title": "Ask about your business",
     "close": "Close",
-    "notice": "Your question and the figures your role can see are sent to Groq, an outside AI service, to write the answer. The assistant can prepare a draft for you to check, but nothing is saved until you press Confirm, and it never posts, pays or deletes. It can make mistakes, so check important numbers. Each message carries a signature, so any later change can be detected.",
+    "notice": "Your question and the figures your role can see are sent to Groq, an outside AI service, to write the answer. The assistant can prepare a draft for you to check, but nothing is saved until you press Confirm, and it never posts, pays or deletes. It can make mistakes, so check important numbers. Each message carries a signature, so any later change can be detected. Messages are kept for 90 days, then removed.",
     "off": "The assistant is switched off on this server.",
     "placeholder": "Ask about your shop, for example: how were sales today?",
     "send": "Send",
@@ -1168,7 +1168,7 @@
     "verified": "All {{count}} messages are intact.",
     "tampered": "Warning: this chat has been changed since it was written.",
     "reset": "New chat",
-    "resetDone": "New chat started. Earlier messages are kept for the record, but they are hidden and the assistant won't use them.",
+    "resetDone": "New chat started. Earlier messages are kept for the record until they are 90 days old, but they are hidden and the assistant won't use them.",
     "draft": {
       "kind": {
         "sales_invoice": "Draft bill",

@@ -23,9 +23,14 @@ def sign(key: bytes, fields: dict[str, str], previous: str) -> str:
     return hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()
 
 
-def first_break(key: bytes, records: Sequence[tuple[dict[str, str], str]]) -> int | None:
-    """The position of the first record that doesn't check out, or None when all of them do."""
-    previous = ""
+def first_break(
+    key: bytes, records: Sequence[tuple[dict[str, str], str]], previous: str = ""
+) -> int | None:
+    """The position of the first record that doesn't check out, or None when all of them do.
+
+    `previous` is the signature the first record follows: empty for a chain from its start, or
+    the last removed record's signature when older records were cleared on purpose.
+    """
     for position, (fields, signature) in enumerate(records):
         # As bytes: compare_digest raises on non-ASCII text, and a tampered row can hold any.
         if not hmac.compare_digest(sign(key, fields, previous).encode(), signature.encode()):

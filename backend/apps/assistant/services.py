@@ -6,6 +6,7 @@ import hmac
 import json
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from django.conf import settings
@@ -25,7 +26,7 @@ from apps.tenancy.context import get_current_tenant
 from apps.tenancy.models import Membership
 
 from . import drafts, lookups
-from .models import ChatMessage
+from .models import ChatChainStart, ChatMessage
 from .screens import SCREENS
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -158,14 +159,57 @@ def confirm(request: Request, user: User, membership: Membership, pk: int) -> Ch
     return record(user, ChatMessage.Role.DONE, content, answering=card)
 
 
+def _start_fields(start: ChatChainStart) -> dict[str, str]:
+    return {
+        "tenant": str(get_current_tenant().public_id),
+        "user": str(start.user.public_id),
+        "after": str(start.after_id),
+        "at": start.cleared_at.isoformat(),
+    }
+
+
 def verify(user: User) -> dict[str, Any]:
     messages = list(mine(user).order_by("id"))
-    broken = first_break(_key(), [(_fields(row), row.signature) for row in messages])
+    start = ChatChainStart.objects.filter(user=user).select_related("user").first()
+    previous = ""
+    if start is not None:
+        expected = sign(_key(), _start_fields(start), start.previous)
+        if not hmac.compare_digest(expected.encode(), start.signature.encode()):
+            return {
+                "ok": False,
+                "count": len(messages),
+                "broken_at": messages[0].pk if messages else None,
+            }
+        previous = start.previous
+    records = [(_fields(row), row.signature) for row in messages]
+    broken = first_break(_key(), records, previous)
     return {
         "ok": broken is None,
         "count": sum(row.role != ChatMessage.Role.RESET for row in messages),
         "broken_at": None if broken is None else messages[broken].pk,
     }
+
+
+@transaction.atomic
+def clear_before(user: User, cutoff: datetime) -> int:
+    """Remove this person's messages older than `cutoff`, as chat is kept for a fixed time. The
+    chain start moves to the last removed message, signed, so what is left still checks and
+    removing anything else is still caught. Returns how many messages went."""
+    # The same lock record() takes, so no message is written into the chain meanwhile.
+    lock_rows(Membership.objects.filter(user=user))
+    last = mine(user).filter(created_at__lt=cutoff).order_by("-id").first()
+    if last is None:
+        return 0
+    start = ChatChainStart.objects.select_for_update().filter(user=user).first()
+    start = start or ChatChainStart(user=user)
+    start.after_id = last.pk
+    start.previous = last.signature
+    start.cleared_at = timezone.now()
+    start.signature = sign(_key(), _start_fields(start), start.previous)
+    start.save()
+    # A queryset delete, not the model's delete(), which refuses: this is the one way out.
+    removed, _ = ChatMessage.objects.filter(user=user, id__lte=last.pk).delete()
+    return int(removed)
 
 
 def facts(membership: Membership) -> dict[str, Any]:
