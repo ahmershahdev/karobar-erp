@@ -62,6 +62,12 @@ class Provider:
 
     @property
     def enabled(self) -> bool:
+        # Facebook stays off unless switched on: it doesn't vouch for the email, and confirming
+        # the email proves who holds the inbox, not who holds the Facebook account, so a
+        # stranger's Facebook could stay linked to someone else's address. Off until linking
+        # Facebook needs a signed-in account (see docs/security.md).
+        if self.name == "facebook" and not settings.FACEBOOK_SIGN_IN:
+            return False
         return bool(self.client_id and self.client_secret)
 
     @property

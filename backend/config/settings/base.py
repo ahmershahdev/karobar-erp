@@ -278,6 +278,7 @@ RECAPTCHA_V3_MIN_SCORE: float = env.float("RECAPTCHA_V3_MIN_SCORE", default=0.5)
 #   {SITE_URL}/api/accounts/oauth/facebook/callback/
 GOOGLE_OAUTH_CLIENT_ID: str = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 GOOGLE_OAUTH_CLIENT_SECRET: str = env("GOOGLE_OAUTH_CLIENT_SECRET", default="")
+FACEBOOK_SIGN_IN: bool = env.bool("FACEBOOK_SIGN_IN", default=False)
 FACEBOOK_APP_ID: str = env("FACEBOOK_APP_ID", default="")
 FACEBOOK_APP_SECRET: str = env("FACEBOOK_APP_SECRET", default="")
 

@@ -21,7 +21,7 @@ Last updated: 2026-11-09. Update at the end of every work session.
 - Page text for the business home lives under `business` in the locale files. The public home page owns `home`; mixing them crashed the home page once.
 - `npm run dev` also runs Celery beat for scheduled jobs. Celery does not reload, so restart it after changing tasks or email code.
 - PDFs need Pango, so they can't be made on the maintainer's Windows machine. Use the Docker image for real PDFs.
-- Google sign-in is configured in the Google Cloud project "Karobar ERP" (`storied-catwalk-513610-u1`, in testing mode with the owner's Gmail as test user); a duplicate empty "Karobar ERP" project was created by mistake and can be deleted. Facebook is waiting for the owner to sign in at developers.facebook.com.
+- Google sign-in is configured in the Google Cloud project "Karobar ERP" (`storied-catwalk-513610-u1`, in testing mode with the owner's Gmail as test user); a duplicate empty "Karobar ERP" project was created by mistake and can be deleted. Facebook sign-in is off at launch by the maintainer's decision (`FACEBOOK_SIGN_IN`, see docs/security.md); to switch it on later, confirming a Facebook sign-up must drop the unproven link and Facebook must be connected from My account while signed in.
 
 ## Next session
 
@@ -43,7 +43,6 @@ Last updated: 2026-11-09. Update at the end of every work session.
 
 ## Open questions
 
-- A Facebook sign-up keeps its link when the address is confirmed by email, because that is how a real Facebook user confirms. Someone who claims another person's address and gets them to click the link would keep an account on it. Decide how Facebook accounts should be confirmed.
 - Reports that read all history stay slow at 1 million lines, on MySQL with its default 128 MB buffer pool: balance sheet and all-time trial balance about 4.7s, cash flow about 7s, dashboard about 4.4s. Each joins every line to its entry. A larger buffer pool should help, which was not measured; the real fix is keeping running balances per account or copying the date onto the line.
 - Chat messages can never be deleted through the app, which is what makes them tamper-evident. Decide how long to keep them before launch.
 - Someone who loses a permission keeps the figures in their old chat replies, and those replies still go to Groq as history. The maintainer accepted this on #34 for now; fixing it needs each reply tagged with what it was allowed to include.
