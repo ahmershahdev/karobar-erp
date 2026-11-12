@@ -625,7 +625,7 @@ class Seeder:
             "job_title": person.title,
             "joined_on": person.joined,
             "nationality": person.nationality or self.plan.country,
-            "bank_account": f"DEMO-{self.plan.kind.upper()}-{number:06d}",
+            "bank_account": f"DEMO{self.plan.kind.upper()}{number:06d}",
         }
         if self.plan.kind == "pk":
             values.update(
@@ -685,7 +685,8 @@ class Seeder:
                     **options,
                 },
             )
-        month = next_month(self.start)
+        # A history starting on the 1st covers that whole month, so it is paid too.
+        month = self.start if self.start.day == 1 else next_month(self.start)
         while next_month(month) <= self.today:
             if self.plan.kind == "pk" and payroll.table_for("PK", month) is None:
                 # Only tax years with official slabs can be paid; see the payroll docs.

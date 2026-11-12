@@ -14,7 +14,8 @@ from apps.accounts.models import User
 from apps.demo import data, seed, wipe
 from apps.demo.models import DemoBusiness
 from apps.hr.models import Employee
-from apps.inventory.models import BatchLevel, StockLevel
+from apps.inventory.models import BatchLevel, StockLevel, Warehouse
+from apps.payroll import wps
 from apps.payroll.models import PayrollRun, SalaryPayment
 from apps.purchasing.models import Bill
 from apps.sales.models import CreditNote, Invoice
@@ -71,6 +72,17 @@ def test_a_demo_business_has_balanced_books_and_real_documents(owner: User, kind
         assert SalaryPayment.objects.count() == posted.count()
     # The history starts on 30 July, so August is the one whole month to pay.
     assert counts["payroll months"] == 1
+    if kind == "ae":
+        with tenant_context(tenant):
+            name, text = wps.salary_file(PayrollRun.objects.get(status="posted"))
+        assert name.endswith(".SIF")
+        assert text.count("EDR,") == 6
+
+
+def test_a_history_starting_on_the_first_pays_that_month(owner: User) -> None:
+    # 1 September to 20 October: September is whole, October is not.
+    _, counts = seed.seed(owner, "ae", date(2026, 10, 20), days=49, plan=light("ae"))
+    assert counts["payroll months"] == 1
 
 
 def test_two_runs_make_the_same_business(owner: User) -> None:
@@ -84,12 +96,16 @@ def test_two_runs_make_the_same_business(owner: User) -> None:
 
 def test_a_wipe_leaves_nothing_behind_and_touches_no_one_else(owner: User) -> None:
     other = create_tenant(name="A real business")
+    with tenant_context(other):
+        kept = Warehouse.objects.create(code="MAIN", name="Real main store")
     before = rows()
     tenant, _ = seed.seed(owner, "ae", TODAY, days=12, plan=light("ae"))
     assert rows() != before
     wipe.wipe(tenant)
     assert rows() == before
     assert Tenant.objects.filter(pk=other.pk).exists()
+    with tenant_context(other):
+        assert Warehouse.objects.get(pk=kept.pk).name == "Real main store"
 
 
 def test_a_real_business_can_never_be_wiped() -> None:

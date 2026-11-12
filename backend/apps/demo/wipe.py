@@ -18,32 +18,28 @@ class NotDemoError(Exception):
     """Only a business made by the seed command can be wiped."""
 
 
-def tenant_tables() -> list[tuple[str, str]]:
-    """Every table with a column pointing at a business, and that column."""
+def tenant_fields() -> list[tuple[type[models.Model], str]]:
+    """Every model with a field pointing at a business, and that field."""
     found = []
     for model in apps.get_models(include_auto_created=True):
         for field in model._meta.concrete_fields:
             if isinstance(field, models.ForeignKey) and field.related_model is Tenant:
-                found.append((model._meta.db_table, field.column))
+                found.append((model, field.name))
     return found
 
 
 def wipe(tenant: Tenant) -> None:
     if not DemoBusiness.objects.filter(tenant=tenant).exists():
         raise NotDemoError
-    quote = connection.ops.quote_name
     with transaction.atomic(), connection.cursor() as cursor:
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
         try:
-            for table, column in tenant_tables():
-                cursor.execute(
-                    f"DELETE FROM {quote(table)} WHERE {quote(column)} = %s",  # noqa: S608
-                    [tenant.pk],
-                )
-            cursor.execute(
-                f"DELETE FROM {quote(Tenant._meta.db_table)} WHERE id = %s",  # noqa: S608
-                [tenant.pk],
-            )
+            for model, name in tenant_fields():
+                # The base manager sees every business's rows; the filter keeps this one's.
+                # A raw delete skips the model's own delete(), which refuses for posted rows.
+                rows = model._base_manager.filter(**{name: tenant})
+                rows._raw_delete(connection.alias)
+            Tenant.objects.filter(pk=tenant.pk)._raw_delete(connection.alias)
         finally:
             cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
 
