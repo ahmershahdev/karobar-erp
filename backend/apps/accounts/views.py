@@ -347,6 +347,11 @@ class AuthConfigView(APIView):
                 "recaptcha_v3_site_key": settings.RECAPTCHA_V3_SITE_KEY,
                 "recaptcha_v2_site_key": settings.RECAPTCHA_V2_SITE_KEY,
                 "oauth_providers": oauth.enabled_providers(),
+                "demo": (
+                    {"email": settings.DEMO_EMAIL, "password": settings.DEMO_PASSWORD}
+                    if settings.DEMO_MODE and settings.DEMO_PASSWORD
+                    else None
+                ),
             }
         )
 

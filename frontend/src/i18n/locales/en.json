@@ -374,7 +374,13 @@
     },
     "googleHint": "Joined with Google? Use Continue with Google, or set a password with Forgot your password.",
     "confirmTitle": "Confirm your new email",
-    "emailChanged": "Your email is changed. Use it next time you sign in."
+    "emailChanged": "Your email is changed. Use it next time you sign in.",
+    "demo": {
+      "title": "Try the demo",
+      "body": "Sign in as the demo owner to look around two invented businesses with a year of records. Anyone can use this account, and it is put back every night.",
+      "fill": "Use the demo account",
+      "blocked": "The demo account can't do this. Sign up for your own account to try it."
+    }
   },
   "workspace": {
     "overview": "Overview",

@@ -1,5 +1,7 @@
 from django.template.loader import render_to_string
 
+from apps.demo.guard import is_demo_email
+
 from .tasks import send_email
 
 
@@ -16,6 +18,9 @@ def send_message(
     `action` is a button label and its link. Django escapes everything here, which matters because
     business and product names are typed by users.
     """
+    if is_demo_email(to):
+        # The shared demo address belongs to nobody, so nothing is sent to it.
+        return
     label, url = action or ("", "")
     html = render_to_string(
         "email/message.html",

@@ -8,7 +8,7 @@ import { api } from '../../lib/api/client';
 import { safeNext } from '../../lib/paths';
 import { ApiError, unwrap } from '../../lib/api/errors';
 import { AuthCard } from './AuthCard';
-import { needsCheckbox, useHumanCheck } from './human';
+import { needsCheckbox, useAuthConfig, useHumanCheck } from './human';
 import { OAuthButtons } from './OAuthButtons';
 import { ensureCsrf, sessionKeys, useMe } from './session';
 
@@ -51,6 +51,7 @@ export function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const human = useHumanCheck('login');
+  const demo = useAuthConfig().data?.demo;
   const oauthError = params.get('error');
   const mutation = useMutation({
     mutationFn: async () => {
@@ -85,6 +86,32 @@ export function SignInPage() {
       {oauthError && OAUTH_ERRORS.has(oauthError) && (
         <div className="mb-5">
           <Alert tone="error">{t(`auth.oauthErrors.${oauthError}`)}</Alert>
+        </div>
+      )}
+      {demo && (
+        <div className="mb-5 rounded-xl border border-line bg-canvas p-4 text-sm">
+          <p className="font-medium text-ink">{t('auth.demo.title')}</p>
+          <p className="mt-1 text-muted">{t('auth.demo.body')}</p>
+          <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+            <dt className="text-muted">{t('signIn.email')}</dt>
+            <dd dir="ltr" className="font-mono break-all">
+              {demo.email}
+            </dd>
+            <dt className="text-muted">{t('signIn.password')}</dt>
+            <dd dir="ltr" className="font-mono break-all">
+              {demo.password}
+            </dd>
+          </dl>
+          <Button
+            variant="ghost"
+            className="mt-3"
+            onClick={() => {
+              setEmail(demo.email);
+              setPassword(demo.password);
+            }}
+          >
+            {t('auth.demo.fill')}
+          </Button>
         </div>
       )}
       <div className="mb-5">

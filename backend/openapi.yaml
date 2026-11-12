@@ -6178,7 +6178,12 @@ components:
           type: array
           items:
             type: string
+        demo:
+          allOf:
+          - $ref: '#/components/schemas/DemoAccount'
+          nullable: true
       required:
+      - demo
       - oauth_providers
       - recaptcha_v2_site_key
       - recaptcha_v3_site_key
@@ -7288,6 +7293,17 @@ components:
       required:
       - employee
       - status
+    DemoAccount:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+      - email
+      - password
     Department:
       type: object
       properties:

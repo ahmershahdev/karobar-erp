@@ -122,6 +122,7 @@ def test_config_lists_public_keys_and_enabled_providers(settings: SettingsWrappe
         "recaptcha_v3_site_key": "site-v3",
         "recaptcha_v2_site_key": "",
         "oauth_providers": ["google"],
+        "demo": None,
     }
     assert "gsecret" not in str(body)
 
