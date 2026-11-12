@@ -350,3 +350,13 @@ def test_a_bug_while_answering_still_ends_the_job(boss: Member) -> None:
         assert tasks.answer_question(job.pk) == "failed"
     job.refresh_from_db()
     assert "try again" in job.error
+
+
+def test_a_queue_that_cannot_be_reached_ends_the_job_calmly(boss: Member) -> None:
+    with patch.object(tasks.answer_question, "delay", side_effect=OSError("no broker")):
+        reply = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+    assert reply.status_code == 202
+    job = reply.json()
+    assert job["status"] == "failed"
+    assert "try again" in job["error"]
+    assert ChatJob.objects.get(pk=job["id"]).finished_at is not None

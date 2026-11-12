@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from typing import Any, cast
 
@@ -15,6 +16,8 @@ from apps.tenancy.permissions import IsTenantMember, membership_of
 
 from . import drafts, services, tasks
 from .models import ChatJob, ChatMessage
+
+logger = logging.getLogger(__name__)
 
 MAX_QUESTION = 2000
 SHOWN = 50
@@ -149,7 +152,17 @@ class ChatAskView(APIView):
         )
         # Outside any transaction (ATOMIC_REQUESTS is off), so both rows are saved before the
         # worker looks for them.
-        tasks.answer_question.delay(job.pk)
+        try:
+            tasks.answer_question.delay(job.pk)
+        except Exception:
+            # The queue can't be reached, so no worker will ever take this job. End it now
+            # with the calm message rather than leaving the screen waiting.
+            logger.exception("Could not queue chat job %s", job.pk)
+            ChatJob.objects.filter(pk=job.pk, status=ChatJob.Status.WAITING).update(
+                status=ChatJob.Status.FAILED,
+                error=services.AssistantError.message,
+                finished_at=timezone.now(),
+            )
         job.refresh_from_db()
         return Response(ChatJobSerializer(_job_data(job)).data, status=202)
 
