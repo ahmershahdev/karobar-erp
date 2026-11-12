@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.assistant",
     "apps.hr",
     "apps.payroll",
+    "apps.demo",
 ]
 
 MIDDLEWARE = [
@@ -232,6 +233,12 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(hour=2, minute=35),
     },
 }
+
+# Demo businesses (apps/demo). The seed command and the nightly reset refuse to run unless
+# DEMO_MODE is on, so a real installation never gets invented data.
+DEMO_MODE: bool = env.bool("DEMO_MODE", default=False)
+DEMO_EMAIL: str = env("DEMO_EMAIL", default="demo@example.com")
+DEMO_PASSWORD: str = env("DEMO_PASSWORD", default="")
 
 # How long chat messages are kept before the nightly job removes them (maintainer's decision).
 CHAT_KEEP_DAYS: int = env.int("CHAT_KEEP_DAYS", default=90)

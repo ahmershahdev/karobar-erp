@@ -77,7 +77,7 @@ in CI, and seed data.
 
 ## M7. Docs and launch (target 2027-06-13)
 
-- [ ] Seed data: two invented businesses with a year of documents
+- [ ] Seed data: two invented businesses with a year of documents (`seed_demo`, in review)
 - [ ] README setup steps and screenshots
 - [ ] End-to-end tests with Playwright for the main flows
 - [ ] Deploy at `karobarerp.ahmershah.dev`; tag `v1.0.0`
