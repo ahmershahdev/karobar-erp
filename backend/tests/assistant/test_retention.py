@@ -166,9 +166,8 @@ def test_a_changed_start_stops_the_next_clear(boss: Member) -> None:  # noqa: F8
     chat(boss)
     tasks.clear_old_chats()
     ChatChainStart.objects.update(cleared_at=timezone.now() - timedelta(days=1))
-    ChatMessage.all_tenants.filter(user=boss.user).update(
-        created_at=timezone.now() - timedelta(days=200)
-    )
+    # A cutoff in the future makes the kept messages due without touching their signatures,
+    # so only the changed start can stop the clear.
     with pytest.raises(services.ChainBrokenError):
-        services.clear_before(boss.user, timezone.now() - timedelta(days=90))
+        services.clear_before(boss.user, timezone.now() + timedelta(days=1))
     assert services.mine(boss.user).count() == 2
