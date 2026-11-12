@@ -98,6 +98,8 @@ npm ci
 npm run dev                                       # http://localhost:5173, proxies /api to :8000
 ```
 
+To try it with data, set `DEMO_MODE=true` and a `DEMO_PASSWORD` in `backend/.env`, then run `.venv/bin/python manage.py seed_demo`. It makes two invented businesses, a Pakistani kiryana store and a Dubai trading company, each with a year of purchases, sales, returns, payments and payroll. Sign in as `demo@example.com` (or your `DEMO_EMAIL`). A year takes about half an hour per business on a laptop, because every document goes through the normal posting rules; `--days 30` is quicker. Running it again replaces only the demo businesses.
+
 The test database needs one grant on a fresh MySQL volume; `deploy/mysql/init.sql` does it for
 the Compose service.
 
