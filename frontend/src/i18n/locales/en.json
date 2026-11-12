@@ -1666,7 +1666,7 @@
       "excludes_nationals": "Nationals of this country get none",
       "excludes_unpaid_days": "Unpaid days are left out of the service",
       "resignation": "Share on resignation",
-      "resignationHint": "Leave empty if resigning changes nothing. Each row gives the share once service reaches its years.",
+      "resignationHint": "Leave empty if resigning changes nothing. Each row gives the share once service reaches its years. When Only after, not at is ticked, the share starts only once service passes those years.",
       "bandYears": "From years of service",
       "bandShare": "Share, such as 1/3",
       "bandAfter": "Only after, not at",
