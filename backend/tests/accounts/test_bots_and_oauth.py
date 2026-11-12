@@ -1,3 +1,4 @@
+import importlib.util
 import io
 import urllib.error
 import urllib.request
@@ -7,6 +8,7 @@ from functools import partial
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+import environ
 import pytest
 from django.core import mail
 from django.test import override_settings
@@ -17,6 +19,7 @@ from rest_framework.test import APIClient
 from apps.accounts import humans, oauth
 from apps.accounts.models import SocialAccount, User
 from apps.platform import http
+from config.settings import base
 from tests.factories import TEST_PASSWORD, create_user
 
 from .test_flows import form_client
@@ -331,6 +334,20 @@ def test_facebook_is_off_unless_switched_on(settings: SettingsWrapper) -> None:
     assert "facebook" not in APIClient().get("/api/accounts/config/").json()["oauth_providers"]
     back = APIClient().get("/api/accounts/oauth/facebook/start/")
     assert back["Location"].endswith("error=provider_unavailable")
+
+
+def test_facebook_stays_off_when_the_setting_is_not_given(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("FACEBOOK_SIGN_IN", raising=False)
+    monkeypatch.setenv("FACEBOOK_APP_ID", "fid")
+    monkeypatch.setenv("FACEBOOK_APP_SECRET", "fsecret")
+    monkeypatch.setattr(environ.Env, "read_env", lambda *args, **kwargs: None)
+    spec = importlib.util.spec_from_file_location("fresh_base_settings", base.__file__)
+    assert spec is not None
+    assert spec.loader is not None
+    fresh = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fresh)
+    assert fresh.FACEBOOK_APP_ID == "fid"
+    assert fresh.FACEBOOK_SIGN_IN is False
 
 
 def test_unconfigured_or_unknown_providers_bounce_back(settings: SettingsWrapper) -> None:
