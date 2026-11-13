@@ -1,7 +1,7 @@
 argon2-cffi==25.1.0
 bcrypt==5.0.0
 celery==5.7.0
-Django==5.2.18
+Django==5.2.19
 django-csp==4.0
 django-environ==0.14.0
 djangorestframework==3.18.3
