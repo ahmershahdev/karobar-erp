@@ -41,7 +41,8 @@ line or on the whole bill, up to the limit set on each person's role.
 ## Buying and stock
 
 Order from a supplier, receive the goods when they arrive, then enter the supplier's bill and pay
-it from the bank. Each step updates your stock and your accounts. Goods with an expiry date are
+it from the bank. An order changes nothing by itself: receiving the goods adds them to your stock,
+and the supplier's bill and its payment go into your accounts. Goods with an expiry date are
 received with their batch, and the alerts page warns you before they expire.
 
 ![Stock on hand](https://raw.githubusercontent.com/ahmershahdev/karobar-erp/main/docs/screenshots/stock-on-hand.jpg)

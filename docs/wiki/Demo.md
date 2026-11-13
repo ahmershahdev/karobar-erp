@@ -30,7 +30,7 @@ DEMO_PASSWORD=choose-one
 DEMO_DAYS=120
 ```
 
-then run `python manage.py seed_demo` in `backend/`. A full year (`DEMO_DAYS=365`) takes about
+then run `.venv/bin/python manage.py seed_demo` in `backend/`. A full year (`DEMO_DAYS=365`) takes about
 half an hour per business on a laptop, because each document goes through the normal posting
 rules. Running it again replaces the demo businesses and leaves every other business alone.
 Never turn `DEMO_MODE` on for a real installation.

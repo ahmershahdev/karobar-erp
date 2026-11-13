@@ -11,7 +11,8 @@
 - Every change to business data goes in an audit log that can't be edited.
 - Bill pictures (logos, signatures) are checked and re-saved as a clean copy; nothing is kept as
   uploaded.
-- Chat messages are signed one after another, so a changed or removed message is caught.
+- Chat messages are signed one after another, so a changed message, or one removed from the middle
+  of a chat, is caught. Removing the newest messages is not caught.
 - On a public demo server, the shared demo account can't change itself, email anyone, or reach
   outside the demo businesses, and the demo is put back every night.
 
