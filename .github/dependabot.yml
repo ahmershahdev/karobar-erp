@@ -28,6 +28,13 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      # i18next 27 and react-i18next 18 must move together and touch every translated screen.
+      # They wait until after v1.0.0, when browser tests can catch a regression.
+      - dependency-name: i18next
+        update-types: [version-update:semver-major]
+      - dependency-name: react-i18next
+        update-types: [version-update:semver-major]
     groups:
       npm:
         patterns: ["*"]
