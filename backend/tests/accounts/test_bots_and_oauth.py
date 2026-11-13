@@ -117,6 +117,8 @@ def test_config_lists_public_keys_and_enabled_providers(settings: SettingsWrappe
     settings.GOOGLE_OAUTH_CLIENT_SECRET = "gsecret"
     settings.FACEBOOK_APP_ID = "fid"
     settings.FACEBOOK_APP_SECRET = ""
+    # A developer's own .env may have the demo switched on.
+    settings.DEMO_MODE = False
     body = APIClient().get("/api/accounts/config/").json()
     assert body == {
         "recaptcha_v3_site_key": "site-v3",

@@ -1,7 +1,8 @@
 # Architecture
 
-The platform skeleton (M1) is in place; the business modules are still design. Change this file in
-the same pull request that changes the code.
+Milestones M1 to M6 are built: the platform, accounting, inventory, purchasing, sales, the
+counter, tax, reports, the business chat, HR and payroll. M7 (seed data, docs, end-to-end tests,
+launch) is under way. Change this file in the same pull request that changes the code.
 
 ## Parts
 
@@ -10,34 +11,37 @@ browser ──> nginx (static app, CSP nonce, rate limits) ──> Django + DRF 
                                                               │  ──> MySQL 8.4 (all tenants, one schema)
                                                               │  ──> Redis (cache, throttles, Celery queue)
                                                               v
-                                                         Celery workers ──> PDFs, emails, alerts, reports
+                                                         Celery worker ──> chat answers, emails, alerts, summaries
+                                                         Celery beat   ──> nightly jobs (alerts, summaries,
+                                                                           clean-ups, the demo reset)
 ```
 
 The app and the API share one origin: nginx serves the built React app and proxies `/api/`. That
 keeps cookies first-party and removes CORS entirely.
 
-The web app only calls the API. Long work (PDF batches, alerts, big reports, payroll runs) runs in
-Celery, never inside a web request.
+The web app only calls the API. Slow or scheduled work runs in Celery, never inside a web request:
+chat answers (the screen polls a job), emails, the stock alert and daily summary emails, clearing
+former employees' details and old chat messages, and resetting the demo businesses. Payroll for
+500 people works out in about half a second, so it runs in the request.
 
 ## Modules
 
 | App | Owns |
 |---|---|
-| `tenancy` | tenants, members, roles, permissions, invitations, audit log |
-| `accounting` | accounts, fiscal periods, journal entries, numbering series |
-| `inventory` | products, units, warehouses, stock moves, stock levels, batches |
-| `purchasing` | suppliers, purchase orders, goods received, bills, supplier payments |
-| `sales` | customers, quotations, orders, invoices, receipts, returns, credit notes |
-| `pos` | registers, sessions, counter sales |
-| `hr`, `payroll` | employees, attendance, leave, salary structures, payroll runs, payslips |
-| `reports` | trial balance, P&L, balance sheet, tax and stock reports, the business home figures, the daily summary |
-| `assistant` | the per-person business chat through Groq, with signed messages and confirm-first drafts |
-| `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths) |
-| `accounting` (built) | accounts, fiscal years and periods, number series, journal entries and lines, trial balance and ledger reports |
-| `inventory` (built) | units, categories, products and packs, warehouses, batches, stock levels, FIFO layers, stock entries and moves, alerts |
-| `purchasing` (built) | suppliers, purchase orders, goods receipts, supplier bills and payments with their allocations |
-| `platform` | health check, request ids, security headers, error handler, pagination, row locking |
-| `accounts` | the user model (email sign-in, public UUID) and the session endpoints |
+| `accounts` | the user model (email sign-in, public UUID), sessions, Google and Facebook sign-in, account changes |
+| `tenancy` | tenants, members, roles, permissions, invitations, ownership hand-over, audit log, automation settings |
+| `accounting` | accounts, fiscal years and periods, number series, journal entries and lines, tax rates, trial balance and ledger |
+| `inventory` | units, categories, products and packs, warehouses, batches, stock levels, FIFO layers, stock entries and moves, alerts |
+| `purchasing` | suppliers, purchase orders, goods receipts, supplier bills and payments with their allocations |
+| `sales` | customers, quotations, orders, invoices, receipts, returns, credit notes, discounts, bill design, signed bill links |
+| `pos` | tills (sessions) and counter sales, posted as invoices with their payment |
+| `reports` | profit and loss, balance sheet, cash flow, sales tax, ageing, statements, the business home figures, the daily summary |
+| `hr` | employees, departments, salary structures, contracts, work week, holidays, leave, attendance, retention |
+| `payroll` | tax slabs, payroll runs and payslips, salary payments, contributions (EOBI, social security, GOSI, GPSSA), end-of-service gratuity, the UAE WPS file |
+| `assistant` | the per-person business chat through Groq, with signed messages, confirm-first drafts and 90-day retention |
+| `demo` | the invented demo businesses, their nightly reset and the guard on the shared demo account |
+| `core` | pure logic used by all of the above (posting rules, valuation, tax, payroll maths, gratuity, signed chains) |
+| `platform` | health check, request ids, security headers, error handler, pagination, row locking, email |
 
 ## Frontend layout
 
@@ -64,7 +68,7 @@ the `X-Tenant` header (the tenant's public UUID), which the app's tenant switche
 middleware checks membership before activating it. Rows of another tenant answer `404`. An isolation test calls every
 endpoint as a member of another tenant.
 
-## Data model (first draft)
+## Data model (outline)
 
 ```
 tenant            id, name, base_currency, valuation_method, fiscal_year_start, locale
@@ -84,7 +88,15 @@ cost_layer        tenant_id, product_id, warehouse_id, qty_left, unit_cost  (FIF
 
 invoice / bill    tenant_id, number, party_id, date, status, totals; lines with qty, price, tax
 tax_rate          tenant_id, name, rate, valid_from, valid_to
+
+employee          tenant_id, code, name, joined_on, left_on, province, nationality, bank details
+contract          tenant_id, employee_id, structure_id, starts_on, ends_on, basic_salary
+payroll_run       tenant_id, month, status, journal_entry_id; payslips with earnings and deductions
+tax_table         tenant_id, country, starts_on, ends_on, source; slabs
+chat_message      tenant_id, user_id, role, content, created_at, signature (chained HMAC)
 ```
+
+The model files are the full truth; this outline is for finding your way.
 
 ## Posting
 

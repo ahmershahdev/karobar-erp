@@ -1,4 +1,7 @@
 - [[Home]]
+- [[Using Karobar]]
+- [[Payroll]]
+- [[Demo]]
 - [[Getting Started]]
 - [[Self Hosting]]
 - [[Concepts]]

@@ -28,6 +28,22 @@ default). The year is split into months; closing a month stops new entries going
 is in an open period and that every account can take entries, then gives it the next number
 (JV-000001, JV-000002, ...). Numbers never skip.
 
-**Audit log.** Changes to businesses, members, roles and invitations record who made them, when,
-what changed and the request they came from. Each business module adds its own records as it
-ships.
+**Tax rates.** Sales tax and VAT rates are data with the dates they apply and where they come
+from, so a new rate never changes last year's bills. Karobar works out the tax on every line and
+keeps tax collected apart from tax paid, for the sales tax report.
+
+**Stock costing.** Each business chooses moving average or FIFO (first in, first out) when it is
+created. Every sale moves the cost of what was sold out of stock and into cost of goods sold.
+
+**The counter.** A till is opened with the cash in the drawer and closed with a count. Each
+counter sale is a posted bill with its payment; a short or extra drawer is booked to cash over and
+short.
+
+**Payroll.** A month is worked out from each person's contract, leave and attendance, then posted
+as one journal entry. See [[Payroll]].
+
+**Business chat.** Each person's questions and answers are signed one after another, so a changed
+or removed message is caught by the check button. Messages are kept 90 days.
+
+**Audit log.** Every create, change, post and delete on business data records who made it, when,
+what changed and the request it came from. Nobody can edit or delete it.
