@@ -162,7 +162,8 @@ class Seeder:
         self.utility = self.supplier(self.plan.utility)
         self.stock: list[Stocked] = []
         for number, item in enumerate(self.plan.items, start=1):
-            target = D(item.carton * 3) if item.carton else D(36)
+            # Enough on the shelf for a week of wholesale orders by the carton.
+            target = D(item.carton * 8) if item.carton else D(60)
             code = data.barcode(self.plan.kind, number)
             packs = [inventory.PackInput(self.ctn, D(item.carton), code)] if item.carton else []
             product = inventory.save_product(
@@ -287,7 +288,8 @@ class Seeder:
         for row in self.rng.sample(self.stock, self.rng.randint(2, 7)):
             if credit and row.item.carton and row.on_hand >= row.item.carton:
                 unit, factor = self.ctn, D(row.item.carton)
-                quantity = D(1)
+                # Regular customers are small shops and kitchens buying a few cartons at a time.
+                quantity = D(self.rng.randint(2, 5))
                 price = row.item.price * factor
             else:
                 unit, factor = self.pcs, D(1)

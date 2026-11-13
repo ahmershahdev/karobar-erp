@@ -73,11 +73,13 @@ in CI, and seed data.
 - [x] Pakistan EOBI and provincial social security as dated data with sources; only officially notified minimum wages ship (#56)
 - [x] Gulf end-of-service gratuity: UAE Article 51 and Saudi Articles 84 and 85 as data, a monthly provision and the payout on leaving (#57)
 - [x] Gulf social insurance: GOSI and the UAE pension for nationals by nationality and first-insured date, rates entered by the business (#58)
-- [x] The UAE WPS salary file (SIF) from a posted month; Saudi Arabia waits for a current Mudad or bank template (in review)
+- [x] The UAE WPS salary file (SIF) from a posted month; Saudi Arabia waits for a current Mudad or bank template (#59). Released as `v0.6.0`
 
 ## M7. Docs and launch (target 2027-06-13)
 
 - [x] Seed data: two invented businesses with a year of documents (`seed_demo`, #65)
-- [ ] README setup steps and screenshots
+- [x] Public demo login on the sign-in page, guarded and reset nightly (#66)
+- [x] Pre-launch items: chat answers on Celery (#60), Facebook sign-in off (#61), chat kept 90 days (#62), Urdu and Arabic review (#63, #64)
+- [x] README setup steps and screenshots, docs and the wiki brought up to date
 - [ ] End-to-end tests with Playwright for the main flows
 - [ ] Deploy at `karobarerp.ahmershah.dev`; tag `v1.0.0`

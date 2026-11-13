@@ -14,6 +14,8 @@ Open <http://localhost:5173/signup>, create an account, and copy the confirmatio
 the worker's log (emails are printed there in development). Then create your first business and
 invite people from Members.
 
+To look around with data instead of an empty business, turn on the demo businesses: see [[Demo]].
+
 The manual way:
 
 1. Clone the repository and start the database and cache:
@@ -44,6 +46,6 @@ The manual way:
    npm run dev
    ```
 
-4. Open <http://localhost:5173>. Sign in at `/app` with the user you created.
+4. Open <http://localhost:5173>. Sign in with the user you created.
 
 On Windows, use `.venv\Scripts\` in place of `.venv/bin/`.

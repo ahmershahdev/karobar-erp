@@ -11,6 +11,15 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+    ignore:
+      # Django 5.2 is the long-term support release (to April 2028). The move to Django 6
+      # is planned after v1.0.0, together with its type stubs.
+      - dependency-name: django
+        update-types: [version-update:semver-major]
+      - dependency-name: django-stubs
+        update-types: [version-update:semver-major]
+      - dependency-name: djangorestframework-stubs
+        versions: [">=3.17"]
     groups:
       python:
         patterns: ["*"]

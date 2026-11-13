@@ -11,27 +11,59 @@ always up to date. The app speaks English, Urdu and Arabic, right to left where 
 It is built for people who are not accountants, and who may not read comfortably: plain words, a
 picture beside every screen, big buttons, and step-by-step help on each page.
 
-> Status: pre-release, `v0.3.0`. Sign-in, businesses and roles, double-entry accounting and inventory
-> work today; purchasing and sales are next. See [docs/roadmap.md](docs/roadmap.md) for the milestones
-> and [docs/status.md](docs/status.md) for where the work is.
+> Status: `v0.6.0`, every module built. The last milestone (end-to-end tests and the public demo)
+> comes before `v1.0.0`. See [docs/roadmap.md](docs/roadmap.md) for the milestones and
+> [docs/status.md](docs/status.md) for where the work is.
 >
 > Website: [karobarerp.ahmershah.dev](https://karobarerp.ahmershah.dev)
 
+![The business home page of the demo kiryana store](docs/screenshots/business-home.jpg)
+
 ## What it does
 
-Inventory and accounting are live; the rest is on the [roadmap](docs/roadmap.md).
-
-- **Inventory.** Products with variants and units, several warehouses, stock moves, batches with
-  expiry dates, barcodes, low-stock alerts, and stock valued by FIFO or moving average.
-- **Sales.** Quotations, orders, invoices, payments, returns and credit notes, customer credit
-  limits, PDF invoices, and a point-of-sale screen for the counter.
-- **Purchasing.** Suppliers, purchase orders, goods received and supplier bills.
-- **Accounting.** Chart of accounts, journal entries posted by every document, fiscal periods,
-  trial balance, profit and loss, balance sheet, and sales tax (GST/VAT) reports.
-- **HR and payroll.** Employees, attendance, leave on working days, and monthly payroll with
-  payslips.
+- **Inventory.** Products with packs and barcodes (buy by the carton, sell by the piece), several
+  warehouses, receipts, issues, transfers and counts, batches with expiry dates, low-stock and
+  expiry alerts by email, and stock valued by FIFO or moving average.
+- **Sales.** Quotations, orders, bills, money received, returns and credit notes, customer credit
+  limits, discounts per line or per bill with a limit per role, six printable bill designs on A4
+  or an 80 mm roll, and bills shared as a signed link or on WhatsApp.
+- **The counter.** A fast point-of-sale screen: scan, take cash or card, give change, and count
+  the drawer at the end of the day.
+- **Purchasing.** Suppliers, purchase orders, goods received, supplier bills and payments, and
+  what you owe by how late it is.
+- **Accounting.** A ready chart of accounts, a journal entry posted by every document, fiscal
+  periods, the ledger and trial balance, profit and loss, balance sheet, cash flow, and the sales
+  tax (GST/VAT) report, with CSV exports.
+- **HR and payroll.** Employees, contracts and salary structures, the work week and public
+  holidays, leave and attendance, monthly payroll with income tax from the official slabs,
+  payslips as PDF, salary payments, EOBI and social security, GOSI and the UAE pension,
+  end-of-service gratuity, and the UAE WPS salary file. See the
+  [Payroll](https://github.com/ahmershahdev/karobar-erp/wiki/Payroll) wiki page.
+- **Ask Karobar.** An optional chat that answers questions about your business with only the
+  figures your role may see, and prepares draft bills and orders for you to confirm. Its messages
+  are signed, so a changed one is caught.
 - **Platform.** Many businesses on one installation, roles and permissions per module, an audit
-  log of every change, and English, Urdu and Arabic.
+  log of every change, a business home page with what needs attention, a daily summary email,
+  sign-in with email or Google, and English, Urdu and Arabic on every screen and printed bill.
+
+## Screenshots
+
+These come from the invented demo businesses (see "Try it with data" below).
+
+| | |
+|---|---|
+| ![How is my business](docs/screenshots/dashboard.jpg) | ![The counter](docs/screenshots/counter.jpg) |
+| How is my business: sales, profit and stock | The counter |
+| ![Sales bills](docs/screenshots/sales-bills.jpg) | ![Who owes me](docs/screenshots/owed-to-me.jpg) |
+| Sales bills | Who owes me, by how late |
+| ![Stock on hand](docs/screenshots/stock-on-hand.jpg) | ![Profit and loss](docs/screenshots/profit-and-loss.jpg) |
+| Stock on hand and its value | Profit and loss |
+| ![Payroll](docs/screenshots/payroll.jpg) | ![Trial balance](docs/screenshots/trial-balance.jpg) |
+| Payroll for the Dubai company | Trial balance |
+| ![The business home in Urdu](docs/screenshots/urdu-business-home.jpg) | ![The dashboard in Arabic](docs/screenshots/arabic-dashboard.jpg) |
+| In Urdu, right to left | In Arabic |
+
+<img src="docs/screenshots/phone-business-home.jpg" alt="The business home on a phone" width="300">
 
 ## Stack
 
@@ -56,6 +88,8 @@ another's data. Karobar ERP is built around those three rules, with tests for ea
 - Session cookies with CSRF protection, a nonce-based Content Security Policy, and rate limits on
   every endpoint.
 - Public forms guarded by reCAPTCHA v3, a v2 checkbox when v3 is unsure, and a honeypot field.
+- Every change to business data goes in an audit log; chat messages are signed in a chain.
+- Uploaded logos and signatures are checked and saved again as a clean copy.
 - Redis for cache, sessions and throttles; Brotli and gzip compressed at build time; WebP images.
 - A service worker keeps the app's code, never business data, so losing the connection shows a
   helpful screen and recovers by itself.
@@ -98,7 +132,9 @@ npm ci
 npm run dev                                       # http://localhost:5173, proxies /api to :8000
 ```
 
-To try it with data, set `DEMO_MODE=true` and a `DEMO_PASSWORD` in `backend/.env`, then run `.venv/bin/python manage.py seed_demo`. It makes two invented businesses, a Pakistani kiryana store and a Dubai trading company, each with a year of purchases, sales, returns, payments and payroll. Sign in as `demo@example.com` (or your `DEMO_EMAIL`). A year takes about half an hour per business on a laptop, because every document goes through the normal posting rules; `--days 30` is quicker. Running it again replaces only the demo businesses.
+### Try it with data
+
+Set `DEMO_MODE=true` and a `DEMO_PASSWORD` in `backend/.env`, then run `.venv/bin/python manage.py seed_demo`. It makes two invented businesses, a Pakistani kiryana store and a Dubai trading company, each with a year of purchases, sales, returns, payments and payroll. Sign in as `demo@example.com` (or your `DEMO_EMAIL`). A year takes about half an hour per business on a laptop, because every document goes through the normal posting rules; `--days 30` is quicker. Running it again replaces only the demo businesses.
 
 The test database needs one grant on a fresh MySQL volume; `deploy/mysql/init.sql` does it for
 the Compose service.
@@ -117,9 +153,11 @@ the Compose service.
 - [docs/status.md](docs/status.md): current state, updated every session
 - [docs/security.md](docs/security.md): tenancy, sessions, CSP, rate limits, locking
 - [docs/seo.md](docs/seo.md) and [docs/design.md](docs/design.md)
+- [docs/locale-review.md](docs/locale-review.md): Urdu and Arabic phrases waiting for a native reader
 - [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and
   [SECURITY.md](SECURITY.md)
-- [Wiki](https://github.com/ahmershahdev/karobar-erp/wiki): guides for users and self-hosters
+- [Wiki](https://github.com/ahmershahdev/karobar-erp/wiki): using Karobar day to day, payroll, the
+  demo, running it yourself and hosting it
 
 ## Related
 
