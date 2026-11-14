@@ -215,6 +215,10 @@ CELERY_TASK_REJECT_ON_WORKER_LOST = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_TIME_LIMIT = 300
 CELERY_TASK_SOFT_TIME_LIMIT = 240
+# Someone is waiting on the screen for a chat answer, so it never queues behind the nightly
+# jobs: it has its own queue, and a worker that takes nothing else.
+CELERY_TASK_DEFAULT_QUEUE = "celery"
+CELERY_TASK_ROUTES = {"apps.assistant.tasks.answer_question": {"queue": "chat"}}
 # 02:00 UTC is 07:00 in Pakistan and 05:00 to 06:00 in the Gulf: before the shops open.
 CELERY_BEAT_SCHEDULE = {
     "stock-alerts": {

@@ -3042,6 +3042,8 @@ export interface components {
             ok: boolean;
             count: number;
             broken_at: number | null;
+            /** @description The job still being answered, for a screen opened mid-wait. */
+            waiting: number | null;
         };
         ChatJob: {
             id: number;
@@ -5877,6 +5879,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChatJob"];
                 };
+            };
+            /** @description Still answering */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
