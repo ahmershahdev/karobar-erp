@@ -1,10 +1,10 @@
 import logging
-from datetime import timedelta
 from typing import Any, cast
 
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, extend_schema_field
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.request import Request
@@ -12,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.models import User
+from apps.platform.locking import lock_rows
+from apps.tenancy.models import Membership
 from apps.tenancy.permissions import IsTenantMember, membership_of
 
 from . import drafts, services, tasks
@@ -21,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 MAX_QUESTION = 2000
 SHOWN = 50
-# The worker's budget for an answer, with room for the queue.
-JOB_PATIENCE = timedelta(seconds=services.ANSWER_BUDGET_SECONDS + 75)
+JOB_PATIENCE = services.JOB_PATIENCE
 
 
 class CardPartySerializer(serializers.Serializer[Any]):
@@ -88,6 +89,9 @@ class ChatCheckSerializer(serializers.Serializer[Any]):
     ok = serializers.BooleanField()
     count = serializers.IntegerField()
     broken_at = serializers.IntegerField(allow_null=True)
+    waiting = serializers.IntegerField(
+        allow_null=True, help_text="The job still being answered, for a screen opened mid-wait."
+    )
 
 
 class ChatJobSerializer(serializers.Serializer[Any]):
@@ -100,10 +104,14 @@ class ChatJobSerializer(serializers.Serializer[Any]):
 
 def _job_data(job: ChatJob) -> dict[str, Any]:
     status, error = job.status, job.error
-    # A worker that died or was never reached leaves the job waiting; after a while the
-    # screen hears that it failed instead of waiting forever.
+    # A worker that died or was never reached leaves the job waiting, and Celery drops an
+    # expired task without running it. After a while the screen hears that it failed instead
+    # of waiting forever, and the row is ended so it says the same.
     if status == ChatJob.Status.WAITING and timezone.now() - job.created_at > JOB_PATIENCE:
         status, error = ChatJob.Status.FAILED, services.AssistantError.message
+        ChatJob.objects.filter(pk=job.pk, status=ChatJob.Status.WAITING).update(
+            status=status, error=error, finished_at=timezone.now()
+        )
     return {
         "id": job.pk,
         "status": status,
@@ -119,8 +127,28 @@ class AssistantUnavailable(APIException):
     default_code = "assistant_unavailable"
 
 
+class StillAnswering(APIException):
+    status_code = 409
+    default_detail = "Your last question is still being answered. Please wait a moment."
+    default_code = "still_answering"
+
+
 def actor(request: Request) -> User:
     return cast(User, request.user)
+
+
+def _waiting(user: User) -> ChatJob | None:
+    """The job this person is waiting on, if any. One older than JOB_PATIENCE has already been
+    reported as failed, so it doesn't count."""
+    return (
+        ChatJob.objects.filter(
+            user=user,
+            status=ChatJob.Status.WAITING,
+            created_at__gte=timezone.now() - JOB_PATIENCE,
+        )
+        .order_by("-id")
+        .first()
+    )
 
 
 class ChatMessagesView(APIView):
@@ -137,23 +165,32 @@ class ChatAskView(APIView):
     permission_classes = [IsTenantMember]
     throttle_scope = "assistant"
 
-    @extend_schema(request=ChatAskSerializer, responses={202: ChatJobSerializer})
+    @extend_schema(
+        request=ChatAskSerializer,
+        responses={202: ChatJobSerializer, 409: OpenApiResponse(description="Still answering")},
+    )
     def post(self, request: Request) -> Response:
         """Save the question and hand the answer to a worker. The screen polls the job."""
         body = ChatAskSerializer(data=request.data)
         body.is_valid(raise_exception=True)
         if not settings.GROQ_API_KEY:
             raise AssistantUnavailable(services.NotConfiguredError.message)
-        question = services.record(
-            actor(request), ChatMessage.Role.USER, body.validated_data["message"]
-        )
-        job = ChatJob.objects.create(
-            user=actor(request), question=question, language=body.validated_data["language"]
-        )
-        # Outside any transaction (ATOMIC_REQUESTS is off), so both rows are saved before the
-        # worker looks for them.
+        user = actor(request)
+        with transaction.atomic():
+            # The lock record() takes, held over the check as well: two tabs asking at once
+            # would otherwise both pass it, and their answers could land in either order.
+            lock_rows(Membership.objects.filter(user=user))
+            if _waiting(user) is not None:
+                raise StillAnswering
+            question = services.record(user, ChatMessage.Role.USER, body.validated_data["message"])
+            job = ChatJob.objects.create(
+                user=user, question=question, language=body.validated_data["language"]
+            )
+        # After the commit, so both rows are saved before the worker looks for them.
         try:
-            tasks.answer_question.delay(job.pk)
+            tasks.answer_question.apply_async(
+                (job.pk,), expires=services.QUEUE_PATIENCE.total_seconds()
+            )
         except Exception:
             # The queue can't be reached, so no worker will ever take this job. End it now
             # with the calm message rather than leaving the screen waiting.
@@ -234,5 +271,10 @@ class ChatCheckView(APIView):
 
     @extend_schema(responses=ChatCheckSerializer)
     def get(self, request: Request) -> Response:
-        data = {"enabled": bool(settings.GROQ_API_KEY), **services.verify(actor(request))}
+        job = _waiting(actor(request))
+        data = {
+            "enabled": bool(settings.GROQ_API_KEY),
+            **services.verify(actor(request)),
+            "waiting": job.pk if job else None,
+        }
         return Response(ChatCheckSerializer(data).data)

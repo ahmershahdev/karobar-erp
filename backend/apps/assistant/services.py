@@ -4,9 +4,10 @@ presses Confirm, and then only as a draft made with their own permissions."""
 
 import hmac
 import json
+import logging
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from django.conf import settings
@@ -29,11 +30,18 @@ from . import drafts, lookups
 from .models import ChatChainStart, ChatMessage
 from .screens import SCREENS
 
+logger = logging.getLogger(__name__)
+
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 # Answers are worked out by a Celery worker, not a web request, but someone is waiting on the
 # screen, so one call and the whole answer still have limits.
 GROQ_TIMEOUT_SECONDS = 20
 ANSWER_BUDGET_SECONDS = 45
+# A question no worker has started on by now is not answered at all: the answer would land
+# after the screen stopped waiting, out of order, and still use the model's quota.
+QUEUE_PATIENCE = timedelta(seconds=75)
+# When the screen is told a job failed: the longest wait in the queue plus the longest answer.
+JOB_PATIENCE = QUEUE_PATIENCE + timedelta(seconds=ANSWER_BUDGET_SECONDS)
 MAX_LOOKUPS = 3
 HISTORY = 12
 MAX_ANSWER_TOKENS = 700
@@ -335,20 +343,33 @@ def complete(
         payload["parallel_tool_calls"] = False
     try:
         answer = post_json(GROQ_URL, payload, settings.GROQ_API_KEY, timeout)
-        reply = answer["choices"][0]["message"]
+    except OutboundError as exc:
+        # A rate limit, a bad key and a refused request look the same to the person; the log
+        # is the only place they differ. Never the request or the reply, which hold figures.
+        logger.warning(
+            "Groq call failed: status %s, code %s, %s", exc.status, exc.code or "none", exc
+        )
+        raise AssistantError from exc
+    choice: Any = None
+    try:
+        choice = answer["choices"][0]
+        reply = choice["message"]
         calls = reply.get("tool_calls") if tools else None
         if calls:
             # Only the first: one card per answer keeps what Confirm does easy to read.
             call = calls[0]["function"]
             name, arguments = call["name"], call["arguments"]
             if not isinstance(name, str) or not isinstance(arguments, str):
-                raise AssistantError
+                raise TypeError("tool call is not text")
             return ToolCall(name, arguments, str(calls[0].get("id", "")))
         text = reply["content"]
-    except (OutboundError, KeyError, IndexError, TypeError, AttributeError) as exc:
+        if not isinstance(text, str) or not text.strip():
+            raise TypeError("no text")
+    except (KeyError, IndexError, TypeError, AttributeError) as exc:
+        # finish_reason "length" with no text means the token limit went on reasoning.
+        reason = choice.get("finish_reason") if isinstance(choice, dict) else None
+        logger.warning("Groq reply could not be used: %r, finish_reason %s", exc, reason)
         raise AssistantError from exc
-    if not isinstance(text, str) or not text.strip():
-        raise AssistantError
     # The chat shows text as written, and the model sometimes bolds words anyway.
     return text.replace("**", "").strip()
 

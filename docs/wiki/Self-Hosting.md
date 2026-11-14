@@ -1,8 +1,9 @@
 # Self hosting
 
-Karobar runs as six containers: `web` (nginx with the built app), `api` (Django under gunicorn),
-`worker` (Celery), `beat` (the Celery schedule for nightly jobs), `mysql` and `redis`. The files
-are in `deploy/`.
+Karobar runs as seven containers: `web` (nginx with the built app), `api` (Django under gunicorn),
+`worker` (Celery, for emails and nightly jobs), `chat` (a second Celery worker that only writes
+chat answers, so a long nightly job never keeps someone waiting), `beat` (the Celery schedule for
+nightly jobs), `mysql` and `redis`. The files are in `deploy/`.
 
 1. Copy `deploy/.env.example` to `deploy/.env` and fill in every value. Generate secrets with a
    password manager or `python -c "import secrets; print(secrets.token_urlsafe(50))"`.

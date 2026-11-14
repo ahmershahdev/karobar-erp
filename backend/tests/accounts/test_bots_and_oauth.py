@@ -454,6 +454,29 @@ def test_http_errors_still_return_their_json_and_network_errors_raise(
     monkeypatch.setattr(http.OPENER, "open", opener(bad_request))
     assert http.get_json("https://example.test/x") == {"error": "x"}
 
+    # A JSON API's error is not an answer: it raises with the status and the short code.
+    for body, code in (
+        (
+            b'{"error": {"code": "rate_limit_exceeded", "message": "private"}}',
+            "rate_limit_exceeded",
+        ),
+        (b'{"error": {"type": "invalid_request_error"}}', "invalid_request_error"),
+        (b'{"error": "x"}', "x"),
+        (b'{"error": {"code": 7}}', ""),
+        (b"<html>", ""),
+        (b"[1]", ""),
+    ):
+
+        def refused(body: bytes = body) -> Any:
+            raise urllib.error.HTTPError(
+                "https://example.test", 429, "slow down", Message(), io.BytesIO(body)
+            )
+
+        monkeypatch.setattr(http.OPENER, "open", opener(refused))
+        with pytest.raises(http.OutboundError, match="status 429") as caught:
+            http.post_json("https://example.test/x", {}, "key")
+        assert (caught.value.status, caught.value.code) == (429, code)
+
     def offline() -> Any:
         raise urllib.error.URLError("no route")
 

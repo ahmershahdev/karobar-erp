@@ -16,7 +16,13 @@ MAX_BYTES = 256 * 1024
 
 
 class OutboundError(Exception):
-    pass
+    """`status` and `code` are set when the other side answered with an HTTP error and the
+    caller asked for those to raise (see post_json)."""
+
+    def __init__(self, message: str, status: int | None = None, code: str = "") -> None:
+        super().__init__(message)
+        self.status = status
+        self.code = code
 
 
 class _NoRedirects(urllib.request.HTTPRedirectHandler):
@@ -29,7 +35,20 @@ class _NoRedirects(urllib.request.HTTPRedirectHandler):
 OPENER = urllib.request.build_opener(_NoRedirects)
 
 
-def _send(request: urllib.request.Request, timeout: int = TIMEOUT_SECONDS) -> dict[str, Any]:
+def _error_code(body: bytes) -> str:
+    """The short machine-readable code in an error body, such as "rate_limit_exceeded". Only
+    that goes in a log: the message beside it can repeat what was sent."""
+    try:
+        error = json.loads(body).get("error")
+        code = error.get("code") or error.get("type") if isinstance(error, dict) else error
+    except (ValueError, AttributeError):
+        return ""
+    return code[:80] if isinstance(code, str) else ""
+
+
+def _send(
+    request: urllib.request.Request, timeout: int = TIMEOUT_SECONDS, raise_errors: bool = False
+) -> dict[str, Any]:
     if urllib.parse.urlsplit(request.full_url).scheme != "https":
         raise OutboundError("only https is allowed")
     try:
@@ -40,6 +59,10 @@ def _send(request: urllib.request.Request, timeout: int = TIMEOUT_SECONDS) -> di
         if 300 <= exc.code < 400:
             raise OutboundError("redirects are not followed") from exc
         body = exc.read(MAX_BYTES + 1)
+        if raise_errors:
+            raise OutboundError(
+                f"status {exc.code}", status=exc.code, code=_error_code(body)
+            ) from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise OutboundError(str(exc)) from exc
     if len(body) > MAX_BYTES:
@@ -70,6 +93,8 @@ def post_form(url: str, fields: dict[str, str]) -> dict[str, Any]:
 def post_json(
     url: str, payload: dict[str, Any], bearer: str, timeout: int = TIMEOUT_SECONDS
 ) -> dict[str, Any]:
+    """Unlike the form and GET helpers, an HTTP error raises here, with its status and code: an
+    API's error body is not an answer, and the caller logs why the call failed."""
     request = urllib.request.Request(  # noqa: S310
         url,
         data=json.dumps(payload).encode(),
@@ -82,7 +107,7 @@ def post_json(
             "User-Agent": "karobar-erp",
         },
     )
-    return _send(request, timeout)
+    return _send(request, timeout, raise_errors=True)
 
 
 def get_json(url: str, bearer: str | None = None) -> dict[str, Any]:

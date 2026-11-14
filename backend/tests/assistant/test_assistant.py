@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings as django_settings
 from django.db import connection
 from django.utils import timezone
 from pytest_django.fixtures import Settings as SettingsWrapper
@@ -328,6 +329,9 @@ def test_a_job_no_worker_picked_up_gives_up(boss: Member) -> None:
     polled = boss.client().get(f"/api/assistant/jobs/{job.pk}/").json()
     assert polled["status"] == "failed"
     assert "try again" in polled["error"]
+    job.refresh_from_db()
+    assert job.status == "failed"
+    assert job.finished_at is not None
     fresh = ChatJob.objects.create(
         user=boss.user, question=services.record(boss.user, ChatMessage.Role.USER, "Again")
     )
@@ -353,10 +357,141 @@ def test_a_bug_while_answering_still_ends_the_job(boss: Member) -> None:
 
 
 def test_a_queue_that_cannot_be_reached_ends_the_job_calmly(boss: Member) -> None:
-    with patch.object(tasks.answer_question, "delay", side_effect=OSError("no broker")):
+    with patch.object(tasks.answer_question, "apply_async", side_effect=OSError("no broker")):
         reply = boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
     assert reply.status_code == 202
     job = reply.json()
     assert job["status"] == "failed"
     assert "try again" in job["error"]
     assert ChatJob.objects.get(pk=job["id"]).finished_at is not None
+
+
+def waiting_job(boss: Member, text: str = "Hi") -> ChatJob:
+    question = services.record(boss.user, ChatMessage.Role.USER, text)
+    job: ChatJob = ChatJob.objects.create(user=boss.user, question=question)
+    return job
+
+
+def test_chat_answers_have_their_own_queue() -> None:
+    routes = django_settings.CELERY_TASK_ROUTES
+    assert routes[tasks.answer_question.name] == {"queue": "chat"}
+    assert django_settings.CELERY_TASK_DEFAULT_QUEUE != "chat"
+    assert tasks.clear_old_chats.name not in routes
+
+
+def test_the_task_is_sent_with_an_expiry(boss: Member) -> None:
+    with patch.object(tasks.answer_question, "apply_async") as sent:
+        boss.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+    assert sent.call_args.kwargs["expires"] == services.QUEUE_PATIENCE.total_seconds()
+
+
+def test_a_job_that_waited_too_long_is_failed_not_answered(
+    boss: Member, caplog: pytest.LogCaptureFixture
+) -> None:
+    job = waiting_job(boss)
+    old = timezone.now() - services.QUEUE_PATIENCE - timedelta(seconds=1)
+    ChatJob.objects.filter(pk=job.pk).update(created_at=old)
+    with patch.object(services, "answer") as answer:
+        assert tasks.answer_question(job.pk) == "failed"
+    answer.assert_not_called()
+    job.refresh_from_db()
+    assert (job.status, job.started_at) == ("failed", None)
+    assert job.finished_at is not None
+    assert "try again" in job.error
+    assert f"Chat job {job.pk} was not answered" in caplog.text
+
+
+def test_a_job_delivered_twice_gets_one_answer(boss: Member) -> None:
+    job = waiting_job(boss)
+    with said("Hello"):
+        assert tasks.answer_question(job.pk) == "done"
+        assert tasks.answer_question(job.pk) == "done"
+    assert ChatMessage.objects.filter(role="assistant").count() == 1
+
+
+def test_a_second_delivery_after_the_worker_died_ends_the_job(boss: Member) -> None:
+    job = waiting_job(boss)
+    ChatJob.objects.filter(pk=job.pk).update(started_at=timezone.now())
+    with patch.object(services, "answer") as answer:
+        assert tasks.answer_question(job.pk) == "failed"
+    answer.assert_not_called()
+    job.refresh_from_db()
+    assert job.status == "failed"
+
+
+def test_a_job_that_is_gone_is_not_an_error(boss: Member) -> None:
+    assert tasks.answer_question(987654) == "gone"
+
+
+def test_an_answer_does_not_overwrite_a_job_already_ended(boss: Member) -> None:
+    job = waiting_job(boss)
+
+    def slow(*args: Any, **kwargs: Any) -> ChatMessage:
+        ChatJob.objects.filter(pk=job.pk).update(status="failed", error="ended")
+        return services.record(boss.user, ChatMessage.Role.ASSISTANT, "Late")
+
+    with patch.object(services, "answer", side_effect=slow):
+        tasks.answer_question(job.pk)
+    job.refresh_from_db()
+    assert (job.status, job.error, job.answer) == ("failed", "ended", None)
+
+
+def test_a_second_question_waits_for_the_first(boss: Member) -> None:
+    job = waiting_job(boss)
+    reply = boss.client().post("/api/assistant/ask/", {"message": "Again"}, format="json")
+    assert reply.status_code == 409
+    assert reply.json()["code"] == "still_answering"
+    assert not ChatMessage.objects.filter(content="Again").exists()
+    assert boss.client().get("/api/assistant/check/").json()["waiting"] == job.pk
+    # A job the screen has already been told failed no longer holds the chat.
+    ChatJob.objects.filter(pk=job.pk).update(created_at=timezone.now() - timedelta(minutes=5))
+    assert boss.client().get("/api/assistant/check/").json()["waiting"] is None
+    with said("Hello"):
+        again = boss.client().post("/api/assistant/ask/", {"message": "Again"}, format="json")
+    assert again.status_code == 202
+
+
+def test_someone_elses_waiting_job_does_not_hold_my_chat(boss: Member) -> None:
+    waiting_job(boss)
+    other = staff(boss)
+    assert other.client().get("/api/assistant/check/").json()["waiting"] is None
+    with said("Hello"):
+        reply = other.client().post("/api/assistant/ask/", {"message": "Hi"}, format="json")
+    assert reply.status_code == 202
+
+
+def test_a_groq_error_is_logged_with_its_status(
+    boss: Member, caplog: pytest.LogCaptureFixture
+) -> None:
+    limit = OutboundError("status 429", status=429, code="rate_limit_exceeded")
+    with (
+        patch.object(services, "post_json", side_effect=limit),
+        pytest.raises(services.AssistantError),
+    ):
+        services.complete([{"role": "user", "content": "A private question"}])
+    assert "status 429, code rate_limit_exceeded" in caplog.text
+    assert "private" not in caplog.text
+    assert "test-key" not in caplog.text
+
+
+def test_an_empty_reply_is_logged_with_why_it_stopped(
+    boss: Member, caplog: pytest.LogCaptureFixture
+) -> None:
+    empty = {"choices": [{"message": {"content": ""}, "finish_reason": "length"}]}
+    with (
+        patch.object(services, "post_json", return_value=empty),
+        pytest.raises(services.AssistantError),
+    ):
+        services.complete([{"role": "user", "content": "Hi"}])
+    assert "finish_reason length" in caplog.text
+
+
+def test_a_tool_call_that_is_not_text_is_refused(boss: Member) -> None:
+    odd = {
+        "choices": [{"message": {"tool_calls": [{"function": {"name": 1, "arguments": "{}"}}]}}]
+    }
+    with (
+        patch.object(services, "post_json", return_value=odd),
+        pytest.raises(services.AssistantError),
+    ):
+        services.complete([{"role": "user", "content": "Hi"}], tools=[{"type": "function"}])

@@ -8,29 +8,20 @@ import type { Membership } from '../../lib/api/types';
 import { ensureCsrf } from '../auth/session';
 import { errorText } from '../workspace/hooks';
 import { DraftCard, DraftSaved } from './DraftCard';
+import { type Job, waitFor } from './wait';
 
 /** The business chat. Answers show as plain text, so nothing a model writes can run on the page. */
 // The chat names screens in the language the app is shown in.
 const LANGUAGES = ['en', 'ur', 'ar'] as const;
 
-type Job = Awaited<ReturnType<typeof fetchJob>>;
+type Message = Job['question'];
+// The business is kept with the job: the person may switch business while it is answered.
+type Waiting = { id: number; tenant: string };
+type Check = { waiting: number | null };
 
-const POLL_MS = 1500;
-// The server gives up on a job after about two minutes; the screen stops a little later.
-const POLL_LIMIT = 90;
-
-function fetchJob(id: number, headers: Record<string, string>) {
-  return unwrap(api.GET('/api/assistant/jobs/{id}/', { params: { path: { id } }, headers }));
-}
-
-async function waitFor(id: number, headers: Record<string, string>): Promise<Job> {
-  for (let tries = 0; tries < POLL_LIMIT; tries += 1) {
-    await new Promise((done) => window.setTimeout(done, POLL_MS));
-    const job = await fetchJob(id, headers);
-    if (job.status === 'done') return job;
-    if (job.status === 'failed') throw new ApiError(503, { detail: job.error });
-  }
-  throw new ApiError(503, {});
+function withMessage(list: Message[] | undefined, message: Message): Message[] {
+  const shown = list ?? [];
+  return shown.some((row) => row.id === message.id) ? shown : [...shown, message];
 }
 
 export function Chat({ membership }: { membership: Membership }) {
@@ -41,10 +32,13 @@ export function Chat({ membership }: { membership: Membership }) {
   const [text, setText] = useState('');
   const [showCheck, setShowCheck] = useState(false);
   const [fresh, setFresh] = useState(false);
+  const [asked, setAsked] = useState<Waiting | null>(null);
+  const [failure, setFailure] = useState<unknown>(null);
   const end = useRef<HTMLDivElement>(null);
+  const tenant = membership.tenant_id;
   const keys = {
-    messages: [membership.tenant_id, 'assistant', 'messages'],
-    check: [membership.tenant_id, 'assistant', 'check'],
+    messages: [tenant, 'assistant', 'messages'],
+    check: [tenant, 'assistant', 'check'],
   };
   const check = useQuery({
     queryKey: keys.check,
@@ -56,24 +50,69 @@ export function Chat({ membership }: { membership: Membership }) {
     queryFn: () => unwrap(api.GET('/api/assistant/messages/')),
     enabled: open,
   });
+  // A question asked on this screen, or one found still being answered when the chat was
+  // opened again (after a reload, or from another tab).
+  const resumed = check.data?.waiting ?? null;
+  const waiting: Waiting | null = asked ?? (resumed === null ? null : { id: resumed, tenant });
+  const waitingId = waiting?.id;
+  const waitingTenant = waiting?.tenant;
+  useEffect(() => {
+    if (waitingId === undefined || waitingTenant === undefined) return;
+    let stopped = false;
+    const messagesKey = [waitingTenant, 'assistant', 'messages'];
+    const checkKey = [waitingTenant, 'assistant', 'check'];
+    waitFor(waitingId, { 'X-Tenant': waitingTenant }, () => stopped)
+      .then(
+        (job) => {
+          if (job?.answer) {
+            const answer = job.answer;
+            client.setQueryData<Message[]>(messagesKey, (list) => withMessage(list, answer));
+          }
+        },
+        (error: unknown) => {
+          if (!stopped) setFailure(error);
+        },
+      )
+      .finally(() => {
+        if (stopped) return;
+        // Cleared here as well as refetched: until the refetch lands the check would still
+        // name this job, and the wait would start again.
+        client.setQueryData<Check>(checkKey, (old) => (old ? { ...old, waiting: null } : old));
+        setAsked(null);
+        void client.invalidateQueries({ queryKey: messagesKey });
+        void client.invalidateQueries({ queryKey: checkKey });
+      });
+    return () => {
+      stopped = true;
+    };
+  }, [waitingId, waitingTenant, client]);
   const ask = useMutation({
     mutationFn: async (message: string) => {
-      // Read before waiting: the person may switch business, and a message can't be taken back.
-      const headers = { 'X-Tenant': membership.tenant_id };
+      // Read before sending: the person may switch business, and a message can't be taken back.
+      const headers = { 'X-Tenant': tenant };
       await ensureCsrf();
       const job = await unwrap(
         api.POST('/api/assistant/ask/', { body: { message, language }, headers }),
       );
-      // The question is saved now; show it while a worker writes the answer.
-      void client.invalidateQueries({ queryKey: keys.messages });
-      return waitFor(job.id, headers);
+      return { job, tenant };
     },
-    onSettled: () =>
-      Promise.all([
-        client.invalidateQueries({ queryKey: keys.messages }),
-        client.invalidateQueries({ queryKey: keys.check }),
-      ]),
+    onSuccess: ({ job, tenant: askedIn }) => {
+      // The saved question goes into the list now, so it is shown from one place: the bubble
+      // below is only for the moment before the server has it.
+      client.setQueryData<Message[]>([askedIn, 'assistant', 'messages'], (list) =>
+        withMessage(withMessage(list, job.question), job.answer ?? job.question),
+      );
+      if (job.status === 'waiting') setAsked({ id: job.id, tenant: askedIn });
+      else if (job.status === 'failed') setFailure(new ApiError(503, { detail: job.error }));
+    },
+    onError: (error) => {
+      setFailure(error);
+      // Refused because another tab's question is still being answered: pick up its wait.
+      void client.invalidateQueries({ queryKey: keys.check });
+    },
   });
+  const thinking = waiting !== null && waiting.tenant === tenant;
+  const busy = ask.isPending || thinking;
   const reset = useMutation({
     mutationFn: async () => {
       const headers = { 'X-Tenant': membership.tenant_id };
@@ -87,7 +126,7 @@ export function Chat({ membership }: { membership: Membership }) {
       await client.cancelQueries({ queryKey: keys.messages });
       client.setQueryData(keys.messages, []);
       setFresh(true);
-      if (!ask.isPending) ask.reset();
+      setFailure(null);
     },
     onSettled: () => client.invalidateQueries({ queryKey: keys.messages }),
   });
@@ -97,14 +136,15 @@ export function Chat({ membership }: { membership: Membership }) {
   );
   useEffect(() => {
     end.current?.scrollIntoView({ block: 'end' });
-  }, [count, ask.isPending, open]);
+  }, [count, busy, open]);
 
   const send = () => {
     const message = text.trim();
     // A question sent mid-reset could land on one side of the marker and its answer on the other.
-    if (!message || ask.isPending || reset.isPending) return;
+    if (!message || busy || reset.isPending) return;
     setText('');
     setFresh(false);
+    setFailure(null);
     ask.mutate(message);
   };
 
@@ -131,7 +171,7 @@ export function Chat({ membership }: { membership: Membership }) {
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            disabled={!count || ask.isPending || reset.isPending}
+            disabled={!count || busy || reset.isPending}
             onClick={() => reset.mutate()}
             className="min-h-10 rounded-full border border-line px-3 text-sm disabled:opacity-40"
           >
@@ -184,20 +224,25 @@ export function Chat({ membership }: { membership: Membership }) {
           );
         })}
         {ask.isPending && (
-          <>
-            <p className="ms-8 rounded-2xl bg-ink px-4 py-2.5 text-sm whitespace-pre-wrap text-white">
-              {ask.variables}
-            </p>
-            <p className="me-8 animate-pulse rounded-2xl bg-raised px-4 py-2.5 text-sm text-muted motion-reduce:animate-none">
-              {t('chat.thinking')}
-            </p>
-          </>
+          <p className="ms-8 rounded-2xl bg-ink px-4 py-2.5 text-sm whitespace-pre-wrap text-white">
+            {ask.variables}
+          </p>
+        )}
+        {busy && (
+          <p
+            role="status"
+            className="me-8 animate-pulse rounded-2xl bg-raised px-4 py-2.5 text-sm text-muted motion-reduce:animate-none"
+          >
+            {t('chat.thinking')}
+          </p>
         )}
         {reset.isError && (
           <p className="text-sm text-red">{errorText(reset.error, t('signIn.unavailable'))}</p>
         )}
-        {ask.isError && (
-          <p className="text-sm text-red">{errorText(ask.error, t('signIn.unavailable'))}</p>
+        {failure !== null && !busy && (
+          <p role="alert" className="text-sm text-red">
+            {errorText(failure, t('signIn.unavailable'))}
+          </p>
         )}
         <div ref={end} />
       </div>
@@ -220,7 +265,7 @@ export function Chat({ membership }: { membership: Membership }) {
           />
           <button
             type="submit"
-            disabled={off || ask.isPending || reset.isPending || !text.trim()}
+            disabled={off || busy || reset.isPending || !text.trim()}
             className="btn btn-primary !py-2.5 !text-sm disabled:opacity-40"
           >
             {t('chat.send')}

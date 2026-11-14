@@ -48,27 +48,52 @@ def clear_old_chats() -> int:
     return removed
 
 
+def _end_unanswered(job_id: int, why: str) -> str:
+    ended = ChatJob.all_tenants.filter(pk=job_id, status=ChatJob.Status.WAITING).update(
+        status=ChatJob.Status.FAILED,
+        error=services.AssistantError.message,
+        finished_at=timezone.now(),
+    )
+    if ended:
+        logger.warning("Chat job %s was not answered: %s", job_id, why)
+        return str(ChatJob.Status.FAILED)
+    status = ChatJob.all_tenants.filter(pk=job_id).values_list("status", flat=True).first()
+    return str(status or "gone")
+
+
 @shared_task  # type: ignore[untyped-decorator]
 def answer_question(job_id: int) -> str:
+    now = timezone.now()
+    # One update that only one delivery can win. A job nobody started on in time is left
+    # unanswered too: the screen has stopped waiting, and a late answer would arrive out of
+    # order and use the model's quota for nothing.
+    claimed = ChatJob.all_tenants.filter(
+        pk=job_id,
+        status=ChatJob.Status.WAITING,
+        started_at__isnull=True,
+        created_at__gte=now - services.QUEUE_PATIENCE,
+    ).update(started_at=now)
+    if not claimed:
+        # Still waiting means it is too old, or this is a second delivery after the first
+        # worker died part-way (acks_late). Either way nobody is working on it.
+        return _end_unanswered(job_id, "it waited too long or was delivered twice")
     job = ChatJob.all_tenants.select_related("tenant", "user", "question").get(pk=job_id)
-    if job.status != ChatJob.Status.WAITING:
-        return str(job.status)
+    answer, status, error = None, ChatJob.Status.FAILED, services.AssistantError.message
     with tenant_context(job.tenant):
         # The person's rights as they are now, not when they asked: a role may have changed.
         membership = Membership.objects.filter(user=job.user, user__is_active=True).first()
         try:
             if membership is None:
                 raise services.AssistantError
-            job.answer = services.answer(job.user, membership, job.question, job.language)
-            job.status = ChatJob.Status.DONE
+            answer = services.answer(job.user, membership, job.question, job.language)
+            status, error = ChatJob.Status.DONE, ""
         except services.AssistantError as exc:
-            job.status = ChatJob.Status.FAILED
-            job.error = type(exc).message
+            error = type(exc).message
+            logger.info("Chat job %s failed: %s", job.pk, type(exc).__name__)
         except Exception:
             # Anything else is a bug; the person still gets a plain answer instead of waiting.
             logger.exception("Chat answer %s failed", job.pk)
-            job.status = ChatJob.Status.FAILED
-            job.error = services.AssistantError.message
-        job.finished_at = timezone.now()
-        job.save(update_fields=["answer", "status", "error", "finished_at"])
-    return str(job.status)
+    ChatJob.all_tenants.filter(pk=job.pk, status=ChatJob.Status.WAITING).update(
+        answer=answer, status=status, error=error, finished_at=timezone.now()
+    )
+    return str(status)
