@@ -828,6 +828,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChatJob'
           description: ''
+        '409':
+          description: Still answering
   /api/assistant/check/:
     get:
       operationId: assistant_check_retrieve
@@ -6673,11 +6675,16 @@ components:
         broken_at:
           type: integer
           nullable: true
+        waiting:
+          type: integer
+          nullable: true
+          description: The job still being answered, for a screen opened mid-wait.
       required:
       - broken_at
       - count
       - enabled
       - ok
+      - waiting
     ChatJob:
       type: object
       properties:

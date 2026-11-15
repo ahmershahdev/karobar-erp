@@ -79,6 +79,8 @@ class ChatJob(TenantOwnedModel):
     )
     error = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Set by the one worker that takes the job, so a task delivered twice answers once.
+    started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
 
     class Meta(TenantOwnedModel.Meta):

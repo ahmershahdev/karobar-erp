@@ -37,7 +37,13 @@ services:
 
   worker:
     <<: *backend
-    command: celery -A config worker --loglevel=info --concurrency=2
+    command: celery -A config worker --loglevel=info --concurrency=2 --queues celery --hostname worker@%h
+
+  # Chat answers only. Someone is waiting on the screen, so they never queue behind the
+  # nightly jobs the other worker runs.
+  chat:
+    <<: *backend
+    command: celery -A config worker --loglevel=info --concurrency=2 --queues chat --hostname chat@%h
 
   # Exactly one beat process, or scheduled emails go out twice.
   beat:

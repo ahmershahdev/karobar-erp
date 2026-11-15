@@ -11,7 +11,8 @@ browser ──> nginx (static app, CSP nonce, rate limits) ──> Django + DRF 
                                                               │  ──> MySQL 8.4 (all tenants, one schema)
                                                               │  ──> Redis (cache, throttles, Celery queue)
                                                               v
-                                                         Celery worker ──> chat answers, emails, alerts, summaries
+                                                         Celery worker ──> emails, alerts, summaries (queue "celery")
+                                                         Chat worker   ──> chat answers only (queue "chat")
                                                          Celery beat   ──> nightly jobs (alerts, summaries,
                                                                            clean-ups, the demo reset)
 ```
