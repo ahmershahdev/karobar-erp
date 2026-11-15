@@ -81,5 +81,5 @@ in CI, and seed data.
 - [x] Public demo login on the sign-in page, guarded and reset nightly (#66)
 - [x] Pre-launch items: chat answers on Celery (#60), Facebook sign-in off (#61), chat kept 90 days (#62), Urdu and Arabic review (#63, #64)
 - [x] README setup steps and screenshots, docs and the wiki brought up to date
-- [ ] End-to-end tests with Playwright for the main flows
+- [ ] End-to-end tests with Playwright for the main flows (smoke, sign-up journey and security are in `e2e/`; the selling and buying flows are not yet)
 - [ ] Deploy at `karobarerp.ahmershah.dev`; tag `v1.0.0`

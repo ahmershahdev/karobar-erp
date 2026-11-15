@@ -703,7 +703,7 @@ export function HolidaysPage() {
               <span>
                 <span className="font-mono text-sm tabular-nums">{holiday.on}</span> {holiday.name}
                 {holiday.source && (
-                  <span className="block text-xs text-muted">{holiday.source}</span>
+                  <span className="block text-xs wrap-anywhere text-muted">{holiday.source}</span>
                 )}
               </span>
               {can(membership, 'hr', 'delete') && (

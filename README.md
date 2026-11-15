@@ -1,6 +1,28 @@
-# Karobar ERP
+<p align="center">
+  <img src="frontend/src/assets/brand/logo.webp" alt="Karobar ERP" width="320">
+</p>
 
-**Stock, sales, accounts and payroll for small businesses, in one place.**
+<h1 align="center">Karobar ERP</h1>
+
+<p align="center">
+  <strong>Stock, sales, accounts and payroll for small businesses, in one place.</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ahmershahdev/karobar-erp/actions/workflows/backend.yml"><img src="https://github.com/ahmershahdev/karobar-erp/actions/workflows/backend.yml/badge.svg" alt="Backend checks"></a>
+  <a href="https://github.com/ahmershahdev/karobar-erp/actions/workflows/frontend.yml"><img src="https://github.com/ahmershahdev/karobar-erp/actions/workflows/frontend.yml/badge.svg" alt="Frontend checks"></a>
+  <a href="https://github.com/ahmershahdev/karobar-erp/actions/workflows/codeql.yml"><img src="https://github.com/ahmershahdev/karobar-erp/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#how-it-fits-together">How it fits together</a> ·
+  <a href="#the-data-model">Data model</a> ·
+  <a href="#run-it-locally">Run it</a> ·
+  <a href="#documentation">Docs</a>
+</p>
 
 Karobar ERP is for shops, wholesalers and distributors that run on paper registers or
 spreadsheets and find the big ERPs too heavy. One installation serves many businesses (tenants),
@@ -76,6 +98,131 @@ These come from the invented demo businesses (see "Try it with data" below).
 | Quality | pytest, factory_boy, Vitest, Ruff, mypy, ESLint, Prettier, GitHub Actions, CodeQL |
 | Run | Docker Compose |
 
+## How it fits together
+
+```mermaid
+flowchart LR
+    browser["Browser<br>React app, service worker"]
+    nginx["nginx<br>static app, CSP nonce,<br>rate limits, Brotli and gzip"]
+    api["Django and DRF<br>gunicorn"]
+    mysql[("MySQL 8.4<br>all businesses, one schema")]
+    redis[("Redis<br>cache, throttles, queues")]
+    worker["Celery worker<br>emails, alerts, nightly jobs"]
+    chat["Chat worker<br>chat answers only"]
+    beat["Celery beat<br>the schedule"]
+    groq["Groq<br>optional chat model"]
+    mail["Resend<br>email"]
+
+    browser -->|HTTPS| nginx
+    nginx -->|/api| api
+    api --> mysql
+    api --> redis
+    beat --> redis
+    redis -->|queue celery| worker
+    redis -->|queue chat| chat
+    worker --> mysql
+    chat --> mysql
+    chat -.-> groq
+    worker -.-> mail
+```
+
+A request for one business follows the same path every time: the session says who is asking, the
+`X-Tenant` header says for which business, and every query goes through a manager that only
+returns that business's rows.
+
+```mermaid
+sequenceDiagram
+    actor Cashier
+    participant App as React app
+    participant API as Django API
+    participant DB as MySQL
+
+    Cashier->>App: Post a sales bill
+    App->>API: POST /api/sales/invoices/{id}/post/ (session cookie, CSRF, X-Tenant)
+    API->>API: Check membership, role and throttle
+    API->>DB: BEGIN, lock the number series, stock levels and fiscal period
+    API->>DB: Next bill number, stock moves, balanced journal entry, audit row
+    DB-->>API: COMMIT (or nothing at all)
+    API-->>App: The posted bill
+    App-->>Cashier: Bill number and print or share
+```
+
+## The data model
+
+Every table below except `User` and `Tenant` carries a `tenant` column. The main tables and how
+they link, with line tables and settings left out for room:
+
+```mermaid
+erDiagram
+    USER ||--o{ MEMBERSHIP : "belongs through"
+    TENANT ||--o{ MEMBERSHIP : has
+    TENANT ||--o{ ROLE : defines
+    ROLE ||--o{ MEMBERSHIP : grants
+    TENANT ||--o{ INVITATION : sends
+    TENANT ||--o{ AUDIT_EVENT : records
+    USER ||--o{ AUDIT_EVENT : causes
+
+    ACCOUNT ||--o{ ACCOUNT : "parent of"
+    FISCAL_YEAR ||--o{ FISCAL_PERIOD : "split into"
+    JOURNAL_ENTRY ||--|{ JOURNAL_LINE : has
+    ACCOUNT ||--o{ JOURNAL_LINE : "debited or credited"
+    JOURNAL_ENTRY |o--o| JOURNAL_ENTRY : reverses
+
+    CATEGORY ||--o{ PRODUCT : groups
+    UNIT ||--o{ PRODUCT : "base unit of"
+    PRODUCT ||--o{ PRODUCT_UNIT : "packed as"
+    PRODUCT ||--o{ BATCH : "made in"
+    PRODUCT ||--o{ STOCK_LEVEL : "on hand as"
+    WAREHOUSE ||--o{ STOCK_LEVEL : holds
+    PRODUCT ||--o{ COST_LAYER : "valued by"
+    STOCK_ENTRY ||--|{ STOCK_MOVE : makes
+    PRODUCT ||--o{ STOCK_MOVE : moves
+    WAREHOUSE ||--o{ STOCK_MOVE : "in or out of"
+    STOCK_ENTRY |o--o| JOURNAL_ENTRY : posts
+
+    SUPPLIER ||--o{ PURCHASE_ORDER : receives
+    PURCHASE_ORDER ||--o{ GOODS_RECEIPT : "fulfilled by"
+    GOODS_RECEIPT ||--|| STOCK_ENTRY : "brings in"
+    SUPPLIER ||--o{ SUPPLIER_BILL : sends
+    SUPPLIER_BILL ||--o| JOURNAL_ENTRY : posts
+    SUPPLIER ||--o{ SUPPLIER_PAYMENT : "is paid by"
+    SUPPLIER_PAYMENT ||--o{ SUPPLIER_BILL : "allocated to"
+
+    CUSTOMER ||--o{ SALES_ORDER : places
+    SALES_ORDER ||--o{ INVOICE : "billed by"
+    CUSTOMER ||--o{ INVOICE : owes
+    INVOICE ||--|{ INVOICE_LINE : has
+    PRODUCT ||--o{ INVOICE_LINE : "sold on"
+    TAX_RATE ||--o{ INVOICE_LINE : "applied to"
+    INVOICE ||--o| JOURNAL_ENTRY : posts
+    INVOICE ||--o| STOCK_ENTRY : "takes out"
+    CUSTOMER ||--o{ CUSTOMER_RECEIPT : pays
+    CUSTOMER_RECEIPT ||--o{ INVOICE : "allocated to"
+    INVOICE ||--o{ CREDIT_NOTE : "corrected by"
+    POS_SESSION ||--o{ POS_SALE : rings
+    POS_SALE ||--|| INVOICE : "is a"
+
+    DEPARTMENT ||--o{ EMPLOYEE : employs
+    EMPLOYEE ||--o{ CONTRACT : "works under"
+    SALARY_STRUCTURE ||--o{ CONTRACT : "pays by"
+    SALARY_STRUCTURE ||--|{ SALARY_COMPONENT : "made of"
+    EMPLOYEE ||--o{ LEAVE_REQUEST : asks
+    EMPLOYEE ||--o{ ATTENDANCE : "is marked in"
+    TAX_TABLE ||--|{ TAX_SLAB : has
+    PAYROLL_RUN ||--|{ PAYSLIP : produces
+    EMPLOYEE ||--o{ PAYSLIP : receives
+    TAX_TABLE ||--o{ PAYROLL_RUN : "taxed by"
+    PAYROLL_RUN ||--o| JOURNAL_ENTRY : posts
+    PAYROLL_RUN ||--o| SALARY_PAYMENT : "paid by"
+    EMPLOYEE ||--o| GRATUITY_PAYOUT : "leaves with"
+
+    USER ||--o{ CHAT_MESSAGE : writes
+    CHAT_MESSAGE ||--o| CHAT_JOB : "answered by"
+```
+
+The rules these tables keep (posted documents never change, every entry balances, stock only
+moves through stock moves) are in [docs/architecture.md](docs/architecture.md).
+
 ## Why it exists
 
 The hard parts of an ERP are not the forms: they are books that always balance, stock that stays
@@ -108,7 +255,7 @@ npm run dev
 
 The first run creates `backend/.env` with a random secret key, the Python virtual environment and
 `node_modules`, starts MySQL and Redis in Docker, applies migrations, then runs Django on :8000,
-a Celery worker and Vite on <http://localhost:5173>. Emails (sign-up confirmation, password
+two Celery workers (one only for chat answers), Celery beat and Vite on <http://localhost:5173>. Emails (sign-up confirmation, password
 reset, invitations) are printed in the worker's log in development. Ctrl+C stops the app
 processes; `docker compose stop` stops the databases.
 
@@ -144,6 +291,7 @@ the Compose service.
 ```sh
 (cd backend && ruff check . && ruff format --check . && mypy . && pytest)
 (cd frontend && npm run lint && npm run typecheck && npm test && npm run build)
+(cd e2e && npm ci && npm run seed && npm test)        # end-to-end, see docs/testing.md
 ```
 
 ## Documentation
@@ -152,6 +300,7 @@ the Compose service.
 - [docs/architecture.md](docs/architecture.md): modules, data model, tenancy and decisions
 - [docs/status.md](docs/status.md): current state, updated every session
 - [docs/security.md](docs/security.md): tenancy, sessions, CSP, rate limits, locking
+- [docs/testing.md](docs/testing.md): end-to-end, security and load tests, and what they found
 - [docs/seo.md](docs/seo.md) and [docs/design.md](docs/design.md)
 - [docs/locale-review.md](docs/locale-review.md): Urdu and Arabic phrases waiting for a native reader
 - [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and
