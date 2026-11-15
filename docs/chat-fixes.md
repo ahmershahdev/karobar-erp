@@ -1,7 +1,7 @@
 # Chat fixes tracker
 
 Found on 2026-11-14 by reading the chat code and checking the running dev stack. Items 1 to 7
-are fixed on the branch `fix/chat-queue`. Delete this file when the unticked items are done.
+were fixed in #74. Delete this file when the unticked items are done.
 
 ## Why the chat did not answer on 2026-11-14
 
