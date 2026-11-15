@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-11-14. Update at the end of every work session.
+Last updated: 2026-11-16. Update at the end of every work session.
 
 ## Where we are
 
@@ -36,7 +36,9 @@ Last updated: 2026-11-14. Update at the end of every work session.
    - A local 120-day rebuild took 13 minutes for the Hyderabad store and 17 minutes for the Dubai company.
    - UI bugs found, to fix during the testing phase: in Urdu and Arabic the business picker cuts the start of the name ("oor Kiryana"); "Sales today" is 0.00 on a freshly seeded demo because the seed stops at yesterday.
 
-   - Chat fixes (branch `fix/chat-queue`, 2026-11-14): chat answers have their own Celery queue and worker in dev and production, so the nightly jobs can't hold them up; a job is claimed by one worker, expires after 75 seconds in the queue, and a second question is refused while one is being answered; Groq failures are logged with their status; the screen shows the question once, survives a few failed polls and picks the wait up again after a reload. What is left is in [chat-fixes.md](chat-fixes.md). Restart `npm run dev` after pulling, because the chat worker is a new process.
+   - Chat fixes (#74, merged 2026-11-16): chat answers have their own Celery queue and worker in dev and production, so the nightly jobs can't hold them up; a job is claimed by one worker, expires after 75 seconds in the queue, and a second question is refused while one is being answered; Groq failures are logged with their status; the screen shows the question once, survives a few failed polls and picks the wait up again after a reload. What is left is in [chat-fixes.md](chat-fixes.md). Restart `npm run dev` after pulling, because the chat worker is a new process.
+
+   - Testing started on 2026-11-14 (branch `test/launch-tests`, on top of the chat fixes): Playwright smoke, journey and security tests in `e2e/`, a k6 load test in `loadtest/`, and four bugs they found, fixed (phone layout of two payroll screens, creating a business sending you back, 500 for a body over 2 MB, 500 after giving up on a row lock). Everything is in [testing.md](testing.md), with what is not tested yet. The README has the logo, an architecture diagram and the data model. Decided by the maintainer on 2026-11-16: no second sign-in step (MFA) and no A/B testing before launch; deploy is next.
 
 1. Launch order set by the maintainer: all docs (done), then Playwright tests, deploy and `v1.0.0`. The testing work starts when the maintainer says so. #56 (EOBI) has still not been tried in the browser.
 2. Find the official EOBI contribution text (the amendment to section 9 of the EOBI Act 1976, or an EOBI circular) and the provincial social security rates and ceilings; add them to `apps/payroll/data/contributions.json` only with that source.

@@ -18,6 +18,7 @@ Owner: Syed Ahmer Shah, <https://ahmershah.dev>, support@ahmershah.dev. Goes liv
 | Auth, headers, CSP, rate limits, locking, anything an attacker touches | [docs/security.md](docs/security.md) |
 | Public pages, meta tags, structured data, sitemap, llms.txt | [docs/seo.md](docs/seo.md) |
 | Look, motion, colours, components | [docs/design.md](docs/design.md) |
+| End-to-end, security and load tests | [docs/testing.md](docs/testing.md) |
 
 ## Stack
 
@@ -40,6 +41,7 @@ backend/tests/        mirrors apps/
 frontend/             React app: src/{app,pages,features,components,lib,i18n,styles}
 deploy/               nginx and production compose
 frontend/build/       build plugin: SEO files, service worker, compression
+e2e/                  Playwright tests against a real server; loadtest/ holds the k6 script
 docs/                 roadmap, architecture, status
 ```
 

@@ -130,7 +130,7 @@ A Celery job (`reset_demo`, 03:30) builds fresh demo businesses and then removes
 |---|---|
 | nginx `limit_req` | 20 requests/s per IP on `/api/`, 10/min on `/api/accounts/`, 30 connections per IP |
 | DRF throttles | `anon` 60/min, `user` 600/min, `auth` 10/min, `health` 120/min (env overridable) |
-| Request size | 2 MB body (nginx and Django), 1000 form fields, 10 files |
+| Request size | 2 MB body (nginx and Django, both answering 413), 1000 form fields, 10 files |
 | Timeouts | nginx 10 s for headers and body, gunicorn 30 s, Celery 300 s hard limit |
 | Pagination | Cursor pagination, 200 rows per page at most, so deep pages cost the same as the first |
 
@@ -213,7 +213,9 @@ response. `/app` and the sign-in screens also get `X-Robots-Tag: noindex`.
   then lock it: the ignored insert takes a shared lock, and two transactions holding shared locks
   while waiting for exclusive ones deadlock. Insert only the rows that are missing.
 - Deadlocks that remain (two first-ever receipts creating the same stock level) are retried by
-  `retry_on_deadlock`, which reruns the whole outermost transaction, as MySQL recommends.
+  `retry_on_deadlock`, which reruns the whole outermost transaction, as MySQL recommends. A
+  request still waiting for a lock after the retries answers 503 `busy`, never 500: nothing was
+  saved, so trying again is safe.
 - Document numbers come from a locked `NumberSeries` row in the same transaction as the posting,
   so a rolled-back post leaves no gap and two documents can't share a number. A test posts six
   entries from six threads at once and checks the numbers are 1 to 6.

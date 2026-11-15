@@ -7,7 +7,7 @@ import { ConfirmButton } from '../../components/ConfirmButton';
 import { Alert, Button, Field, Select } from '../../components/form';
 import { api } from '../../lib/api/client';
 import { unwrap } from '../../lib/api/errors';
-import { MODULES, can, type Me, type Role } from '../../lib/api/types';
+import { MODULES, can, type Me, type Membership, type Role } from '../../lib/api/types';
 import { ScreenIcon } from './icons';
 import { AuthCard } from '../auth/AuthCard';
 import { ensureCsrf, sessionKeys } from '../auth/session';
@@ -42,8 +42,15 @@ export function NewBusinessPage({ me }: { me: Me }) {
         }),
       );
     },
-    onSuccess: async (membership) => {
-      await client.invalidateQueries({ queryKey: sessionKeys.tenants });
+    onSuccess: (membership) => {
+      // Put in the list by hand before moving on. Nothing on this page reads the list, so
+      // invalidating alone refetches nothing, and the business screens would look the new
+      // business up in the old list, not find it, and send the person back here.
+      client.setQueryData<Membership[]>(sessionKeys.tenants, (list) => [
+        ...(list ?? []).filter((row) => row.tenant_id !== membership.tenant_id),
+        membership,
+      ]);
+      void client.invalidateQueries({ queryKey: sessionKeys.tenants });
       void navigate(`/app/${membership.tenant_slug}`);
     },
   });

@@ -859,7 +859,7 @@ function TableCard({ table }: { table: TaxTable }) {
             </tbody>
           </table>
         </div>
-        <p className="text-sm text-muted">{table.source}</p>
+        <p className="text-sm wrap-anywhere text-muted">{table.source}</p>
         {remove.isError && (
           <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
         )}
@@ -1321,7 +1321,7 @@ function MinimumWagesPanel() {
                   <span className="min-w-0 flex-1">
                     <span className="font-medium">{provinceName(wage.province, t)}</span>{' '}
                     <span className="tabular-nums">{money(wage.amount)}</span>
-                    <span className="block text-sm text-muted">
+                    <span className="block text-sm wrap-anywhere text-muted">
                       {t('payroll.from')} <span className="tabular-nums">{wage.starts_on}</span>
                       {' · '}
                       {wage.source}
@@ -1403,7 +1403,7 @@ function RatesPanel() {
                           ` ${t('payroll.insuredFromShort', { date: rate.first_insured_from })}`}
                       </span>
                     )}
-                    <span className="block text-sm text-muted">
+                    <span className="block text-sm wrap-anywhere text-muted">
                       {t('payroll.from')} <span className="tabular-nums">{rate.starts_on}</span>
                       {' · '}
                       {rate.source}
@@ -1862,7 +1862,7 @@ function RuleCard({ rule }: { rule: GratuityRule }) {
             </li>
           ))}
         </ul>
-        <p className="text-sm text-muted">{rule.source}</p>
+        <p className="text-sm wrap-anywhere text-muted">{rule.source}</p>
         {remove.isError && (
           <Alert tone="error">{errorText(remove.error, t('signIn.unavailable'))}</Alert>
         )}

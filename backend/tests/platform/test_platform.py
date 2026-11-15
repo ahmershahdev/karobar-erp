@@ -1,11 +1,13 @@
 from typing import Any
 
 import pytest
+from django.conf import settings
 from django.db import OperationalError, transaction
 from rest_framework.test import APIClient
 
 from apps.accounts.models import User
 from apps.platform.locking import lock_rows, retry_on_deadlock
+from tests.conftest import Member
 
 pytestmark = pytest.mark.django_db
 
@@ -57,6 +59,33 @@ def test_unhandled_errors_hide_details(monkeypatch: pytest.MonkeyPatch, user: Us
     assert response.status_code == 500
     assert "secret" not in response.content.decode()
     assert "request_id" in response.json()
+
+
+@pytest.mark.parametrize(("code", "status"), [(1205, 503), (1213, 503), (2006, 500)])
+def test_giving_up_on_a_lock_says_busy_not_broken(
+    monkeypatch: pytest.MonkeyPatch, user: User, code: int, status: int
+) -> None:
+    def stuck(*args: Any, **kwargs: Any) -> None:
+        raise OperationalError(code, "Lock wait timeout exceeded; SELECT secret")
+
+    monkeypatch.setattr("apps.accounts.views.MeSerializer", stuck)
+    client = APIClient(raise_request_exception=False)
+    client.force_login(user)
+    response = client.get("/api/accounts/me/")
+    assert response.status_code == status
+    assert "secret" not in response.content.decode()
+    assert response.json().get("code") == ("busy" if status == 503 else None)
+
+
+def test_a_body_over_the_limit_is_refused_not_a_server_error(
+    owner: Member, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Without nginx in front, Django raises while the body is read.
+    huge = {"code": "BIG", "name": "x" * (settings.DATA_UPLOAD_MAX_MEMORY_SIZE + 1)}
+    response = owner.client().post("/api/sales/customers/", huge, format="json")
+    assert response.status_code == 413
+    assert response.json()["code"] == "too_large"
+    assert "unhandled error" not in caplog.text
 
 
 @pytest.mark.django_db(transaction=True)

@@ -1,0 +1,4 @@
+node_modules/
+.mail/
+test-results/
+playwright-report/
