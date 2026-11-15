@@ -27,7 +27,7 @@ from apps.tenancy.context import get_current_tenant
 from apps.tenancy.models import Membership
 
 from . import drafts, lookups
-from .models import ChatChainStart, ChatMessage
+from .models import ChatChainStart, ChatJob, ChatMessage
 from .screens import SCREENS
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,7 @@ HISTORY = 12
 MAX_ANSWER_TOKENS = 700
 LOW_STOCK_SHOWN = 10
 LANGUAGES = tuple(SCREENS)
+FINISH_REASONS = ("stop", "length", "tool_calls", "content_filter")
 
 
 class AssistantError(Exception):
@@ -55,6 +56,10 @@ class AssistantError(Exception):
 
 class NotConfiguredError(AssistantError):
     message = "The assistant isn't set up on this server yet."
+
+
+class GaveUpError(AssistantError):
+    """The screen was already told this question failed, so its answer is not kept."""
 
 
 class StartedOverError(AssistantError):
@@ -135,6 +140,13 @@ def record(
     # otherwise put an answer to the old chat at the start of the new one.
     if answering and mine(user).filter(role=ChatMessage.Role.RESET, id__gt=answering.pk).exists():
         raise StartedOverError
+    # Also under the lock, which the poll that ends a timed-out job takes too: either that poll
+    # sees the answer, or the answer sees the job ended and is dropped. Never both.
+    if (
+        answering
+        and ChatJob.objects.filter(question=answering, status=ChatJob.Status.FAILED).exists()
+    ):
+        raise GaveUpError
     last = mine(user).order_by("-id").first()
     message = ChatMessage(user=user, role=role, content=content, created_at=timezone.now())
     previous = last.signature if last else _after_start(user)
@@ -366,9 +378,14 @@ def complete(
         if not isinstance(text, str) or not text.strip():
             raise TypeError("no text")
     except (KeyError, IndexError, TypeError, AttributeError) as exc:
-        # finish_reason "length" with no text means the token limit went on reasoning.
+        # finish_reason "length" with no text means the token limit went on reasoning. Only a
+        # known reason is logged: the reply is someone else's text.
         reason = choice.get("finish_reason") if isinstance(choice, dict) else None
-        logger.warning("Groq reply could not be used: %r, finish_reason %s", exc, reason)
+        logger.warning(
+            "Groq reply could not be used: %s, finish_reason %s",
+            type(exc).__name__,
+            reason if reason in FINISH_REASONS else "other",
+        )
         raise AssistantError from exc
     # The chat shows text as written, and the model sometimes bolds words anyway.
     return text.replace("**", "").strip()

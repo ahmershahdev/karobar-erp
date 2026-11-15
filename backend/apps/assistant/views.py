@@ -108,10 +108,19 @@ def _job_data(job: ChatJob) -> dict[str, Any]:
     # expired task without running it. After a while the screen hears that it failed instead
     # of waiting forever, and the row is ended so it says the same.
     if status == ChatJob.Status.WAITING and timezone.now() - job.created_at > JOB_PATIENCE:
-        status, error = ChatJob.Status.FAILED, services.AssistantError.message
-        ChatJob.objects.filter(pk=job.pk, status=ChatJob.Status.WAITING).update(
-            status=status, error=error, finished_at=timezone.now()
-        )
+        with transaction.atomic():
+            # The lock record() takes: a worker saving its answer at this very moment either
+            # finishes first, and is found below, or finds the job ended and drops the answer.
+            lock_rows(Membership.objects.filter(user=job.user))
+            ended = ChatJob.objects.filter(pk=job.pk, status=ChatJob.Status.WAITING).update(
+                status=ChatJob.Status.FAILED,
+                error=services.AssistantError.message,
+                finished_at=timezone.now(),
+            )
+        job.refresh_from_db()
+        status, error = job.status, job.error
+        if not ended and status == ChatJob.Status.WAITING:  # pragma: no cover
+            status, error = ChatJob.Status.FAILED, services.AssistantError.message
     return {
         "id": job.pk,
         "status": status,

@@ -53,7 +53,10 @@ export function Chat({ membership }: { membership: Membership }) {
   // A question asked on this screen, or one found still being answered when the chat was
   // opened again (after a reload, or from another tab).
   const resumed = check.data?.waiting ?? null;
-  const waiting: Waiting | null = asked ?? (resumed === null ? null : { id: resumed, tenant });
+  // Only a question asked in this business counts here; one asked in another business is
+  // picked up again from its own check when the person goes back to it.
+  const mine = asked?.tenant === tenant ? asked : null;
+  const waiting: Waiting | null = mine ?? (resumed === null ? null : { id: resumed, tenant });
   const waitingId = waiting?.id;
   const waitingTenant = waiting?.tenant;
   useEffect(() => {
@@ -64,7 +67,9 @@ export function Chat({ membership }: { membership: Membership }) {
     waitFor(waitingId, { 'X-Tenant': waitingTenant }, () => stopped)
       .then(
         (job) => {
-          if (job?.answer) {
+          // An answer landing after the screen moved on (a new chat, another business) would
+          // put an old reply back into a list that has since changed.
+          if (!stopped && job?.answer) {
             const answer = job.answer;
             client.setQueryData<Message[]>(messagesKey, (list) => withMessage(list, answer));
           }
@@ -96,9 +101,11 @@ export function Chat({ membership }: { membership: Membership }) {
       );
       return { job, tenant };
     },
-    onSuccess: ({ job, tenant: askedIn }) => {
+    onSuccess: async ({ job, tenant: askedIn }) => {
       // The saved question goes into the list now, so it is shown from one place: the bubble
-      // below is only for the moment before the server has it.
+      // below is only for the moment before the server has it. A slow read of the list from
+      // before the question is stopped first, or it would put the older list back.
+      await client.cancelQueries({ queryKey: [askedIn, 'assistant', 'messages'] });
       client.setQueryData<Message[]>([askedIn, 'assistant', 'messages'], (list) =>
         withMessage(withMessage(list, job.question), job.answer ?? job.question),
       );
@@ -111,7 +118,7 @@ export function Chat({ membership }: { membership: Membership }) {
       void client.invalidateQueries({ queryKey: keys.check });
     },
   });
-  const thinking = waiting !== null && waiting.tenant === tenant;
+  const thinking = waiting !== null;
   const busy = ask.isPending || thinking;
   const reset = useMutation({
     mutationFn: async () => {

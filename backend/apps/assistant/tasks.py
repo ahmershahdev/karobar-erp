@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from celery import shared_task
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -48,14 +49,18 @@ def clear_old_chats() -> int:
     return removed
 
 
-def _end_unanswered(job_id: int, why: str) -> str:
-    ended = ChatJob.all_tenants.filter(pk=job_id, status=ChatJob.Status.WAITING).update(
-        status=ChatJob.Status.FAILED,
-        error=services.AssistantError.message,
-        finished_at=timezone.now(),
+def _end_unanswered(job_id: int) -> str:
+    """End a job this delivery could not claim, if nobody is working on it: one that was never
+    claimed (it waited too long), or one whose worker has had its whole budget and more, so
+    it died part-way. A job another worker claimed a moment ago is left to that worker."""
+    now = timezone.now()
+    abandoned = now - timedelta(seconds=services.ANSWER_BUDGET_SECONDS * 2)
+    waiting = ChatJob.all_tenants.filter(pk=job_id, status=ChatJob.Status.WAITING)
+    ended = waiting.filter(Q(started_at__isnull=True) | Q(started_at__lt=abandoned)).update(
+        status=ChatJob.Status.FAILED, error=services.AssistantError.message, finished_at=now
     )
     if ended:
-        logger.warning("Chat job %s was not answered: %s", job_id, why)
+        logger.warning("Chat job %s was not answered: it waited too long", job_id)
         return str(ChatJob.Status.FAILED)
     status = ChatJob.all_tenants.filter(pk=job_id).values_list("status", flat=True).first()
     return str(status or "gone")
@@ -74,9 +79,8 @@ def answer_question(job_id: int) -> str:
         created_at__gte=now - services.QUEUE_PATIENCE,
     ).update(started_at=now)
     if not claimed:
-        # Still waiting means it is too old, or this is a second delivery after the first
-        # worker died part-way (acks_late). Either way nobody is working on it.
-        return _end_unanswered(job_id, "it waited too long or was delivered twice")
+        # Too old, or a second delivery of a job another worker already took (acks_late).
+        return _end_unanswered(job_id)
     job = ChatJob.all_tenants.select_related("tenant", "user", "question").get(pk=job_id)
     answer, status, error = None, ChatJob.Status.FAILED, services.AssistantError.message
     with tenant_context(job.tenant):

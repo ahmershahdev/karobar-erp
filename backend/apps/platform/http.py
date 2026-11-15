@@ -6,6 +6,7 @@ or closed.
 """
 
 import json
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -43,7 +44,8 @@ def _error_code(body: bytes) -> str:
         code = error.get("code") or error.get("type") if isinstance(error, dict) else error
     except (ValueError, AttributeError):
         return ""
-    return code[:80] if isinstance(code, str) else ""
+    # Kept to what a code looks like, so nothing the other side sends can write a log line.
+    return re.sub(r"[^A-Za-z0-9_.-]", "", code)[:80] if isinstance(code, str) else ""
 
 
 def _send(

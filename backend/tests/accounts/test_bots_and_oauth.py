@@ -462,6 +462,7 @@ def test_http_errors_still_return_their_json_and_network_errors_raise(
         ),
         (b'{"error": {"type": "invalid_request_error"}}', "invalid_request_error"),
         (b'{"error": "x"}', "x"),
+        (b'{"error": {"code": "bad\\nFAKE LINE"}}', "badFAKELINE"),
         (b'{"error": {"code": 7}}', ""),
         (b"<html>", ""),
         (b"[1]", ""),

@@ -409,9 +409,20 @@ def test_a_job_delivered_twice_gets_one_answer(boss: Member) -> None:
     assert ChatMessage.objects.filter(role="assistant").count() == 1
 
 
-def test_a_second_delivery_after_the_worker_died_ends_the_job(boss: Member) -> None:
+def test_a_second_delivery_leaves_a_job_another_worker_just_took(boss: Member) -> None:
     job = waiting_job(boss)
     ChatJob.objects.filter(pk=job.pk).update(started_at=timezone.now())
+    with patch.object(services, "answer") as answer:
+        assert tasks.answer_question(job.pk) == "waiting"
+    answer.assert_not_called()
+    job.refresh_from_db()
+    assert job.status == "waiting"
+
+
+def test_a_second_delivery_after_the_worker_died_ends_the_job(boss: Member) -> None:
+    job = waiting_job(boss)
+    long_ago = timezone.now() - timedelta(seconds=services.ANSWER_BUDGET_SECONDS * 2 + 1)
+    ChatJob.objects.filter(pk=job.pk).update(started_at=long_ago)
     with patch.object(services, "answer") as answer:
         assert tasks.answer_question(job.pk) == "failed"
     answer.assert_not_called()
@@ -423,17 +434,29 @@ def test_a_job_that_is_gone_is_not_an_error(boss: Member) -> None:
     assert tasks.answer_question(987654) == "gone"
 
 
-def test_an_answer_does_not_overwrite_a_job_already_ended(boss: Member) -> None:
+def test_an_answer_arriving_after_the_screen_gave_up_is_not_kept(boss: Member) -> None:
     job = waiting_job(boss)
 
-    def slow(*args: Any, **kwargs: Any) -> ChatMessage:
-        ChatJob.objects.filter(pk=job.pk).update(status="failed", error="ended")
-        return services.record(boss.user, ChatMessage.Role.ASSISTANT, "Late")
+    def slow(*args: Any, **kwargs: Any) -> str:
+        # The screen polls a job that has run out of time while the model is still writing.
+        ChatJob.objects.filter(pk=job.pk).update(created_at=timezone.now() - timedelta(minutes=5))
+        assert boss.client().get(f"/api/assistant/jobs/{job.pk}/").json()["status"] == "failed"
+        return "Late"
 
-    with patch.object(services, "answer", side_effect=slow):
-        tasks.answer_question(job.pk)
+    with patch.object(services, "complete", side_effect=slow):
+        assert tasks.answer_question(job.pk) == "failed"
     job.refresh_from_db()
-    assert (job.status, job.error, job.answer) == ("failed", "ended", None)
+    assert (job.status, job.answer) == ("failed", None)
+    assert not ChatMessage.objects.filter(role="assistant").exists()
+
+
+def test_a_poll_at_the_deadline_returns_an_answer_that_just_landed(boss: Member) -> None:
+    job = waiting_job(boss)
+    with said("Hello"):
+        tasks.answer_question(job.pk)
+    ChatJob.objects.filter(pk=job.pk).update(created_at=timezone.now() - timedelta(minutes=5))
+    polled = boss.client().get(f"/api/assistant/jobs/{job.pk}/").json()
+    assert (polled["status"], polled["answer"]["content"]) == ("done", "Hello")
 
 
 def test_a_second_question_waits_for_the_first(boss: Member) -> None:
@@ -484,6 +507,19 @@ def test_an_empty_reply_is_logged_with_why_it_stopped(
     ):
         services.complete([{"role": "user", "content": "Hi"}])
     assert "finish_reason length" in caplog.text
+
+
+def test_text_from_the_model_never_reaches_the_log(
+    boss: Member, caplog: pytest.LogCaptureFixture
+) -> None:
+    odd = {"choices": [{"message": {"content": ""}, "finish_reason": "x\nFAKE LOG LINE"}]}
+    with (
+        patch.object(services, "post_json", return_value=odd),
+        pytest.raises(services.AssistantError),
+    ):
+        services.complete([{"role": "user", "content": "Hi"}])
+    assert "FAKE" not in caplog.text
+    assert "finish_reason other" in caplog.text
 
 
 def test_a_tool_call_that_is_not_text_is_refused(boss: Member) -> None:
