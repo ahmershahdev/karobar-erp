@@ -6,7 +6,7 @@ django-csp==4.0
 django-environ==0.14.0
 djangorestframework==3.18.3
 drf-spectacular==0.30.0
-gunicorn==26.2.0
+gunicorn==27.0.1
 holidays==0.108
 mysqlclient==2.3.1
 pillow==13.0.0
