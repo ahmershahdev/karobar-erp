@@ -1,8 +1,10 @@
 # Project status
 
-Last updated: 2026-11-16. Update at the end of every work session.
+Last updated: 2026-11-17. Update at the end of every work session.
 
 ## Where we are
+
+- Uncommitted on `main` (2026-11-17): demo sign-in hung while a demo reset ran. Each business is seeded in one transaction, which keeps the demo owner's user row locked, and Django's `last_login` save waited on it until MySQL's lock wait ran out. `apps/accounts/signals.py` now replaces Django's receiver and skips the stamp when the row is locked (`tests/accounts/test_last_login.py`). In dev, beat runs a missed 03:30 reset as soon as `npm run dev` starts, so this was hit right after starting the app.
 
 - Released: `v0.1.0` (M1 platform), `v0.2.0` (M2 accounting core), `v0.3.0` (M3 inventory), `v0.4.0` (M4 purchasing, sales, documents), `v0.5.0` (M5 counter, tax, reports, report indexes), `v0.6.0` (M6 HR and payroll, at #59).
 - Merged since `v0.5.0` (#32 to #43): the business home page (#32); signed bill links, WhatsApp click-to-chat and the daily summary email (#33); the business chat through Groq with signed messages (#34); chat focus and new chat (#35); confirm before every delete (#36); name, email and password settings (#37); chat screen names per language (#38); handing over a business and deleting an account (#39); chat drafts the person confirms (#40); chat lookups of products, customers and suppliers (#41); line and bill discounts with a limit per role and a Sales discounts account (#42); the Bill design screen with six templates, logo, signature, footer and an 80 mm till roll (#43).
